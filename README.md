@@ -151,4 +151,4 @@ The file is located in `config/o.a.s/lethalbreed.json`.
 
 > *"The sky has turned black, the storms have brought the Great Alienation, and the dead have ceased to moan to start thinking. O.A.S is not a cure, it is the final protocol of the end of times."*
 
-<sub>**O.A.S - Oblivion Adaptation System**</sub>
+<sub>**O.A.S - Order of Apocalypse Storms**</sub>
