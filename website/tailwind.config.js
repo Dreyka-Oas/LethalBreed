@@ -7,20 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        'mc-green': '#10b981', // Emerald 500
-        'mc-dark-green': '#059669', // Emerald 600
-        'wiki-bg': '#f8fafc', // Slate 50
-        'wiki-card': '#ffffff', // White
-        'wiki-border': '#f1f5f9', // Slate 100
-        'wiki-text': '#334155', // Slate 700
+        'brand': {
+          DEFAULT: '#008800', // O.A.S Green
+          hover: '#006600',
+          subtle: 'rgba(0, 136, 0, 0.05)',
+        },
+        'ui': {
+          bg: '#FFFFFF',
+          surface: '#F9FAFB',
+          border: '#E4E4E7',
+          text: '#09090B',
+          muted: '#71717A',
+        }
       },
       fontFamily: {
         'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'mono': ['JetBrains Mono', 'monospace'],
       },
       boxShadow: {
-        'soft-sm': '0 2px 4px 0 rgba(0,0,0,0.02), 0 1px 2px -1px rgba(0,0,0,0.02)',
-        'soft-md': '0 4px 6px -1px rgba(0,0,0,0.03), 0 2px 4px -2px rgba(0,0,0,0.03)',
-        'soft-xl': '0 20px 25px -5px rgba(0,0,0,0.03), 0 8px 10px -6px rgba(0,0,0,0.03)',
+        'brutalist': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+        'soft': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
       }
     },
   },

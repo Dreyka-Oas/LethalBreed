@@ -1,26 +1,20 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Technical Overview
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
-# Lethal Breed - Technical Overview
+# Lethal Breed - Aperçu Technique
 
 ## Introduction
-**Lethal Breed** is a survival-horror mod for Minecraft (Fabric) that radically transforms zombie behavior. The goal is to make every night a strategic challenge where zombies don't just walk toward the player, but adapt their approach based on the environment.
+**Lethal Breed** est un mod de survie-horreur pour Minecraft (Fabric) qui transforme radicalement le comportement des zombies. L'objectif est de faire de chaque nuit un défi stratégique où les zombies ne se contentent pas de marcher vers le joueur, mais adaptent leur approche en fonction de l'environnement.
 
 ---
 
-## 🏗️ Obstacle Engineering (Advanced Pathfinding)
+## 🏗️ Ingénierie d'Obstacles (Pathfinding Avancé)
 
-### 1. Dynamic Obstruction Analysis
-The mod uses a specialized class, `ObstructionAnalyzer`, to precisely identify what is blocking the zombie via angular scanning.
+### 1. Analyse Dynamique des Obstructions
+Le mod utilise une classe spécialisée, `ObstructionAnalyzer`, pour identifier précisément ce qui bloque le zombie via un balayage angulaire.
 
-### 2. Bridge Coordination (Bridging)
-The `BridgeCoordinator` intervenes to place dirt blocks and create a passage over gaps.
+### 2. Coordination de Pontage (Bridging)
+Le `BridgeCoordinator` intervient pour poser des blocs de terre et créer un passage au-dessus des vides.
 
-### 3. Placement System: `BlockSetter`
-Manages physical interaction with the world. It checks the validity of the location before materializing a block.
+### 3. Système de Pose : `BlockSetter`
+Gère l'interaction physique avec le monde. Il vérifie la validité de l'emplacement avant de matérialiser un bloc.
 ```java
 public static void placeDirt(World world, BlockPos pos) {
     if (PlacementValidator.canPlaceAt(world, pos)) {
@@ -29,87 +23,87 @@ public static void placeDirt(World world, BlockPos pos) {
 }
 ```
 
-### 4. Block Destruction: `BreakAction`
-Zombies mine obstacles with a configurable speed multiplier. A visual cracking effect is synchronized with real progress.
+### 4. Destruction de Blocs : `BreakAction`
+Les zombies minent les obstacles avec un multiplicateur de vitesse configurable. Un effet visuel de fissure est synchronisé avec la progression réelle.
 ```java
 int maxTime = (int) (20 / (speed * ModConfig.INSTANCE.breakSpeedMultiplier)); 
 int progress = (int) (((float)timer / maxTime) * 10);
 world.setBlockBreakingInfo(zombie.getId(), target, progress);
 ```
 
-### 5. Critical Void Detection: `MovementCoordinator`
-Prevents zombies from accidentally falling. If a "Next Step" leads to a void, the zombie stops dead, centers itself, and triggers bridge construction.
+### 5. Détection Critique de Vide : `MovementCoordinator`
+Empêche les zombies de tomber accidentellement. Si un "Prochain Pas" mène à un vide, le zombie s'arrête net, se centre, et déclenche la construction d'un pont.
 
 ---
 
-## 🧠 Artificial Intelligence and Threads
+## 🧠 Intelligence Artificielle et Threads
 
-### 6. State Machine: `BuildStateMachine`
-Drives complex transitions between chasing, mining, and building.
+### 6. Machine à États : `BuildStateMachine`
+Pilote les transitions complexes entre la poursuite, le minage et la construction.
 
 ```java
 public void tick() {
-    if (state == 2) processMining(); // Mining State
-    if (state == 1) processBuilding(); // Building State
+    if (state == 2) processMining(); // État Minage
+    if (state == 1) processBuilding(); // État Construction
 }
 ```
 
-### 7. Asynchronous Processing: `LethalThreads`
-To avoid slowing down the server, complex AI calculations (such as obstruction analysis) are offloaded to background threads.
+### 7. Traitement Asynchrone : `LethalThreads`
+Pour éviter de ralentir le serveur, les calculs d'IA complexes (comme l'analyse d'obstruction) sont déportés sur des threads en arrière-plan.
 ```java
 private static final ThreadPoolExecutor POOL = new ThreadPoolExecutor(
     CORES, CORES, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(256)
 );
 ```
 
-### 8. Thought Processor: `BrainProcessor`
-Links the game tick and threads. It allows zombies to "think" about their next block without blocking the physics engine.
+### 8. Processeur de Pensée : `BrainProcessor`
+Fait le lien entre le tick de jeu et les threads. Il permet aux zombies de "réfléchir" à leur prochain bloc sans bloquer le moteur physique.
 
-### 9. Starting Conditions: `BuildConditions`
-Defines if a zombie should start building. It checks vertical distance (`dy`) and the presence of holes before engaging building mode.
-
----
-
-## 🧗 Movement and Pack Coordination
-
-### 10. Vertical Climbing: `ClimbMover`
-Adjusts velocity vectors to allow zombies to climb along the structures they build or natural walls.
-
-### 11. Intelligent Pack Placement: `PackPlacementLogic`
-Prevents 10 zombies from trying to build in the same place. If a zombie detects allies already building, it will look for an adjacent point (North, South, East, or West) to create a wider staircase.
-
-### 12. Placement Validation: `PlacementValidator`
-Safety preventing block placement outside world limits or in non-replaceable blocks.
-
-### 13. Physical Centering: `ConstructionCoordinator`
-Before each building action, the zombie is "snapped" to the center of its current block to guarantee its tower or bridge is perfectly aligned.
+### 9. Conditions de Démarrage : `BuildConditions`
+Définit si un zombie doit commencer à construire. Il vérifie la distance verticale (`dy`) et la présence de trous avant d'engager le mode construction.
 
 ---
 
-## 🔊 Sound Ecosystem and Instincts
+## 🧗 Mouvement et Coordination de Meute
 
-### 14. Hearing System
-Zombies track environmental sounds (footsteps, blocks) via the `HearingRegistry`.
+### 10. Escalade Verticale : `ClimbMover`
+Ajuste les vecteurs de vélocité pour permettre aux zombies de grimper le long des structures qu'ils construisent ou des murs naturels.
 
-### 15. Survival Instinct: `FleeExplosionGoal`
-Normal zombies detect "Primed" allies (Kamikazes about to explode) and flee to avoid collateral damage.
+### 11. Pose Intelligente en Meute : `PackPlacementLogic`
+Empêche 10 zombies d'essayer de construire au même endroit. Si un zombie détecte des alliés en train de construire, il cherchera un point adjacent (Nord, Sud, Est ou Ouest) pour créer un escalier plus large.
+
+### 12. Validation de Placement : `PlacementValidator`
+Sécurité empêchant la pose de blocs hors des limites du monde ou dans des blocs non-remplaçables.
+
+### 13. Centrage Physique : `ConstructionCoordinator`
+Avant chaque action de construction, le zombie est "magnétisé" au centre de son bloc actuel pour garantir que sa tour ou son pont soit parfaitement aligné.
+
+---
+
+## 🔊 Écosystème Sonore et Instincts
+
+### 14. Système d'Ouïe
+Les zombies traquent les sons environnementaux (pas, blocs) via le `HearingRegistry`.
+
+### 15. Instinct de Survie : `FleeExplosionGoal`
+Les zombies normaux détectent les alliés "Amorcés" (Kamikazes sur le point d'exploser) et fuient pour éviter les dommages collatéraux.
 ```java
 var list = world.getEntitiesByClass(ZombieEntity.class, range, z -> z.hasTag("lethal_primed"));
 if (!list.isEmpty()) fleeFrom(list.get(0));
 ```
 
-### 16. Kamikaze Overload
-Visual details for kamikazes: flame particles and electrical sparks (`ELECTRIC_SPARK`) if the explosion power exceeds 1.7x normal.
+### 16. Surcharge Kamikaze
+Détails visuels pour les kamikazes : particules de flammes et étincelles électriques (`ELECTRIC_SPARK`) si la puissance d'explosion dépasse 1,7x la normale.
 
 ---
 
-## 🧬 Genetics and Mutation
+## 🧬 Génétique et Mutation
 
-### 17. Dynamic Specimen Scaling
-Manipulation of `SCALE`, `MAX_HEALTH`, and `MOVEMENT_SPEED` attributes based on the size generated at spawn.
+### 17. Mise à l'Échelle Dynamique des Spécimens
+Manipulation des attributs `SCALE`, `MAX_HEALTH`, et `MOVEMENT_SPEED` en fonction de la taille générée à l'apparition.
 
-### 18. Panic Mechanics
-Management of screams and alerting allies when health falls below a critical threshold.
+### 18. Mécaniques de Panique
+Gestion des cris et de l'alerte des alliés lorsque la santé tombe sous un seuil critique.
 
 ---
-Last Update: February 12, 2026
+Dernière mise à jour : 12 février 2026

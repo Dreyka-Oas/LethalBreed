@@ -1,52 +1,46 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Mod Features
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
-# Feature Diagnostics
+# Diagnostic des Fonctionnalités
 
-**Lethal Breed** introduces an interconnected suite of threat systems. Below are the core diagnostic profiles for active threat capabilities.
+**Lethal Breed** introduit une suite interconnectée de systèmes de menace. Voici les profils de diagnostic principaux des capacités actives.
 
 ---
 
-## 📏 Volumetric Scaling & Physical Stats
+## 📏 Échelle Volumétrique et Statistiques Physiques
 
-Specimens exhibit extreme genetic variance upon initial materialization.
+Les spécimens présentent une variance génétique extrême lors de leur matérialisation initiale.
 
-- **Morphological Variance**: Entity scale fluctuates randomly between **0.85x** and **1.35x**.
-- **Vitality Correlation**: Total health pool is directly proportional to mass. Alpha specimens generate with up to **120%** baseline durability.
-- **Locomotion Overdrive**: Base velocities span from **0.18** to **0.28**. Higher-end variants will easily overtake sprinting targets.
-
----
-
-## 🔊 Acoustic Threat Detection
-
-Visual occlusion is no longer a valid defense strategy. Entities employ persistent auditory tracking.
-
-- **Detection Radius**: Active scanning up to a 16-block radius.
-- **Acoustic Triggers**: Sensitive to locomotion, fall damage, item consumption, and block state changes.
-- **Echolocation Patrol**: Targets breaking line-of-sight while emitting noise will trigger a targeted investigation protocol at the exact acoustic epicenter.
+- **Variance Morphologique** : L'échelle de l'entité fluctue aléatoirement entre **0.85x** et **1.35x**.
+- **Corrélation de Vitalité** : La réserve totale de santé est directement proportionnelle à la masse. Les spécimens Alpha génèrent jusqu'à **120%** de la durabilité de base.
+- **Surmultiplication de Locomotion** : Les vitesses de base s'étendent de **0.18** à **0.28**. Les variantes haut de gamme dépasseront facilement les cibles en sprint.
 
 ---
 
-## 🏗️ Environmental Manipulation (AI)
+## 🔊 Détection Acoustique des Menaces
 
-Entities possess authorization to actively alter terrain geometry.
+L'occlusion visuelle n'est plus une stratégie de défense valide. Les entités emploient un traçage auditif persistant.
 
-- **Void Traversal (Bridging)**: Deployment of temporary terrestrial blocks (Dirt) to bypass chasms.
-- **Vertical Escalation (Towering)**: Construction of vertical support pillars to intercept high-altitude targets.
-- **Obstruction Nullification**: Active block destruction routines operate at **400%** standard mining efficiency to break through fortifications.
+- **Rayon de Détection** : Balayage actif jusqu'à un rayon de 16 blocs.
+- **Déclencheurs Acoustiques** : Sensible à la locomotion, aux dégâts de chute, à la consommation d'objets et aux changements d'état des blocs.
+- **Patrouille par Écholocalisation** : Les cibles brisant la ligne de mire tout en émettant du bruit déclencheront un protocole d'investigation ciblé à l'épicentre acoustique exact.
+
+---
+
+## 🏗️ Manipulation Environnementale (IA)
+
+Les entités possèdent l'autorisation de modifier activement la géométrie du terrain.
+
+- **Franchissement de Vide (Pontage)** : Déploiement de blocs terrestres temporaires (Terre) pour contourner les gouffres.
+- **Escalade Verticale (Tour)** : Construction de piliers de support verticaux pour intercepter les cibles à haute altitude.
+- **Annulation d'Obstruction** : Les routines actives de destruction de blocs opèrent à **400%** de l'efficacité de minage standard pour percer les fortifications.
 
 ---
 
-## 💀 Biological Anomalies
+## 💀 Anomalies Biologiques
 
-> **WARNING**: High-priority targets detected. Engage with extreme prejudice.
+> **ATTENTION** : Cibles prioritaires détectées. Engagez avec un préjudice extrême.
 
-- **Unit: KAMIKAZE**: Engineered with hyper-reactive explosives. Detonates with an explosive payload of **3.0** upon breaching a 3-block proximity threshold.
-- **Unit: MUTANT**: Rare anomaly (5% materialization probability). Radiates a necrotic aura and violently expels **8 subordinate units** upon termination.
-- **Swarm Intelligence**: Critically damaged units broadcast distress signals. Swarms exceeding 5 units enter a hyper-aggressive frenzy state.
+- **Unité : KAMIKAZE** : Conçue avec des explosifs hyper-réactifs. Déclenche une charge explosive de **3.0** lors du franchissement d'un seuil de proximité de 3 blocs.
+- **Unité : MUTANT** : Anomalie rare (5% de probabilité de matérialisation). Irradie une aura nécrotique et expulse violemment **8 unités subordonnées** lors de sa terminaison.
+- **Intelligence de Meute** : Les unités gravement endommagées diffusent des signaux de détresse. Les meutes dépassant 5 unités entrent dans un état de frénésie hyper-agressive.
 
 ---
-Last Update: February 27, 2026
+Dernière mise à jour : 27 février 2026

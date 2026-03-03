@@ -1,12 +1,6 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Mutant Details
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
 # Mutants
 
-Mutants have a 5% spawn chance and are very dangerous.
+Les Mutants ont 5% de chance d'apparaître et sont très dangereux.
 
 ---
-Last Update: February 12, 2026
+Dernière mise à jour : 12 février 2026

@@ -1,93 +1,87 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Technical Documentation
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
-# Lethal Breed - Technical Documentation
+# Lethal Breed - Documentation Technique
 
 ## Introduction
-**Lethal Breed** is a survival-horror mod for Minecraft (Fabric) that radically transforms zombie behavior. The goal is to make every night a strategic challenge where zombies don't just walk toward the player, but adapt their approach based on the environment.
+**Lethal Breed** est un mod de survie-horreur pour Minecraft (Fabric) qui transforme radicalement le comportement des zombies. L'objectif est de faire de chaque nuit un défi stratégique où les zombies ne se contentent pas de marcher vers le joueur, mais adaptent leur approche en fonction de l'environnement.
 
 ---
 
-## Technical Sheet
-- **Minecraft Version:** 1.21.11
-- **Loader:** Fabric
-- **Language:** Java 25
-- **Dependencies:** Fabric API
-- **Architecture:** Modular, based on mixins and a Finite State Machine for AI.
+## Fiche Technique
+- **Version de Minecraft :** 1.21.11
+- **Loader :** Fabric
+- **Langage :** Java 25
+- **Dépendances :** Fabric API
+- **Architecture :** Modulaire, basée sur des mixins et une Machine à États Finis (FSM) pour l'IA.
 
 ---
 
-## Main Features
+## Fonctionnalités Principales
 
-### 1. Building and Destruction AI
-The heart of the mod lies in the zombies' ability to overcome physical obstacles.
-- **Bridging:** Zombies can place blocks to cross gaps or reach platforms.
-- **Climbing:** Uses vertical construction logic to "stack" blocks or climb walls naturally.
-- **Mining:** If a zombie is blocked by a wall, it will start mining blocks to clear a path. Mining speed is configurable.
-- **State Machine (BuildStateMachine):** Manages transitions between pursuit, construction, and mining.
+### 1. IA de Construction et de Destruction
+Le cœur du mod réside dans la capacité des zombies à surmonter les obstacles physiques.
+- **Pontage (Bridging) :** Les zombies peuvent poser des blocs pour franchir des vides ou atteindre des plateformes.
+- **Escalade :** Utilise une logique de construction verticale pour "empiler" des blocs ou grimper aux murs naturellement.
+- **Minage :** Si un zombie est bloqué par un mur, il commencera à miner les blocs pour se frayer un chemin. La vitesse de minage est personnalisable.
+- **Machine à États (BuildStateMachine) :** Gère les transitions entre la poursuite, la construction et le minage.
 
-### 2. Hearing System
-Zombies now react to environmental sounds.
-- **Events Detected:** Footsteps (Step), block placement/destruction, eating, falling.
-- **Logic:** If a zombie has no visual target, it will move toward the source of the last detected noise within a configurable radius (default: 16 blocks).
-- **Registry:** A `HearingRegistry` stores sound positions by entity ID.
+### 2. Système d'Ouïe
+Les zombies réagissent désormais aux sons environnementaux.
+- **Événements Détectés :** Pas (Step), pose/destruction de blocs, consommation d'objets, chutes.
+- **Logique :** Si un zombie n'a pas de cible visuelle, il se déplacera vers la source du dernier bruit détecté dans un rayon configurable (défaut : 16 blocs).
+- **Registre :** Un `HearingRegistry` stocke les positions sonores par ID d'entité.
 
-### 3. Specimen Variability (Size & Stats)
-Every zombie is unique thanks to spawn randomization.
-- **Scale:** Size varying between 0.85x and 1.35x.
-- **Attributes:** Speed and health are correlated to size or randomized individually.
-- **Adults only:** The mod disables baby zombies to favor adults capable of crawling or building.
+### 3. Variabilité des Spécimens (Taille & Stats)
+Chaque zombie est unique grâce à une randomisation à l'apparition.
+- **Échelle :** Taille variant entre 0.85x et 1.35x.
+- **Attributs :** La vitesse et la santé sont corrélées à la taille ou randomisées individuellement.
+- **Adultes uniquement :** Le mod désactive les bébés zombies pour privilégier les adultes capables de ramper ou de construire.
 
-### 4. Mutants and Specialists
-- **Mutants:** 5% spawn chance. They have a particle aura ("tentacles") and spawn a pack of minions upon death.
-- **Kamikazes:** Explosive zombies that trigger a Creeper-like detonation when approaching their target.
-- **Dynamic Equipment:** Increased probability of carrying weapons, full armor, and enchantments.
+### 4. Mutants et Spécialistes
+- **Mutants :** 5% de chance d'apparition. Ils possèdent une aura de particules ("tentacules") et font apparaître une meute de serviteurs à leur mort.
+- **Kamikazes :** Zombies explosifs qui déclenchent une détonation de type Creeper en approchant de leur cible.
+- **Équipement Dynamique :** Probabilité accrue de porter des armes, des armures complètes et des enchantements.
 
-### 5. Panic Mechanics
-When a zombie falls below 25% health:
-- It can enter a **Panic** state.
-- It emits screams that alert nearby allies (12-block radius).
-- It may attempt to flee if its pack is too small.
+### 5. Mécaniques de Panique
+Lorsqu'un zombie tombe sous les 25% de santé :
+- Il peut entrer dans un état de **Panique**.
+- Il émet des cris qui alertent les alliés proches (rayon de 12 blocs).
+- Il peut tenter de fuir si sa meute est trop petite.
 
 ---
 
-## Code Architecture
+## Architecture du Code
 
-### Key Packages
-- `oas.work.lethalbreed.ai.builder`: Contains all complex building and mining logic.
-- `oas.work.lethalbreed.mixin`: Injection points into Minecraft code to alter basic behaviors.
-- `oas.work.lethalbreed.ai`: Secondary AI systems (Hearing, Kamikaze, Panic).
+### Paquets Clés
+- `oas.work.lethalbreed.ai.builder` : Contient toute la logique complexe de construction et de minage.
+- `oas.work.lethalbreed.mixin` : Points d'injection dans le code de Minecraft pour modifier les comportements de base.
+- `oas.work.lethalbreed.ai` : Systèmes d'IA secondaires (Ouïe, Kamikaze, Panique).
 
-### Important Classes
-- `LethalBreed`: Mod entry point.
-- `ModConfig`: Configuration manager (JSON format).
-- `BuildStateMachine`: The brain behind the construction capabilities.
-- `HearingLogic`: Manages interception of `GameEvent` for the hearing system.
-- `MutantLogic`: Logic specific to mutant variants.
+### Classes Importantes
+- `LethalBreed` : Point d'entrée du mod.
+- `ModConfig` : Gestionnaire de configuration (format JSON).
+- `BuildStateMachine` : Le cerveau derrière les capacités de construction.
+- `HearingLogic` : Gère l'interception des `GameEvent` pour le système d'ouïe.
+- `MutantLogic` : Logique spécifique aux variantes mutantes.
 
 ---
 
 ## Configuration (`lethalbreed.json`)
-The mod is highly customizable via its configuration file:
-- `zombieFollowRange`: Visual detection distance.
-- `mutantChance`: Mutant appearance probability.
-- `hearingRange`: Zombie hearing sensitivity.
-- `breakSpeedMultiplier`: Block destruction speed multiplier.
-- `climbVerticalSpeed`: Ascension speed during construction.
+Le mod est hautement personnalisable via son fichier de configuration :
+- `zombieFollowRange` : Distance de détection visuelle.
+- `mutantChance` : Probabilité d'apparition des mutants.
+- `hearingRange` : Sensibilité auditive des zombies.
+- `breakSpeedMultiplier` : Multiplicateur de vitesse de destruction des blocs.
+- `climbVerticalSpeed` : Vitesse d'ascension pendant la construction.
 
 ---
 
-## Installation and Usage
-1. Install Fabric Loader for version 1.21.11.
-2. Place the JAR in the `mods` folder.
-3. Launch the game to generate the initial config file in `config/o.a.s/lethalbreed.json`.
-4. Customize values according to desired difficulty.
+## Installation et Utilisation
+1. Installez Fabric Loader pour la version 1.21.11.
+2. Placez le JAR dans le dossier `mods`.
+3. Lancez le jeu pour générer le fichier de config initial dans `config/o.a.s/lethalbreed.json`.
+4. Personnalisez les valeurs selon la difficulté souhaitée.
 
 ---
-*Documentation generated for the Lethal Breed project.*
+*Documentation générée pour le projet Lethal Breed.*
 
 ---
-Last Update: February 12, 2026
+Dernière mise à jour : 12 février 2026

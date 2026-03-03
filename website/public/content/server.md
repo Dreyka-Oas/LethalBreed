@@ -1,21 +1,15 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Server Optimization
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
-# Server Optimization
+# Optimisation Serveur
 
-**Lethal Breed** is designed to maintain optimal performance even on servers with a high density of players and entities. To achieve this, the mod offloads the heaviest AI calculations to separate threads.
+**Lethal Breed** est conçu pour maintenir des performances optimales même sur des serveurs avec une forte densité de joueurs et d'entités. Pour y parvenir, le mod délègue les calculs d'IA les plus lourds à des threads séparés.
 
 ---
 
-## 🧵 Multi-Thread Architecture
+## 🧵 Architecture Multi-Thread
 
-Unlike standard Minecraft behavior where AI runs entirely on the main thread (which can cause slow-downs or "TPS drops"), Lethal Breed uses an asynchronous task management system called **LethalThreads**.
+Contrairement au comportement standard de Minecraft où l'IA s'exécute entièrement sur le thread principal (ce qui peut causer des ralentissements ou des "chutes de TPS"), Lethal Breed utilise un système de gestion de tâches asynchrones appelé **LethalThreads**.
 
-### The Engine: `LethalThreads.java`
-This component manages an intelligent queue and adapts its power based on the server's processor.
+### Le Moteur : `LethalThreads.java`
+Ce composant gère une file d'attente intelligente et adapte sa puissance en fonction du processeur du serveur.
 
 ```java
 public class LethalThreads {
@@ -34,29 +28,29 @@ public class LethalThreads {
 
 ---
 
-## 🧠 What is "Threaded" and why?
+## 🧠 Qu'est-ce qui est "Threadé" et pourquoi ?
 
-The most costly calculation for the server is **Dynamic Obstruction Analysis**. When a zombie is blocked, it must scan the environment from several angles and heights to decide whether to mine or build.
+Le calcul le plus coûteux pour le serveur est l'**Analyse Dynamique d'Obstruction**. Lorsqu'un zombie est bloqué, il doit scanner l'environnement sous plusieurs angles et hauteurs pour décider s'il doit miner ou construire.
 
-### Asynchronous Thinking Process
-The `BrainProcessor` asks background threads to calculate the solution while the game continues to run.
+### Processus de Pensée Asynchrone
+Le `BrainProcessor` demande aux threads d'arrière-plan de calculer la solution pendant que le jeu continue de s'exécuter.
 
 ```java
 LethalThreads.execute(() -> {
     try {
-        // Heavy environmental scan (Raycasting)
+        // Balayage environnemental lourd (Raycasting)
         BlockPos res = ObstructionAnalyzer.getHorizontal(world, zombie, target);
         resultSlot.set(res);
     } finally {
-        thinking.set(false); // Releases the zombie's "thought"
+        thinking.set(false); // Libère la "pensée" du zombie
     }
 });
 ```
 
-### Benefits for the server:
-- **TPS Stability**: The server does not stop to wait for a zombie to find its path.
-- **Lag Reduction**: Even with 100 zombies trying to break through your walls, Minecraft's physics engine remains fluid.
-- **CPU Utilization**: The mod finally exploits modern multi-core processors, where Vanilla Minecraft is often limited to a single core.
+### Avantages pour le serveur :
+- **Stabilité du TPS** : Le serveur ne s'arrête pas pour attendre qu'un zombie trouve son chemin.
+- **Réduction du Lag** : Même avec 100 zombies essayant de percer vos murs, le moteur physique de Minecraft reste fluide.
+- **Utilisation du CPU** : Le mod exploite enfin les processeurs multi-cœurs modernes, là où Minecraft Vanilla est souvent limité à un seul cœur.
 
 ---
-Last Update: February 12, 2026
+Dernière mise à jour : 12 février 2026

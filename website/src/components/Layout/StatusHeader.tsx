@@ -1,35 +1,28 @@
 /**
  * Project: Lethal Breed
- * Responsibility: Navigation Breadcrumbs and Status Header
+ * Responsibility: Page Header with Version and Status (Light Mode)
  * License: O.A.S - MS-RSL (Microsoft Reference Source License)
  * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
  */
-import { ChevronRight, Menu } from 'lucide-react'
-
-interface Props {
-  onMenuOpen: () => void;
-}
-
-export const StatusHeader = ({ onMenuOpen }: Props) => (
-  <div className="flex items-center justify-between mb-8 bg-white p-4 border border-slate-100 shadow-soft-sm rounded-2xl">
-    <div className="flex items-center gap-4">
-      <button
-        onClick={onMenuOpen}
-        className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors"
-      >
-        <Menu size={20} />
-      </button>
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg">
-        <img src="/logo.png" alt="" className="w-5 h-5 rounded" />
-        <span className="text-mc-dark-green bg-emerald-50 px-2 py-0.5 rounded-md">Core</span>
-        <span className="text-slate-300">/</span>
-        <span className="text-slate-700">Menu</span>
+export const StatusHeader = () => (
+  <header className="mb-20">
+    <div className="flex flex-wrap items-center gap-4 mb-8">
+      <span className="px-4 py-1.5 bg-zinc-900 text-white text-[10px] font-black uppercase tracking-[0.2em]">
+        Lethal Breed Project
+      </span>
+      <span className="px-4 py-1.5 border-2 border-zinc-900 text-zinc-900 text-[10px] font-black uppercase tracking-[0.2em]">
+        v1.0.0-beta
+      </span>
+      <div className="flex items-center gap-2 ml-auto">
+        <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+          Systems Online
+        </span>
       </div>
     </div>
-    <div className="flex items-center gap-3 border border-slate-100 px-4 py-2 rounded-xl bg-slate-50">
-      <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2">SYS_OK
-        <div className="h-2 w-2 bg-mc-green rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-      </span>
-    </div>
-  </div>
+    <h1 className="text-7xl font-black tracking-tighter text-zinc-900 uppercase leading-[0.85]">
+      Evolution <br/>
+      <span className="text-brand">Protocol.</span>
+    </h1>
+  </header>
 )

@@ -1,30 +1,42 @@
 /**
  * Project: Lethal Breed
- * Responsibility: Main Content Layout and Markdown Rendering
+ * Responsibility: Main Documentation Content Display
  * License: O.A.S - MS-RSL (Microsoft Reference Source License)
  * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
  */
 import ReactMarkdown from 'react-markdown'
-import { InfoBox } from './InfoBox'
-import { StatsPanel } from './StatsPanel'
+import { Menu } from 'lucide-react'
 import { StatusHeader } from './StatusHeader'
+import { StatsPanel } from './StatsPanel'
+import { DownloadSection } from './DownloadSection'
 
-interface Props { content: string; onMenuOpen: () => void }
+interface Props {
+  content: string;
+  onMenuOpen: () => void;
+}
 
 export const MainContent = ({ content, onMenuOpen }: Props) => (
-  <main className="flex-1 overflow-x-hidden p-6 md:p-10 lg:p-16 h-screen overflow-y-auto">
-    <div className="w-full">
-      <StatusHeader onMenuOpen={onMenuOpen} />
-      <div className="content-grid items-start">
-        <div className="bg-white border border-slate-100 p-8 md:p-12 lg:p-16 shadow-soft-xl rounded-2xl transition-all hover:shadow-soft-md">
-          <article className="prose prose-slate max-w-none">
-            <ReactMarkdown>{content}</ReactMarkdown>
-          </article>
-        </div>
-        <div className="space-y-8 pb-10">
-          <InfoBox />
+  <main className="flex-1 min-w-0 bg-ui-bg relative overflow-y-auto">
+    <div className="max-w-[1400px] mx-auto p-8 lg:p-16">
+      {/* Mobile Header */}
+      <button 
+        onClick={onMenuOpen}
+        className="lg:hidden mb-12 flex items-center gap-2 text-ui-muted font-bold uppercase tracking-widest text-xs"
+      >
+        <Menu size={20} /> Menu
+      </button>
+
+      <StatusHeader />
+
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-20">
+        <article className="prose prose-slate max-w-none">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </article>
+
+        <aside className="space-y-12">
           <StatsPanel />
-        </div>
+          <DownloadSection />
+        </aside>
       </div>
     </div>
   </main>

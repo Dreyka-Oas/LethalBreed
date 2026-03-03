@@ -1,23 +1,17 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Mod Presentation
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
-# Project Brief: Lethal Breed
+# Présentation du Projet : Lethal Breed
 
-> **CLASSIFIED INFORMATION** - O.A.S SECURITY CLEARANCE REQUIRED.
+> **INFORMATIONS CLASSÉES** - ACCRÉDITATION DE SÉCURITÉ O.A.S REQUISE.
 
-**Lethal Breed** is a profound behavioral overhaul for standard Class-Z entities. The objective of this project is to eliminate predictable behavior and replace it with highly adaptive, aggressive, and intelligent hostility.
+**Lethal Breed** est une refonte comportementale profonde pour les entités standard de Classe-Z. L'objectif de ce projet est d'éliminer les comportements prévisibles et de les remplacer par une hostilité hautement adaptative, agressive et intelligente.
 
-## Core System Upgrades
+## Améliorations du Système Principal
 
-- **Dynamic Auditory Tracking**: Entities no longer rely solely on visual confirmation. They actively track acoustic signatures including footsteps, block interactions, and impacts.
-- **Terrain Navigation AI**: Targets placed at an elevation or across chasms are no longer safe. Entities can now deploy structures to bridge gaps or scale walls.
-- **Aggressive Obstruction Clearing**: Physical barriers are systematically dismantled. Entities will rapidly mine through obstructing blocks to establish a direct vector to the target.
-- **Genetic Variants**: Deployment of extreme biological anomalies with hyper-lethal capabilities (e.g., *Kamikazes*, *Mutants*).
+- **Suivi Auditif Dynamique** : Les entités ne comptent plus uniquement sur la confirmation visuelle. Elles traquent activement les signatures acoustiques, incluant les bruits de pas, les interactions avec les blocs et les impacts.
+- **IA de Navigation de Terrain** : Les cibles situées en hauteur ou de l'autre côté de gouffres ne sont plus en sécurité. Les entités peuvent désormais déployer des structures pour franchir des fossés ou escalader des murs.
+- **Nettoyage Agressif des Obstacles** : Les barrières physiques sont systématiquement démantelées. Les entités mineront rapidement à travers les blocs obstruants pour établir un vecteur direct vers la cible.
+- **Variantes Génétiques** : Déploiement d'anomalies biologiques extrêmes avec des capacités hyper-léthales (ex: *Kamikazes*, *Mutants*).
 
-System parameters are fully tunable via a dedicated strict JSON configuration, allowing administrators to scale the threat level according to operational requirements.
+Les paramètres du système sont entièrement réglables via une configuration JSON stricte dédiée, permettant aux administrateurs d'ajuster le niveau de menace selon les besoins opérationnels.
 
 ---
-Last Update: February 27, 2026
+Dernière mise à jour : 27 février 2026

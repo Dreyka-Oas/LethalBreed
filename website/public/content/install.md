@@ -1,15 +1,9 @@
-<!--
- * Project: Lethal Breed
- * Responsibility: Installation Guide
- * License: O.A.S - MS-RSL (Microsoft Reference Source License)
- * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
--->
 # Installation
 
-1. Install Fabric Loader for version 1.21.11.
-2. Place the JAR in the mods folder.
-3. Launch the game to generate the initial config file.
-4. Customize the values.
+1. Installez Fabric Loader pour la version 1.21.11.
+2. Placez le JAR dans le dossier `mods`.
+3. Lancez le jeu pour générer le fichier de config initial.
+4. Personnalisez les valeurs.
 
 ---
-Last Update: February 12, 2026
+Dernière mise à jour : 12 février 2026

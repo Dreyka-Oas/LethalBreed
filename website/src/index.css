@@ -4,101 +4,69 @@
 
 @layer base {
   body {
-    @apply bg-wiki-bg text-wiki-text font-sans antialiased;
+    @apply bg-white text-zinc-900 font-sans antialiased selection:bg-brand selection:text-white;
   }
 }
 
-/* Modern Rectangular Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-[#e5e5e5];
+  @apply bg-zinc-50;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full border-2 border-solid border-wiki-bg hover:bg-slate-400 transition-colors;
+  @apply bg-zinc-200 rounded-full hover:bg-zinc-300 transition-colors;
 }
 
+/* Typography Overrides - FULL LIGHT */
 .prose h1 {
-  @apply text-4xl font-black mb-8 text-slate-900 tracking-tight border-b-2 border-slate-100 pb-4 inline-block;
+  @apply text-5xl font-black mb-12 tracking-tighter text-zinc-900;
 }
-
-.prose hr {
-  @apply my-10 border-t border-slate-200 w-full;
-}
-
-.prose hr+p {
-  @apply text-left text-slate-400 text-xs font-semibold uppercase mt-6 tracking-widest;
-}
-
 
 .prose h2 {
-  @apply text-2xl font-bold mt-12 mb-6 text-slate-800 p-5 bg-white border border-slate-100 rounded-2xl flex items-center gap-4 transition-all shadow-soft-sm hover:shadow-soft-md hover:border-mc-green/30;
+  @apply text-2xl font-bold mt-16 mb-8 text-zinc-900 flex items-center gap-3 border-l-4 border-brand pl-6;
 }
 
 .prose h3 {
-  @apply text-xl font-bold mt-8 mb-4 text-slate-800 flex items-center gap-3 border-b border-slate-100 pb-3;
+  @apply text-xl font-bold mt-10 mb-4 text-zinc-800;
 }
 
 .prose p {
-  @apply mb-6 leading-relaxed text-slate-800 text-base;
+  @apply mb-6 leading-7 text-zinc-600 text-lg max-w-3xl;
 }
 
-.prose ul,
-.prose ol {
-  @apply mt-6 mb-10 flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-6;
+.prose ul {
+  @apply my-8 grid grid-cols-1 md:grid-cols-2 gap-4;
 }
 
 .prose li {
-  @apply relative pl-12 pr-6 py-4 bg-white border border-slate-100 rounded-xl transition-all text-slate-700 list-none hover:border-mc-green/30 hover:shadow-soft-md hover:-translate-y-0.5;
-}
-
-.prose ol {
-  counter-reset: list-counter;
-}
-
-.prose ol li {
-  counter-increment: list-counter;
-}
-
-.prose ol li::before {
-  content: counter(list-counter);
-  @apply absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-emerald-50 text-mc-dark-green rounded-full flex items-center justify-center text-xs font-bold transition-colors;
-}
-
-.prose ul li::before {
-  content: "";
-  @apply absolute left-6 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-slate-300 rounded-full transition-colors;
-}
-
-.prose li:hover::before {
-  @apply bg-mc-green text-white;
-}
-
-.prose li strong {
-  @apply font-bold text-slate-900;
+  @apply p-5 bg-zinc-50 border border-zinc-100 rounded-lg text-zinc-700 list-none transition-all hover:border-brand hover:bg-white hover:shadow-lg;
 }
 
 .prose code {
-  @apply bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-200 text-mc-dark-green font-mono text-sm;
+  @apply bg-zinc-100 px-2 py-1 rounded border border-zinc-200 font-mono text-sm text-brand;
 }
 
 .prose blockquote {
-  @apply border-l-4 border-mc-green/50 bg-emerald-50/50 px-6 py-4 rounded-r-xl italic text-slate-600 my-8;
+  @apply border-l-4 border-brand bg-zinc-50 p-8 rounded-r-lg italic text-zinc-700 my-12 text-xl shadow-sm;
 }
 
-/* Full Width Utility */
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 3rem;
-  width: 100%;
+.prose hr {
+  @apply my-16 border-zinc-100;
 }
 
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
+/* Sidebar Item Styling */
+.sidebar-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 text-sm font-bold uppercase tracking-widest border-2;
+}
+
+.sidebar-item-active {
+  @apply bg-zinc-900 text-white border-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)];
+}
+
+.sidebar-item-inactive {
+  @apply text-zinc-400 border-transparent hover:border-zinc-200 hover:text-zinc-900 hover:bg-zinc-50;
 }

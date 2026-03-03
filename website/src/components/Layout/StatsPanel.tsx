@@ -1,28 +1,34 @@
 /**
  * Project: Lethal Breed
- * Responsibility: Mod Requirements and Technical Details Panel
+ * Responsibility: Side Stats Visualization Panel (Light Mode)
  * License: O.A.S - MS-RSL (Microsoft Reference Source License)
  * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
  */
-import { Cpu, Box, Code } from 'lucide-react'
+import { Activity, Zap, Shield, Target } from 'lucide-react'
 
-const TechDetail = ({ icon: Icon, l, v }: { icon: any, l: string, v: string }) => (
-  <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-soft-sm hover:shadow-soft-md hover:-translate-y-0.5 transition-all group">
-    <div className="text-slate-400 bg-slate-50 p-2 rounded-lg group-hover:bg-emerald-50 group-hover:text-mc-green transition-colors"><Icon size={18} /></div>
-    <div>
-      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest leading-none mb-1">{l}</p>
-      <p className="text-sm font-bold text-slate-900">{v}</p>
+export const StatsPanel = () => (
+  <div className="space-y-6">
+    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-8">
+      Entity Analytics
+    </h4>
+    
+    <div className="grid grid-cols-1 gap-4">
+      <StatItem icon={Activity} label="AI Intelligence" value="Tier 4" color="text-brand" />
+      <StatItem icon={Zap} label="Response Time" value="< 50ms" color="text-amber-600" />
+      <StatItem icon={Shield} label="Adaptability" value="High" color="text-blue-600" />
+      <StatItem icon={Target} label="Threat Level" value="Lethal" color="text-red-600" />
     </div>
   </div>
 )
 
-export const StatsPanel = () => (
-  <div className="bg-white border border-slate-100 p-6 shadow-soft-md rounded-2xl">
-    <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-4">Requirements</h4>
-    <div className="space-y-3">
-      <TechDetail icon={Code} l="Java Runtime" v="Java 21" />
-      <TechDetail icon={Box} l="Mod Loader" v="Fabric" />
-      <TechDetail icon={Cpu} l="Environment" v="Client/Server" />
+const StatItem = ({ icon: Icon, label, value, color }: any) => (
+  <div className="bg-zinc-50 p-5 flex items-center justify-between border border-zinc-100 rounded hover:border-zinc-300 transition-all group">
+    <div className="flex items-center gap-4">
+      <div className="p-2 bg-white border border-zinc-100 rounded shadow-sm group-hover:border-zinc-900 transition-colors">
+        <Icon size={16} className="text-zinc-900" />
+      </div>
+      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{label}</span>
     </div>
+    <span className={`text-[10px] font-black uppercase tracking-wider ${color}`}>{value}</span>
   </div>
 )
