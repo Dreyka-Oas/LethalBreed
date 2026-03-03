@@ -1,9 +1,10 @@
 /**
  * Project: Lethal Breed
- * Responsibility: Main Documentation Content Display
+ * Responsibility: Main Documentation Content Display (with Scroll Fix)
  * License: O.A.S - MS-RSL (Microsoft Reference Source License)
  * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
  */
+import { useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Menu } from 'lucide-react'
 import { StatusHeader } from './StatusHeader'
@@ -15,29 +16,40 @@ interface Props {
   onMenuOpen: () => void;
 }
 
-export const MainContent = ({ content, onMenuOpen }: Props) => (
-  <main className="flex-1 min-w-0 bg-ui-bg relative overflow-y-auto">
-    <div className="max-w-[1400px] mx-auto p-8 lg:p-16">
-      {/* Mobile Header */}
-      <button 
-        onClick={onMenuOpen}
-        className="lg:hidden mb-12 flex items-center gap-2 text-ui-muted font-bold uppercase tracking-widest text-xs"
-      >
-        <Menu size={20} /> Menu
-      </button>
+export const MainContent = ({ content, onMenuOpen }: Props) => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-      <StatusHeader />
+  // Scroll to top whenever content changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo(0, 0);
+    }
+  }, [content]);
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-20">
-        <article className="prose prose-slate max-w-none">
-          <ReactMarkdown>{content}</ReactMarkdown>
-        </article>
+  return (
+    <main ref={containerRef} className="flex-1 min-w-0 bg-ui-bg relative overflow-y-auto scroll-smooth">
+      <div className="max-w-[1400px] mx-auto p-8 lg:p-16">
+        {/* Mobile Header */}
+        <button 
+          onClick={onMenuOpen}
+          className="lg:hidden mb-12 flex items-center gap-2 text-ui-muted font-bold uppercase tracking-widest text-xs"
+        >
+          <Menu size={20} /> Menu
+        </button>
 
-        <aside className="space-y-12">
-          <StatsPanel />
-          <DownloadSection />
-        </aside>
+        <StatusHeader />
+
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-20">
+          <article className="prose prose-slate max-w-none">
+            <ReactMarkdown>{content}</ReactMarkdown>
+          </article>
+
+          <aside className="space-y-12">
+            <StatsPanel />
+            <DownloadSection />
+          </aside>
+        </div>
       </div>
-    </div>
-  </main>
-)
+    </main>
+  )
+}

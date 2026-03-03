@@ -1,59 +1,64 @@
 # Configuration du Mod
 
-Le mod **Lethal Breed** est entièrement personnalisable via un fichier JSON situé dans le dossier de configuration de votre instance Minecraft.
+Le mod **Lethal Breed** est entièrement personnalisable via un fichier JSON situé dans le dossier de configuration.
 
-**Chemin du fichier :** `.minecraft/config/o.a.s/lethalbreed.json`
-
----
-
-## 📊 Attributs des Zombies
-
-Ces paramètres contrôlent les statistiques physiques de base générées aléatoirement pour chaque zombie.
-
-- **`zombieFollowRange`** (Défaut : `18.0`) : Distance maximale à laquelle un zombie peut verrouiller une cible visuelle.
-- **`minScale` / `maxScale`** (Défaut : `0.85` / `1.35`) : Plage de taille des zombies. Influence également la santé et les dégâts.
-- **`minSpeed` / `maxSpeed`** (Défaut : `0.18` / `0.28`) : Vitesse de déplacement au sol.
-- **`healthBonusMin` / `healthBonusMax`** (Défaut : `0.8` / `1.2`) : Multiplicateur de santé supplémentaire appliqué après le calcul de la taille.
+**Chemin :** `.minecraft/config/o.a.s/lethalbreed.json`
 
 ---
 
-## 🧬 Système de Mutation
-
-Paramètres relatifs aux variantes spéciales et aux Mutants.
-
-- **`mutantChance`** (Défaut : `0.05`) : Probabilité (0.0 à 1.0) qu'un zombie devienne un Mutant lors de son apparition.
-- **`mutantMinionCount`** (Défaut : `8`) : Nombre de serviteurs qui apparaissent à la mort d'un Mutant.
-- **`mutantTentacleTickRate`** (Défaut : `5`) : Fréquence de mise à jour de l'aura de particules du Mutant.
+### 📊 attributes : Statistiques Physiques
+- **`zombieFollowRange`** (18.0) : Distance de détection et de poursuite.
+- **`minScale` / `maxScale`** (0.85 / 1.35) : Plage de taille aléatoire.
+- **`minSpeed` / `maxSpeed`** (0.18 / 0.28) : Vitesse de déplacement au sol.
+- **`healthBonusMin` / `healthBonusMax`** (0.8 / 1.2) : Multiplicateur de santé aléatoire.
 
 ---
 
-## 🔊 IA et Système d'Ouïe
-
-Contrôle la sensibilité auditive et les capacités de traque.
-
-- **`hearingRange`** (Défaut : `16.0`) : Rayon en blocs dans lequel un zombie peut entendre du bruit (pas, blocs, etc.).
-- **`soundLockTicks`** (Défaut : `300`) : Durée pendant laquelle un zombie se souvient de la position d'un son avant de reprendre sa patrouille.
+### 🧬 mutant : Paramètres du Boss
+- **`mutantChance`** (0.05) : Probabilité qu'un zombie apparaisse en tant que Mutant.
+- **`mutantMinionCount`** (8) : Nombre de zombies invoqués à la mort du Mutant.
+- **`mutantTentacleTickRate`** (5) : Fréquence d'apparition des particules d'aura.
 
 ---
 
-## 💣 Spécialistes Kamikazes
-
-- **`kamikazeChance`** (Défaut : `0.05`) : Chance qu'un zombie apparaisse avec de la TNT sur la tête.
-- **`kamikazeFuseTicks`** (Défaut : `40`) : Temps avant l'explosion une fois amorcé (20 ticks = 1 seconde).
-- **`kamikazeExplosionPower`** (Défaut : `3.0`) : Puissance de l'explosion.
-
----
-
-## 🏃 Panique et Survie
-
-- **`panicHealthThreshold`** (Défaut : `0.25`) : Seuil de santé (25%) déclenchant l'état de panique.
-- **`fleeExplosionRange`** (Défaut : `8.0`) : Distance à laquelle les zombies s'éloignent d'un allié sur le point d'exploser.
+### ⚔️ equipment : Chances d'Équipement
+- **`kamikazeChance`** (0.05) : Probabilité qu'un zombie soit un kamikaze.
+- **`weaponChance`** (0.7) : Chance d'avoir une arme en main.
+- **`weaponEnchantChance`** (0.4) : Chance que l'arme soit enchantée.
+- **`armorHeadChance`** (0.5) : Chance d'avoir un casque.
+- **`armorChestChance`** (0.4) : Chance d'avoir un plastron.
+- **`armorLegsChance`** (0.4) : Chance d'avoir des jambières.
+- **`armorFeetChance`** (0.4) : Chance d'avoir des bottes.
+- **`armorEnchantChance`** (0.3) : Chance que l'armure soit enchantée.
 
 ---
 
-## 🏗️ Construction et Minage
-
-- **`climbVerticalSpeed`** (Défaut : `0.25`) : Vitesse d'ascension lors de l'escalade ou de la construction de tours.
-- **`breakSpeedMultiplier`** (Défaut : `4.0`) : Multiplicateur de vitesse de minage des blocs (par rapport à un joueur non armé).
+### 🔊 ai : Intelligence & Explosions
+- **`hearingRange`** (16.0) : Rayon d'écoute des bruits (pas, blocs, chutes).
+- **`soundLockTicks`** (300) : Durée pendant laquelle un zombie se souvient d'un son.
+- **`kamikazeFuseTicks`** (40) : Temps avant l'explosion du kamikaze.
+- **`kamikazeExplosionPower`** (3.0) : Puissance de base de la détonation.
 
 ---
+
+### 📢 panic : Comportement de Meute
+- **`healthThreshold`** (0.25) : PV restants pour déclencher la panique (25%).
+- **`continueHealthThreshold`** (0.5) : PV pour arrêter de paniquer.
+- **`screamIntervalTicks`** (40) : Fréquence des cris d'alerte.
+- **`allyAlertRange`** (12.0) : Rayon d'appel des alliés.
+- **`stopPackSize`** (5) : Nombre de zombies pour stopper la fuite et contre-attaquer.
+- **`cooldownTicks`** (600) : Temps avant de pouvoir paniquer à nouveau.
+- **`fleeExplosionRange`** (8.0) : Distance de fuite face aux explosions.
+
+---
+
+### 🏃 movement : Escalade & Pose de blocs
+- **`climbVerticalSpeed`** (0.25) : Vitesse de montée aux murs.
+- **`climbHorizontalSpeed`** (0.15) : Vitesse de déplacement sur les parois.
+- **`buildGlobalCooldownTicks`** (4) : Temps entre chaque pose de bloc par le groupe.
+
+---
+
+### 🔨 breaking : Destruction de Blocs
+- **`breakSpeedMultiplier`** (4.0) : Multiplicateur de vitesse de minage.
+- **`breakMinTicks`** (5) : Temps minimum pour casser un bloc.

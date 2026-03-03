@@ -1,59 +1,64 @@
 # Mod Configuration
 
-The **Lethal Breed** mod is fully customizable via a JSON file located in the configuration folder of your Minecraft instance.
+The **Lethal Breed** mod is fully customizable via a JSON file located in the configuration folder.
 
-**File Path:** `.minecraft/config/o.a.s/lethalbreed.json`
-
----
-
-## 📊 Zombie Attributes
-
-These parameters control the basic physical statistics randomly generated for each zombie.
-
-- **`zombieFollowRange`** (Default: `18.0`): Maximum distance a zombie can lock onto a visual target.
-- **`minScale` / `maxScale`** (Default: `0.85` / `1.35`): Size range for zombies. Also influences health and damage.
-- **`minSpeed` / `maxSpeed`** (Default: `0.18` / `0.28`): Ground movement speed.
-- **`healthBonusMin` / `healthBonusMax`** (Default: `0.8` / `1.2`): Additional health multiplier applied after size calculation.
+**Path:** `.minecraft/config/o.a.s/lethalbreed.json`
 
 ---
 
-## 🧬 Mutation System
-
-Parameters relating to special variants and Mutants.
-
-- **`mutantChance`** (Default: `0.05`): Probability (0.0 to 1.0) that a zombie becomes a Mutant when spawning.
-- **`mutantMinionCount`** (Default: `8`): Number of minions that appear when a Mutant dies.
-- **`mutantTentacleTickRate`** (Default: `5`): Update frequency of the Mutant's particle aura.
+### 📊 attributes: Physical Statistics
+- **`zombieFollowRange`** (18.0): Detection and pursuit distance.
+- **`minScale` / `maxScale`** (0.85 / 1.35): Random size range.
+- **`minSpeed` / `maxSpeed`** (0.18 / 0.28): Ground movement speed.
+- **`healthBonusMin` / `healthBonusMax`** (0.8 / 1.2): Random health multiplier.
 
 ---
 
-## 🔊 AI and Hearing System
-
-Controls hearing sensitivity and tracking capabilities.
-
-- **`hearingRange`** (Default: `16.0`): Radius in blocks within which a zombie can hear noise (footsteps, blocks, etc.).
-- **`soundLockTicks`** (Default: `300`): Duration for which a zombie remembers a sound position before resuming its patrol.
+### 🧬 mutant: Boss Settings
+- **`mutantChance`** (0.05): Probability of a zombie spawning as a Mutant.
+- **`mutantMinionCount`** (8): Number of zombies summoned upon Mutant death.
+- **`mutantTentacleTickRate`** (5): Frequency of aura particle spawning.
 
 ---
 
-## 💣 Kamikaze Specialists
-
-- **`kamikazeChance`** (Default: `0.05`): Chance a zombie spawns with TNT on its head.
-- **`kamikazeFuseTicks`** (Default: `40`): Time before explosion once primed (20 ticks = 1 second).
-- **`kamikazeExplosionPower`** (Default: `3.0`): Explosive power.
-
----
-
-## 🏃 Panic and Survival
-
-- **`panicHealthThreshold`** (Default: `0.25`): Health threshold (25%) triggering the panic state.
-- **`fleeExplosionRange`** (Default: `8.0`): Distance at which zombies move away from an ally about to explode.
+### ⚔️ equipment: Equipment Chances
+- **`kamikazeChance`** (0.05): Probability of a zombie being a kamikaze.
+- **`weaponChance`** (0.7): Chance of having a weapon in hand.
+- **`weaponEnchantChance`** (0.4): Chance for the weapon to be enchanted.
+- **`armorHeadChance`** (0.5): Chance for a helmet.
+- **`armorChestChance`** (0.4): Chance for a chestplate.
+- **`armorLegsChance`** (0.4): Chance for leggings.
+- **`armorFeetChance`** (0.4): Chance for boots.
+- **`armorEnchantChance`** (0.3): Chance for the armor to be enchanted.
 
 ---
 
-## 🏗️ Building and Mining
-
-- **`climbVerticalSpeed`** (Default: `0.25`): Ascension speed when climbing or building towers.
-- **`breakSpeedMultiplier`** (Default: `4.0`): Block mining speed multiplier (relative to an unarmed player).
+### 🔊 ai: Intelligence & Explosions
+- **`hearingRange`** (16.0): Sound detection radius (steps, blocks, falls).
+- **`soundLockTicks`** (300): Duration a zombie remembers a sound.
+- **`kamikazeFuseTicks`** (40): Time before kamikaze explosion.
+- **`kamikazeExplosionPower`** (3.0): Base detonation power.
 
 ---
+
+### 📢 panic: Swarm Behavior
+- **`healthThreshold`** (0.25): Remaining HP to trigger panic (25%).
+- **`continueHealthThreshold`** (0.5): HP to stop panicking.
+- **`screamIntervalTicks`** (40): Frequency of alert screams.
+- **`allyAlertRange`** (12.0): Ally call radius.
+- **`stopPackSize`** (5): Number of zombies to stop fleeing and counter-attack.
+- **`cooldownTicks`** (600): Cooldown before panicking again.
+- **`fleeExplosionRange`** (8.0): Flee distance from explosions.
+
+---
+
+### 🏃 movement: Climbing & Building
+- **`climbVerticalSpeed`** (0.25): Wall climbing speed.
+- **`climbHorizontalSpeed`** (0.15): Movement speed on walls.
+- **`buildGlobalCooldownTicks`** (4): Time between each block placement by the group.
+
+---
+
+### 🔨 breaking: Block Destruction
+- **`breakSpeedMultiplier`** (4.0): Mining speed multiplier.
+- **`breakMinTicks`** (5): Minimum time to break a block.
