@@ -1,4 +1,4 @@
-# Lethal Breed - L'Évolution du Prédateur
+# Lethal Breed - Predator Evolution
 
 <p align="left">
   <img src="https://img.shields.io/badge/Status-BETA-orange?style=for-the-badge&logo=minecraft" alt="Status Beta">
@@ -7,139 +7,144 @@
 </p>
 
 > [!IMPORTANT]
-> **Ce mod est actuellement en phase de test actif.** Des bugs mineurs peuvent survenir. Vos retours sont essentiels pour affiner l'IA !
+> **This mod is currently in active beta testing.** Minor bugs may occur. Your feedback is essential to refining the AI!
 
 ---
 
-> "Les zombies ne sont plus des sacs de chair sans cervelle. Ils sont maintenant des chasseurs intelligents, adaptatifs et implacables."
+> "Zombies are no longer brainless meat sacks. They are now intelligent, adaptive, and relentless hunters."
 
 ---
 
-## ![Capacités](https://img.shields.io/badge/Capacit%C3%A9s-Avanc%C3%A9es-darkgreen?style=flat-square)
+## Redefine the Threat
+**Lethal Breed** is a total overhaul of zombie AI for Minecraft Fabric 1.21.11. Forget passive monsters waiting to be hit. Our zombies use a complex **Finite State Machine (FSM)** to analyze their environment, track prey by sound, and overcome any obstacle — whether by mining through your walls or building makeshift bridges.
+
+---
+
+## ![Capabilities](https://img.shields.io/badge/Advanced-Capabilities-darkgreen?style=flat-square)
 
 <details>
-<summary><b>Détails des mécaniques d'IA</b></summary>
+<summary><b>AI Mechanics Details</b></summary>
 
-### Système d'Ouïe Dynamique
-Les zombies ne se contentent plus de vous voir. Ils vous **entendent**.
-*   **Réaction aux sons :** Vos bruits de pas, les blocs cassés ou les explosions attirent leur attention.
-*   **Traque persistante :** Une fois un son localisé, ils enquêteront sur la zone même s'ils perdent le contact visuel.
+### Dynamic Hearing System
+Zombies no longer just see you. They **hear** you.
+*   **Sound Reaction:** Footsteps, broken blocks, or explosions attract their attention.
+*   **Persistent Tracking:** Once a sound is localized, they will investigate the area even if they lose visual contact.
 
-### Ingénierie de Meute
-Aucune base n'est sûre. Les zombies s'adaptent dynamiquement au terrain :
-*   **Ponts Improvisés (Bridging) :** S'ils font face à un vide, ils poseront des blocs de **terre** pour traverser.
-*   **Échafaudage (Scaffolding) :** Ils peuvent s'empiler et poser de la **terre** sous leurs pieds pour monter.
-*   **Minage Tactique :** Ils analysent les obstructions et creusent des tunnels intelligents vers vous.
-*   **Adultes Rampants (Crawling) :** Les bébés zombies ont disparu. À la place, vous ferez face à des adultes capables de ramper dans les passages de 1 bloc de haut.
+### Swarm Engineering
+No base is safe. Zombies adapt dynamically to the terrain:
+*   **Bridging:** If faced with a gap, they will place **dirt** blocks to cross.
+*   **Scaffolding:** They can stack up and place **dirt** under their feet to climb.
+*   **Tactical Mining:** They analyze obstructions and dig intelligent tunnels towards you.
+*   **Crawling Adults:** Baby zombies are gone. Instead, you will face adults capable of crawling through 1-block high gaps.
 
-### États Comportementaux (FSM)
-Chaque zombie suit une logique de survie et de traque :
-*   **Chase :** Poursuite agressive et escalade agile.
-*   **Appel de Détresse (Panic) :** Un zombie blessé hurlera, envoyant sa position exacte à tous les alliés dans un rayon de 12 blocs. Ces derniers convergeront vers lui pour former une meute punitive.
-*   **Pillage :** Chaque zombie peut ramasser et utiliser votre équipement. Mourir face à eux signifie souvent qu'ils porteront votre propre armure contre vous.
+### Behavioral States (FSM)
+Each zombie follows a logic of survival and tracking:
+*   **Chase:** Aggressive pursuit and agile climbing.
+*   **Distress Call (Panic):** A wounded zombie will scream, sending its exact position to all allies within a 12-block radius. They will converge to form a punishing swarm.
+*   **Looting:** Every zombie can pick up and use your equipment. Dying to them often means they will wear your own armor against you.
 
 ### Performance & Multithreading
-Lethal Breed déporte les calculs lourds (scans de blocs, IA de construction) sur des threads séparés. Des centaines de zombies intelligents peuvent coexister sans impacter la fluidité (TPS) du serveur.
+Lethal Breed offloads heavy calculations (block scans, building AI) to separate threads. Hundreds of intelligent zombies can coexist without impacting the server's TPS.
 </details>
 
 ---
 
-## ![Variantes](https://img.shields.io/badge/Variantes-Sp%C3%A9ciales-red?style=flat-square)
+## ![Variants](https://img.shields.io/badge/Special-Variants-red?style=flat-square)
 
 <details>
-<summary><b>Détails des Mutants et Kamikazes</b></summary>
+<summary><b>Mutant and Kamikaze Details</b></summary>
 
-### Variabilité Biologique
-Le système de statistiques rend chaque individu unique et imprévisible :
-*   **Corrélation Taille/Puissance :** La taille d'un zombie (Scale) multiplie directement sa **Santé Maximale** et ses **Dégâts d'Attaque**. Plus ils sont grands, plus ils sont résistants et mortels.
-*   **Agilité variable :** Les petits spécimens sont souvent plus rapides, compensant leur fragilité par une vitesse frénétique.
+### Biological Variability
+The statistics system makes every individual unique and unpredictable:
+*   **Scale/Power Correlation:** A zombie's size (Scale) directly multiplies its **Max Health** and **Attack Damage**. The larger they are, the more resilient and deadly they become.
+*   **Variable Agility:** Smaller specimens are often faster, compensating for their fragility with frantic speed.
 
-### Le Mutant (Boss Rare)
-Il y a 5% de chance (configurable) qu'un zombie devienne un **Mutant**.
-*   **Aura Sombre :** Reconnaissable à son aura de particules d'encre.
-*   **Dernier Souffle :** À sa mort, le Mutant explose en libérant un essaim de serviteurs (minions) pour venger sa chute.
-*   **Stats Boostées :** Plus grand, plus fort et beaucoup plus résistant.
+### The Mutant (Rare Boss)
+There is a 5% chance (configurable) for a zombie to become a **Mutant**.
+*   **Dark Aura:** Recognizable by its squid ink particle aura.
+*   **Final Breath:** Upon death, the Mutant explodes, releasing a swarm of minions to avenge its fall.
+*   **Boosted Stats:** Larger, stronger, and much more resistant.
 
-### Le Kamikaze
-Certains zombies portent une charge explosive instable (reconnaissables au bloc de **TNT** sur leur tête).
-*   **Détonation Scalable :** La puissance de l'explosion dépend de la taille du zombie. Plus il est gros, plus le cratère sera immense.
-*   **Avertissement Visuel :** Des étincelles électriques et des flammes apparaissent juste avant l'explosion. Fuyez.
+### The Kamikaze
+Some zombies carry an unstable explosive charge (recognizable by the **TNT** block on their head).
+*   **Scalable Detonation:** Explosion power depends on the zombie's size. The bigger it is, the larger the crater will be.
+*   **Visual Warning:** Electric sparks and flames appear just before the explosion. Run.
 </details>
 
 ---
 
-## ![Configuration](https://img.shields.io/badge/Guide-Configuration-blue?style=flat-square)
+## ![Configuration](https://img.shields.io/badge/Configuration-Guide-blue?style=flat-square)
 
 <details>
-<summary><b>Paramètres complets (lethalbreed.json)</b></summary>
+<summary><b>Full Parameters (lethalbreed.json)</b></summary>
 
-Le fichier se trouve dans `config/o.a.s/lethalbreed.json`.
+The file is located in `config/o.a.s/lethalbreed.json`.
 
-### attributes : Statistiques Physiques
-*   `zombieFollowRange` (Standard: 18.0) : Distance à laquelle un zombie vous poursuit.
-*   `minScale` / `maxScale` (0.85 / 1.35) : Plage de taille aléatoire des zombies.
-*   `minSpeed` / `maxSpeed` (0.18 / 0.28) : Vitesse de déplacement au sol.
-*   `healthBonusMin` / `healthBonusMax` (0.8 / 1.2) : Multiplicateur de santé aléatoire.
+### attributes: Physical Statistics
+*   `zombieFollowRange` (Default: 18.0): Distance at which a zombie pursues you.
+*   `minScale` / `maxScale` (0.85 / 1.35): Random size range for zombies.
+*   `minSpeed` / `maxSpeed` (0.18 / 0.28): Ground movement speed.
+*   `healthBonusMin` / `healthBonusMax` (0.8 / 1.2): Random health multiplier.
 
-### mutant : Paramètres du Boss
-*   `mutantChance` (0.05) : Probabilité qu'un zombie apparaisse en tant que Mutant.
-*   `mutantMinionCount` (8) : Nombre de zombies invoqués à la mort du Mutant.
-*   `mutantTentacleTickRate` (5) : Fréquence d'apparition des particules d'aura.
+### mutant: Boss Settings
+*   `mutantChance` (0.05): Probability of a zombie spawning as a Mutant.
+*   `mutantMinionCount` (8): Number of zombies summoned upon Mutant death.
+*   `mutantTentacleTickRate` (5): Frequency of aura particle spawning.
 
-### equipment : Chances d'Équipement
-*   `kamikazeChance` (0.05) : Probabilité qu'un zombie soit un kamikaze.
-*   `weaponChance` (0.7) : Chance d'avoir une arme en main.
-*   `weaponEnchantChance` (0.4) : Chance que l'arme soit enchantée.
-*   `armor[Head/Chest/Legs/Feet]Chance` : Probabilités pour chaque pièce d'armure.
-*   `armorEnchantChance` (0.3) : Chance que l'armure soit enchantée.
+### equipment: Equipment Chances
+*   `kamikazeChance` (0.05): Probability of a zombie being a kamikaze.
+*   `weaponChance` (0.7): Chance of having a weapon in hand.
+*   `weaponEnchantChance` (0.4): Chance for the weapon to be enchanted.
+*   `armor[Head/Chest/Legs/Feet]Chance`: Probabilities for each armor piece.
+*   `armorEnchantChance` (0.3): Chance for the armor to be enchanted.
 
-### ai : Intelligence & Explosions
-*   `hearingRange` (16.0) : Rayon d'écoute des bruits.
-*   `soundLockTicks` (300) : Durée pendant laquelle un zombie se souvient d'un son.
-*   `kamikazeFuseTicks` (40) : Temps avant l'explosion du kamikaze.
-*   `kamikazeExplosionPower` (3.0) : Puissance de base de la détonation.
+### ai: Intelligence & Explosions
+*   `hearingRange` (16.0): Sound detection radius.
+*   `soundLockTicks` (300): Duration a zombie remembers a sound.
+*   `kamikazeFuseTicks` (40): Time before kamikaze explosion.
+*   `kamikazeExplosionPower` (3.0): Base detonation power.
 
-### panic : Comportement de Meute
-*   `healthThreshold` (0.25) : PV restants pour déclencher la panique (25%).
-*   `continueHealthThreshold` (0.5) : PV pour arrêter de paniquer (après régénération).
-*   `screamIntervalTicks` (40) : Fréquence des cris d'alerte.
-*   `allyAlertRange` (12.0) : Rayon d'appel des alliés.
-*   `stopPackSize` (5) : Nombre de zombies pour stopper la fuite et contre-attaquer.
-*   `cooldownTicks` (600) : Temps avant de pouvoir paniquer à nouveau.
-*   `fleeExplosionRange` (8.0) : Distance de fuite face aux explosions.
+### panic: Swarm Behavior
+*   `healthThreshold` (0.25): Remaining HP to trigger panic (25%).
+*   `continueHealthThreshold` (0.5): HP to stop panicking (after regeneration).
+*   `screamIntervalTicks` (40): Frequency of alert screams.
+*   `allyAlertRange` (12.0): Ally call radius.
+*   `stopPackSize` (5): Number of zombies to stop fleeing and counter-attack.
+*   `cooldownTicks` (600): Cooldown before panicking again.
+*   `fleeExplosionRange` (8.0): Flee distance from explosions.
 
-### movement : Escalade & Pose de blocs
-*   `climbVerticalSpeed` (0.25) : Vitesse de montée aux murs.
-*   `climbHorizontalSpeed` (0.15) : Vitesse de déplacement sur les parois.
-*   `buildGlobalCooldownTicks` (4) : Temps entre chaque pose de bloc par le groupe.
+### movement: Climbing & Building
+*   `climbVerticalSpeed` (0.25): Wall climbing speed.
+*   `climbHorizontalSpeed` (0.15): Movement speed on walls.
+*   `buildGlobalCooldownTicks` (4): Time between each block placement by the group.
 
-### breaking : Destruction de Blocs
-*   `breakSpeedMultiplier` (4.0) : Multiplicateur de vitesse de minage.
-*   `breakMinTicks` (5) : Temps minimum pour casser un bloc (même très fragile).
+### breaking: Block Destruction
+*   `breakSpeedMultiplier` (4.0): Mining speed multiplier.
+*   `breakMinTicks` (5): Minimum time to break a block.
 
-> *Conseil : Toutes ces options sont modifiables en jeu avec **Mod Menu** !*
+> *Tip: All these options are modifiable in-game with **Mod Menu**!*
 </details>
 
 ---
 
-## ![Recommandations](https://img.shields.io/badge/D%C3%A9pendances-Recommandations-purple?style=flat-square)
+## ![Recommendations](https://img.shields.io/badge/Dependencies-Recommendations-purple?style=flat-square)
 
-### Obligatoires
+### Mandatory
 *   [Fabric API](https://modrinth.com/mod/fabric-api)
-*   Java 25 (GraalVM recommandé)
+*   Java 25 (GraalVM recommended)
 
-### Recommandations O.A.S
-*   **Mod Menu :** Pour accéder à la configuration facilement.
-*   **Sodium :** Pour des performances optimales.
-*   **Sounds :** Complète parfaitement notre système d'ouïe.
+### O.A.S Recommendations
+*   **Mod Menu:** To easily access configuration.
+*   **Sodium:** For optimal performance.
+*   **Sounds:** Perfectly complements our hearing system.
 
 ---
 
-## Licence & Crédits
-*   **Développeur :** O.A.S (Optimization & Quality)
-*   **Licence :** O.A.S - MS-RSL (Microsoft Reference Source License)
-*   **Modpacks :** Vous êtes **libre** d'inclure Lethal Breed dans n'importe quel modpack, tant que le crédit est maintenu.
-*   **Inspiration :** Les films de zombies classiques et les jeux de survie tactiques.
+## License & Credits
+*   **Developer:** O.A.S (Optimization & Quality)
+*   **License:** O.A.S - MS-RSL (Microsoft Reference Source License)
+*   **Modpacks:** You are **free** to include Lethal Breed in any modpack, as long as credit is maintained.
+*   **Inspiration:** Classic zombie movies and tactical survival games.
 
 ---
 ![O.A.S Badge](https://img.shields.io/badge/O.A.S-Certified-008800?style=for-the-badge)
