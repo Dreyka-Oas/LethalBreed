@@ -55,6 +55,9 @@ loaders/fabric/1.21.11/launch_debug.log
 loaders/fabric/1.21.11/client.log
 loaders/fabric/1.21.11/run_client.log
 
-# --- Gemini CLI ---
+# --- Gemini CLI & O.A.S Internal ---
 .gemini/
 gemini-cli.log
+GEMINI.md
+SKILL.md
+UPDATE_PLAN.md
