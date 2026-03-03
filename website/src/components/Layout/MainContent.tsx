@@ -1,6 +1,6 @@
 /**
  * Project: Lethal Breed
- * Responsibility: Main Documentation Content Display (with Scroll Fix)
+ * Responsibility: Main Documentation Content Display (Enhanced Scroll Fix)
  * License: O.A.S - MS-RSL (Microsoft Reference Source License)
  * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
  */
@@ -19,15 +19,30 @@ interface Props {
 export const MainContent = ({ content, onMenuOpen }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to top whenever content changes
+  // Scroll to top with multiple fallbacks
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTo(0, 0);
-    }
+    const scrollToTop = () => {
+      // Method 1: Container internal scroll
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+      }
+      // Method 2: Global window scroll (just in case)
+      window.scrollTo(0, 0);
+    };
+
+    // Execute immediately
+    scrollToTop();
+
+    // Re-execute after a tiny delay to ensure render is complete
+    const timeout = setTimeout(scrollToTop, 10);
+    return () => clearTimeout(timeout);
   }, [content]);
 
   return (
-    <main ref={containerRef} className="flex-1 min-w-0 bg-ui-bg relative overflow-y-auto scroll-smooth">
+    <main 
+      ref={containerRef} 
+      className="flex-1 min-w-0 bg-ui-bg relative overflow-y-auto"
+    >
       <div className="max-w-[1400px] mx-auto p-8 lg:p-16">
         {/* Mobile Header */}
         <button 
