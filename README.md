@@ -2,7 +2,6 @@
 
 <p align="left">
   <img src="https://img.shields.io/badge/Status-BETA-orange?style=for-the-badge&logo=minecraft" alt="Status Beta">
-  <img src="https://img.shields.io/badge/Version-1.21.11-brightgreen?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/Loader-Fabric-blue?style=for-the-badge" alt="Fabric">
 </p>
 
