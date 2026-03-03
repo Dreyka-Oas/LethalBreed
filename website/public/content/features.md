@@ -8,9 +8,9 @@
 
 Les spécimens présentent une variance génétique extrême lors de leur matérialisation initiale.
 
-- **Variance Morphologique** : L'échelle de l'entité fluctue aléatoirement entre **0.85x** et **1.35x**.
-- **Corrélation de Vitalité** : La réserve totale de santé est directement proportionnelle à la masse. Les spécimens Alpha génèrent jusqu'à **120%** de la durabilité de base.
-- **Surmultiplication de Locomotion** : Les vitesses de base s'étendent de **0.18** à **0.28**. Les variantes haut de gamme dépasseront facilement les cibles en sprint.
+- **Variance Morphologique** : L'échelle de l'entité fluctue aléatoirement. La taille multiplie directement les points de vie et les dégâts d'attaque.
+- **Adultes Rampants (Crawling)** : Les bébés zombies ont été éradiqués. À la place, des adultes agiles peuvent ramper pour s'infiltrer dans des passages de 1 bloc de haut.
+- **Équipement Tactique** : Apparition naturelle avec des armes et armures enchantées selon la difficulté locale.
 
 ---
 
@@ -18,9 +18,8 @@ Les spécimens présentent une variance génétique extrême lors de leur matér
 
 L'occlusion visuelle n'est plus une stratégie de défense valide. Les entités emploient un traçage auditif persistant.
 
-- **Rayon de Détection** : Balayage actif jusqu'à un rayon de 16 blocs.
-- **Déclencheurs Acoustiques** : Sensible à la locomotion, aux dégâts de chute, à la consommation d'objets et aux changements d'état des blocs.
-- **Patrouille par Écholocalisation** : Les cibles brisant la ligne de mire tout en émettant du bruit déclencheront un protocole d'investigation ciblé à l'épicentre acoustique exact.
+- **Rayon de Détection** : Balayage actif permanent. Les entités enquêtent sur les bruits de pas, les blocs cassés et les consommations d'objets.
+- **Appel de Détresse (Panic)** : Un zombie blessé émet des cris captés par ses alliés dans un rayon de 12 blocs, provoquant une convergence immédiate pour former une meute.
 
 ---
 
@@ -28,9 +27,9 @@ L'occlusion visuelle n'est plus une stratégie de défense valide. Les entités 
 
 Les entités possèdent l'autorisation de modifier activement la géométrie du terrain.
 
-- **Franchissement de Vide (Pontage)** : Déploiement de blocs terrestres temporaires (Terre) pour contourner les gouffres.
-- **Escalade Verticale (Tour)** : Construction de piliers de support verticaux pour intercepter les cibles à haute altitude.
-- **Annulation d'Obstruction** : Les routines actives de destruction de blocs opèrent à **400%** de l'efficacité de minage standard pour percer les fortifications.
+- **Franchissement de Vide (Bridging)** : Déploiement de blocs de **Terre** pour contourner les gouffres.
+- **Escalade Verticale (Towering)** : Construction de piliers de support en terre pour intercepter les cibles en hauteur.
+- **Annulation d'Obstruction** : Les routines de minage intelligent analysent les murs et créent des tunnels directs vers la cible.
 
 ---
 
@@ -38,9 +37,6 @@ Les entités possèdent l'autorisation de modifier activement la géométrie du 
 
 > **ATTENTION** : Cibles prioritaires détectées. Engagez avec un préjudice extrême.
 
-- **Unité : KAMIKAZE** : Conçue avec des explosifs hyper-réactifs. Déclenche une charge explosive de **3.0** lors du franchissement d'un seuil de proximité de 3 blocs.
-- **Unité : MUTANT** : Anomalie rare (5% de probabilité de matérialisation). Irradie une aura nécrotique et expulse violemment **8 unités subordonnées** lors de sa terminaison.
-- **Intelligence de Meute** : Les unités gravement endommagées diffusent des signaux de détresse. Les meutes dépassant 5 unités entrent dans un état de frénésie hyper-agressive.
-
----
-Dernière mise à jour : 27 février 2026
+- **Unité : KAMIKAZE** : Reconnaissable au bloc de **TNT** sur sa tête. Déclenche une explosion dont la puissance dépend de sa taille. Des étincelles électriques avertissent de la détonation imminente.
+- **Unité : MUTANT** : Anomalie rare entourée d'une aura d'encre sombre. À sa mort, il libère violemment un essaim de **8 serviteurs** pour venger sa chute.
+- **Intelligence de Meute** : Les unités en groupe entrent dans un état de frénésie coordonnée dès qu'un nombre critique d'alliés est atteint.

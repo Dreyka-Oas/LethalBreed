@@ -8,9 +8,9 @@
 
 Specimens exhibit extreme genetic variance upon initial materialization.
 
-- **Morphological Variance**: Entity scale fluctuates randomly between **0.85x** and **1.35x**.
-- **Vitality Correlation**: Total health pool is directly proportional to mass. Alpha specimens generate with up to **120%** baseline durability.
-- **Locomotion Overdrive**: Base velocities span from **0.18** to **0.28**. Higher-end variants will easily overtake sprinting targets.
+- **Morphological Variance**: Entity scale fluctuates randomly. Size directly multiplies both health points and attack damage.
+- **Adult Crawling**: Baby zombies have been eradicated. Instead, agile adults can crawl to infiltrate 1-block high passages.
+- **Tactical Equipment**: Natural spawning with enchanted weapons and armor based on local difficulty.
 
 ---
 
@@ -18,9 +18,8 @@ Specimens exhibit extreme genetic variance upon initial materialization.
 
 Visual occlusion is no longer a valid defense strategy. Entities employ persistent auditory tracking.
 
-- **Detection Radius**: Active scanning up to a 16-block radius.
-- **Acoustic Triggers**: Sensitive to locomotion, fall damage, item consumption, and block state changes.
-- **Echolocation Patrol**: Targets breaking line-of-sight while emitting noise will trigger a targeted investigation protocol at the exact acoustic epicenter.
+- **Detection Radius**: Continuous active scanning. Entities investigate footsteps, block interactions, and item consumption.
+- **Distress Call (Panic)**: Wounded zombies scream, sending their exact location to allies within a 12-block radius, triggering immediate convergence.
 
 ---
 
@@ -28,9 +27,9 @@ Visual occlusion is no longer a valid defense strategy. Entities employ persiste
 
 Entities possess authorization to actively alter terrain geometry.
 
-- **Void Traversal (Bridging)**: Deployment of temporary terrestrial blocks (Dirt) to bypass chasms.
-- **Vertical Escalation (Towering)**: Construction of vertical support pillars to intercept high-altitude targets.
-- **Obstruction Nullification**: Active block destruction routines operate at **400%** standard mining efficiency to break through fortifications.
+- **Void Traversal (Bridging)**: Deployment of **Dirt** blocks to bypass chasms.
+- **Vertical Escalation (Towering)**: Construction of vertical support pillars using dirt to intercept elevated targets.
+- **Obstruction Nullification**: Intelligent mining routines analyze walls and dig direct tunnels towards the target.
 
 ---
 
@@ -38,9 +37,6 @@ Entities possess authorization to actively alter terrain geometry.
 
 > **WARNING**: High-priority targets detected. Engage with extreme prejudice.
 
-- **Unit: KAMIKAZE**: Engineered with hyper-reactive explosives. Detonates with an explosive payload of **3.0** upon breaching a 3-block proximity threshold.
-- **Unit: MUTANT**: Rare anomaly (5% materialization probability). Radiates a necrotic aura and violently expels **8 subordinate units** upon termination.
-- **Swarm Intelligence**: Critically damaged units broadcast distress signals. Swarms exceeding 5 units enter a hyper-aggressive frenzy state.
-
----
-Last Update: February 27, 2026
+- **Unit: KAMIKAZE**: Recognizable by the **TNT** block on its head. Detonates with a payload scaled to its physical size. Electric sparks warn of imminent detonation.
+- **Unit: MUTANT**: Rare anomaly surrounded by a dark ink aura. Upon death, it violently expels a swarm of **8 minions** to avenge its fall.
+- **Swarm Intelligence**: Entities in groups enter a state of coordinated frenzy once a critical number of allies is reached.

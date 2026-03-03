@@ -6,4 +6,3 @@
 4. Customize the values.
 
 ---
-Last Update: February 12, 2026

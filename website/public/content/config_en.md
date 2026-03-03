@@ -57,4 +57,3 @@ Controls hearing sensitivity and tracking capabilities.
 - **`breakSpeedMultiplier`** (Default: `4.0`): Block mining speed multiplier (relative to an unarmed player).
 
 ---
-Last Update: February 12, 2026

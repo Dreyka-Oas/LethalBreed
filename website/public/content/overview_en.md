@@ -106,4 +106,3 @@ Manipulation of `SCALE`, `MAX_HEALTH`, and `MOVEMENT_SPEED` attributes based on 
 Management of screams and alerting allies when health falls below a critical threshold.
 
 ---
-Last Update: February 12, 2026

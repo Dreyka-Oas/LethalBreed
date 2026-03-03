@@ -14,4 +14,3 @@
 System parameters are fully tunable via a dedicated strict JSON configuration, allowing administrators to scale the threat level according to operational requirements.
 
 ---
-Last Update: February 27, 2026

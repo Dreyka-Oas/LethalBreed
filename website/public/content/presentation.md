@@ -14,4 +14,3 @@
 Les paramètres du système sont entièrement réglables via une configuration JSON stricte dédiée, permettant aux administrateurs d'ajuster le niveau de menace selon les besoins opérationnels.
 
 ---
-Dernière mise à jour : 27 février 2026

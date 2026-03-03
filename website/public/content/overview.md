@@ -106,4 +106,3 @@ Manipulation des attributs `SCALE`, `MAX_HEALTH`, et `MOVEMENT_SPEED` en fonctio
 Gestion des cris et de l'alerte des alliés lorsque la santé tombe sous un seuil critique.
 
 ---
-Dernière mise à jour : 12 février 2026

@@ -6,4 +6,3 @@
 4. Personnalisez les valeurs.
 
 ---
-Dernière mise à jour : 12 février 2026

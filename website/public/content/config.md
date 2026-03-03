@@ -57,4 +57,3 @@ Contrôle la sensibilité auditive et les capacités de traque.
 - **`breakSpeedMultiplier`** (Défaut : `4.0`) : Multiplicateur de vitesse de minage des blocs (par rapport à un joueur non armé).
 
 ---
-Dernière mise à jour : 12 février 2026

@@ -53,4 +53,3 @@ LethalThreads.execute(() -> {
 - **CPU Utilization**: The mod finally exploits modern multi-core processors, where Vanilla Minecraft is often limited to a single core.
 
 ---
-Last Update: February 12, 2026

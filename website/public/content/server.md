@@ -53,4 +53,3 @@ LethalThreads.execute(() -> {
 - **Utilisation du CPU** : Le mod exploite enfin les processeurs multi-cœurs modernes, là où Minecraft Vanilla est souvent limité à un seul cœur.
 
 ---
-Dernière mise à jour : 12 février 2026
