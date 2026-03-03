@@ -6,9 +6,9 @@
 ---
 
 ## Fiche Technique
-- **Version de Minecraft :** 1.21.11
+- **Version de Minecraft :** Compatible avec les dernières versions Fabric
 - **Loader :** Fabric
-- **Langage :** Java 25
+- **Langage :** Java
 - **Dépendances :** Fabric API
 - **Architecture :** Modulaire, basée sur des mixins et une Machine à États Finis (FSM) pour l'IA.
 
@@ -26,24 +26,24 @@ Le cœur du mod réside dans la capacité des zombies à surmonter les obstacles
 ### 2. Système d'Ouïe
 Les zombies réagissent désormais aux sons environnementaux.
 - **Événements Détectés :** Pas (Step), pose/destruction de blocs, consommation d'objets, chutes.
-- **Logique :** Si un zombie n'a pas de cible visuelle, il se déplacera vers la source du dernier bruit détecté dans un rayon configurable (défaut : 16 blocs).
+- **Logique :** Si un zombie n'a pas de cible visuelle, il se déplacera vers la source du dernier bruit détecté dans un rayon configurable.
 - **Registre :** Un `HearingRegistry` stocke les positions sonores par ID d'entité.
 
 ### 3. Variabilité des Spécimens (Taille & Stats)
 Chaque zombie est unique grâce à une randomisation à l'apparition.
-- **Échelle :** Taille variant entre 0.85x et 1.35x.
+- **Échelle :** Taille variant entre de petits et de grands spécimens.
 - **Attributs :** La vitesse et la santé sont corrélées à la taille ou randomisées individuellement.
 - **Adultes uniquement :** Le mod désactive les bébés zombies pour privilégier les adultes capables de ramper ou de construire.
 
 ### 4. Mutants et Spécialistes
-- **Mutants :** 5% de chance d'apparition. Ils possèdent une aura de particules ("tentacules") et font apparaître une meute de serviteurs à leur mort.
+- **Mutants :** Rare chance d'apparition. Ils possèdent une aura de particules ("tentacules") et font apparaître une meute de serviteurs à leur mort.
 - **Kamikazes :** Zombies explosifs qui déclenchent une détonation de type Creeper en approchant de leur cible.
 - **Équipement Dynamique :** Probabilité accrue de porter des armes, des armures complètes et des enchantements.
 
 ### 5. Mécaniques de Panique
-Lorsqu'un zombie tombe sous les 25% de santé :
+Lorsqu'un zombie tombe sous un certain seuil de santé :
 - Il peut entrer dans un état de **Panique**.
-- Il émet des cris qui alertent les alliés proches (rayon de 12 blocs).
+- Il émet des cris qui alertent les alliés proches.
 - Il peut tenter de fuir si sa meute est trop petite.
 
 ---
@@ -75,13 +75,10 @@ Le mod est hautement personnalisable via son fichier de configuration :
 ---
 
 ## Installation et Utilisation
-1. Installez Fabric Loader pour la version 1.21.11.
+1. Installez Fabric Loader.
 2. Placez le JAR dans le dossier `mods`.
 3. Lancez le jeu pour générer le fichier de config initial dans `config/o.a.s/lethalbreed.json`.
 4. Personnalisez les valeurs selon la difficulté souhaitée.
 
 ---
 *Documentation générée pour le projet Lethal Breed.*
-
----
-Dernière mise à jour : 12 février 2026

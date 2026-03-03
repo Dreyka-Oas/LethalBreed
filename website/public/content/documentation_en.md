@@ -6,9 +6,9 @@
 ---
 
 ## Technical Sheet
-- **Minecraft Version:** 1.21.11
+- **Minecraft Version:** Compatible with Latest Fabric
 - **Loader:** Fabric
-- **Language:** Java 25
+- **Language:** Java
 - **Dependencies:** Fabric API
 - **Architecture:** Modular, based on mixins and a Finite State Machine for AI.
 
@@ -26,24 +26,24 @@ The heart of the mod lies in the zombies' ability to overcome physical obstacles
 ### 2. Hearing System
 Zombies now react to environmental sounds.
 - **Events Detected:** Footsteps (Step), block placement/destruction, eating, falling.
-- **Logic:** If a zombie has no visual target, it will move toward the source of the last detected noise within a configurable radius (default: 16 blocks).
+- **Logic:** If a zombie has no visual target, it will move toward the source of the last detected noise within a configurable radius.
 - **Registry:** A `HearingRegistry` stores sound positions by entity ID.
 
 ### 3. Specimen Variability (Size & Stats)
 Every zombie is unique thanks to spawn randomization.
-- **Scale:** Size varying between 0.85x and 1.35x.
+- **Scale:** Size varying between small and large specimens.
 - **Attributes:** Speed and health are correlated to size or randomized individually.
 - **Adults only:** The mod disables baby zombies to favor adults capable of crawling or building.
 
 ### 4. Mutants and Specialists
-- **Mutants:** 5% spawn chance. They have a particle aura ("tentacles") and spawn a pack of minions upon death.
+- **Mutants:** Rare spawn chance. They have a particle aura ("tentacles") and spawn a pack of minions upon death.
 - **Kamikazes:** Explosive zombies that trigger a Creeper-like detonation when approaching their target.
 - **Dynamic Equipment:** Increased probability of carrying weapons, full armor, and enchantments.
 
 ### 5. Panic Mechanics
-When a zombie falls below 25% health:
+When a zombie falls below a certain health threshold:
 - It can enter a **Panic** state.
-- It emits screams that alert nearby allies (12-block radius).
+- It emits screams that alert nearby allies.
 - It may attempt to flee if its pack is too small.
 
 ---
@@ -75,13 +75,10 @@ The mod is highly customizable via its configuration file:
 ---
 
 ## Installation and Usage
-1. Install Fabric Loader for version 1.21.11.
+1. Install Fabric Loader.
 2. Place the JAR in the `mods` folder.
 3. Launch the game to generate the initial config file in `config/o.a.s/lethalbreed.json`.
 4. Customize values according to desired difficulty.
 
 ---
 *Documentation generated for the Lethal Breed project.*
-
----
-Last Update: February 12, 2026

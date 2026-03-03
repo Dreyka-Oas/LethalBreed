@@ -1,31 +1,47 @@
 /**
  * Project: Lethal Breed
- * Responsibility: Download and Support Links (Light Mode)
+ * Responsibility: Platform Selection Links (Modrinth/CurseForge)
  * License: O.A.S - MS-RSL (Microsoft Reference Source License)
  * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
  */
-import { Download, Github, Heart } from 'lucide-react'
+import { ExternalLink, Box } from 'lucide-react'
 
 export const DownloadSection = () => (
   <div className="space-y-6 pt-12 border-t border-zinc-100">
-    <button className="w-full bg-zinc-900 text-white p-6 flex items-center justify-between group hover:bg-brand transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.1)] active:translate-x-1 active:translate-y-1 active:shadow-none">
+    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-4">
+      Availability
+    </h4>
+    
+    <a 
+      href="https://modrinth.com/mod/lethal-breed" 
+      target="_blank" 
+      rel="noreferrer"
+      className="w-full bg-[#1bd96a] text-white p-6 flex items-center justify-between group transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+    >
       <div className="flex items-center gap-4">
-        <Download size={24} />
+        <Box size={24} />
         <div className="text-left">
-          <div className="text-[10px] font-black uppercase tracking-widest opacity-50">Latest Stable</div>
-          <div className="text-sm font-black uppercase tracking-tight text-white">Download Artifact</div>
+          <div className="text-[10px] font-black uppercase tracking-widest opacity-70">Platform</div>
+          <div className="text-sm font-black uppercase tracking-tight">Modrinth</div>
         </div>
       </div>
-      <span className="text-[10px] font-black px-2 py-1 border border-white/20">v1.0.0</span>
-    </button>
+      <ExternalLink size={18} className="opacity-50" />
+    </a>
 
-    <div className="grid grid-cols-2 gap-4">
-      <a href="#" className="p-4 border-2 border-zinc-100 text-zinc-900 flex items-center justify-center gap-3 hover:border-zinc-900 hover:bg-zinc-50 transition-all font-black text-[10px] uppercase tracking-widest">
-        <Github size={18} /> Source
-      </a>
-      <a href="#" className="p-4 border-2 border-zinc-100 text-zinc-900 flex items-center justify-center gap-3 hover:border-brand hover:text-brand hover:bg-brand/5 transition-all font-black text-[10px] uppercase tracking-widest">
-        <Heart size={18} /> Support
-      </a>
-    </div>
+    <a 
+      href="https://www.curseforge.com/minecraft/mc-mods/lethal-breed" 
+      target="_blank" 
+      rel="noreferrer"
+      className="w-full bg-[#f16436] text-white p-6 flex items-center justify-between group transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+    >
+      <div className="flex items-center gap-4">
+        <Box size={24} />
+        <div className="text-left">
+          <div className="text-[10px] font-black uppercase tracking-widest opacity-70">Platform</div>
+          <div className="text-sm font-black uppercase tracking-tight">CurseForge</div>
+        </div>
+      </div>
+      <ExternalLink size={18} className="opacity-50" />
+    </a>
   </div>
 )
