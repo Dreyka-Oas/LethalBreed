@@ -1,0 +1,46 @@
+/**
+ * Project: Lethal Breed
+ * Responsibility: Mutant Boss and Minion Spawning Logic
+ * License: O.A.S - MS-RSL (Microsoft Reference Source License)
+ * Copyright (c) 2026 O.A.S (Optimization & Quality). All rights reserved.
+ */
+package oas.work.lethalbreed;
+import oas.work.lethalbreed.config.ModConfig;
+
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.world.ServerWorld;
+
+public class MutantLogic {
+    public static void makeMutant(ZombieEntity z) {
+        z.addCommandTag("lethal_mutant");
+    }
+
+    public static void tickTentacles(ZombieEntity z) {
+        if (!z.getCommandTags().contains("lethal_mutant") || z.age % ModConfig.INSTANCE.mutant.mutantTentacleTickRate != 0) return;
+        if (!(z.getEntityWorld() instanceof ServerWorld world)) return;
+
+        double scale = z.getScale();
+        for (int i = 0; i < 3; i++) {
+            double angle = Math.toRadians(z.age * 10 + i * 120);
+            // Tight aura (0.2 * scale)
+            double x = z.getX() + Math.cos(angle) * (0.2 * scale);
+            double zPos = z.getZ() + Math.sin(angle) * (0.2 * scale);
+            double y = z.getY() + (i * scale * 0.5);
+            world.spawnParticles(ParticleTypes.SQUID_INK, x, y, zPos, 1, 0.05, 0.05, 0.05, 0.01);
+        }
+    }
+
+    public static void onDeath(ZombieEntity z) {
+        if (!z.getCommandTags().contains("lethal_mutant")) return;
+        ServerWorld world = (ServerWorld) z.getEntityWorld();
+        for (int i = 0; i < ModConfig.INSTANCE.mutant.mutantMinionCount; i++) {
+            ZombieEntity minion = new ZombieEntity(world);
+            minion.refreshPositionAndAngles(z.getX(), z.getY(), z.getZ(), world.random.nextFloat() * 360, 0);
+            SizeLogic.randomizeStats(minion, false);
+            EquipmentLogic.randomizeEquipment(minion);
+            world.spawnEntity(minion);
+        }
+    }
+}
