@@ -139,8 +139,6 @@ The file is located in `config/o.a.s/lethalbreed.json`.
 
 ### O.A.S Recommendations
 *   **Mod Menu:** To easily access configuration.
-*   **Sodium:** For optimal performance.
-*   **Sounds:** Perfectly complements our hearing system.
 
 ---
 
