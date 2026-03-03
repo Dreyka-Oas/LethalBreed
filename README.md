@@ -148,3 +148,5 @@ The file is located in `config/o.a.s/lethalbreed.json`.
 
 ---
 ![O.A.S Badge](https://img.shields.io/badge/O.A.S-Certified-008800?style=for-the-badge)
+
+<sub>*O.A.S - Outbreak Adaptation Series*</sub>
