@@ -15,17 +15,18 @@
 
 ---
 
-## Redefine the Threat
+## Overview
 **Lethal Breed** is a total overhaul of zombie AI for Minecraft Fabric 1.21.11. Forget passive monsters waiting to be hit. Our zombies use a complex **Finite State Machine (FSM)** to analyze their environment, track prey by sound, and overcome any obstacle — whether by mining through your walls or building makeshift bridges.
 
 ---
 
-## ![Capabilities](https://img.shields.io/badge/Advanced-Capabilities-darkgreen?style=flat-square)
+## Capabilities
+![Capabilities](https://img.shields.io/badge/Advanced-Capabilities-darkgreen?style=flat-square)
 
 <details>
 <summary><b>AI Mechanics Details</b></summary>
 
-### Dynamic Hearing System
+### Dynamic Hearing
 Zombies no longer just see you. They **hear** you.
 *   **Sound Reaction:** Footsteps, broken blocks, or explosions attract their attention.
 *   **Persistent Tracking:** Once a sound is localized, they will investigate the area even if they lose visual contact.
@@ -37,29 +38,30 @@ No base is safe. Zombies adapt dynamically to the terrain:
 *   **Tactical Mining:** They analyze obstructions and dig intelligent tunnels towards you.
 *   **Crawling Adults:** Baby zombies are gone. Instead, you will face adults capable of crawling through 1-block high gaps.
 
-### Behavioral States (FSM)
+### Behavioral States
 Each zombie follows a logic of survival and tracking:
 *   **Chase:** Aggressive pursuit and agile climbing.
-*   **Distress Call (Panic):** A wounded zombie will scream, sending its exact position to all allies within a 12-block radius. They will converge to form a punishing swarm.
+*   **Distress Call:** A wounded zombie will scream, sending its exact position to all allies within a 12-block radius. They will converge to form a punishing swarm.
 *   **Looting:** Every zombie can pick up and use your equipment. Dying to them often means they will wear your own armor against you.
 
-### Performance & Multithreading
+### Performance
 Lethal Breed offloads heavy calculations (block scans, building AI) to separate threads. Hundreds of intelligent zombies can coexist without impacting the server's TPS.
 </details>
 
 ---
 
-## ![Variants](https://img.shields.io/badge/Special-Variants-red?style=flat-square)
+## Variants
+![Variants](https://img.shields.io/badge/Special-Variants-red?style=flat-square)
 
 <details>
 <summary><b>Mutant and Kamikaze Details</b></summary>
 
 ### Biological Variability
 The statistics system makes every individual unique and unpredictable:
-*   **Scale/Power Correlation:** A zombie's size (Scale) directly multiplies its **Max Health** and **Attack Damage**. The larger they are, the more resilient and deadly they become.
+*   **Scale/Power Correlation:** A zombie's size (Scale) directly multiplies its **Max Health** and **Attack Damage**.
 *   **Variable Agility:** Smaller specimens are often faster, compensating for their fragility with frantic speed.
 
-### The Mutant (Rare Boss)
+### The Mutant
 There is a 5% chance (configurable) for a zombie to become a **Mutant**.
 *   **Dark Aura:** Recognizable by its squid ink particle aura.
 *   **Final Breath:** Upon death, the Mutant explodes, releasing a swarm of minions to avenge its fall.
@@ -67,44 +69,45 @@ There is a 5% chance (configurable) for a zombie to become a **Mutant**.
 
 ### The Kamikaze
 Some zombies carry an unstable explosive charge (recognizable by the **TNT** block on their head).
-*   **Scalable Detonation:** Explosion power depends on the zombie's size. The bigger it is, the larger the crater will be.
+*   **Scalable Detonation:** Explosion power depends on the zombie's size.
 *   **Visual Warning:** Electric sparks and flames appear just before the explosion. Run.
 </details>
 
 ---
 
-## ![Configuration](https://img.shields.io/badge/Configuration-Guide-blue?style=flat-square)
+## Configuration
+![Configuration](https://img.shields.io/badge/Configuration-Guide-blue?style=flat-square)
 
 <details>
 <summary><b>Full Parameters (lethalbreed.json)</b></summary>
 
 The file is located in `config/o.a.s/lethalbreed.json`.
 
-### attributes: Physical Statistics
+### Physical Stats
 *   `zombieFollowRange` (Default: 18.0): Distance at which a zombie pursues you.
 *   `minScale` / `maxScale` (0.85 / 1.35): Random size range for zombies.
 *   `minSpeed` / `maxSpeed` (0.18 / 0.28): Ground movement speed.
 *   `healthBonusMin` / `healthBonusMax` (0.8 / 1.2): Random health multiplier.
 
-### mutant: Boss Settings
+### Mutant Settings
 *   `mutantChance` (0.05): Probability of a zombie spawning as a Mutant.
 *   `mutantMinionCount` (8): Number of zombies summoned upon Mutant death.
 *   `mutantTentacleTickRate` (5): Frequency of aura particle spawning.
 
-### equipment: Equipment Chances
+### Equipment
 *   `kamikazeChance` (0.05): Probability of a zombie being a kamikaze.
 *   `weaponChance` (0.7): Chance of having a weapon in hand.
 *   `weaponEnchantChance` (0.4): Chance for the weapon to be enchanted.
 *   `armor[Head/Chest/Legs/Feet]Chance`: Probabilities for each armor piece.
 *   `armorEnchantChance` (0.3): Chance for the armor to be enchanted.
 
-### ai: Intelligence & Explosions
+### AI & Hearing
 *   `hearingRange` (16.0): Sound detection radius.
 *   `soundLockTicks` (300): Duration a zombie remembers a sound.
 *   `kamikazeFuseTicks` (40): Time before kamikaze explosion.
 *   `kamikazeExplosionPower` (3.0): Base detonation power.
 
-### panic: Swarm Behavior
+### Panic System
 *   `healthThreshold` (0.25): Remaining HP to trigger panic (25%).
 *   `continueHealthThreshold` (0.5): HP to stop panicking (after regeneration).
 *   `screamIntervalTicks` (40): Frequency of alert screams.
@@ -113,12 +116,12 @@ The file is located in `config/o.a.s/lethalbreed.json`.
 *   `cooldownTicks` (600): Cooldown before panicking again.
 *   `fleeExplosionRange` (8.0): Flee distance from explosions.
 
-### movement: Climbing & Building
+### Movement
 *   `climbVerticalSpeed` (0.25): Wall climbing speed.
 *   `climbHorizontalSpeed` (0.15): Movement speed on walls.
 *   `buildGlobalCooldownTicks` (4): Time between each block placement by the group.
 
-### breaking: Block Destruction
+### Block Breaking
 *   `breakSpeedMultiplier` (4.0): Mining speed multiplier.
 *   `breakMinTicks` (5): Minimum time to break a block.
 
@@ -127,7 +130,8 @@ The file is located in `config/o.a.s/lethalbreed.json`.
 
 ---
 
-## ![Recommendations](https://img.shields.io/badge/Dependencies-Recommendations-purple?style=flat-square)
+## Recommendations
+![Recommendations](https://img.shields.io/badge/Dependencies-Recommendations-purple?style=flat-square)
 
 ### Mandatory
 *   [Fabric API](https://modrinth.com/mod/fabric-api)
