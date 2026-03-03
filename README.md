@@ -24,7 +24,7 @@
 ![Capabilities](https://img.shields.io/badge/Advanced-Capabilities-darkgreen?style=flat-square)
 
 <details>
-<summary><b>AI Mechanics Details</b></summary>
+<summary><b>Mechanics</b></summary>
 
 ### Dynamic Hearing
 Zombies no longer just see you. They **hear** you.
@@ -54,9 +54,9 @@ Lethal Breed offloads heavy calculations (block scans, building AI) to separate 
 ![Variants](https://img.shields.io/badge/Special-Variants-red?style=flat-square)
 
 <details>
-<summary><b>Mutant and Kamikaze Details</b></summary>
+<summary><b>Details</b></summary>
 
-### Biological Variability
+### Variability
 The statistics system makes every individual unique and unpredictable:
 *   **Scale/Power Correlation:** A zombie's size (Scale) directly multiplies its **Max Health** and **Attack Damage**.
 *   **Variable Agility:** Smaller specimens are often faster, compensating for their fragility with frantic speed.
@@ -79,7 +79,7 @@ Some zombies carry an unstable explosive charge (recognizable by the **TNT** blo
 ![Configuration](https://img.shields.io/badge/Configuration-Guide-blue?style=flat-square)
 
 <details>
-<summary><b>Full Parameters (lethalbreed.json)</b></summary>
+<summary><b>Parameters</b></summary>
 
 The file is located in `config/o.a.s/lethalbreed.json`.
 
@@ -137,7 +137,7 @@ The file is located in `config/o.a.s/lethalbreed.json`.
 *   [Fabric API](https://modrinth.com/mod/fabric-api)
 *   Java 25 (GraalVM recommended)
 
-### O.A.S Recommendations
+### Optional
 *   **Mod Menu:** To easily access configuration.
 
 ---
