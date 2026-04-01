@@ -36,6 +36,22 @@
 >
 > 📝 Edit this file to customize the mod.
 
+### 🔄 Reload Command
+
+You can reload the config and apply changes **without restarting the game**:
+
+```
+/lethalbreed reload
+```
+
+This will:
+- Reload the configuration file
+- Update all living zombies with new stats (size, speed, health)
+- Re-equip zombies with new equipment settings
+- Reset AI behaviors (hearing range, panic settings...)
+
+> ⚠️ **Note**: Only zombies spawned *after* the reload will have the new config applied to their initial spawn. Existing zombies are updated with `/lethalbreed reload`.
+
 <p>
   <a href="https://modrinth.com/mod/lethalbreed">
     <img src="https://img.shields.io/badge/Modrinth-00FF00?style=for-the-badge&logo=modrinth&logoColor=black" alt="Modrinth"/>

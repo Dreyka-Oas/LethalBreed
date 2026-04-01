@@ -126,6 +126,24 @@ Set chances to 0 to disable:
 
 ---
 
+## 🔄 Reload Command
+
+You can reload the config and apply changes **without restarting the game**:
+
+```
+/lethalbreed reload
+```
+
+This will:
+- Reload the configuration file
+- Update all living zombies with new stats (size, speed, health)
+- Re-equip zombies with new equipment settings
+- Reset AI behaviors (hearing range, panic settings...)
+
+> ⚠️ **Note**: Only zombies spawned *after* the reload will have the new config applied to their initial spawn. Existing zombies are updated with `/lethalbreed reload`.
+
+---
+
 ## FAQ
 
 **Does the mod work on multiplayer servers?**
@@ -133,6 +151,9 @@ Yes! LethalBreed is 100% multiplayer compatible.
 
 **How to reset config to default?**
 Delete `config/o.a.s/lethalbreed.json` and restart the game.
+
+**Can I reload config without restarting?**
+Yes! Use `/lethalbreed reload` command to apply config changes instantly.
 
 **Is the mod compatible with other mob mods?**
 Partially. Behaviors may apply to zombies added by other mods.
