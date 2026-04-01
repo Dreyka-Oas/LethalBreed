@@ -83,16 +83,17 @@ function Invoke-Git {
     $prev = Get-Location
     Set-Location $WorkDir
     
-    # Executer git et ignorer volontairement l'erreur stream de PowerShell
-    $errFile = Join-Path $env:TEMP "giterr.txt"
+    $oldErr = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $outFile = Join-Path $env:TEMP "gitout.txt"
-    & git @GitArgs 1> $outFile 2> $errFile
+    & cmd.exe /c "git $($GitArgs -join ' ') > `"$outFile`" 2>&1"
+    
+    # Catch both cmd exit code and git exit code
     $ok = ($LASTEXITCODE -eq 0)
+    $fullOut = Get-Content $outFile -Raw -ErrorAction SilentlyContinue
+    if ($null -eq $fullOut) { $fullOut = "" } else { $fullOut = $fullOut.Trim() }
     
-    $out = Get-Content $outFile -Raw -ErrorAction SilentlyContinue
-    $err = Get-Content $errFile -Raw -ErrorAction SilentlyContinue
-    $fullOut = "$out $err".Trim()
-    
+    $ErrorActionPreference = $oldErr
     Set-Location $prev
 
     if (-not $ok -and -not $AllowFail) {
@@ -205,6 +206,7 @@ function Sync-Loader([string]$LoaderName) {
         # ── Créer un Git vierge et pousser de force ──
         Set-Location $tempPath
         & git init --initial-branch=tmp > $null
+        & git config core.longpaths true > $null
         
         # IMPORTANT: Copier le .gitignore pour que "git add ." ignore récursivement build, .gradle, etc.
         if (Test-Path (Join-Path $REPO ".gitignore")) {
@@ -221,18 +223,73 @@ function Sync-Loader([string]$LoaderName) {
         & git commit -m "sync($LoaderName): absolute force-sync from disk (versions: $($versions -join ', '))" > $null
         
         Write-Info "Force-Push $LoaderName -> origin..."
-        # On pousse cette copie locale directement sur la branche distante (efface tout le reste)
-        $r = & git push --force $remoteUrl "HEAD:refs/heads/$LoaderName" 2>&1
         
-        if ($LASTEXITCODE -eq 0) {
+        $oldErr = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        $outFileLog = Join-Path $env:TEMP "gitpush.txt"
+        & cmd.exe /c "git push --force `"$remoteUrl`" HEAD:refs/heads/$LoaderName > `"$outFileLog`" 2>&1"
+        $okPush = ($LASTEXITCODE -eq 0)
+        $r = Get-Content $outFileLog -Raw -ErrorAction SilentlyContinue
+        $ErrorActionPreference = $oldErr
+        
+        if ($okPush) {
             Write-OK "$LoaderName -> GitHub  OK (copie parfaite du disque)"
         } else {
-            throw "Push force vers $LoaderName a échoué : $($r -join ' ')"
+            throw "Push force vers $LoaderName a échoué : $r"
         }
     } finally {
         Set-Location $REPO
         # On détruit la copie temporaire (elle a servi à écraser le distant)
         Remove-Item $tempPath -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# ============================================================
+#  NETTOYAGE : Supprime les branches distantes obsolètes
+# ============================================================
+function Sync-CleanupRemote([string[]]$ValidLoaders) {
+    Write-Section "Nettoyage des branches orphelines sur GitHub"
+    
+    $remoteUrl = (& git -C $REPO remote get-url origin 2>$null).Trim()
+    if (-not $remoteUrl) {
+        $remoteUrl = $GITHUB_URL
+    }
+
+    $remoteBranchesRaw = & git -C $REPO ls-remote --heads $remoteUrl 2>$null
+    # Extraction propre des noms de branche depuis la signature refs/heads/nom
+    $remoteBranches = $remoteBranchesRaw | ForEach-Object { 
+        if ($_ -match "refs/heads/(.+)") { $matches[1] } 
+    }
+    
+    $protectedBranches = @("main", "master")
+    $hasDeleted = $false
+
+    foreach ($rb in $remoteBranches) {
+        # Si la branche n'est pas main et n'appartient pas à la liste des loaders existants
+        if ($rb -notin $protectedBranches -and $rb -notin $ValidLoaders) {
+            $hasDeleted = $true
+            Write-Warn "Branche distante '$rb' non reconnue localement -> SUPPRESSION"
+            
+            if ($DryRun) {
+                Write-Info "[DRY] Exécuterait : git push --delete `"$remoteUrl`" $rb"
+            } else {
+                $oldErr = $ErrorActionPreference
+                $ErrorActionPreference = "Continue"
+                $outDel = Join-Path $env:TEMP "gitdel.txt"
+                & cmd.exe /c "git -C `"$REPO`" push `"$remoteUrl`" --delete $rb > `"$outDel`" 2>&1"
+                if ($LASTEXITCODE -eq 0) {
+                    Write-OK "Branche $rb supprimée avec succès de GitHub."
+                } else {
+                    $errDel = Get-Content $outDel -Raw -ErrorAction SilentlyContinue
+                    Write-Err "Impossible de supprimer la branche $rb : $errDel"
+                }
+                $ErrorActionPreference = $oldErr
+            }
+        }
+    }
+
+    if (-not $hasDeleted) {
+         Write-Info "Aucune branche orpheline à supprimer."
     }
 }
 
@@ -272,6 +329,11 @@ try {
         foreach ($l in $loadersToSync) {
             Sync-Loader $l
         }
+    }
+    
+    # ── Nettoyage orphelines ──
+    if (-not $Loader -and -not $MainOnly) {
+        Sync-CleanupRemote $loadersToSync
     }
 
     # Re-S'assurer d'être sur main et au propre niveau travail

@@ -1,9 +1,12 @@
 # LethalBreed GitIgnore
 
 ## Build outputs (regenerable)
-1.21.11/fabric/.gradle/
-1.21.11/fabric/build/
-1.21.11/fabric/run/
+.gradle/
+build/
+run/
+out/
+.idea/
+bin/
 
 ## Local documentation (not for GitHub)
 structure.md
