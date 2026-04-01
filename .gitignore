@@ -1,3 +1,5 @@
-fabric/1.21.11/.gradle/
-fabric/1.21.11/build/
-fabric/1.21.11/run/
+fabric/.gradle/
+fabric/build/
+fabric/run/
+ARCHITECTURE.md
+structure.md
