@@ -3,35 +3,37 @@
 ## Objectif
 Quand l'utilisateur demande de "build le .jar" ou de "créer une release", suivre cette procédure.
 
+## Prérequis
+- Java 21 installé (GraalVM ou autre)
+- GitHub CLI (`gh`) installé et connecté: `gh auth login`
+
 ## Étapes de Build
 
-### 1. Build le mod
+### 1. Configurer Java 21
+```powershell
+$env:JAVA_HOME = "C:\Users\perso\scoop\apps\graalvm-oracle-21jdk\current"
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+java -version  # Vérifier que c'est bien Java 21
+```
+
+### 2. Build le mod
 ```bash
 cd 1.21.11/fabric
 ./gradlew build
-# ou sur Windows:
-gradlew.bat build
 ```
 
-### 2. Trouver le .jar
-Le .jar se trouve dans: `1.21.11/fabric/build/libs/`
+### 3. Vérifier le .jar
+Le .jar se trouve dans: `1.21.11/fabric/build/libs/lethalbreed-2.0.0.jar`
 
-### 3. Créer un Tag Git
+### 4. Créer et pousser le Tag Git
 ```bash
 git tag -a 1.21.11-fabric -m "Release LethalBreed 1.21.11 for Fabric"
 git push origin 1.21.11-fabric
 ```
 
-### 4. Créer une Release GitHub
-Utiliser `gh release create` avec:
-- **Tag**: `1.21.11-fabric`
-- **Title**: `LethalBreed 1.21.11 (Fabric)`
-- **Body**: Changelog en anglais
-
-## Changelog Template
-
-```markdown
-## LethalBreed 1.21.11 - Fabric
+### 5. Créer la Release GitHub
+```bash
+gh release create 1.21.11-fabric --title "LethalBreed 1.21.11 (Fabric)" --notes "## LethalBreed 1.21.11 - Fabric
 
 ### Features
 - Advanced zombie AI with sound detection
@@ -40,35 +42,25 @@ Utiliser `gh release create` avec:
 - Kamikaze zombies with TNT
 - Panic system (zombies alert allies)
 - Equipment drops (weapons & armor)
-- **NEW:** `/lethalbreed reload` command - apply config changes without restarting!
+- **NEW:** \`/lethalbreed reload\` command - apply config changes without restarting!
 
 ### Configuration
-Edit `config/o.a.s/lethalbreed.json` to customize:
-- Zombie attributes (size, speed, health)
-- Mutant spawn chance
-- Kamikaze & equipment drops
-- AI hearing range
-- Panic behavior
-- Movement & building speed
+Edit \`config/o.a.s/lethalbreed.json\` to customize all settings.
 
 ### Commands
 | Command | Description |
 |---------|-------------|
-| `/lethalbreed reload` | Reload config and update all zombies |
-
-### Installation
-1. Install Fabric Loader
-2. Install Fabric API
-3. Drop `lethalbreed-1.21.11.jar` into `mods/` folder
+| \`/lethalbreed reload\` | Reload config and update all zombies |
 
 ### Requirements
 - Minecraft 1.21.11
 - Fabric Loader
-- Fabric API
+- Fabric API" "1.21.11/fabric/build/libs/lethalbreed-2.0.0.jar"
 ```
 
-## Notes
+## Notes Importantes
+- **Java 21 requis** - Le build échoue avec Java 17 (Fabric Loom nécessite JVM 21+)
 - Toujours build AVANT de créer le tag
-- Toujours vérifier que le .jar existe avant de créer la release
 - Le changelog doit être en ANGLAIS
-- Utiliser le format: `{version}-{loader}` pour le tag (ex: `1.21.11-fabric`)
+- Format du tag: `{version}-{loader}` (ex: `1.21.11-fabric`)
+- Vérifier que `gh` est connecté: `gh auth status`
