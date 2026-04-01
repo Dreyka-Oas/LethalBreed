@@ -1,4 +1,26 @@
+# LethalBreed GitIgnore
+
+## Build outputs (regenerable)
 1.21.11/fabric/.gradle/
 1.21.11/fabric/build/
 1.21.11/fabric/run/
+
+## Local documentation (not for GitHub)
+structure.md
 ARCHITECTURE.md
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Logs
+*.log
+logs/
+
+## Crash reports
+crash-reports/
+
+## Local world data (Fabric run folder sometimes contains this)
+*.mca
+*.dat
+*.lock
