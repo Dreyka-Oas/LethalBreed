@@ -1,0 +1,14 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="lethalbreed"
+version="${mod_version}"
+displayName="Lethal Breed"
+description="Unleash the ultimate predator. Lethal Breed transforms zombies with advanced hearing, strategic building capabilities, and adaptive AI."
+authors="O.A.S (Optimization & Quality);Dreyka Oas"
+homepage="https://oas.work/lethalbreed"
+
+[[mixins]]
+config="lethalbreed.mixins.json"

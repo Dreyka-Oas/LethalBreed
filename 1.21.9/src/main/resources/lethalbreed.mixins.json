@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"minVersion": "0.8.5",
+	"package": "oas.work.lethalbreed.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"MobEntityAccessor",
+		"HearingEventMixin",
+		"ServerShutdownMixin"
+	],
+	"client": [
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
