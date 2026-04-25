@@ -1,0 +1,15 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.badge--accent  { background: var(--c-accent-soft); color: var(--c-accent-text); }
+.badge--success { background: var(--c-success-soft); color: var(--c-success); }
+.badge--warning { background: var(--c-warning-soft); color: var(--c-warning); }
+.badge--danger  { background: var(--c-danger-soft); color: var(--c-danger); }
+.badge--neutral { background: rgba(0,0,0,0.05); color: var(--c-text-3); }

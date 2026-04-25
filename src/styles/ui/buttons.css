@@ -1,0 +1,43 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 15px;
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-fluent);
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.btn:active { transform: scale(0.975); }
+
+.btn svg {
+  flex-shrink: 0;
+}
+
+.btn--modrinth {
+  background: #1BD96A;
+  color: #111;
+  box-shadow: 0 2px 12px rgba(27,217,106,0.25);
+}
+.btn--modrinth:hover { background: #1ff07b; transform: translateY(-1px); }
+
+.btn--curseforge {
+  background: #F16436;
+  color: white;
+  box-shadow: 0 2px 12px rgba(241,100,54,0.25);
+}
+.btn--curseforge:hover { background: #ff754d; transform: translateY(-1px); }
+
+.btn--lg {
+  padding: 12px 24px;
+  font-size: 15px;
+  border-radius: var(--r-md);
+}

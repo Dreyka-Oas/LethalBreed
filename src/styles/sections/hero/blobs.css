@@ -1,0 +1,35 @@
+.hero__blobs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: blob-drift 14s ease-in-out infinite alternate;
+}
+
+.hero__blob--1 {
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, rgba(0, 120, 212, 0.18) 0%, transparent 70%);
+  top: -120px; right: -80px;
+  animation-duration: 16s;
+}
+.hero__blob--2 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(100, 180, 80, 0.12) 0%, transparent 70%);
+  bottom: 0px; left: 5%;
+  animation-duration: 20s;
+  animation-delay: -4s;
+}
+.hero__blob--3 {
+  width: 260px; height: 260px;
+  background: radial-gradient(circle, rgba(196, 43, 28, 0.09) 0%, transparent 70%);
+  top: 40%; left: 40%;
+  animation-duration: 18s;
+  animation-delay: -8s;
+}

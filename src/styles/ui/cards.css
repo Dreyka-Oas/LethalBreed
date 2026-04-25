@@ -1,0 +1,35 @@
+.win-card {
+  background: var(--c-surface);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--c-stroke);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.9);
+  transition:
+    box-shadow 0.25s var(--ease-fluent),
+    transform 0.25s var(--ease-fluent),
+    border-color 0.25s var(--ease-fluent);
+  overflow: hidden;
+  position: relative;
+}
+
+.win-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-lg);
+  opacity: 0;
+  background: radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0,120,212,0.06), transparent 60%);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.win-card:hover {
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,1);
+  border-color: var(--c-stroke-strong);
+  transform: translateY(-2px);
+}
+
+.win-card:hover::before {
+  opacity: 1;
+}

@@ -1,0 +1,33 @@
+.code-block {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: var(--r-md);
+  padding: 20px 22px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: var(--shadow-md);
+}
+
+.code-block .k  { color: #cba6f7; } /* key */
+.code-block .s  { color: #a6e3a1; } /* string */
+.code-block .n  { color: #fab387; } /* number */
+.code-block .b  { color: #89b4fa; } /* boolean */
+.code-block .c  { color: #6c7086; font-style: italic; } /* comment */
+.code-block .p  { color: #6c7086; } /* punctuation */
+
+.reload-cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #1e1e2e;
+  color: #a6e3a1;
+  border-radius: var(--r-md);
+  font-family: var(--mono);
+  font-size: 14px;
+  margin: 10px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}

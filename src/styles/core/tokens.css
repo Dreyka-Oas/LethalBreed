@@ -1,0 +1,58 @@
+:root {
+  /* Windows 11 Light palette */
+  --c-bg:              #f3f3f3;
+  --c-bg-alt:          #fafafa;
+  --c-surface:         rgba(255, 255, 255, 0.82);
+  --c-surface-solid:   #ffffff;
+  --c-surface-subtle:  rgba(255, 255, 255, 0.5);
+  --c-stroke:          rgba(0, 0, 0, 0.06);
+  --c-stroke-strong:   rgba(0, 0, 0, 0.12);
+  --c-stroke-focus:    rgba(0, 120, 212, 0.5);
+
+  /* Accent — Windows 11 Blue */
+  --c-accent:          #0078d4;
+  --c-accent-hover:    #106ebe;
+  --c-accent-press:    #005a9e;
+  --c-accent-soft:     rgba(0, 120, 212, 0.09);
+  --c-accent-text:     #0067b8;
+
+  /* Status */
+  --c-success:         #107c10;
+  --c-success-soft:    rgba(16, 124, 16, 0.08);
+  --c-warning:         #ca5010;
+  --c-warning-soft:    rgba(202, 80, 16, 0.08);
+  --c-danger:          #c42b1c;
+  --c-danger-soft:     rgba(196, 43, 28, 0.08);
+
+  /* Text */
+  --c-text-1:          #1b1b1b;
+  --c-text-2:          #424242;
+  --c-text-3:          #767676;
+  --c-text-inv:        #ffffff;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.11);
+  --shadow-lg: 0 8px 36px rgba(0, 0, 0, 0.14);
+  --shadow-xl: 0 16px 56px rgba(0, 0, 0, 0.18);
+
+  /* Radius */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-2xl: 20px;
+  --r-pill: 100px;
+
+  /* Easing — Fluent Motion */
+  --ease-fluent:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decel:   cubic-bezier(0, 0, 0.2, 1);
+  --ease-accel:   cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Typography */
+  --font: "Plus Jakarta Sans", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+}
