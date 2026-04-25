@@ -1,0 +1,25 @@
+package oas.work.lethalbreed.ai;
+
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.monster.Zombie;
+
+public class KamikazeLogic {
+    public static void prime(Zombie zombie, float bonus) {
+        zombie.addTag("lethal_primed");
+        zombie.playSound(SoundEvents.TNT_PRIMED, 2.0f, bonus);
+        zombie.getNavigation().stop();
+    }
+
+    public static void tickShake(Zombie zombie, float bonus) {
+        double j = (zombie.getRandom().nextDouble() - 0.5) * (0.1 * bonus);
+        zombie.moveTo(zombie.getX() + j, zombie.getY(), zombie.getZ() + j, 
+            zombie.getYRot(), zombie.getXRot());
+    }
+}
+
+
+
+
+
+
+

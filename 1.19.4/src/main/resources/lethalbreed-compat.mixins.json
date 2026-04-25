@@ -1,0 +1,12 @@
+{
+	"minVersion": "0.8",
+	"required": false,
+	"package": "oas.work.lethalbreed.mixin.compat",
+	"compatibilityLevel": "JAVA_16",
+	"refmap": "lethalbreed.refmap.json",
+	"client": [],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
+

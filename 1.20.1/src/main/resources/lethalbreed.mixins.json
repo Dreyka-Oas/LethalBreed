@@ -1,0 +1,23 @@
+{
+	"minVersion": "0.8",
+	"required": true,
+	"package": "oas.work.lethalbreed.mixin",
+	"compatibilityLevel": "JAVA_16",
+	"refmap": "lethalbreed.refmap.json",
+	"mixins": [
+		"ZombieEntityMixin",
+		"EntityMountMixin",
+		"ZombieGoalMixin",
+		"MobEntityAccessor",
+		"EntityAccessor",
+		"LivingEntityMixin",
+		"MutantDeathMixin",
+		"HearingEventMixin"
+	],
+	"client": [
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
+

@@ -1,0 +1,251 @@
+plugins {
+    id 'dev.architectury.loom' version '1.11.458'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+loom {
+    forge {
+        mixinConfig 'lethalbreed.mixins.json'
+        mixinConfig 'lethalbreed-compat.mixins.json'
+    }
+    runs {
+        client {
+            client()
+            configName = 'Forge Client'
+            runDir = 'run'
+            vmArg "-Xmx${project.findProperty('clientRamGb') ?: '3'}G"
+            vmArg "-Dfml.earlywindow.headless=true"
+        }
+        server {
+            server()
+            configName = 'Forge Server'
+            runDir = 'run'
+        }
+    }
+}
+
+repositories {
+    maven { url 'https://maven.minecraftforge.net/' }
+    maven { url 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "forge_version", project.forge_version
+    filteringCharset "UTF-8"
+    exclude "META-INF/mods.toml"
+    filesMatching(["META-INF/mods.toml", "pack.mcmeta"]) {
+        expand(
+            version: project.version,
+            minecraft_version: project.minecraft_version,
+            forge_version: project.forge_version,
+            mod_id: project.mod_id,
+            mod_name: project.mod_name,
+            mod_description: project.mod_description,
+            mod_authors: project.mod_authors
+        )
+    }
+}
+
+tasks.register("copyModsTomlToClasses", Copy) {
+    dependsOn tasks.named("compileJava")
+    from("src/main/resources/META-INF/mods.toml")
+    into(layout.buildDirectory.dir("classes/java/main/META-INF"))
+    filteringCharset = "UTF-8"
+    expand(
+        version: project.version,
+        minecraft_version: project.minecraft_version,
+        forge_version: project.forge_version,
+        mod_id: project.mod_id,
+        mod_name: project.mod_name,
+        mod_description: project.mod_description,
+        mod_authors: project.mod_authors
+    )
+}
+
+tasks.register("copyPackMetadataToClasses", Copy) {
+    dependsOn tasks.named("compileJava")
+    from("src/main/resources/pack.mcmeta")
+    into(layout.buildDirectory.dir("classes/java/main"))
+    filteringCharset = "UTF-8"
+    expand(
+        version: project.version,
+        minecraft_version: project.minecraft_version,
+        forge_version: project.forge_version,
+        mod_id: project.mod_id,
+        mod_name: project.mod_name,
+        mod_description: project.mod_description,
+        mod_authors: project.mod_authors
+    )
+}
+
+tasks.register("copyPackIconToClasses", Copy) {
+    dependsOn tasks.named("compileJava")
+    from("src/main/resources/icon.png")
+    into(layout.buildDirectory.dir("classes/java/main"))
+}
+
+tasks.named("classes") {
+    dependsOn(tasks.named("copyModsTomlToClasses"))
+    dependsOn(tasks.named("copyPackMetadataToClasses"))
+    dependsOn(tasks.named("copyPackIconToClasses"))
+}
+
+tasks.named("generateDLIConfig") {
+    doLast {
+        def launchCfg = file(".gradle/loom-cache/launch.cfg")
+        if (!launchCfg.exists()) {
+            return
+        }
+
+        def lines = launchCfg.readLines("UTF-8")
+        def filtered = []
+        def skip = false
+
+        lines.each { line ->
+            if (line == "clientdataArgs") {
+                skip = true
+                return
+            }
+
+            if (skip && !line.startsWith("\t") && !line.trim().isEmpty()) {
+                skip = false
+            }
+
+            if (!skip) {
+                filtered << line
+            }
+        }
+
+        launchCfg.setText(filtered.join(System.lineSeparator()), "UTF-8")
+    }
+}
+
+tasks.register("patchLoomMinecraftModules") {
+    dependsOn tasks.named("configureClientLaunch")
+
+    doLast {
+        logger.lifecycle("patchLoomMinecraftModules: skipped, cache jars are patched out-of-band")
+    }
+}
+
+tasks.register("patchForgeMinecraftClasspath") {
+    doLast {
+        logger.lifecycle("patchForgeMinecraftClasspath: skipped, using patched Loom cache jars directly")
+    }
+}
+
+tasks.register("patchTransformedFmlloader") {
+    dependsOn tasks.named("generateRemapClasspath")
+
+    doLast {
+        def remapClasspathFile = file(".gradle/loom-cache/remapClasspath.txt")
+        if (!remapClasspathFile.exists()) {
+            return
+        }
+
+        def remapClasspath = remapClasspathFile.getText("UTF-8").trim()
+        def fmlloaderJar = remapClasspath.split(";").find { it.contains("\\fmlloader\\${project.minecraft_version}-${project.forge_version}\\") && it.endsWith(".jar") }
+        if (fmlloaderJar == null) {
+            return
+        }
+
+        def patchRoot = file("../patches")
+        def javaHome = System.getenv("JAVA_HOME") ?: System.getProperty("java.home")
+        def javacExe = new File(javaHome, "bin/javac.exe")
+        def jarExe = new File(javaHome, "bin/jar.exe")
+        def compileDir = layout.buildDirectory.dir("tmp/fmlloaderPatch/classes").get().asFile
+        def runCommand = { List<String> command ->
+            def process = new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .start()
+            def output = process.inputStream.getText("UTF-8")
+            def exitCode = process.waitFor()
+            if (exitCode != 0) {
+                throw new GradleException("Command failed (${exitCode}): ${command.join(' ')}\n${output}")
+            }
+        }
+
+        delete(compileDir)
+        compileDir.mkdirs()
+
+        def patchSources = fileTree(patchRoot) {
+            include("*.java")
+        }.files.collect { it.absolutePath }.sort()
+        if (patchSources.isEmpty()) {
+            return
+        }
+
+        runCommand([
+            javacExe.absolutePath,
+            "-proc:none",
+            "-cp", remapClasspath,
+            "-d", compileDir.absolutePath
+        ] + patchSources)
+
+        runCommand([
+            jarExe.absolutePath,
+            "uf", fmlloaderJar,
+            "-C", compileDir.absolutePath,
+            "net/minecraftforge/fml/loading/moddiscovery/MinecraftLocator.class"
+        ])
+
+        runCommand([
+            jarExe.absolutePath,
+            "uf", fmlloaderJar,
+            "-C", compileDir.absolutePath,
+            "net/minecraftforge/fml/loading/moddiscovery/ModJarMetadata.class"
+        ])
+
+        runCommand([
+            jarExe.absolutePath,
+            "uf", fmlloaderJar,
+            "-C", compileDir.absolutePath,
+            "net/minecraftforge/fml/loading/targets/CommonLaunchHandler.class"
+        ])
+
+        runCommand([
+            jarExe.absolutePath,
+            "uf", fmlloaderJar,
+            "-C", compileDir.absolutePath,
+            'net/minecraftforge/fml/loading/ImmediateWindowHandler$DummyProvider.class'
+        ])
+    }
+}
+
+tasks.matching { it.name == "runClient" }.configureEach {
+    dependsOn tasks.named("patchTransformedFmlloader")
+}
+
+def targetJavaVersion = 21
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release.set(targetJavaVersion)
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+}
+
+jar {
+    manifest {
+        attributes("MixinConfigs": "lethalbreed.mixins.json,lethalbreed-compat.mixins.json")
+    }
+    from("LICENSE.txt")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

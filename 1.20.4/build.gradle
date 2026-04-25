@@ -1,0 +1,124 @@
+plugins {
+    id 'dev.architectury.loom' version '1.9.436'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+loom {
+    forge {
+        mixinConfig 'lethalbreed.mixins.json'
+        mixinConfig 'lethalbreed-compat.mixins.json'
+    }
+    runs {
+        client {
+            client()
+            configName = 'Forge Client'
+            runDir = 'run'
+            mods {
+                lethalbreed {
+                    source sourceSets.main
+                }
+            }
+            vmArg "-Xmx${project.findProperty('clientRamGb') ?: '3'}G"
+        }
+        server {
+            server()
+            configName = 'Forge Server'
+            runDir = 'run'
+            mods {
+                lethalbreed {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    maven { url 'https://maven.minecraftforge.net/' }
+    maven { url 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "forge_version", project.forge_version
+    filteringCharset "UTF-8"
+    exclude("META-INF/mods.toml")
+    filesMatching("pack.mcmeta") {
+        expand(
+            version: project.version,
+            minecraft_version: project.minecraft_version,
+            forge_version: project.forge_version,
+            mod_id: project.mod_id,
+            mod_name: project.mod_name,
+            mod_description: project.mod_description,
+            mod_authors: project.mod_authors
+        )
+    }
+}
+
+tasks.register("copyModsTomlToClasses", Copy) {
+    dependsOn tasks.named("compileJava")
+    from("src/main/resources/META-INF/mods.toml")
+    into(layout.buildDirectory.dir("classes/java/main/META-INF"))
+    filteringCharset = "UTF-8"
+    expand(
+        version: project.version,
+        minecraft_version: project.minecraft_version,
+        forge_version: project.forge_version,
+        mod_id: project.mod_id,
+        mod_name: project.mod_name,
+        mod_description: project.mod_description,
+        mod_authors: project.mod_authors
+    )
+}
+
+tasks.register("copyPackMetadataToClasses", Copy) {
+    dependsOn tasks.named("compileJava")
+    from("src/main/resources/pack.mcmeta")
+    into(layout.buildDirectory.dir("classes/java/main"))
+}
+
+tasks.register("copyPackIconToClasses", Copy) {
+    dependsOn tasks.named("compileJava")
+    from("src/main/resources/icon.png")
+    into(layout.buildDirectory.dir("classes/java/main"))
+}
+
+tasks.named("classes") {
+    dependsOn(tasks.named("copyModsTomlToClasses"))
+    dependsOn(tasks.named("copyPackMetadataToClasses"))
+    dependsOn(tasks.named("copyPackIconToClasses"))
+}
+
+def targetJavaVersion = 17
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release.set(targetJavaVersion)
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes("MixinConfigs": "lethalbreed.mixins.json,lethalbreed-compat.mixins.json")
+    }
+    from("LICENSE.txt")
+}

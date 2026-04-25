@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[59,)"
+license="Proprietary - © 2024 LethalBreed"
+
+[[mods]]
+modId="lethalbreed"
+version="${version}"
+displayName="Lethal Breed"
+authors="O.A.S (Optimization & Quality), Dreyka Oas"
+description='''Unleash the ultimate predator. Lethal Breed transforms zombies with advanced hearing, strategic building capabilities, and adaptive AI, turning every night into a desperate struggle for survival.'''
+logoFile="icon.png"
+
+[[dependencies.lethalbreed]]
+modId="forge"
+mandatory=true
+versionRange="[59,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lethalbreed]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.9,1.22)"
+ordering="NONE"
+side="BOTH"
