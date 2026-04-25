@@ -1,0 +1,9 @@
+{
+	"required": false,
+	"package": "oas.work.lethalbreed.mixin.compat",
+	"compatibilityLevel": "JAVA_17",
+	"client": [],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

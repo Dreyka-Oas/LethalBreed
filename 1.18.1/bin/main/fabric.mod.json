@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "lethalbreed",
+	"version": "${version}",
+	"name": "Lethal Breed",
+	"description": "Unleash the ultimate predator. Lethal Breed transforms zombies with advanced hearing, strategic building capabilities, and adaptive AI, turning every night into a desperate struggle for survival.",
+	"authors": [
+		"O.A.S (Optimization & Quality)",
+		"Dreyka Oas"
+	],
+	"contact": {
+		"homepage": "https://oas.work/lethalbreed"
+	},
+	"license": "Proprietary - © 2024 LethalBreed",
+	"icon": "assets/lethalbreed/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"oas.work.lethalbreed.LethalBreed"
+		]
+	},
+	"custom": {
+		"fabric-loader:server_side": true
+	},
+	"mixins": [
+		"lethalbreed.mixins.json",
+		"lethalbreed-compat.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=${loader_version}",
+		"minecraft": "~${minecraft_version}",
+		"fabric": "*"
+	},
+	"suggests": {
+	}
+}
