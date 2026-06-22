@@ -8,6 +8,7 @@ Auteur : Dreyka Oas. Chemin : `F:\projects\LethalBreed`.
 Objectif : zombies construisent (blocs de terre), détruisent (avec drop), perçoivent les sons.  
 Scale cible : 1000+ zombies simultanés → architecture flow field obligatoire.  
 Compute : GPU prioritaire (AMD RX 9060 XT via OpenCL/JOCL), fallback CPU multi-thread.  
+Serveur peut tourner sur même machine que GPU ou machine séparée sans GPU — `GpuComputeManager.isGpuAvailable()` détecte automatiquement → fallback `CpuFlowField` (ForkJoinPool) si OpenCL absent.  
 Dimensions : toutes (Overworld, Nether, End, custom) — flow field par dimension.  
 Rendu client : compatible Sodium + Iris Shaders.
 
