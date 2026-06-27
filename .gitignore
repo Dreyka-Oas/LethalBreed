@@ -1,0 +1,17 @@
+# Gradle
+.gradle/
+build/
+# Loom / dev runtime
+run/
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+# OS
+*.log
+# Dev run-output dumps (gradle log captures)
+rc.txt
+rs.txt

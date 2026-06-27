@@ -3,23 +3,45 @@
 ## Context
 
 Fabric mod 1.21.11 — Zombies vanilla améliorés avec IA environnementale.  
-(Note : 1.21.11 = version Java MC post-août 2025, architecture identique à 1.21.x)  
+(Note : 1.21.11 sortie 9 déc 2025, "Mounts of Mayhem". DERNIÈRE version Java obfusquée — après, MC passe en non-obfusqué + numérotation 26.x. Fabric API `0.139.5+1.21.11` dispo, Mojang mappings OK.)  
 Auteur : Dreyka Oas. Chemin : `F:\projects\LethalBreed`.  
 Objectif : zombies construisent (blocs de terre), détruisent (avec drop), perçoivent les sons.  
-Scale cible : 1000+ zombies simultanés → architecture flow field obligatoire.  
-Compute : GPU prioritaire (AMD RX 9060 XT via OpenCL/JOCL), fallback CPU multi-thread.  
+Scale cible : « le plus de zombies possible sans lag » (objectif ~1000) → architecture flow field obligatoire.  
+Compute : GPU optionnel **benchmark-gated** — cible **GPU AMD (tout modèle, OpenCL/JOCL)**, fallback CPU multi-thread (le maître par défaut). RX 9060 XT 4GB = machine dev de référence, pas une dépendance codée en dur.  
 Serveur peut tourner sur même machine que GPU ou machine séparée sans GPU — `GpuComputeManager.isGpuAvailable()` détecte automatiquement → fallback `CpuFlowField` (ForkJoinPool) si OpenCL absent.  
 Dimensions : toutes (Overworld, Nether, End, custom) — flow field par dimension.  
 Rendu client : compatible Sodium + Iris Shaders.
+
+### Réalité perf (à garder en tête)
+Le facteur limitant de ~1000 zombies n'est **PAS** le pathfinding (flow field 128×128 ≈ 16k cases = µs en CPU). C'est, dans l'ordre :
+1. **Collisions entité↔entité** vanilla (coût qui explose avec le nombre) → à neutraliser/atténuer.
+2. **AI/navigation vanilla** par entité → remplacée par flow field + goals custom.
+3. **LOD + budgets + threading** corrects.
+
+Conséquence GPU : le flow field est petit + Bellman-Ford itératif (overhead lancement kernel × itérations + aller-retour PCIe). Gain GPU **incertain, possiblement négatif** pour cette taille → on construit le CPU d'abord et on **active le GPU seulement si un benchmark prouve le gain**. Le code GPU reste présent, mais désactivable.
+
+### Cible
+Serveur **dédié** (avec ou sans GPU) → détection/fallback justifiés. Le rendu client custom ne compte que pour les joueurs connectés moddés.
+
+### État d'avancement (toutes phases buildées vertes)
+- ✅ **Phase 0** — Gradle/Loom/Fabric setup, JVM GraalVM+G1GC. Client dev charge avec Sodium+Iris (RX 9060 XT détectée), serveur dev boot clean.
+- ✅ **Phase 1** — `ZombieRegistry`, `TickScheduler` (buckets), `SpatialGrid`, `LODManager`, `DimensionManager` + **spawn control** (no baby/drowned/équipement, config-toggle).
+- ✅ **Phase 2** — flow field CPU multi-source Dijkstra (`ai/flowfield/`), nav par gradient.
+- ✅ **Phase 3** — block ops réactifs casse/pont (`block/`), budget ops/tick, `PlacedBlockTracker` (terre retirée 600 ticks sans drop).
+- ✅ **Phase 4** — perception sonore (`sound/`) : pas des joueurs + casse de bloc → zombies investiguent. Priorité cible vanilla > flow > son.
+- ✅ **Phase 5** — flow field calculé **hors thread principal** : snapshot main-thread → pool daemon → swap `AtomicReference`. (Tick zombie reste main-thread.)
+- ✅ **Phase 6** — couche GPU OpenCL/JOCL (`gpu/`) : `GpuComputeManager` (init + détection AMD + build kernel `bellman_ford.cl` + solve) **benchmark-gated** (`useGpu=false` défaut, CPU maître, fallback CPU auto sur toute erreur).
+- ✅ **Phase 7 (client opti)** — config client Sodium-aware (`LethalBreedClientConfig`, `config/lethalbreed-client.json`) + mixin de **culling distance** des zombies coopératif avec Sodium. Instancing/billboards = flags présents, implémentation lourde laissée en option future.
+- Notes : mappings Mojang. Tick zombie sur thread serveur (le gros calcul = flow field, lui, est off-thread). Activer GPU = passer `useGpu=true` après benchmark.
 
 ## Environnement Dev
 
 | Outil | Chemin | Note |
 |-------|--------|------|
-| JDK cible build | `C:\Program Files\BellSoft\LibericaNIK-23-OpenJDK-21` | Java 21 + GraalVM JIT |
+| JDK cible build | `C:\Program Files\BellSoft\LibericaNIK-23-OpenJDK-21` | Java 21 + GraalVM JIT — vérifié top pratique pour serveur MC (JIT GraalVM ~10-20% CPU-lourd). G1GC only (OK). Azul Prime + rapide mais Linux/incompat mods → exclu |
 | JDK alternatif | `C:\Program Files\BellSoft\LibericaNIK-25-OpenJDK-25` | Java 25, pas pour ce mod |
-| JAVA_HOME à configurer | `LibericaNIK-23` | Fabric 1.21.1 requiert Java 21 |
-| GPU | AMD Radeon RX 9060 XT 4GB | OpenCL via driver AMD |
+| JAVA_HOME à configurer | `LibericaNIK-23` | Fabric 1.21.11 requiert Java 21 |
+| GPU (dev) | GPU AMD (OpenCL) — réf dev : Radeon RX 9060 XT 4GB | OpenCL via driver AMD ; code générique, sélectionne 1er GPU AMD/OpenCL dispo |
 | OpenCL runtime | `C:\Windows\System32\OpenCL.dll` | Présent, natif Windows/AMD |
 | Pas de CUDA | — | GPU AMD, pas NVIDIA |
 | Pas de Vulkan serveur | — | LWJGL absent du serveur MC |
@@ -83,7 +105,7 @@ F:\projects\LethalBreed\
 ```kotlin
 plugins {
     java
-    id("fabric-loom") version "1.7-SNAPSHOT"
+    id("fabric-loom") version "1.11-SNAPSHOT"  // ⚠️ 1.7 trop vieux pour 1.21.11 — vérifier dernière version Loom sur fabricmc.net au build
     id("com.github.johnrengelman.shadow") version "8.1.1"  // bundle JOCL natif
 }
 group = "com.dreykaoas.lethalbreed"
@@ -93,7 +115,7 @@ dependencies {
     minecraft("com.mojang:minecraft:1.21.11")
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:0.16.x")   // vérifier dernière version 1.21.11
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.xxx+1.21.11")  // vérifier au build
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.139.5+1.21.11")  // vérifié dispo — épingler (ou + récent compat 1.21.11)
     // Rendu — compatibilité Sodium + Iris
     modCompileOnly("maven.modrinth:sodium:mc1.21.11-latest")
     // GPU compute — OpenCL bindings (AMD natif via driver Windows)
@@ -458,9 +480,11 @@ Pas de commandes. Monitoring passif, toujours actif en dev.
 
 ---
 
-## NMS Touch Points (Mojang Mappings, Fabric 1.21.1)
+## Minecraft Touch Points (Mojang Mappings, Fabric 1.21.11)
 
-| Besoin | Classe NMS |
+> Note : "NMS" (`net.minecraft.server`) est un terme Bukkit/Spigot. En Fabric on modifie les classes MC via mappings — ici Mojang mappings. Les noms de classes ci-dessous sont corrects pour Mojmap.
+
+| Besoin | Classe Minecraft (Mojmap) |
 |--------|-----------|
 | Entité zombie | `net.minecraft.world.entity.monster.Zombie` |
 | Base goal | `net.minecraft.world.entity.ai.goal.Goal` |
@@ -490,7 +514,7 @@ Accès via Mojang mappings (Loom remapping transparent au build).
     ┌────────▼────────────┐    ┌───────────────────────┐
     │  ForkJoinPool       │    │  GPU Thread (JOCL)    │
     │  (zombie ticks)     │    │  Bellman-Ford kernel  │
-    │  Virtual Threads    │    │  sur AMD RX 9060 XT   │
+    │  Virtual Threads    │    │  sur GPU AMD (OpenCL) │
     │  (sound propagation)│    │  async, résultat →    │
     └─────────────────────┘    │  AtomicReference swap │
                                └───────────────────────┘
@@ -554,7 +578,7 @@ __kernel void relax_step(
 
 **Exécution** : boucle jusqu'à `changed == 0` (convergence) ou max iterations.  
 Pour grille 128×128 = 16 384 work-items, convergence en ~128 iterations.  
-Temps estimé : < 1ms sur RX 9060 XT.
+Temps estimé : < 1ms sur GPU AMD moderne (à confirmer par benchmark — gain GPU non garanti vu la petite taille, cf. Réalité perf).
 
 ### CpuFlowField.java — Fallback CPU
 
@@ -615,61 +639,89 @@ void onServerTick(MinecraftServer server) {
 
 ---
 
+## Thread-Safety (RÈGLE CRITIQUE)
+
+Règle d'or : **un seul thread écrit/lit le monde MC = le main thread (server tick)**. Toute lecture du monde
+depuis un worker = crashs aléatoires (ConcurrentModification, chunk en cours d'unload).
+
+- Lecture du monde pour décisions zombie → via **snapshots capturés sur le main thread**
+  (`Chunk.getChunkSnapshot(...)` pour blocs ; copie des données d'entités voisines nécessaires) AVANT dispatch worker.
+- `SmartZombie.tick()` sur worker (ForkJoinPool) : **lecture seule** snapshot + flow field (`AtomicReference`, lock-free) ;
+  **écriture uniquement** dans structures thread-safe (`BlockOperationQueue` = `ConcurrentLinkedQueue`, `soundTarget` volatile).
+- Application des effets (poser/casser blocs, déplacer entité, MoveControl) → **toujours main thread**, en vidant
+  les queues sous budget (`BlockOperationQueue` : 20 ops/tick, casses > placements).
+- Le worker calcule le vecteur désiré ; le mouvement réel reste main thread.
+
+---
+
 ## Phases d'implémentation
 
-**Phase 1 — Fondations**
-- `gradle.properties` → JAVA_HOME = LibericaNIK-23 (Java 21)
-- Gradle + Fabric Loom + Shadow plugin setup, vérifier compilation NMS
-- `ZombieRegistry`, `SmartZombie`, `TickScheduler` (sans IA, sans GPU)
-- `SpatialGrid`
-- Mixin injection goal no-op → vérifier injection OK
+> Principe : jouable le plus tôt possible. CPU/serveur d'abord → benchmark scale → **GPU après** (si prouvé) → **rendu client en dernier** (le plus risqué).
+
+**Phase 0 — Bootstrap**
+- `gradle.properties` → `org.gradle.java.home` = LibericaNIK-23 (Java 21), `JAVA_HOME` idem
+- `build.gradle.kts` : Loom (version 1.21.11), `officialMojangMappings()`, fabric-loader/api épinglés 1.21.11, Shadow (JOCL plus tard)
+- `fabric.mod.json`, `lethalbreed.mixins.json`, config vide
+- **Livrable** : `./gradlew build` → JAR ; serveur Fabric 1.21.11 démarre avec le mod (vide)
+
+**Phase 1 — Squelette entité + spawn control**
+- `ZombieRegistry`, `SmartZombie`, `TickScheduler` (buckets, no-op), `SpatialGrid`, `DimensionManager`
+- Mixin injection goal **no-op** → vérifier injection OK
 - Spawn control : bloquer babies + drowned + équipement
+- **Livrable** : zombies suivis par le mod (compteur log), spawns filtrés, 0 IA custom
 
-**Phase 2 — Flow Field CPU**
-- `WorldSnapshot`, `CpuFlowField` (Dijkstra ForkJoinPool)
+**Phase 2 — Flow Field CPU + navigation** ← *premier "ça bouge intelligemment"*
+- `WorldSnapshot`, `CpuFlowField` (Dijkstra/Bellman-Ford ForkJoinPool)
 - `FlowFieldManager` + async dispatch + AtomicReference swap
-- `FlowFieldNavigateGoal` → zombies suivent joueurs
-- Tuning coûts, valider pathfinding correct
+- `FlowFieldNavigateGoal` → zombies suivent joueurs, contournent obstacles, sans pathfinder vanilla
+- Tuning coûts (déplacement=1, saut=10, placement=100, casse=50×hardness, IMPASSABLE)
 
-**Phase 3 — GPU Compute**
-- `GpuComputeManager` : init JOCL, détection AMD GPU, fallback gracieux
-- Kernel `bellman_ford.cl` : Bellman-Ford parallèle
-- `GpuFlowField` : upload world data → exécute kernel → download résultat
-- `DijkstraComputer` : dispatcher GPU/CPU
-- Benchmark GPU vs CPU sur grille 128×128 et 256×256
-
-**Phase 4 — Block Ops**
+**Phase 3 — Block Ops (casser/construire)** ← *gameplay "lethal"*
 - `MaterialRegistry`, `BlockOperationQueue` (ConcurrentLinkedQueue)
-- `BuildCoordinator`, `BreakCoordinator` (ConcurrentHashMap)
-- `BreakBlockGoal`, `BuildGoal`
-- Tests thread-safety : 1000 zombies buildent simultanément
+- `BuildCoordinator`, `BreakCoordinator` (ConcurrentHashMap), `PlacedBlockTracker` (terre supprimée 600 ticks, sans drop)
+- `BreakBlockGoal` (`world.destroyBlock(pos, true)` = drop + son), `BuildGoal` (pilier + pont terre)
+- Tests thread-safety : beaucoup de zombies build/break en même temps, application main-thread only
+- **Livrable** : zombies cassent un mur de verre, comblent un fossé de 3 blocs
 
-**Phase 5 — Son + State Machine**
-- `SoundEventBus` (Virtual Threads pour propagation)
-- `SoundPropagator`
-- `InvestigateSoundGoal`
-- `StateMachine` complet + `LODManager`
+**Phase 4 — Son + State Machine + LOD**
+- `SoundEventBus` (Virtual Threads pour propagation), `SoundPropagator`, `InvestigateSoundGoal`
+- `StateMachine` complet + gardes min-ticks, `LODManager` (HIGH/MED/LOW/FROZEN)
+- **Livrable** : zombies se dirigent vers les bruits hors ligne de vue ; LOD réduit le coût à distance
 
-**Phase 6 — Client Rendering**
-- `ZombieBulkPositionPacket` + `PacketRegistry` (server + client)
-- Détection mod client (canal packet)
-- `ZombieInstanceRenderer` + `InstanceBuffer` (OpenGL instancing)
-- `FrustumCuller` CPU-side
-- Test : FPS avec 1000 zombies, mod ON vs OFF
+**Phase 5 — Montée en charge CPU + benchmark** ← *prouver le scale AVANT le GPU*
+- Threading ticks zombie (bucket courant → ForkJoinPool, lecture snapshot/flow field seulement)
+- **Neutraliser/atténuer collisions entité↔entité vanilla** + couper goals vanilla coûteux
+- Overlay debug serveur (log 5s : tick ms, counts LOD, blockOps/tick)
+- **Benchmark TPS** à 100 / 300 / 500 / 1000 zombies → trouver le mur réel
+- **Livrable** : chiffre honnête de « combien de zombies sans lag » en CPU pur
 
-**Phase 7 — Perf finale**
-- Profiling avec async-profiler : GPU kernel, ForkJoinPool, SpatialGrid, packets bulk
-- Benchmark : TPS avec 1000 zombies actifs + FPS client (mod ON vs OFF)
-- Flow field chunk cache + dirty-marking
-- Audit mémoire : SmartZombie ~200B × 1000 = ~200KB ✓
-- Vulkan compute headless (optionnel, si FPS encore insuffisant)
+**Phase 6 — GPU Compute (benchmark-gated)**
+- `GpuComputeManager` : init JOCL, détection AMD GPU, fallback gracieux
+- Kernel `bellman_ford.cl` : Bellman-Ford parallèle ; `GpuFlowField` (upload → kernel → download)
+- `DijkstraComputer` : dispatcher GPU/CPU
+- **Benchmark GPU vs CPU** sur 128×128, 256×256, multi-flow-fields → **garder GPU activé seulement si gain net mesuré**, sinon CPU maître (code GPU reste, désactivé)
+- **Livrable** : décision data-driven GPU + fallback gracieux vérifié (GPU absent → CPU, aucun crash)
+
+**Phase 7 — Client Rendering (le plus dur, en dernier)**
+- `ZombieBulkPositionPacket` + `PacketRegistry`, détection mod client (canal) → sinon fallback vanilla total
+- Optimisations dans l'ordre **sûr → risqué** :
+  1. **LOD modèle + frustum/occlusion culling** (gains faciles)
+  2. **Billboards** zombies lointains (sprite plat au lieu de modèle 3D)
+  3. **Instancing OpenGL** (`glDrawArraysInstanced`, 1 draw call/LOD) — compat Sodium (`RenderLayer` Fabric, `WorldRenderEvents.AFTER_ENTITIES`) ; Iris : pas d'effet shader sur instancing (accepté)
+- Overlay F3 client (`DebugHudCallback`)
+- **Livrable** : FPS tenable, mod ON vs OFF testé
+
+**Phase 8 — Perf finale**
+- Profiling async-profiler : GPU kernel, ForkJoinPool, SpatialGrid, packets bulk
+- Flow field chunk cache + dirty-marking ; audit mémoire (SmartZombie ~200B × 1000 ≈ 200KB ✓)
+- Vulkan compute headless (optionnel, dernier recours si FPS encore insuffisant)
 
 ---
 
 ## Vérification
 
 1. `./gradlew build` → JAR dans `build/libs/`
-2. Serveur Fabric 1.21.1 local → drop JAR dans `mods/`
+2. Serveur Fabric 1.21.11 local → drop JAR dans `mods/`
 3. Tests manuels :
    - Spawner 10 zombies face à un mur de verre → doivent casser
    - Fossé 3 blocs devant joueur → zombies doivent poser terre et passer
@@ -680,5 +732,5 @@ void onServerTick(MinecraftServer server) {
 5. Vérifier : zombies n'ont aucun équipement
 6. **Client mod ON** : F3 → GPU instancing actif, 1 draw call pour zombies
 7. **Client mod OFF** (vanilla) : connexion fonctionne, aucune erreur, zombies visibles normalement
-8. GPU serveur : log startup → `[LethalBreed] GPU: AMD Radeon RX 9060 XT — OpenCL OK`
+8. GPU serveur : log startup → `[LethalBreed] GPU: <nom GPU AMD détecté> — OpenCL OK`
 9. GPU absent : log → `[LethalBreed] GPU: unavailable — CPU fallback activé`

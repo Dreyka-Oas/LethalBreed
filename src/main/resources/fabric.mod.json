@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "lethalbreed",
+  "version": "1.0.0",
+  "name": "LethalBreed",
+  "description": "Smart vanilla zombies: build, break, hear sounds. Scales toward ~1000 via per-dimension flow field + GPU/CPU compute.",
+  "authors": ["Dreyka Oas"],
+  "license": "ARR",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.dreykaoas.lethalbreed.LethalBreedMod"],
+    "client": ["com.dreykaoas.lethalbreed.client.LethalBreedClient"]
+  },
+  "mixins": ["lethalbreed.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21"
+  },
+  "suggests": {
+    "fabric-api": "*",
+    "krypton": "*",
+    "lithium": "*",
+    "ferritecore": "*",
+    "c2me": "*",
+    "scalablelux": "*",
+    "servercore": "*",
+    "vmp": "*",
+    "immersive_optimization": "*",
+    "spark": "*"
+  },
+  "breaks": {
+    "enhancedai": "*",
+    "enhanced_ai": "*",
+    "special_ai": "*",
+    "specialai": "*",
+    "ai_improvements": "*",
+    "aiimprovements": "*",
+    "zombie_awareness": "*",
+    "zombieawareness": "*",
+    "smarter_mobs": "*",
+    "better_zombies": "*",
+    "monster_ai": "*"
+  }
+}
