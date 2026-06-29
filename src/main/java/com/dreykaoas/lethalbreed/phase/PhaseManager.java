@@ -4,13 +4,19 @@ import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.Random;
 
 /**
  * Server-global difficulty phase (1..15). Auto-advances on a ~10-minute timer (with random jitter),
  * monotonic (only up), capped at the last phase. Announces each change in chat. {@link ZombieVariation}
- * reads {@link #current()} when scaling a freshly-spawned zombie. In-memory only (resets on server start).
+ * reads {@link #current()} when scaling a freshly-spawned zombie.
+ *
+ * <p>State is PERSISTED per-world via {@link PhaseSavedData} (in {@code <world>/data}), so the phase AND the
+ * elapsed time toward the next advance survive close/reopen. The timer runs off the overworld's
+ * {@code getGameTime()} (the persisted world age, monotonic across reloads) — NOT the server's since-boot
+ * tick count, which resets to 0 every launch.
  */
 public final class PhaseManager {
     private static final PhaseManager INSTANCE = new PhaseManager();
@@ -19,10 +25,14 @@ public final class PhaseManager {
         return INSTANCE;
     }
 
+    // Cached mirror of the persisted state, so the hot static read in the spawn hook needs no server lookup.
     private int phase = 1;
-    private long lastAdvanceTick = Long.MIN_VALUE;
+    private long lastAdvanceGameTime = Long.MIN_VALUE;
     private long nextIntervalTicks = -1;
     private final Random rng = new Random();
+
+    // The world-attached store this mirror writes through (null until load()).
+    private PhaseSavedData store;
 
     private PhaseManager() {}
 
@@ -31,10 +41,36 @@ public final class PhaseManager {
         return INSTANCE.phase;
     }
 
+    /** SERVER_STARTED: bind to the overworld's persisted phase data and restore the cached mirror from it.
+     *  Replaces the old "reset to phase 1 each session" — the whole point is that it no longer resets. */
+    public void load(MinecraftServer server) {
+        ServerLevel overworld = server.overworld();
+        store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
+        phase = store.phase;
+        lastAdvanceGameTime = store.lastAdvanceGameTime;
+        nextIntervalTicks = store.nextIntervalTicks;
+        com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
+                "[LethalBreed] phase loaded: {} (worldAge={}, nextIn={})",
+                phase, overworld.getGameTime(), nextIntervalTicks);
+        logPhases();
+    }
+
+    /** Push the cached mirror into the world store and mark it dirty so it is written on the next save. */
+    private void persist() {
+        if (store != null) {
+            store.phase = phase;
+            store.lastAdvanceGameTime = lastAdvanceGameTime;
+            store.nextIntervalTicks = nextIntervalTicks;
+            store.setDirty();
+        }
+    }
+
+    /** Reset to phase 1 (e.g. a future /lethalphase reset). Persists, so the reset survives a reload too. */
     public void reset() {
         phase = 1;
-        lastAdvanceTick = Long.MIN_VALUE;
+        lastAdvanceGameTime = Long.MIN_VALUE;
         nextIntervalTicks = -1;
+        persist();
         logPhases();
     }
 
@@ -51,16 +87,20 @@ public final class PhaseManager {
         if (!ProgressionConfig.phaseSystemEnabled || phase >= PhaseConfig.count()) {
             return;
         }
-        long now = server.getTickCount();
-        if (lastAdvanceTick == Long.MIN_VALUE) {
-            lastAdvanceTick = now;
+        long now = server.overworld().getGameTime();
+        if (lastAdvanceGameTime == Long.MIN_VALUE) {
+            lastAdvanceGameTime = now;
             scheduleNext();
+            persist();
             return;
         }
-        if (now - lastAdvanceTick >= nextIntervalTicks) {
+        if (now - lastAdvanceGameTime >= nextIntervalTicks) {
             phase++;
-            lastAdvanceTick = now;
+            lastAdvanceGameTime = now;
             scheduleNext();
+            persist();
+            com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
+                    "[LethalBreed] phase advanced -> {} (worldAge={})", phase, now);
             broadcast(server);
         }
     }
@@ -74,8 +114,9 @@ public final class PhaseManager {
     /** Force a phase (e.g. /lethalphase) and announce it. */
     public void setPhase(MinecraftServer server, int p) {
         phase = Math.max(1, Math.min(PhaseConfig.count(), p));
-        lastAdvanceTick = server.getTickCount();
+        lastAdvanceGameTime = server.overworld().getGameTime();
         scheduleNext();
+        persist();
         broadcast(server);
     }
 
