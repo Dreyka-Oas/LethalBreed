@@ -18,6 +18,22 @@ public final class FlowConfig {
      *  power of two the device supports (e.g. 64/128/256) to tune throughput; the global range is rounded
      *  up to a multiple and the kernel bounds-checks the tail, so an over-large value is harmless. */
     public static int gpuWorkgroupSize = 0;
+    /** Minimum grid area (cells = width × depth) before the GPU solver is used; smaller fields solve on the
+     *  CPU instead, where the GPU's buffer upload/round-trip overhead would outweigh its throughput. The CPU
+     *  and GPU solvers produce the identical cost field, so this only trades latency, never correctness.
+     *  0 = always use the GPU when available. Ignored when {@link #gpuAutoCalibrate}.
+     *  <p>Default 1024 (≈32²): with the batched GPU convergence check (one readback per 16 passes, not per
+     *  pass) a boot benchmark on an AMD RX 9060 XT measured the GPU FASTER than the parallel CPU solver from
+     *  ~24² upward (e.g. 192²: 6.3 ms GPU vs 15.4 ms CPU), so only tiny fields stay on the CPU. Enable
+     *  {@link #gpuAutoCalibrate} to measure the exact crossover on the host hardware. */
+    public static int gpuMinCells = 1024;
+    /** Measure the CPU↔GPU crossover once at server start (micro-benchmark of both solvers at a range of
+     *  grid sizes) and use that as the GPU threshold instead of the fixed {@link #gpuMinCells}. Adds a brief
+     *  one-off boot cost on this exact machine; the result is logged. Off = use the manual gpuMinCells. */
+    public static boolean gpuAutoCalibrate = false;
+    /** Which OpenCL GPU to use, as an index into the detected-GPU list (logged at boot). -1 = auto (prefer an
+     *  AMD/Radeon device, else the first GPU). Out-of-range falls back to auto. Only matters with >1 GPU. */
+    public static int gpuDeviceIndex = -1;
 
     // ---- Flow field (Phase 2) ----
     /** Ticks between flow-field recomputes per dimension. */

@@ -5,12 +5,14 @@ import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
 import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 
 /**
- * OpenCL (JOCL) compute backend for the flow field — Phase 6, <b>benchmark-gated</b>. Initialized
- * lazily only when {@code useGpu} is enabled. Detects an AMD GPU (any model), builds the
- * {@code bellman_ford.cl} kernel, and solves a flow-field snapshot on the GPU. Every failure path
- * degrades to the CPU solver, so enabling the GPU can never break the game — at worst it is no win.
+ * OpenCL (JOCL) compute backend for the flow field — Phase 6. Initialized lazily only when {@code useGpu}
+ * is enabled. Detects an AMD GPU (any model), builds the {@code bellman_ford.cl} kernel, and solves a
+ * flow-field snapshot on the GPU. Every failure path degrades to the CPU solver, so enabling the GPU can
+ * never break the game — at worst it is no win.
  *
- * <p>CPU stays the master path; the GPU is only used when a benchmark proves it helps.
+ * <p>CPU stays the master path: {@link com.dreykaoas.lethalbreed.ai.flowfield.GpuFlowField} routes a solve
+ * to the GPU only when {@code useGpu} is on, a device is available, and the grid is at least
+ * {@code gpuMinCells} cells (small fields stay on the CPU, where the GPU round-trip would not pay off).
  *
  * <p>Device pick + context/kernel build live in {@link GpuContext}; per-call buffer marshalling lives
  * in {@link GpuFlowFieldSolver}. This class is the lazy-init facade and shared serialization point.

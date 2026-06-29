@@ -33,6 +33,9 @@ public final class ProgressionConfig {
     public static boolean devSpecialTest = false;
     /** Dev: headless mechanics arena (sun-burn / phase gear / contamination). Off for shipping. */
     public static boolean devMechTest = false;
+    /** Dev: headless Compute-backend self-test on server start — solves a synthetic field on CPU and GPU and
+     *  logs CPU sanity + GPU/CPU parity + dynamic-pool + routing checks. No world mutation. Off for shipping. */
+    public static boolean devComputeTest = false;
 
     // ---- Dev climb test (headless) ----
     /** Build a wall + villager-on-top + zombies arena on server start, for autonomous climb testing. */

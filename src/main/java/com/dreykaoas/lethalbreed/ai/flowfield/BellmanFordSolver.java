@@ -6,13 +6,14 @@ import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
 /**
  * WORKER THREAD: solve a {@link Snapshot} with PARALLEL Bellman-Ford relaxation — the multi-core CPU
  * backup used whenever the GPU is absent/disabled. Each iteration every passable cell pulls the
- * cheapest cost from its 8 neighbours (across {@link #SOLVE_THREADS} threads); repeat until a
+ * cheapest cost from its 8 neighbours (across the {@link #pool()} threads); repeat until a
  * fixpoint (nothing improved) or the safety cap. This is the same algorithm as the GPU
  * {@code relax_step} kernel and converges to the identical shortest-cost field as a sequential
  * Dijkstra (non-negative weights). No Minecraft access.
@@ -28,19 +29,39 @@ final class BellmanFordSolver {
     private static final int[] NDX = {1, -1, 0, 0, 1, 1, -1, -1};
     private static final int[] NDZ = {0, 0, 1, -1, 1, -1, 1, -1};
 
-    /** Threads used to parallelize ONE flow-field solve when there's no GPU (the multi-core CPU backup). */
-    private static final int SOLVE_THREADS = resolveSolveThreads();
-    private static final ForkJoinPool SOLVE_POOL = new ForkJoinPool(SOLVE_THREADS,
-            pool -> {
-                ForkJoinWorkerThread t = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-                t.setName("LethalBreed-CpuSolve");
-                t.setDaemon(true);
-                return t;
-            }, null, false);
+    /** Daemon worker factory for the CPU solve pool. */
+    private static final ForkJoinPool.ForkJoinWorkerThreadFactory SOLVE_FACTORY = pool -> {
+        ForkJoinWorkerThread t = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+        t.setName("LethalBreed-CpuSolve");
+        t.setDaemon(true);
+        return t;
+    };
+
+    private static volatile ForkJoinPool solvePool;     // lazily built, rebuilt on a flowCpuThreads change
+    private static volatile int solvePoolThreads = -1;   // thread count the current pool was sized for
 
     private static int resolveSolveThreads() {
         int cfg = FlowConfig.flowCpuThreads;
         return cfg > 0 ? cfg : Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
+    }
+
+    /** CPU solve pool, rebuilt when {@link FlowConfig#flowCpuThreads} changes so a GUI/command edit takes
+     *  effect without a JVM restart. Rebuilds are rare (only on a config change) and the superseded pool is
+     *  shut down. Synchronized because solves run on the 2-thread FlowField daemon pool — two solves could
+     *  otherwise race to rebuild. */
+    private static synchronized ForkJoinPool pool() {
+        int want = resolveSolveThreads();
+        if (solvePool == null || want != solvePoolThreads) {
+            // Replace the pool but DO NOT shut the old one down: a concurrent solve on another dimension may
+            // still hold a reference to it and be about to submit(), and shutdown() would make that submit()
+            // throw RejectedExecutionException. Instead the pool is built with a short keep-alive, so once a
+            // superseded pool goes idle its daemon workers terminate within a few seconds and the pool is
+            // GC'd — bounded, no leak, no race. Rebuilds happen only when flowCpuThreads actually changes.
+            solvePool = new ForkJoinPool(want, SOLVE_FACTORY, null, false,
+                    want, want, 1, null, 5L, TimeUnit.SECONDS);
+            solvePoolThreads = want;
+        }
+        return solvePool;
     }
 
     static FlowField compute(Snapshot s) {
@@ -61,7 +82,7 @@ final class BellmanFordSolver {
         int maxIter = width + depth + 2; // safety cap; converges in ~graph-diameter passes, breaks early
         for (int iter = 0; iter < maxIter; iter++) {
             AtomicBoolean changed = new AtomicBoolean(false);
-            SOLVE_POOL.submit(() -> IntStream.range(0, n).parallel().forEach(i -> {
+            pool().submit(() -> IntStream.range(0, n).parallel().forEach(i -> {
                 if (!passable[i]) {
                     return;
                 }
@@ -100,7 +121,7 @@ final class BellmanFordSolver {
 
         // Direction extraction: each cell points to its cheapest reachable neighbour. Parallel — every cell
         // writes only its own dirX[i]/dirZ[i], so no races.
-        SOLVE_POOL.submit(() -> IntStream.range(0, n).parallel().forEach(i -> {
+        pool().submit(() -> IntStream.range(0, n).parallel().forEach(i -> {
             if (cost[i] >= FlowField.IMPASSABLE || cost[i] == 0) {
                 return;
             }
