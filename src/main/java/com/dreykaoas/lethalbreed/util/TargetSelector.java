@@ -76,19 +76,23 @@ public final class TargetSelector {
         // raycast), so visiting candidates closest-first lets us stop after the fewest possible raycasts:
         // only the entities nearer than the winner (all unseen+unheard) ever get raycast.
         candidates.sort((a, b) -> Double.compare(self.distanceToSqr(a), self.distanceToSqr(b)));
+        double radiusSq = radius * radius;
         for (LivingEntity e : candidates) {
             double d = self.distanceToSqr(e);
-            // Heard (close, through walls) OR seen (line of sight). Hearing requires the entity to be making
-            // NOISE this tick (not mere proximity) — a motionless, silent entity emits no sound and can only
-            // be acquired by sight. A loud action (arm swing) is heard from the louder radius; a mere footstep
-            // only from the base radius. Only when LOS is required AND it's not heard do we fall back to
-            // needing sight — a distant/quiet entity behind an opaque wall is unseen and unheard, so it isn't
-            // a target until it makes itself known.
+            // Two independent detection channels, each with its OWN range:
+            //  - SIGHT is bounded by the visual detect radius (targetDetectRadius). The candidate box is sized
+            //    to the LARGER of sight/hearing reach, so a visible entity beyond the detect radius is in the
+            //    box but must NOT be acquired by sight — that is what keeps targetDetectRadius authoritative.
+            //  - HEARING reaches soundBaseRadius (or ×loud for a noisy arm-swing), through walls, but only for
+            //    an entity actually emitting noise this tick; a motionless, silent entity makes no sound.
+            // Detected = seen within sight range OR heard within hearing range. List is distance-sorted, so the
+            // first detected candidate is the nearest detected one.
             boolean heard = isAudible(e) && d <= (e.swinging ? loudHearSq : baseHearSq);
-            if (TargetingConfig.requireLineOfSight && !heard && !canSee(level, self, e)) {
-                continue;
+            boolean seen = d <= radiusSq
+                    && (!TargetingConfig.requireLineOfSight || canSee(level, self, e));
+            if (heard || seen) {
+                return e; // nearest detected — done
             }
-            return e; // nearest detected (list is distance-sorted) — done
         }
         return null;
     }
