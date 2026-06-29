@@ -38,15 +38,34 @@ public final class MechTestArena {
     private static void buildSunburn(ServerLevel ow, MechTestState s) {
         ArenaBuilder.forceChunks(ow, 30);
         floor(ow, 30, false);
-        s.husk = EntityType.HUSK.spawn(ow, new BlockPos(30, Y, 0), EntitySpawnReason.COMMAND);
+        // Guarantee OPEN sky over the props. The dev tests share one persistent run/world, and another test's
+        // arena can sit at these coordinates (the special-test platform's case #0 is also at x=30 and carries a
+        // glowstone roof at Y+4) — a leftover roof would block canSeeSky and silently kill the sun-burn. Clear
+        // the column above the floor so the check is self-contained regardless of prior runs.
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -4; dz <= 6; dz++) {
+                for (int dy = 0; dy <= 8; dy++) {
+                    ow.setBlock(new BlockPos(30 + dx, Y + dy, dz), Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
+        // Use create()+addFreshEntity, NOT EntityType.spawn: vanilla Zombie.finalizeSpawn rolls a baby ~5%
+        // of the time (getSpawnAsBabyOdds), and our own blockBabyZombies then DISCARDS that baby on load —
+        // the prop vanishes before it can sun-burn, a flaky false FAIL unrelated to the burn mechanic.
+        // create() skips finalizeSpawn entirely, so the prop is always a plain adult.
+        s.husk = EntityType.HUSK.create(ow, EntitySpawnReason.COMMAND);
         if (s.husk != null) {
+            s.husk.setPos(30.5, Y, 0.5);
             s.husk.setPersistenceRequired();
             s.husk.setNoAi(true); // stay on the open platform (don't wander into shade/void)
+            ow.addFreshEntity(s.husk);
         }
-        s.sunZombie = EntityType.ZOMBIE.spawn(ow, new BlockPos(32, Y, 0), EntitySpawnReason.COMMAND);
+        s.sunZombie = EntityType.ZOMBIE.create(ow, EntitySpawnReason.COMMAND);
         if (s.sunZombie != null) {
+            s.sunZombie.setPos(32.5, Y, 0.5);
             s.sunZombie.setPersistenceRequired();
             s.sunZombie.setNoAi(true);
+            ow.addFreshEntity(s.sunZombie);
         }
     }
 
