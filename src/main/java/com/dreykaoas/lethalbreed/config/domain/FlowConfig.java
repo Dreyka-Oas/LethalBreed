@@ -1,8 +1,8 @@
 package com.dreykaoas.lethalbreed.config.domain;
 
 /**
- * Flow-field pathing (GPU/CPU solver, grid sizing, path costs) and wall-climb tuning used when following
- * the field toward an overhead target.
+ * Flow-field pathing (GPU/CPU solver, grid sizing, path costs) and the overhead-pursuit tuning (when to
+ * start a pillar climb, its reach zone and give-up caps) used when chasing a target above the zombie.
  */
 public final class FlowConfig {
     private FlowConfig() {}
@@ -29,10 +29,14 @@ public final class FlowConfig {
     public static int gpuMinCells = 1024;
     /** Measure the CPU↔GPU crossover once at server start (micro-benchmark of both solvers at a range of
      *  grid sizes) and use that as the GPU threshold instead of the fixed {@link #gpuMinCells}. Adds a brief
-     *  one-off boot cost on this exact machine; the result is logged. Off = use the manual gpuMinCells. */
+     *  one-off boot cost on this exact machine; the result is logged. Off = use the manual gpuMinCells.
+     *  <p>(lu au démarrage — redémarrage requis pour prendre effet : a runtime GUI/command toggle is a no-op
+     *  until the next server start, since the crossover is measured once during GPU init.) */
     public static boolean gpuAutoCalibrate = false;
     /** Which OpenCL GPU to use, as an index into the detected-GPU list (logged at boot). -1 = auto (prefer an
-     *  AMD/Radeon device, else the first GPU). Out-of-range falls back to auto. Only matters with >1 GPU. */
+     *  AMD/Radeon device, else the first GPU). Out-of-range falls back to auto. Only matters with >1 GPU.
+     *  <p>(lu au démarrage — redémarrage requis pour prendre effet : the device is selected once when the
+     *  GpuContext is built at server start; changing this at runtime has no effect until a restart.) */
     public static int gpuDeviceIndex = -1;
 
     // ---- Flow field (Phase 2) ----
@@ -67,19 +71,23 @@ public final class FlowConfig {
     public static boolean targetCreativePlayers = false;
     /** Build a staircase up when the target is at least this many blocks above the zombie. */
     public static double climbThreshold = 2.0;
-    /** Climb ZONE: start scaling once stuck against a wall within this horizontal distance of an overhead
-     *  target. Generous on purpose — the wall-climb tops out onto the ledge then walks to the target, so it
-     *  no longer needs to be perfectly lined up. Too tight and zombies stall at a wall they can't quite reach. */
+    /** Climb ZONE: only start a climb (wall-scale or pillar) toward an overhead target while within this
+     *  horizontal distance of it. Generous on purpose — the climb tops out then walks to the target, so it no
+     *  longer needs to be perfectly lined up. Too tight and zombies stall below a target they can't reach. */
     public static double climbHorizRadius = 5.0;
-    /** Give up a wall-climb after it has risen this many blocks without reaching the target — only a safety
-     *  cap against scaling an endless wall toward an unreachable sky target. Generous: the wall-climb places
-     *  no blocks, so a tall climb leaves nothing behind and never strands the zombie. */
-    public static int maxClimbHeight = 24;
-    /** Upward speed (blocks/tick) when a zombie scales a wall toward an overhead target (≈ vanilla ladder).
-     *  Spider-style climb — NO blocks are placed, so nothing is ever left stranding the zombie. */
+    /** Spider wall-scale: when a flush vertical wall blocks the path to an overhead target, the zombie scales
+     *  it directly (drives upward velocity, hugging the face — NO blocks placed) instead of pillaring beside
+     *  it. ON leaves a clean world (no dirt columns); OFF falls back to the dirt pillar for every overhead. */
+    public static boolean wallClimbEnabled = true;
+    /** Upward speed (blocks/tick) when a zombie scales a flush wall toward an overhead target (≈ vanilla
+     *  ladder 0.2). Spider-style — no blocks are placed, so nothing is ever left stranding the zombie. */
     public static double wallClimbSpeed = 0.2;
-    /** Activations a zombie waits before re-attempting a wall it just failed to top (too tall) — stops it
-     *  jittering up-and-down the same unreachable wall forever. */
+    /** Give up a wall-scale after rising this many blocks without topping out / reaching the target — safety
+     *  cap against scaling an endless wall toward an unreachable sky target. The scale places no blocks, so a
+     *  tall attempt leaves nothing behind. On give-up the zombie falls back to a dirt pillar. */
+    public static int maxClimbHeight = 24;
+    /** Activations a zombie waits before re-attempting a climb it just gave up on (too tall / no progress) —
+     *  stops it jittering up-and-down the same unreachable wall or column forever. */
     public static int climbGiveUpCooldown = 15;
     /** Give up a pillar-up after rising this many blocks without reaching the target (safety cap). */
     public static int pillarMaxHeight = 24;

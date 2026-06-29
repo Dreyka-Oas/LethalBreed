@@ -33,7 +33,15 @@ public final class BreakManager {
 
     /** Mark a block as being broken by {@code breaker} (call every tick the zombie wants it). */
     public void request(BlockPos pos, LivingEntity breaker) {
-        State s = active.computeIfAbsent(pos.asLong(), k -> {
+        if (!CombatMoveConfig.blockOpsEnabled) {
+            return; // master toggle: no breaking at all
+        }
+        long key = pos.asLong();
+        // Anti-TPS cap: a brand-new break is ignored once we're already breaking the max distinct blocks.
+        if (!active.containsKey(key) && active.size() >= CombatMoveConfig.maxConcurrentBreaks) {
+            return;
+        }
+        State s = active.computeIfAbsent(key, k -> {
             State ns = new State();
             ns.breakerId = breakerSeq++;
             return ns;
@@ -84,7 +92,7 @@ public final class BreakManager {
                 s.lastStage = stage;
             }
             if (s.progress >= 1.0f) {
-                level.destroyBlock(pos, true, null, 512); // drop items + break effects
+                level.destroyBlock(pos, CombatMoveConfig.breakDropsItems, null, 512); // break effects; drops per config
                 level.destroyBlockProgress(s.breakerId, pos, -1);
                 it.remove();
             }

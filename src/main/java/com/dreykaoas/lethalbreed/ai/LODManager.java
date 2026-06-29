@@ -34,8 +34,17 @@ public final class LODManager {
             }
             // With vanilla target goals stripped (forceNearestTarget), set the vanilla target here too so
             // melee + look track the nearest pick immediately, even when the zombie is mid-water/pillar.
-            if (TargetingConfig.attackAllTargets && sz.entity().getTarget() != target) {
-                sz.entity().setTarget(target);
+            // forceNearestTarget=true → we own the selection, so always retarget to our nearest pick.
+            // forceNearestTarget=false → vanilla target goals still run, so only seed a target when there is
+            // none (don't stomp vanilla's choice every tick, which made the toggle inoperative).
+            if (TargetingConfig.attackAllTargets) {
+                if (TargetingConfig.forceNearestTarget) {
+                    if (sz.entity().getTarget() != target) {
+                        sz.entity().setTarget(target);
+                    }
+                } else if (sz.entity().getTarget() == null) {
+                    sz.entity().setTarget(target);
+                }
             }
             lod = lodFromDistSq(sz.entity().distanceToSqr(target), prev);
         } else if (TargetingConfig.targetMemoryTicks > 0 && sz.pursuit().hasMemory()

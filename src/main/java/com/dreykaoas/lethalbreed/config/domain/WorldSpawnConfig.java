@@ -22,14 +22,18 @@ public final class WorldSpawnConfig {
     public static double varSpeedMin = 0.9, varSpeedMax = 1.2;     // movement speed
     public static double varDamageMin = 0.85, varDamageMax = 1.3;  // attack damage
     public static double varLeapMin = 0.85, varLeapMax = 1.2;      // leap power
+    public static double varHealthMin = 0.9, varHealthMax = 1.2;   // max health
 
     // ---- Random beneficial effect on spawn (constant while alive) ----
-    /** Each spawned zombie has a chance to carry one random beneficial effect for its whole life. */
+    /** Master gate for spawn effects: when OFF, NEITHER the legacy flat roll NOR the phase effects apply. */
     public static boolean randomEffectEnabled = true;
-    /** Fraction of spawns that get an effect (0.25 = ~1 in 4). */
+    /** LEGACY ONLY: fraction of spawns that get an effect when the phase system is OFF (0.25 = ~1 in 4).
+     *  Ignored by the phase path, which uses each phase's own effChance. */
     public static float randomEffectChance = 0.25f;
-    /** Max amplifier; the level is rolled in [0, max] so I–(max+1). 2 = up to level III. */
-    public static int randomEffectMaxAmplifier = 2;
+    /** Global hard amplifier ceiling — applies to BOTH the legacy roll AND the phase effects (capped via
+     *  Math.min against the phase's effMaxAmp). Default 3 = the table's current max, so it is a no-op cap
+     *  by default; lower it to nerf effect strength everywhere. Level rolled in [0, max]. */
+    public static int randomEffectMaxAmplifier = 3;
     /** Custom LEAP effect: extra horizontal leap reach per level (0.35 = +35%/level). */
     public static double leapEffectPerLevel = 0.35;
 
@@ -43,4 +47,6 @@ public final class WorldSpawnConfig {
     public static boolean stripZombieEquipment = false;
     /** Force every zombie type to burn in daylight (husks too); Fire Resistance/helmet/water still protect. */
     public static boolean forceAllZombiesSunBurn = true;
+    /** Fire ticks applied per sun-burn trigger (160 = 8s, like vanilla). */
+    public static int sunBurnDurationTicks = 160;
 }

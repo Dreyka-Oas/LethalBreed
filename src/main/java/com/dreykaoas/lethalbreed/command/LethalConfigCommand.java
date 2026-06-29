@@ -29,8 +29,9 @@ import java.util.Locale;
  *   <li>{@code /lethalconfig reset all}        — restore everything to defaults</li>
  * </ul>
  *
- * No permission gate (level 0): every player may open the menu and edit everything. Changes are global
- * (the config is static) and persisted to {@code config/oas/lethalbreed.json}.
+ * Op-gated (permission level 2 / GAMEMASTERS): config changes are global (the config is static) and
+ * persisted to {@code config/oas/lethalbreed.json}, so editing is restricted to operators (in singleplayer
+ * this means "allow cheats"). The C2S {@code SetConfig} packet is gated identically server-side.
  */
 public final class LethalConfigCommand {
     private LethalConfigCommand() {}
@@ -47,6 +48,7 @@ public final class LethalConfigCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lethalconfig")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(LethalConfigCommand::openMenu)
                 .then(Commands.literal("list").executes(LethalConfigCommand::list))
                 .then(Commands.literal("get")

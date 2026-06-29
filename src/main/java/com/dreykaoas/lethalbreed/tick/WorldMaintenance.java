@@ -29,7 +29,13 @@ final class WorldMaintenance {
             return;
         }
         if (WorldSpawnConfig.forceDayTime) {
-            ow.setDayTime(WorldSpawnConfig.forcedDayTime);
+            // Hold only the time-of-day, preserving the day counter (don't reset to day 0 each tick).
+            long target = Math.floorMod(WorldSpawnConfig.forcedDayTime, 24000L);
+            long current = ow.getDayTime();
+            long timeOfDay = Math.floorMod(current, 24000L);
+            if (timeOfDay != target) {
+                ow.setDayTime(current - timeOfDay + target);
+            }
         }
         if (WorldSpawnConfig.clearWeather && ow.isRaining()) {
             ow.setWeatherParameters(6000, 0, false, false);

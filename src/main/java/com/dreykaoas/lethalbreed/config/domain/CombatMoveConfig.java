@@ -20,6 +20,8 @@ public final class CombatMoveConfig {
     /** Leap velocity. */
     public static double leapHorizontalSpeed = 0.55;
     public static double leapUpward = 0.42;
+    /** Max absolute vertical offset (blocks) to target for a leap to fire (too high/low = no pounce). */
+    public static double leapMaxVerticalDiff = 3.0;
 
     /** Max vertical blocks a zombie breaks to pass an obstacle (size-aware, ceil of its height). */
     public static int maxBreakHeight = 4;
@@ -38,8 +40,6 @@ public final class CombatMoveConfig {
     public static double waterSwimSpeed = 0.06;
 
     // ---- Climb pacing ----
-    /** Activations to wait between pillar steps (higher = slower, more natural climb). */
-    public static int climbCooldown = 2;
     /** Activations of no horizontal progress before the zombie is "stuck" and may break/build/pillar.
      *  Until then it just walks (vanilla auto-steps 1 block + jumps 1-wide gaps) — no needless block ops. */
     public static int stuckActivations = 2;
@@ -47,10 +47,10 @@ public final class CombatMoveConfig {
      *  target. Below this, the activation is counted toward {@link #stuckActivations}. 0.25 = 0.5 blocks; raise
      *  to demand more progress (acts/breaks sooner), lower to be more patient before block ops. */
     public static double stuckProgressEpsilon = 0.25;
-    /** Max ticks a pillar-jump waits to gain height before aborting (jump arc length). */
+    /** Safety cap: abort a pillar climb if it fails to gain a full block within this many activations on the
+     *  CURRENT rung — stops a zombie jumping in place forever when a support can't land (queue full, ceiling,
+     *  or a sideways-blocked arc). A healthy pillar gains a rung every few ticks and never trips this. */
     public static int climbJumpMaxAge = 16;
-    /** Upward velocity of a pillar jump (0.42 ≈ vanilla player jump, ~1.25 blocks high). */
-    public static double climbJumpVelocity = 0.42;
     /** Target this many blocks BELOW (and stuck at a ledge) → dig straight down to descend safely. */
     public static double descendThreshold = 2.0;
     /** A drop this many blocks or shorter is walked/dropped down for free instead of being carved into a
@@ -73,10 +73,20 @@ public final class CombatMoveConfig {
     public static long breakGraceTicks = 10L;
 
     // ---- Block ops (Phase 3) ----
-    /** Max world-mutating ops applied per tick per dimension (breaks prioritized over placements). */
+    /** Master toggle for ALL world mutation (breaks + placements/bridge/pillar). false = pure vanilla
+     *  pathing, zero block ops. Gated at BreakManager.request and BlockOperationQueue.enqueuePlace. */
+    public static boolean blockOpsEnabled = true;
+    /** Max placement ops applied per tick per dimension (the place queue; breaks run via BreakManager). */
     public static int blockOpsPerTick = 20;
     /** Pending-op queue cap; ops past this are dropped until it drains. */
     public static int blockOpsQueueCap = 500;
+    /** Anti-TPS cap: max distinct blocks being progressively broken at once (per dimension). New breaks
+     *  past this are ignored until an active one finishes. */
+    public static int maxConcurrentBreaks = 64;
+    /** Never break blocks with a block-entity (chests, furnaces, spawners, beds, etc.). Anti-grief. */
+    public static boolean breakProtectBlockEntities = true;
+    /** Whether broken blocks drop their items. false = no item-entity spam during a raid. */
+    public static boolean breakDropsItems = true;
     /** Blocks with getDestroySpeed above this are treated as unbreakable (excludes obsidian etc.). */
     public static float breakMaxHardness = 30.0f;
     /** Ticks before zombie-placed dirt is auto-removed (no drop). 600 = 30s. */

@@ -37,18 +37,20 @@ public final class EntityEventsInit {
     /** Register / unregister vanilla zombies as they load into a server level, applying spawn control. */
     private static void registerTracking(ZombieRegistry registry) {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            ContaminationManager.onLoad(entity); // re-track contaminated
+            // Discard blocked drowned/babies BEFORE tracking, so we don't contamination-track an entity we
+            // then toss this same load.
             if (WorldSpawnConfig.blockDrowned && entity.getType() == EntityType.DROWNED) {
                 entity.discard();
                 return;
             }
+            if (WorldSpawnConfig.blockBabyZombies && entity instanceof Zombie zb && zb.isBaby()) {
+                zb.discard();
+                return;
+            }
+            ContaminationManager.onLoad(entity); // re-track contaminated
             // Track all zombie variants (plain Zombie, Husk, ZombieVillager, ZombifiedPiglin...).
-            // Drowned is handled above (discarded when blockDrowned).
+            // Drowned + babies are handled above (discarded when blocked).
             if (entity instanceof Zombie zombie) {
-                if (WorldSpawnConfig.blockBabyZombies && zombie.isBaby()) {
-                    zombie.discard();
-                    return;
-                }
                 if (WorldSpawnConfig.stripZombieEquipment) {
                     SpawnControl.stripEquipment(zombie);
                 }

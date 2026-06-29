@@ -7,5 +7,6 @@ public enum ZombieState {
     PURSUING_SOUND,
     BUILDING,
     BREAKING,
+    CLIMBING,
     DESCENDING
 }

@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.ai.flowfield.gpu;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import org.jocl.Pointer;
+import org.jocl.Sizeof;
 import org.jocl.cl_command_queue;
 import org.jocl.cl_context;
 import org.jocl.cl_context_properties;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.jocl.CL.CL_CONTEXT_PLATFORM;
+import static org.jocl.CL.CL_DEVICE_MAX_WORK_GROUP_SIZE;
 import static org.jocl.CL.CL_DEVICE_NAME;
 import static org.jocl.CL.CL_DEVICE_TYPE_GPU;
 import static org.jocl.CL.clBuildProgram;
@@ -43,6 +45,9 @@ final class GpuContext {
     final cl_kernel kernel;
     final cl_program program;
     final String deviceName;
+    /** CL_DEVICE_MAX_WORK_GROUP_SIZE of the chosen device — the largest legal local work-group size.
+     *  Used by the solver to reject an over-large/illegal gpuWorkgroupSize and let the driver pick instead. */
+    final long maxWorkGroupSize;
 
     GpuContext() {
         setExceptionsEnabled(true);
@@ -113,6 +118,19 @@ final class GpuContext {
         clBuildProgram(program, 0, null, null, null, null);
         this.kernel = clCreateKernel(program, "relax_step", null);
         this.deviceName = chosenName;
+        this.maxWorkGroupSize = queryMaxWorkGroupSize(chosenDevice);
+    }
+
+    /** Query CL_DEVICE_MAX_WORK_GROUP_SIZE (a size_t). Falls back to a conservative 256 if the query fails
+     *  or reports a nonsense value, so the solver still has a safe upper bound to validate against. */
+    private static long queryMaxWorkGroupSize(cl_device_id device) {
+        try {
+            long[] out = new long[1];
+            clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, Sizeof.size_t, Pointer.to(out), null);
+            return out[0] > 0 ? out[0] : 256L;
+        } catch (Throwable t) {
+            return 256L;
+        }
     }
 
     private static String queryDeviceName(cl_device_id device) {

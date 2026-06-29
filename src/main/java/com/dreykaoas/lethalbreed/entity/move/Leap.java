@@ -44,8 +44,11 @@ public final class Leap {
         }
         double horiz = Math.sqrt(horizSq);
         double ldf = MoveMath.leapDistanceFactor(entity); // custom LEAP effect → farther reach (1.0 if absent)
-        if (horiz < CombatMoveConfig.leapMinRange || horiz > CombatMoveConfig.leapMaxRange * ldf
-                || Math.abs(dy) >= 3.0 || entity.getRandom().nextFloat() >= CombatMoveConfig.leapChance) {
+        double lo = Math.min(CombatMoveConfig.leapMinRange, CombatMoveConfig.leapMaxRange);
+        double hi = Math.max(CombatMoveConfig.leapMinRange, CombatMoveConfig.leapMaxRange);
+        if (horiz < lo || horiz > hi * ldf
+                || Math.abs(dy) >= CombatMoveConfig.leapMaxVerticalDiff
+                || entity.getRandom().nextFloat() >= CombatMoveConfig.leapChance) {
             return false;
         }
         double inv = 1.0 / horiz;

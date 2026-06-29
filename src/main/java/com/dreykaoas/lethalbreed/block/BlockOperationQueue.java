@@ -11,48 +11,33 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 
 /**
- * Per-dimension queue of pending world mutations. Zombies enqueue break/place requests during their
- * tick; the scheduler drains them on the server thread under a per-tick budget (breaks first). A
- * position set deduplicates requests so a crowd hitting one block enqueues it once.
+ * Per-dimension queue of pending block <i>placements</i> (bridge spans / pillar supports). Zombies
+ * enqueue place requests during their tick; the scheduler drains them on the server thread under a
+ * per-tick budget. A position set deduplicates requests so a crowd targeting one cell enqueues it once.
+ * Breaks do NOT go through here — they are progressive and handled by {@link BreakManager}.
  *
  * <p>Phase 3 is server-thread only. When zombie ticks move off-thread (Phase 5) this becomes a
  * concurrent queue and the dedup set a {@code ConcurrentHashMap.newKeySet()}.
  */
 public final class BlockOperationQueue {
-    private final ArrayDeque<BlockPos> breaks = new ArrayDeque<>();
     private final ArrayDeque<BlockPos> places = new ArrayDeque<>();
     private final HashSet<Long> pending = new HashSet<>();
 
-    public void enqueueBreak(BlockPos pos) {
-        add(breaks, pos);
-    }
-
     public void enqueuePlace(BlockPos pos) {
-        add(places, pos);
-    }
-
-    private void add(ArrayDeque<BlockPos> q, BlockPos pos) {
-        if (breaks.size() + places.size() >= CombatMoveConfig.blockOpsQueueCap) {
+        if (!CombatMoveConfig.blockOpsEnabled) {
+            return; // master toggle: no bridging/pillar placements
+        }
+        if (places.size() >= CombatMoveConfig.blockOpsQueueCap) {
             return;
         }
         if (pending.add(pos.asLong())) {
-            q.add(pos.immutable());
+            places.add(pos.immutable());
         }
     }
 
-    /** Apply up to the per-tick budget. Breaks are spent first, then placements. */
+    /** Apply up to the per-tick budget of placements. */
     public void drain(Level level, PlacedBlockTracker tracker, long tick) {
         int budget = CombatMoveConfig.blockOpsPerTick;
-
-        while (budget > 0 && !breaks.isEmpty()) {
-            BlockPos p = breaks.poll();
-            pending.remove(p.asLong());
-            BlockState s = level.getBlockState(p);
-            if (MaterialRegistry.isBreakable(level, p, s)) {
-                level.destroyBlock(p, true, null, 512); // drop items + break effects (vanilla)
-                budget--;
-            }
-        }
 
         while (budget > 0 && !places.isEmpty()) {
             BlockPos p = places.poll();
@@ -67,6 +52,6 @@ public final class BlockOperationQueue {
     }
 
     public int pendingCount() {
-        return breaks.size() + places.size();
+        return places.size();
     }
 }

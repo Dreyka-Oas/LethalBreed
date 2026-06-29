@@ -42,6 +42,9 @@ public final class TargetSelector {
         if (e instanceof Player p) {
             return Players.isTargetable(p); // creative/spectator excluded
         }
+        if (TargetingConfig.targetPlayersOnly) {
+            return false; // players-only mode: reject every non-player living entity
+        }
         return !e.isSpectator();
     }
 
@@ -50,7 +53,16 @@ public final class TargetSelector {
      *  ({@code soundBaseRadius}) is sensed even through solid walls (zombies hear through walls by design). So
      *  a close entity hidden behind blocks still beats a far visible one: the nearest DETECTED entity wins. */
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
-        AABB box = self.getBoundingBox().inflate(radius);
+        // The candidate AABB must cover the FULL detection reach, which is the max of the visual radius and the
+        // loud-hearing reach (soundBaseRadius × soundLoudMultiplier). Inflating by radius alone dropped loud
+        // entities sitting between radius and hearReach, silently truncating hearing.
+        // Cap the hearing reach used to size the query box: soundBaseRadius (≤128) × soundLoudMultiplier (≤16)
+        // could otherwise reach ~2048, and a 2048-block getEntitiesOfClass AABB would scan a colossal volume
+        // every acquisition = a TPS cliff. 128 is well past any sane hearing range and matches the detect cap.
+        double hearReach = TargetingConfig.soundEnabled
+                ? Math.min(128.0, TargetingConfig.soundBaseRadius * Math.max(1.0, TargetingConfig.soundLoudMultiplier))
+                : 0.0;
+        AABB box = self.getBoundingBox().inflate(Math.max(radius, hearReach));
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
         // Hearing range scales with how LOUD the entity is, mirroring SoundEventBus: a normal noise carries
         // soundBaseRadius, a LOUD action (mining/attacking/placing = arm swing, like a block break) carries

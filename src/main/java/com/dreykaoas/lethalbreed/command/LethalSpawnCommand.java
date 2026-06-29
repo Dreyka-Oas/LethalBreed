@@ -33,9 +33,11 @@ public final class LethalSpawnCommand {
     private LethalSpawnCommand() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext) {
-        // Note: 1.21.11 replaced hasPermission(int) with a Permission-object system. For this dev tool
-        // we leave it open — it still requires command access (cheats in singleplayer / op on a server).
+        // Op-gated (level 2 / GAMEMASTERS): 1.21.11 replaced hasPermission(int) with a Permission-object
+        // system, so the check is Commands.hasPermission(Commands.LEVEL_GAMEMASTERS). This dev/load-test tool
+        // can queue up to 100k entities, so it must not be reachable by non-operators on a server.
         dispatcher.register(Commands.literal("lethalspawn")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("entity", ResourceArgument.resource(buildContext, Registries.ENTITY_TYPE))
                         .then(Commands.argument("count", IntegerArgumentType.integer(1, 100000))
                                 .executes(ctx -> run(ctx, 0))
