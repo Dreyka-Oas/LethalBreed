@@ -7,6 +7,7 @@ import com.dreykaoas.lethalbreed.block.MaterialRegistry;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -65,6 +66,18 @@ public final class MoveMath {
     static int breakHeight(LivingEntity entity) {
         int n = (int) Math.ceil(entity.getBbHeight() - 1.0e-4);
         return Math.max(1, Math.min(n, CombatMoveConfig.maxBreakHeight));
+    }
+
+    /** Turn the entity to face a horizontal heading (yaw from the XZ vector), pitch untouched. No-op on a
+     *  degenerate heading (|h| ≤ 1e-2) so a zombie sitting on its target doesn't snap to a junk yaw. */
+    static void faceHeading(LivingEntity entity, double hx, double hz) {
+        if (hx * hx + hz * hz <= 1.0e-4) { // (1e-2)^2 — same gate as the callers, no sqrt
+            return;
+        }
+        float yaw = (float) (Mth.atan2(hz, hx) * (180.0 / Math.PI)) - 90.0f;
+        entity.setYRot(yaw);
+        entity.yBodyRot = yaw;
+        entity.yHeadRot = yaw;
     }
 
     /** True if (x,y,z) is a motion-blocking block the configured material rules allow breaking. */

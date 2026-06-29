@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
-import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
@@ -10,8 +9,6 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
  * Jump-and-place vertical ascent. When a target is perched above with no flush wall to scale, the zombie
@@ -19,36 +16,13 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * hurtMarked}), never a setPos levitation, so it stands on what it builds. Owns the pillar mutable state
  * and the post-give-up climb cooldown. See the {@code entity-velocity-not-applying} skill.
  */
-public final class PillarClimb {
-    private final SmartZombie owner;
-    private final Zombie entity;
-
-    private boolean pillaring = false;
-    private int pillarAge = 0;
-    private double pillarStartY = 0.0;
+public final class PillarClimb extends Ascent {
     private int pillarColX = 0;
     private int pillarColZ = 0;
     private int pillarStandY = 0; // block-Y the zombie last jumped from (support is laid here)
-    private int pillarTopY = 0;   // highest block-Y reached this climb (for the stall watchdog)
-    private int pillarRungAge = 0; // activations since the last full-block gain on the current rung
-    private int climbCd = 0;
 
     public PillarClimb(SmartZombie owner) {
-        this.owner = owner;
-        this.entity = owner.entity();
-    }
-
-    public boolean active() { return pillaring; }
-    public boolean onCooldown() { return climbCd > 0; }
-
-    /** Force the ascent off (used when the zombie enters water and must not build). */
-    public void cancel() { pillaring = false; }
-
-    /** Decrement the give-up cooldown each activation (called from the bucketed tick). */
-    public void tickCooldown() {
-        if (climbCd > 0) {
-            climbCd--;
-        }
+        super(owner);
     }
 
     /**
@@ -57,18 +31,15 @@ public final class PillarClimb {
      * zombie stands on what it builds and never levitates. The column is auto-removed by the tracker.
      */
     public void initiate() {
-        if (pillaring || climbCd > 0 || !entity.onGround()) {
+        if (running || climbCd > 0 || !entity.onGround()) {
             return;
         }
-        pillaring = true;
-        pillarAge = 0;
-        pillarStartY = entity.getY();
+        running = true;
+        beginAscent();
         // Lock the column to where we start so the whole pillar rises straight up one fixed XZ cell.
         pillarColX = entity.blockPosition().getX();
         pillarColZ = entity.blockPosition().getZ();
         pillarStandY = entity.blockPosition().getY();
-        pillarTopY = pillarStandY;
-        pillarRungAge = 0;
         owner.setState(ZombieState.BUILDING);
     }
 
@@ -79,24 +50,24 @@ public final class PillarClimb {
      * height, the height cap, or a ceiling.
      */
     public void step(ServerLevel level, WorldAIContext ctx) {
-        if (!pillaring) {
+        if (!running) {
             return;
         }
         if (!owner.isValid()) {
-            pillaring = false;
+            running = false;
             return;
         }
-        pillarAge++;
+        age++;
 
         double dyToTarget = owner.hasTarget() ? (owner.tgtY() - entity.getY()) : -1.0;
         double hx = owner.tgtX() - entity.getX();
         double hz = owner.tgtZ() - entity.getZ();
         double h = Math.sqrt(hx * hx + hz * hz);
 
-        if (ProgressionConfig.debugClimb && (pillarAge % 3 == 1)) {
+        if (ProgressionConfig.debugClimb && (age % 3 == 1)) {
             LethalBreed.LOGGER.info("[ClimbDbg] z{} PILLAR y={} dyTgt={} horiz={} age={} risen={} ground={}",
-                    entity.getId(), MoveMath.f1(entity.getY()), MoveMath.f1(dyToTarget), MoveMath.f1(h), pillarAge,
-                    MoveMath.f1(entity.getY() - pillarStartY), entity.onGround());
+                    entity.getId(), MoveMath.f1(entity.getY()), MoveMath.f1(dyToTarget), MoveMath.f1(h), age,
+                    MoveMath.f1(risen()), entity.onGround());
         }
 
         // Reached the target's height → hop forward off the column toward the target and stop.
@@ -106,28 +77,18 @@ public final class PillarClimb {
                 entity.hurtMarked = true;
             }
             entity.setJumping(false);
-            pillaring = false;
+            running = false;
             return;
         }
-        // Stall watchdog: count activations since the last full-block height gain. Reaching a new rung resets
-        // it; if the current rung makes no progress within climbJumpMaxAge activations the support can't land
-        // (queue full, sideways-blocked arc, ceiling) — abort so the zombie doesn't jump in place forever.
-        int curY = entity.blockPosition().getY();
-        if (curY > pillarTopY) {
-            pillarTopY = curY;
-            pillarRungAge = 0;
-        } else {
-            pillarRungAge++;
-        }
+        boolean stalled = updateStallWatchdog();
 
         // Height budget spent, a solid ceiling blocks further rise, or the rung stalled → give up; the column
         // stays (and is auto-removed by the tracker). The zombie stands on what it built.
         boolean ceiling = level.getBlockState(BlockPos.containing(
                 entity.getX(), entity.getY() + entity.getBbHeight() + 0.25, entity.getZ())).blocksMotion();
-        boolean stalled = pillarRungAge > CombatMoveConfig.climbJumpMaxAge;
-        if (entity.getY() - pillarStartY >= FlowConfig.pillarMaxHeight || ceiling || stalled) {
+        if (risen() >= FlowConfig.pillarMaxHeight || ceiling || stalled) {
             entity.setJumping(false);
-            pillaring = false;
+            running = false;
             climbCd = FlowConfig.climbGiveUpCooldown;
             return;
         }
@@ -136,12 +97,7 @@ public final class PillarClimb {
         entity.getNavigation().stop();
 
         // Face the target so the zombie looks where it is climbing (not staring sideways mid-jump).
-        if (h > 1.0e-2) {
-            float yaw = (float) (Mth.atan2(hz, hx) * (180.0 / Math.PI)) - 90.0f;
-            entity.setYRot(yaw);
-            entity.yBodyRot = yaw;
-            entity.yHeadRot = yaw;
-        }
+        MoveMath.faceHeading(entity, hx, hz);
 
         if (entity.onGround()) {
             // Grounded on the column: record this rung and launch a jump. A direct upward velocity impulse
