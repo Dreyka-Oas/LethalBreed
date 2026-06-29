@@ -26,8 +26,9 @@ public final class ConfigCategory {
         if (n.startsWith("flow") || n.startsWith("nav")) return "Pathing";
         if (n.contains("target") || n.contains("nearest") || n.contains("lineofsight")
                 || n.contains("attack")) return "Targeting";
-        if (n.contains("lod") || n.contains("throttle") || n.equals("tickbuckets")
-                || n.contains("spatial") || n.contains("reclassify")) return "Perf";
+        if (n.contains("lod") || n.contains("throttle") || n.contains("bucket")
+                || n.contains("spatial") || n.contains("reclassify") || n.contains("budget")
+                || n.contains("mspt")) return "Perf";
         if (n.startsWith("dev") || n.startsWith("debug")) return "Dev";
         if (n.contains("day") || n.contains("weather") || n.contains("suppressvanilla")
                 || n.contains("failonai")) return "World";
