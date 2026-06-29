@@ -4,6 +4,7 @@ import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +25,10 @@ public final class ClimbTest {
     private ClimbTest() {}
 
     public static void run(MinecraftServer server) {
-        if (!ProgressionConfig.devClimbTest) {
+        // Dev-env gate: this force-loads chunks, builds a wall, spawns mobs AND flips WorldSpawnConfig.
+        // forceDayTime + ProgressionConfig.debugClimb at runtime. Far too destructive for a real world, so it
+        // runs ONLY under gradle runServer (a development environment) even if the GUI toggle is left on.
+        if (!ProgressionConfig.devClimbTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
             return;
         }
         ServerLevel level = server.overworld();

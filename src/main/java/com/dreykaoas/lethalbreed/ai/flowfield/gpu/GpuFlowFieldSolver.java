@@ -85,11 +85,20 @@ final class GpuFlowFieldSolver {
                 global = new long[]{g};
                 local = new long[]{wg};
             }
+            // Convergence is checked once per BATCH of kernel passes instead of every pass. The blocking
+            // changed-flag round-trip (write 0 + read back) dominated GPU latency at O(width+depth) passes;
+            // batching cuts those round-trips ~BATCH×. The in-order command queue runs the queued passes
+            // sequentially (each sees the previous pass's relaxations), and extra passes after convergence
+            // are cheap no-ops, so at most one extra batch runs. Correctness is unchanged.
+            final int BATCH = 16;
             int maxIter = width + depth + 2;
-            for (int iter = 0; iter < maxIter; iter++) {
+            for (int done = 0; done < maxIter; done += BATCH) {
                 changed[0] = 0;
                 clEnqueueWriteBuffer(ctx.queue, changedMem, true, 0, Sizeof.cl_int, Pointer.to(changed), 0, null, null);
-                clEnqueueNDRangeKernel(ctx.queue, ctx.kernel, 1, null, global, local, 0, null, null);
+                int passes = Math.min(BATCH, maxIter - done);
+                for (int k = 0; k < passes; k++) {
+                    clEnqueueNDRangeKernel(ctx.queue, ctx.kernel, 1, null, global, local, 0, null, null);
+                }
                 clEnqueueReadBuffer(ctx.queue, changedMem, true, 0, Sizeof.cl_int, Pointer.to(changed), 0, null, null);
                 if (changed[0] == 0) {
                     break;

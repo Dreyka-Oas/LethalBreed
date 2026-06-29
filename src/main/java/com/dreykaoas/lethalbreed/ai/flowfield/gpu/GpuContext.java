@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.ai.flowfield.gpu;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
+import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import org.jocl.Pointer;
 import org.jocl.cl_command_queue;
 import org.jocl.cl_context;
@@ -11,6 +13,8 @@ import org.jocl.cl_program;
 import org.jocl.cl_queue_properties;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.jocl.CL.CL_CONTEXT_PLATFORM;
 import static org.jocl.CL.CL_DEVICE_NAME;
@@ -51,13 +55,10 @@ final class GpuContext {
         cl_platform_id[] platforms = new cl_platform_id[numPlatforms[0]];
         clGetPlatformIDs(platforms.length, platforms, null);
 
-        cl_platform_id chosenPlatform = null;
-        cl_device_id chosenDevice = null;
-        String chosenName = null;
-        cl_platform_id firstPlatform = null;
-        cl_device_id firstDevice = null;
-        String firstName = null;
-
+        // Enumerate every GPU device across all platforms into one flat, index-stable list.
+        List<cl_platform_id> platList = new ArrayList<>();
+        List<cl_device_id> devList = new ArrayList<>();
+        List<String> nameList = new ArrayList<>();
         for (cl_platform_id platform : platforms) {
             int[] numDevices = new int[1];
             try {
@@ -71,33 +72,36 @@ final class GpuContext {
             cl_device_id[] devices = new cl_device_id[numDevices[0]];
             clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, devices.length, devices, null);
             for (cl_device_id device : devices) {
-                String name = queryDeviceName(device);
-                if (firstDevice == null) {
-                    firstPlatform = platform;
-                    firstDevice = device;
-                    firstName = name;
-                }
-                String upper = name.toUpperCase();
+                platList.add(platform);
+                devList.add(device);
+                nameList.add(queryDeviceName(device));
+            }
+        }
+        if (devList.isEmpty()) {
+            throw new IllegalStateException("no OpenCL GPU device");
+        }
+        for (int i = 0; i < nameList.size(); i++) {
+            LethalBreed.LOGGER.info("[LethalBreed] GPU[{}] = {}", i, nameList.get(i));
+        }
+
+        // Pick: an explicit, in-range gpuDeviceIndex wins; otherwise auto — prefer AMD/Radeon, else device 0.
+        int want = FlowConfig.gpuDeviceIndex;
+        int chosen;
+        if (want >= 0 && want < devList.size()) {
+            chosen = want;
+        } else {
+            chosen = 0;
+            for (int i = 0; i < nameList.size(); i++) {
+                String upper = nameList.get(i).toUpperCase();
                 if (upper.contains("AMD") || upper.contains("RADEON")) {
-                    chosenPlatform = platform;
-                    chosenDevice = device;
-                    chosenName = name;
+                    chosen = i;
                     break;
                 }
             }
-            if (chosenDevice != null) {
-                break;
-            }
         }
-
-        if (chosenDevice == null) {
-            chosenPlatform = firstPlatform;
-            chosenDevice = firstDevice;
-            chosenName = firstName;
-        }
-        if (chosenDevice == null) {
-            throw new IllegalStateException("no OpenCL GPU device");
-        }
+        cl_platform_id chosenPlatform = platList.get(chosen);
+        cl_device_id chosenDevice = devList.get(chosen);
+        String chosenName = nameList.get(chosen);
 
         cl_context_properties props = new cl_context_properties();
         props.addProperty(CL_CONTEXT_PLATFORM, chosenPlatform);

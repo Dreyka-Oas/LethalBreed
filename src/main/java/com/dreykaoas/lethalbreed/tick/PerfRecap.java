@@ -13,7 +13,7 @@ import net.minecraft.server.MinecraftServer;
 
 /**
  * Dev perf recap, emitted every {@code debugLogInterval} ticks (~5s). Active ONLY in a development
- * environment AND once {@code /lethalspawn} has turned it on — so a built/published jar never logs.
+ * environment AND when {@code SchedulerConfig.debugLogInterval > 0} — so a built/published jar never logs.
  */
 final class PerfRecap {
     private final ZombieRegistry registry;
