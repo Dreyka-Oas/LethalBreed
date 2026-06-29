@@ -4,28 +4,27 @@
 // or a max-iteration cap is hit. Cost grid is seeded with 0 at player/goal cells and a large
 // value everywhere else; after convergence, dirX/dirZ point each cell downhill toward the goal.
 //
-// blockType encoding:
-//   0 = air / passable     (move cost 1)
-//   1 = solid impassable   (skipped)
-//   2 = breakable          (cost BREAK_BASE * relative hardness, host-precomputed into `cost` seed)
-//   3 = buildable gap      (cost BUILD_COST, marks BUILD_NEEDED)
-//
-// flags bitmask (output): bit0 BUILD_NEEDED, bit1 BREAK_NEEDED, bit2 JUMP_NEEDED.
+// This MUST stay numerically identical to the CPU BellmanFordSolver:
+//   - blockType: 0 = passable, 1 = solid impassable (skipped).
+//   - extra[i]:  per-cell cost to ENTER cell i (break/build cost, 0 for plain air). Host-built from
+//                the same Snapshot.extraCost the CPU reads, so break/bridge routing matches the CPU.
+//   - orthoCost / diagCost: step costs (config-driven), shared with the CPU.
+//   - No corner cutting: a diagonal move is rejected unless both shared orthogonal cells are passable.
+// Action flags (break/build) are taken from the Snapshot on the host, not produced here.
 
 #define IMPASSABLE  32767
-#define FLAG_BUILD  1
-#define FLAG_BREAK  2
-#define FLAG_JUMP   4
 
 __kernel void relax_step(
-    __global short* cost,       // in/out: per-cell cost-to-goal  [W*H]
-    __global const char* blockType,
-    __global char*  dirX,       // out: -1 / 0 / +1
-    __global char*  dirZ,       // out: -1 / 0 / +1
-    __global char*  flags,      // out: per-cell action flags
+    __global short* cost,           // in/out: per-cell cost-to-goal  [W*H]
+    __global const char* blockType, // in: 0 passable, 1 solid
+    __global const int* extra,      // in: per-cell enter cost (break/build), 0 for air
+    __global char*  dirX,           // out: -1 / 0 / +1
+    __global char*  dirZ,           // out: -1 / 0 / +1
     const int W,
     const int H,
-    __global int* changed)      // out: set to 1 if any cell relaxed this pass
+    const int orthoCost,
+    const int diagCost,
+    __global int* changed)          // out: set to 1 if any cell relaxed this pass
 {
     int idx = get_global_id(0);
     if (idx >= W * H) return;
@@ -43,9 +42,8 @@ __kernel void relax_step(
     short best = cur;
     char bestDX = 0;
     char bestDZ = 0;
-    char bestFlag = 0;
+    int ex = extra[idx];        // entering this cell costs ex (break/build), matches CPU
 
-    // 8-neighbourhood. Diagonals cost slightly more (~1.41 scaled to integers as +1).
     for (int dz = -1; dz <= 1; dz++) {
         for (int dx = -1; dx <= 1; dx++) {
             if (dx == 0 && dz == 0) continue;
@@ -54,24 +52,21 @@ __kernel void relax_step(
             if (nx < 0 || nx >= W || nz < 0 || nz >= H) continue;
 
             int nidx = nx * H + nz;
-            char nbt = blockType[nidx];
-            if (nbt == 1) continue;
+            if (blockType[nidx] == 1) continue;
 
             short ncost = cost[nidx];
             if (ncost >= IMPASSABLE) continue;
 
-            // Traversal cost from this cell's own block type.
-            int step = (dx != 0 && dz != 0) ? 2 : 1;      // diagonal vs orthogonal
-            char flag = 0;
-            if (bt == 2) { step += 50; flag = FLAG_BREAK; } // breaking through this cell
-            else if (bt == 3) { step += 100; flag = FLAG_BUILD; }
+            int diag = (dx != 0 && dz != 0);
+            if (diag) {                                  // no corner cutting (mirrors CPU)
+                if (blockType[x * H + nz] == 1 || blockType[nx * H + z] == 1) continue;
+            }
 
-            int cand = (int) ncost + step;
+            int cand = (int) ncost + (diag ? diagCost : orthoCost) + ex;
             if (cand < best) {
                 best = (short) min(cand, IMPASSABLE - 1);
-                bestDX = (char) (-dx);   // point toward the lower-cost neighbour
-                bestDZ = (char) (-dz);
-                bestFlag = flag;
+                bestDX = (char) dx;      // step toward the lower-cost neighbour (matches CPU dirX = NDX[k])
+                bestDZ = (char) dz;
             }
         }
     }
@@ -80,7 +75,6 @@ __kernel void relax_step(
         cost[idx] = best;
         dirX[idx] = bestDX;
         dirZ[idx] = bestDZ;
-        flags[idx] = bestFlag;
         atomic_or(changed, 1);
     }
 }

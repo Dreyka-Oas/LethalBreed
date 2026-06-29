@@ -43,6 +43,10 @@ public final class CombatMoveConfig {
     /** Activations of no horizontal progress before the zombie is "stuck" and may break/build/pillar.
      *  Until then it just walks (vanilla auto-steps 1 block + jumps 1-wide gaps) — no needless block ops. */
     public static int stuckActivations = 2;
+    /** Min horizontal-distance-squared improvement (blocks²) that still counts as "making progress" toward the
+     *  target. Below this, the activation is counted toward {@link #stuckActivations}. 0.25 = 0.5 blocks; raise
+     *  to demand more progress (acts/breaks sooner), lower to be more patient before block ops. */
+    public static double stuckProgressEpsilon = 0.25;
     /** Max ticks a pillar-jump waits to gain height before aborting (jump arc length). */
     public static int climbJumpMaxAge = 16;
     /** Upward velocity of a pillar jump (0.42 ≈ vanilla player jump, ~1.25 blocks high). */

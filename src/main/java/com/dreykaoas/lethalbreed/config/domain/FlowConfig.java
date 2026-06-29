@@ -14,10 +14,18 @@ public final class FlowConfig {
     public static boolean useGpu = true;
     /** CPU flow-field solver threads when no GPU (the multi-core backup). 0 = auto = cores-2. */
     public static int flowCpuThreads = 0;
+    /** OpenCL work-group (local) size for the GPU solve. 0 = let the driver pick (safe default). Set to a
+     *  power of two the device supports (e.g. 64/128/256) to tune throughput; the global range is rounded
+     *  up to a multiple and the kernel bounds-checks the tail, so an over-large value is harmless. */
+    public static int gpuWorkgroupSize = 0;
 
     // ---- Flow field (Phase 2) ----
     /** Ticks between flow-field recomputes per dimension. */
     public static int flowRecomputeInterval = 10;
+    /** Skip a scheduled recompute when the players' focus centre has moved less than this many blocks since
+     *  the last solve (saves the solve while players stand still). 0 = always recompute on interval. WARNING:
+     *  a stale field won't reflect blocks broken/placed while the focus is still, so keep this small. */
+    public static double flowResampleOnMoveDist = 0.0;
     /** Blocks of padding added around the players' bounding box. */
     public static int flowMargin = 24;
     /** Hard cap on the flow-field grid side (blocks) to bound compute cost. */
@@ -32,6 +40,13 @@ public final class FlowConfig {
     public static int flowBreakCost = 60;
     /** Extra path cost to BRIDGE a gap with dirt (vs detour). */
     public static int flowBuildCost = 100;
+    /** Per-step path cost for an orthogonal (N/S/E/W) move in the flow-field solve. Scaled integer: 10 ≈ 1.0
+     *  block. Must stay below {@link #flowDiagonalCost} or diagonals are never preferred. CPU and GPU read
+     *  the same value so both solvers produce the identical field. */
+    public static int flowOrthoCost = 10;
+    /** Per-step path cost for a diagonal move (≈ orthogonal × √2). 14 ≈ 1.41. Raise above 14 to make zombies
+     *  prefer straight orthogonal approaches; lower toward {@link #flowOrthoCost} for more diagonal shortcuts. */
+    public static int flowDiagonalCost = 14;
     /** Chase players in creative/spectator. Default false = they ignore you when not in survival. */
     public static boolean targetCreativePlayers = false;
     /** Build a staircase up when the target is at least this many blocks above the zombie. */

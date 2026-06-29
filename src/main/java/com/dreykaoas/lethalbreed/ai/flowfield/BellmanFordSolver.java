@@ -25,8 +25,6 @@ import java.util.stream.IntStream;
 final class BellmanFordSolver {
     private BellmanFordSolver() {}
 
-    private static final int ORTH = 10;
-    private static final int DIAG = 14;
     private static final int[] NDX = {1, -1, 0, 0, 1, 1, -1, -1};
     private static final int[] NDZ = {0, 0, 1, -1, 1, -1, 1, -1};
 
@@ -53,6 +51,9 @@ final class BellmanFordSolver {
         Arrays.fill(cost, FlowField.IMPASSABLE);
         final byte[] dirX = new byte[n];
         final byte[] dirZ = new byte[n];
+        // Step costs are config-driven and shared with the GPU kernel so both solvers yield the same field.
+        final int orth = Math.max(1, FlowConfig.flowOrthoCost);
+        final int diagCost = Math.max(orth, FlowConfig.flowDiagonalCost);
         for (int seed : s.seedCells) {
             cost[seed] = 0;
         }
@@ -82,7 +83,7 @@ final class BellmanFordSolver {
                     if (diag && (!passable[cx * depth + nz] || !passable[nx * depth + cz])) {
                         continue; // no corner cutting
                     }
-                    int cand = nc + (diag ? DIAG : ORTH) + extra[i]; // entering i costs extra[i]
+                    int cand = nc + (diag ? diagCost : orth) + extra[i]; // entering i costs extra[i]
                     if (cand < best) {
                         best = cand;
                     }
