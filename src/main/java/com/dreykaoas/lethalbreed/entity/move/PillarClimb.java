@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
@@ -28,6 +29,8 @@ public final class PillarClimb {
     private int pillarColX = 0;
     private int pillarColZ = 0;
     private int pillarStandY = 0; // block-Y the zombie last jumped from (support is laid here)
+    private int pillarTopY = 0;   // highest block-Y reached this climb (for the stall watchdog)
+    private int pillarRungAge = 0; // activations since the last full-block gain on the current rung
     private int climbCd = 0;
 
     public PillarClimb(SmartZombie owner) {
@@ -64,6 +67,8 @@ public final class PillarClimb {
         pillarColX = entity.blockPosition().getX();
         pillarColZ = entity.blockPosition().getZ();
         pillarStandY = entity.blockPosition().getY();
+        pillarTopY = pillarStandY;
+        pillarRungAge = 0;
         owner.setState(ZombieState.BUILDING);
     }
 
@@ -104,11 +109,23 @@ public final class PillarClimb {
             pillaring = false;
             return;
         }
-        // Height budget spent, or a solid ceiling blocks further rise → give up; the column stays (and is
-        // auto-removed by the tracker). The zombie stands on what it built.
+        // Stall watchdog: count activations since the last full-block height gain. Reaching a new rung resets
+        // it; if the current rung makes no progress within climbJumpMaxAge activations the support can't land
+        // (queue full, sideways-blocked arc, ceiling) — abort so the zombie doesn't jump in place forever.
+        int curY = entity.blockPosition().getY();
+        if (curY > pillarTopY) {
+            pillarTopY = curY;
+            pillarRungAge = 0;
+        } else {
+            pillarRungAge++;
+        }
+
+        // Height budget spent, a solid ceiling blocks further rise, or the rung stalled → give up; the column
+        // stays (and is auto-removed by the tracker). The zombie stands on what it built.
         boolean ceiling = level.getBlockState(BlockPos.containing(
                 entity.getX(), entity.getY() + entity.getBbHeight() + 0.25, entity.getZ())).blocksMotion();
-        if (entity.getY() - pillarStartY >= FlowConfig.pillarMaxHeight || ceiling) {
+        boolean stalled = pillarRungAge > CombatMoveConfig.climbJumpMaxAge;
+        if (entity.getY() - pillarStartY >= FlowConfig.pillarMaxHeight || ceiling || stalled) {
             entity.setJumping(false);
             pillaring = false;
             climbCd = FlowConfig.climbGiveUpCooldown;

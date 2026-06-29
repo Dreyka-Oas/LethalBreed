@@ -18,5 +18,6 @@ public final class SpawnControl {
             mob.setItemSlot(slot, ItemStack.EMPTY);
             mob.setDropChance(slot, 0.0f);
         }
+        mob.setCanPickUpLoot(false); // don't re-equip a weapon picked up after spawn (would bypass the strip)
     }
 }

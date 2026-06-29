@@ -42,7 +42,11 @@ final class BellmanFordSolver {
 
     private static int resolveSolveThreads() {
         int cfg = FlowConfig.flowCpuThreads;
-        return cfg > 0 ? cfg : Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
+        int cores = Math.max(1, Runtime.getRuntime().availableProcessors());
+        // cfg>0: honour the request but cap RELATIVE to the host cores (cores*4) — a ForkJoinPool can't exceed
+        // its MAX_CAP and massive oversubscription only adds contention. cfg<=0: auto = cores-2. This is a
+        // runtime-relative anti-oversubscription bound, not a static config range (those live in ConfigBounds).
+        return cfg > 0 ? Math.min(cfg, cores * 4) : Math.max(1, cores - 2);
     }
 
     /** CPU solve pool, rebuilt when {@link FlowConfig#flowCpuThreads} changes so a GUI/command edit takes

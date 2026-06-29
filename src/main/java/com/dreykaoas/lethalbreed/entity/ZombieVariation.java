@@ -32,8 +32,10 @@ public final class ZombieVariation {
     private static final Identifier SCALE_ID = Identifier.fromNamespaceAndPath("lethalbreed", "rand_scale");
     private static final Identifier SPEED_ID = Identifier.fromNamespaceAndPath("lethalbreed", "rand_speed");
     private static final Identifier DAMAGE_ID = Identifier.fromNamespaceAndPath("lethalbreed", "rand_damage");
+    private static final Identifier HEALTH_ID = Identifier.fromNamespaceAndPath("lethalbreed", "rand_health");
 
     private static final long EFFECT_SALT = 4242L;
+    private static final long LEAP_SALT = 777L;
 
     private static final Identifier HP_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_hp");
     private static final Identifier PDMG_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_dmg");
@@ -46,6 +48,8 @@ public final class ZombieVariation {
             applyMultiplier(z, Attributes.SCALE, SCALE_ID, roll(r, WorldSpawnConfig.varScaleMin, WorldSpawnConfig.varScaleMax));
             applyMultiplier(z, Attributes.MOVEMENT_SPEED, SPEED_ID, roll(r, WorldSpawnConfig.varSpeedMin, WorldSpawnConfig.varSpeedMax));
             applyMultiplier(z, Attributes.ATTACK_DAMAGE, DAMAGE_ID, roll(r, WorldSpawnConfig.varDamageMin, WorldSpawnConfig.varDamageMax));
+            applyMultiplier(z, Attributes.MAX_HEALTH, HEALTH_ID, roll(r, WorldSpawnConfig.varHealthMin, WorldSpawnConfig.varHealthMax));
+            z.setHealth(z.getMaxHealth()); // refill so the resized pool isn't left partly empty
         }
         if (ProgressionConfig.phaseSystemEnabled) {
             applyPhase(z); // phase scaling drives stats/gear/effects
@@ -72,15 +76,23 @@ public final class ZombieVariation {
         com.dreykaoas.lethalbreed.special.SpecialRoller.roll(z, r, PhaseManager.current());
     }
 
-    /** Apply {@code effCount} beneficial effects (chance-gated) from the pool, amplifier up to the phase max. */
+    /** Apply {@code effCount} beneficial effects (chance-gated) from the pool, amplifier up to the phase max.
+     *  Gated by the master {@link WorldSpawnConfig#randomEffectEnabled} switch (so it disables BOTH paths) and
+     *  hard-capped by the global {@link WorldSpawnConfig#randomEffectMaxAmplifier} ceiling. */
     private static void applyPhaseEffects(Zombie z, Random r, PhaseConfig.PhaseDef p) {
+        if (!WorldSpawnConfig.randomEffectEnabled) {
+            return;
+        }
         if (p.effChance() <= 0 || p.effCount() <= 0 || r.nextDouble() >= p.effChance()) {
             return;
         }
+        int maxAmp = Math.min(WorldSpawnConfig.randomEffectMaxAmplifier, p.effMaxAmp());
         Holder<MobEffect>[] pool = effectPool();
         for (int i = 0; i < p.effCount(); i++) {
             Holder<MobEffect> pick = pool[r.nextInt(pool.length)];
-            int amp = r.nextInt(p.effMaxAmp() + 1);
+            // Math.max(1,..) guards nextInt against a 0/negative bound (mirrors applyRandomEffect): a phase
+            // with effMaxAmp 0 still rolls amp 0, never throws IllegalArgumentException.
+            int amp = r.nextInt(Math.max(1, maxAmp + 1));
             z.addEffect(new MobEffectInstance(pick, MobEffectInstance.INFINITE_DURATION, amp, false, false, true));
         }
     }
@@ -122,10 +134,14 @@ public final class ZombieVariation {
         if (!WorldSpawnConfig.enableVariation) {
             return 1.0;
         }
-        return roll(seeded(z, 777L), WorldSpawnConfig.varLeapMin, WorldSpawnConfig.varLeapMax);
+        return roll(seeded(z, LEAP_SALT), WorldSpawnConfig.varLeapMin, WorldSpawnConfig.varLeapMax);
     }
 
     private static void applyMultiplier(LivingEntity e, Holder<Attribute> attr, Identifier id, double factor) {
+        // Floor SCALE/SPEED so an extreme low roll can't make a zombie invisibly tiny or frozen in place.
+        if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
+            factor = Math.max(0.05, factor);
+        }
         AttributeInstance inst = e.getAttribute(attr);
         if (inst != null) {
             inst.addOrReplacePermanentModifier(
@@ -138,6 +154,11 @@ public final class ZombieVariation {
     }
 
     private static double roll(Random r, double min, double max) {
-        return min + r.nextDouble() * (max - min);
+        if (!Double.isFinite(min) || !Double.isFinite(max)) {
+            return 1.0; // non-finite range → neutral factor (no resize)
+        }
+        double lo = Math.min(min, max);
+        double hi = Math.max(min, max);
+        return lo + r.nextDouble() * (hi - lo);
     }
 }

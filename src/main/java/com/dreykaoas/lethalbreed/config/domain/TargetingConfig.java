@@ -18,6 +18,9 @@ public final class TargetingConfig {
     /** Strip vanilla target-selection goals so our "nearest living entity" pick is authoritative — the
      *  zombie always retargets to the closest entity instead of vanilla re-locking onto the player. */
     public static boolean forceNearestTarget = true;
+    /** Restrict targeting to PLAYERS only — when on, non-player living entities (villagers, animals, other
+     *  mobs) are never acquired as targets. Default off = hunt any valid living entity. */
+    public static boolean targetPlayersOnly = false;
     /** Short-term memory: once a target is lost (out of sight AND out of hearing), keep heading to its LAST
      *  known position for this many ticks before giving up (200 = 10s). Any live detection (a nearer/visible
      *  or heard entity) overrides the memory immediately — the nearest DETECTED target always wins. 0 = off. */

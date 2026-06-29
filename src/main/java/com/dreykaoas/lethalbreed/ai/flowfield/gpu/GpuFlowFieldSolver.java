@@ -80,7 +80,11 @@ final class GpuFlowFieldSolver {
             int wg = FlowConfig.gpuWorkgroupSize;
             long[] local = null;
             long[] global = new long[]{n};
-            if (wg > 0) {
+            // Apply an explicit local size ONLY when it is actually legal for this device: positive, a power
+            // of two, and within CL_DEVICE_MAX_WORK_GROUP_SIZE. An illegal value would otherwise make
+            // clEnqueueNDRangeKernel throw and force a permanent CPU fallback + per-call alloc churn; instead
+            // we silently fall back to local=null (driver picks) and keep using the GPU.
+            if (wg > 0 && Integer.bitCount(wg) == 1 && wg <= ctx.maxWorkGroupSize) {
                 long g = ((long) (n + wg - 1) / wg) * wg;
                 global = new long[]{g};
                 local = new long[]{wg};

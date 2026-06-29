@@ -22,7 +22,7 @@ import java.util.Set;
  *       This catches <i>any</i> such mod without knowing its id.</li>
  * </ol>
  *
- * On conflict: loud log, and if {@link LethalBreedConfig#failOnAiConflict} (default true) a hard stop
+ * On conflict: loud log, and if {@link com.dreykaoas.lethalbreed.config.domain.TargetingConfig#failOnAiConflict} (default true) a hard stop
  * — i.e. the mods are treated as incompatible.
  */
 public final class AiConflictDetector {
@@ -78,7 +78,7 @@ public final class AiConflictDetector {
         if (TargetingConfig.failOnAiConflict) {
             throw new IllegalStateException(
                     "LethalBreed is incompatible with mods that modify zombie AI (" + detail + "). "
-                    + "Remove the conflicting mod, or set failOnAiConflict=false in config/lethalbreed.json.");
+                    + "Remove the conflicting mod, or set failOnAiConflict=false in config/oas/lethalbreed.json.");
         }
         LethalBreed.LOGGER.warn("[LethalBreed] continuing despite conflict (failOnAiConflict=false) — zombie behaviour may be unpredictable.");
     }

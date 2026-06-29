@@ -49,7 +49,7 @@ public final class ConfigAccess {
             return false;
         }
         try {
-            f.set(null, ConfigType.parse(f.getType(), raw));
+            f.set(null, ConfigBounds.clamp(f.getName(), ConfigType.parse(f.getType(), raw)));
         } catch (RuntimeException | IllegalAccessException ex) {
             return false;
         }

@@ -13,9 +13,10 @@ public final class MechTestEvaluator {
     private MechTestEvaluator() {}
 
     public static void evaluate(ServerLevel ow, MechTestState s) {
-        // Sun-burn (the key check: Husk burns now too).
-        boolean huskBurn = s.husk != null && s.husk.getRemainingFireTicks() > 0;
-        boolean zBurn = s.sunZombie != null && s.sunZombie.getRemainingFireTicks() > 0;
+        // Sun-burn (the key check: Husk burns now too). Use the latched "was on fire" flag so a mob that
+        // ignited then burned to death before this tick still counts as a PASS (instantaneous state is flaky).
+        boolean huskBurn = s.husk != null && (s.huskWasOnFire || s.husk.getRemainingFireTicks() > 0);
+        boolean zBurn = s.sunZombie != null && (s.sunZombieWasOnFire || s.sunZombie.getRemainingFireTicks() > 0);
         boolean bright = ow.isBrightOutside();
         boolean sky = s.husk != null && ow.canSeeSky(s.husk.blockPosition());
         LethalBreed.LOGGER.info("[MechTest] sunburn : {} (husk={} zombie={} | bright={} skyAtHusk={} huskPos={} removed={})",
