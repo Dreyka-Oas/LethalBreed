@@ -29,7 +29,7 @@ public final class LifecycleInit {
                     ComputeCalibration.calibrate();
                 }
             }
-            PhaseManager.get().reset(); // start each session at phase 1
+            PhaseManager.get().load(server); // restore the persisted phase (survives close/reopen)
 
             // Dev tests build block arenas; the tick-driven ones (special + mechanics) share Y=101 with
             // overlapping X, so enabling more than one at once corrupts each other's arena. Warn once at boot
