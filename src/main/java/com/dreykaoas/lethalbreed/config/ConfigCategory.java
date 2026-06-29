@@ -22,7 +22,7 @@ public final class ConfigCategory {
                 || n.contains("descend") || n.contains("safedrop") || n.contains("jump")
                 || n.contains("melee") || n.contains("fall")) return "Climb";
         if (n.contains("break") || n.contains("blockops") || n.contains("placedblock")) return "Breaking";
-        if (n.equals("usegpu") || n.equals("flowcputhreads")) return "Compute";
+        if (n.equals("usegpu") || n.equals("flowcputhreads") || n.contains("gpu")) return "Compute";
         if (n.startsWith("flow") || n.startsWith("nav")) return "Pathing";
         if (n.contains("target") || n.contains("nearest") || n.contains("lineofsight")
                 || n.contains("attack")) return "Targeting";

@@ -30,6 +30,8 @@ public final class FlowFieldManager {
     private final AtomicReference<FlowField> active = new AtomicReference<>();
     private final AtomicBoolean computing = new AtomicBoolean(false);
     private long lastComputeTick = Long.MIN_VALUE;
+    private double lastFocusX = Double.NaN;
+    private double lastFocusZ = Double.NaN;
 
     public FlowField active() {
         return active.get();
@@ -57,7 +59,28 @@ public final class FlowFieldManager {
             return;
         }
 
+        // Optional move-gate: when the players' focus centre has barely shifted since the last solve and a
+        // field already exists, reuse it instead of re-solving (saves the solve while players stand still).
+        double focusX = 0.0, focusZ = 0.0;
+        for (ServerPlayer p : players) {
+            focusX += p.getX();
+            focusZ += p.getZ();
+        }
+        focusX /= players.size();
+        focusZ /= players.size();
+        double moveGate = FlowConfig.flowResampleOnMoveDist;
+        if (moveGate > 0.0 && active.get() != null && !Double.isNaN(lastFocusX)) {
+            double mdx = focusX - lastFocusX;
+            double mdz = focusZ - lastFocusZ;
+            if (mdx * mdx + mdz * mdz < moveGate * moveGate) {
+                lastComputeTick = serverTick; // consume this cycle; recheck after the next interval
+                return;
+            }
+        }
+
         lastComputeTick = serverTick;
+        lastFocusX = focusX;
+        lastFocusZ = focusZ;
         Snapshot snapshot = CpuFlowField.snapshot(level, players); // main thread read
         computing.set(true);
         POOL.submit(() -> {
@@ -72,5 +95,7 @@ public final class FlowFieldManager {
     public void clear() {
         active.set(null);
         lastComputeTick = Long.MIN_VALUE;
+        lastFocusX = Double.NaN;
+        lastFocusZ = Double.NaN;
     }
 }
