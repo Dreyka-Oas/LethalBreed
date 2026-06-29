@@ -4,7 +4,6 @@ import com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldManager;
 import com.dreykaoas.lethalbreed.block.BlockOperationQueue;
 import com.dreykaoas.lethalbreed.block.BreakManager;
 import com.dreykaoas.lethalbreed.block.PlacedBlockTracker;
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
 import com.dreykaoas.lethalbreed.sound.SoundEventBus;
 import com.dreykaoas.lethalbreed.spatial.SpatialGrid;
 
@@ -21,7 +20,7 @@ public final class WorldAIContext {
     private final SoundEventBus soundBus;
 
     public WorldAIContext() {
-        this.spatialGrid = new SpatialGrid(LethalBreedConfig.spatialCellSize);
+        this.spatialGrid = new SpatialGrid();
         this.flowFieldManager = new FlowFieldManager();
         this.blockOps = new BlockOperationQueue();
         this.placedBlocks = new PlacedBlockTracker();

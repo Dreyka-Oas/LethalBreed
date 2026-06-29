@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.ai;
+package com.dreykaoas.lethalbreed.entity;
 
 /**
  * Level of detail for zombie ticking. Controls how much work each zombie does based on

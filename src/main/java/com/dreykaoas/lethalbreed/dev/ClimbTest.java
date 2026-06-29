@@ -1,7 +1,9 @@
-package com.dreykaoas.lethalbreed.command;
+package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.LethalBreedMod;
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
+
+import com.dreykaoas.lethalbreed.LethalBreed;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -22,7 +24,7 @@ public final class ClimbTest {
     private ClimbTest() {}
 
     public static void run(MinecraftServer server) {
-        if (!LethalBreedConfig.devClimbTest) {
+        if (!ProgressionConfig.devClimbTest) {
             return;
         }
         ServerLevel level = server.overworld();
@@ -36,7 +38,7 @@ public final class ClimbTest {
                 level.setChunkForced((cx >> 4) + dcx, (cz >> 4) + dcz, true);
             }
         }
-        LethalBreedConfig.forceDayTime = false;
+        WorldSpawnConfig.forceDayTime = false;
         level.setDayTime(18000L);
 
         int gy = level.getHeight(Heightmap.Types.WORLD_SURFACE, cx, cz); // floor level of the test platform
@@ -79,8 +81,8 @@ public final class ClimbTest {
             }
         }
 
-        LethalBreedConfig.debugClimb = true;
-        LethalBreedMod.LOGGER.info(
+        ProgressionConfig.debugClimb = true;
+        LethalBreed.LOGGER.info(
                 "[ClimbTest] flat arena: floor y={}, wall x={} ({} tall, y {}..{}), villager @({},{},{}), {} zombies "
                         + "west. Climbing {} blocks reaches the villager. Watch [ClimbDbg].",
                 gy, wallX, wallH, gy, gy + wallH - 1, wallX + 0.5, villagerY, cz + 0.5, spawned, wallH);

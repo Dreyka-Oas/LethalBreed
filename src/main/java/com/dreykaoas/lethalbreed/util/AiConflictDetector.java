@@ -1,7 +1,8 @@
 package com.dreykaoas.lethalbreed.util;
 
-import com.dreykaoas.lethalbreed.LethalBreedMod;
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+
+import com.dreykaoas.lethalbreed.LethalBreed;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.entity.Mob;
 
@@ -66,19 +67,19 @@ public final class AiConflictDetector {
             return false; // scan only — never remove
         });
         if (foreign.isEmpty()) {
-            LethalBreedMod.LOGGER.info("[LethalBreed] AI-conflict scan: clean (no foreign zombie goals).");
+            LethalBreed.LOGGER.info("[LethalBreed] AI-conflict scan: clean (no foreign zombie goals).");
         } else {
             report("foreign zombie AI goals injected by another mod: " + foreign);
         }
     }
 
     private static void report(String detail) {
-        LethalBreedMod.LOGGER.error("[LethalBreed] AI CONFLICT — {}", detail);
-        if (LethalBreedConfig.failOnAiConflict) {
+        LethalBreed.LOGGER.error("[LethalBreed] AI CONFLICT — {}", detail);
+        if (TargetingConfig.failOnAiConflict) {
             throw new IllegalStateException(
                     "LethalBreed is incompatible with mods that modify zombie AI (" + detail + "). "
                     + "Remove the conflicting mod, or set failOnAiConflict=false in config/lethalbreed.json.");
         }
-        LethalBreedMod.LOGGER.warn("[LethalBreed] continuing despite conflict (failOnAiConflict=false) — zombie behaviour may be unpredictable.");
+        LethalBreed.LOGGER.warn("[LethalBreed] continuing despite conflict (failOnAiConflict=false) — zombie behaviour may be unpredictable.");
     }
 }

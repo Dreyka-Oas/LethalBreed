@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.util;
 
-import com.dreykaoas.lethalbreed.LethalBreedMod;
+import com.dreykaoas.lethalbreed.LethalBreed;
 import net.fabricmc.loader.api.FabricLoader;
 
 /**
@@ -36,11 +36,11 @@ public final class InstalledMods {
         sodium = fl.isModLoaded("sodium");
         iris = fl.isModLoaded("iris");
 
-        LethalBreedMod.LOGGER.info(
+        LethalBreed.LOGGER.info(
                 "[LethalBreed] perf mods: krypton={} lithium={} vmp={} c2me={} ferritecore={} servercore={} scalablelux={} immersiveOpt={} spark={}",
                 krypton, lithium, vmp, c2me, ferritecore, servercore, scalablelux, immersiveOptimization, spark);
         if (krypton || vmp) {
-            LethalBreedMod.LOGGER.info("[LethalBreed] network handled by Krypton/VMP — relying on optimized vanilla entity tracking (no custom bulk packets).");
+            LethalBreed.LOGGER.info("[LethalBreed] network handled by Krypton/VMP — relying on optimized vanilla entity tracking (no custom bulk packets).");
         }
     }
 }

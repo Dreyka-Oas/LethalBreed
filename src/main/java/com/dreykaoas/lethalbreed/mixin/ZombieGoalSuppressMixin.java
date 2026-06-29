@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.mixin;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -23,7 +24,7 @@ public abstract class ZombieGoalSuppressMixin {
 
     @Inject(method = "registerGoals", at = @At("TAIL"))
     private void lethalbreed$suppressWanderGoals(CallbackInfo ci) {
-        if (!LethalBreedConfig.suppressVanillaWander) {
+        if (!TargetingConfig.suppressVanillaWander) {
             return;
         }
         Mob self = (Mob) (Object) this;
