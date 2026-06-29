@@ -36,6 +36,12 @@ public final class SpecialTestArena {
         ow.getGameRules().set(net.minecraft.world.level.gamerules.GameRules.SPAWN_MONSTERS, false, server);
         ContaminationConfig.contaminationEnabled = false;     // keep cows alive for the per-special checks
         TargetingConfig.targetDetectRadius = 10.0;        // tight so a "lone" zombie stays target-less
+        // Disable hearing for this arena: a special zombie shoving its invulnerable cow gives the cow a little
+        // horizontal velocity, which makes it AUDIBLE — and the HURLEUR's "lone" extra (11 blocks away, inside
+        // the 24-block hearing range) would then hear+target the cow on its own, so it is no longer target-less
+        // and the howler's rally finds nothing to retarget (a flaky false FAIL). Hearing isn't under test here;
+        // every case's cow is within the 10-block sight range with clear LOS, so vision alone drives targeting.
+        TargetingConfig.soundEnabled = false;
 
         SpecialType[] types = {
                 SpecialType.SPRINTEUR, SpecialType.BONDISSEUR, SpecialType.JUGGERNAUT, SpecialType.FOUISSEUR,
@@ -84,8 +90,12 @@ public final class SpecialTestArena {
             cow.setPersistenceRequired();
         }
         z.setTarget(cow);
-        if (type == SpecialType.CRACHEUR) {
-            z.setNoAi(true); // stay put so the target stays at range (else it closes to melee, no spit)
+        if (type == SpecialType.CRACHEUR || type == SpecialType.HURLEUR) {
+            // Keep the special anchored: CRACHEUR needs the target at spit range; HURLEUR must not dive into
+            // the invulnerable cow and pile up — repeatedly bonking it triggers zombie reinforcements that
+            // crowd in, shove the "lone" extra and the cow around, and flake the rally check. noAi specials
+            // still run their ability each activation (it keeps its cow target by sight at 2 blocks).
+            z.setNoAi(true);
         }
         return cow;
     }
