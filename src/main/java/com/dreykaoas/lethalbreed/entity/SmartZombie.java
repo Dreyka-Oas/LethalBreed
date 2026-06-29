@@ -1,8 +1,10 @@
 package com.dreykaoas.lethalbreed.entity;
 
+import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.move.ZombieBrain;
+import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -33,6 +35,21 @@ public final class SmartZombie {
     }
 
     public ZombiePursuit pursuit() { return pursuit; }
+
+    /**
+     * Reconcile this zombie's vanilla target-selection goals to {@link TargetingConfig#forceNearestTarget}
+     * so the option takes effect LIVE on an already-spawned zombie. ON → strip the vanilla goals so our
+     * "nearest living entity" pick is authoritative; OFF → re-add the exact goals we stripped. Cheap and
+     * idempotent (a no-op once already in the wanted state); called each classify. Runs post-spawn so the
+     * entity id used by {@link VanillaTargetingGoals} is stable.
+     */
+    public void reconcileTargetingGoals() {
+        if (TargetingConfig.forceNearestTarget) {
+            VanillaTargetingGoals.strip(entity);
+        } else {
+            VanillaTargetingGoals.restore(entity);
+        }
+    }
 
     // --- identity ---
     public Zombie entity() { return entity; }

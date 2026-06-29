@@ -17,6 +17,8 @@ public final class LODManager {
     private LODManager() {}
 
     public static LODLevel classify(SmartZombie sz, ServerLevel level) {
+        // Apply forceNearestTarget live (strip/restore vanilla target goals) before acquiring our own pick.
+        sz.reconcileTargetingGoals();
         LivingEntity target = TargetSelector.findNearest(level, sz.entity(), TargetingConfig.targetDetectRadius);
 
         LODLevel prev = sz.lod();

@@ -14,6 +14,7 @@ import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
 import com.dreykaoas.lethalbreed.util.Players;
+import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -58,6 +59,7 @@ public final class EntityEventsInit {
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
             if (entity instanceof Zombie) {
                 registry.remove(entity.getId());
+                VanillaTargetingGoals.drop(entity.getId()); // release any stripped-goal snapshot
             }
         });
     }
