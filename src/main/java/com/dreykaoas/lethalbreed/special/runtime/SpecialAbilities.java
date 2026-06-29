@@ -40,7 +40,7 @@ public final class SpecialAbilities {
 
     /** HURLEUR: hand the caller's target to nearby target-less smart zombies. */
     public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAIContext ctx) {
-        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getZ(), 24.0)) {
+        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(), 24.0)) {
             if (o != sz && !o.hasTarget()) {
                 o.entity().setTarget(tgt);
                 o.pursuit().setTarget(tgt, tgt.getX(), tgt.getY(), tgt.getZ());
@@ -51,7 +51,7 @@ public final class SpecialAbilities {
 
     /** SOIGNEUR: grant regeneration to nearby living smart zombies. */
     public static void heal(SmartZombie sz, Zombie z, WorldAIContext ctx) {
-        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getZ(), 8.0)) {
+        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(), 8.0)) {
             if (o != sz && o.entity().isAlive()) {
                 o.entity().addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0, false, false, true));
                 SpecialBehavior.HEAL_COUNT.incrementAndGet();
@@ -71,7 +71,7 @@ public final class SpecialAbilities {
 
     /** NECROMANCIEN: summon 1–2 child zombies, capped against an already-dense local pack. */
     public static void summon(ServerLevel level, Zombie z, WorldAIContext ctx) {
-        if (ctx.spatialGrid().queryRadius(z.getX(), z.getZ(), 12.0).size() > 40) {
+        if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(), 12.0).size() > 40) {
             return;
         }
         int n = 1 + level.getRandom().nextInt(2);

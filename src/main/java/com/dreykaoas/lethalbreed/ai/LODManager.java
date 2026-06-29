@@ -19,6 +19,7 @@ public final class LODManager {
     public static LODLevel classify(SmartZombie sz, ServerLevel level) {
         LivingEntity target = TargetSelector.findNearest(level, sz.entity(), TargetingConfig.targetDetectRadius);
 
+        LODLevel prev = sz.lod();
         LODLevel lod;
         if (target != null) {
             // Live detection (seen or heard) → the nearest DETECTED entity always wins, overriding memory.
@@ -34,7 +35,7 @@ public final class LODManager {
             if (TargetingConfig.attackAllTargets && sz.entity().getTarget() != target) {
                 sz.entity().setTarget(target);
             }
-            lod = lodFromDistSq(sz.entity().distanceToSqr(target));
+            lod = lodFromDistSq(sz.entity().distanceToSqr(target), prev);
         } else if (TargetingConfig.targetMemoryTicks > 0 && sz.pursuit().hasMemory()
                 && level.getGameTime() < sz.pursuit().memoryExpire()) {
             // Lost sight AND sound, but remember where it was — keep going there briefly (no live entity, so
@@ -48,7 +49,7 @@ public final class LODManager {
                 sz.pursuit().clearMemory();
                 lod = LODLevel.FROZEN;
             } else {
-                lod = lodFromDistSq(d);
+                lod = lodFromDistSq(d, prev);
             }
         } else {
             sz.pursuit().clearTarget();
@@ -59,16 +60,20 @@ public final class LODManager {
         return lod;
     }
 
-    private static LODLevel lodFromDistSq(double d) {
+    private static LODLevel lodFromDistSq(double d, LODLevel prev) {
         // Enforce monotonic tier radii (high <= medium <= low). The three are independent config knobs, so a
         // misordered value (e.g. lodMedium <= lodHigh) would otherwise let an earlier branch swallow a whole
         // tier silently. Clamping each tier up to the previous keeps classification predictable.
         double highR = SchedulerConfig.lodHigh;
         double medR = Math.max(SchedulerConfig.lodMedium, highR);
         double lowR = Math.max(SchedulerConfig.lodLow, medR);
-        double high = highR * highR;
-        double med = medR * medR;
-        double low = lowR * lowR;
+        // One-sided hysteresis: a zombie keeps its current (closer) tier until it crosses that tier's outer
+        // edge by more than lodHysteresis blocks. Upgrades (moving inward) snap at the plain boundary; only
+        // downgrades get the slack — so a zombie idling on a boundary stops flip-flopping tier + re-pathing.
+        double h = Math.max(0.0, SchedulerConfig.lodHysteresis);
+        double high = sq(highR + (prev == LODLevel.HIGH ? h : 0.0));
+        double med = sq(medR + (prev == LODLevel.HIGH || prev == LODLevel.MEDIUM ? h : 0.0));
+        double low = sq(lowR + (prev != LODLevel.FROZEN ? h : 0.0));
         if (d <= high) {
             return LODLevel.HIGH;
         } else if (d <= med) {
@@ -77,5 +82,9 @@ public final class LODManager {
             return LODLevel.LOW;
         }
         return LODLevel.FROZEN;
+    }
+
+    private static double sq(double v) {
+        return v * v;
     }
 }
