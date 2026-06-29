@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.block;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -31,7 +32,7 @@ public final class BlockOperationQueue {
     }
 
     private void add(ArrayDeque<BlockPos> q, BlockPos pos) {
-        if (breaks.size() + places.size() >= LethalBreedConfig.blockOpsQueueCap) {
+        if (breaks.size() + places.size() >= CombatMoveConfig.blockOpsQueueCap) {
             return;
         }
         if (pending.add(pos.asLong())) {
@@ -41,7 +42,7 @@ public final class BlockOperationQueue {
 
     /** Apply up to the per-tick budget. Breaks are spent first, then placements. */
     public void drain(Level level, PlacedBlockTracker tracker, long tick) {
-        int budget = LethalBreedConfig.blockOpsPerTick;
+        int budget = CombatMoveConfig.blockOpsPerTick;
 
         while (budget > 0 && !breaks.isEmpty()) {
             BlockPos p = breaks.poll();

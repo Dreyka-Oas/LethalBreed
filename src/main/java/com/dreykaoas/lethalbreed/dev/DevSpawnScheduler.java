@@ -1,6 +1,6 @@
-package com.dreykaoas.lethalbreed.command;
+package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.LethalBreedMod;
+import com.dreykaoas.lethalbreed.LethalBreed;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
@@ -67,7 +67,7 @@ public final class DevSpawnScheduler {
                 spawned++;
             }
         }
-        LethalBreedMod.LOGGER.info("[LethalBreed] /lethalspawn -> spawned {}/{} {} in {}",
+        LethalBreed.LOGGER.info("[LethalBreed] /lethalspawn -> spawned {}/{} {} in {}",
                 spawned, r.count, BuiltInRegistries.ENTITY_TYPE.getKey(r.type), r.dimension.identifier());
     }
 }

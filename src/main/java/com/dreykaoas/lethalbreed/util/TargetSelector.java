@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.util;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -51,8 +52,8 @@ public final class TargetSelector {
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
         AABB box = self.getBoundingBox().inflate(radius);
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
-        double hearSq = LethalBreedConfig.soundEnabled
-                ? LethalBreedConfig.soundBaseRadius * LethalBreedConfig.soundBaseRadius : -1.0;
+        double hearSq = TargetingConfig.soundEnabled
+                ? TargetingConfig.soundBaseRadius * TargetingConfig.soundBaseRadius : -1.0;
         LivingEntity best = null;
         double bestSq = Double.MAX_VALUE;
         for (LivingEntity e : candidates) {
@@ -66,7 +67,7 @@ public final class TargetSelector {
             // sight — a distant/quiet entity behind an opaque wall is unseen and unheard, so it isn't a target
             // until it makes itself known.
             boolean heard = d <= hearSq && isAudible(e);
-            if (LethalBreedConfig.requireLineOfSight && !heard && !canSee(level, self, e)) {
+            if (TargetingConfig.requireLineOfSight && !heard && !canSee(level, self, e)) {
                 continue;
             }
             bestSq = d;
@@ -77,15 +78,16 @@ public final class TargetSelector {
 
     /** An entity is audible only when it actually emits noise this tick: walking (moved at least
      *  {@code soundMoveThreshold} horizontally and not sneaking), performing an action (arm swing =
-     *  attack/place/break/mine, or using an item = eat/drink), or just hurt (cry on taking damage). A
+     *  attack/place/break/mine, or using an item = eat/drink), or hurt (cry on taking damage / being hit /
+     *  burning). A
      *  motionless, silent entity makes no sound and can only be acquired by line of sight. Mirrors the
      *  player-footstep rule in {@code SoundEventBus.tickPlayers} so hearing is consistent for all entities. */
     private static boolean isAudible(LivingEntity e) {
         Vec3 v = e.getDeltaMovement();
         double hMove = Math.sqrt(v.x * v.x + v.z * v.z); // horizontal only — ignore gravity on a standing mob
-        boolean walking = hMove >= LethalBreedConfig.soundMoveThreshold && !e.isCrouching();
+        boolean walking = hMove >= TargetingConfig.soundMoveThreshold && !e.isCrouching();
         boolean acting = e.swinging || e.isUsingItem();  // place / break / mine / eat / drink
-        boolean hurt = e.hurtTime > 0;
+        boolean hurt = e.hurtTime > 0 || e.isOnFire();   // taking damage / being hit / burning
         return walking || acting || hurt;
     }
 

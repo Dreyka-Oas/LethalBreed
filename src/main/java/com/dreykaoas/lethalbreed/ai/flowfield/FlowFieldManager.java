@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
-import com.dreykaoas.lethalbreed.gpu.GpuFlowField;
+import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+
 import com.dreykaoas.lethalbreed.util.Players;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,7 +37,7 @@ public final class FlowFieldManager {
 
     /** SERVER THREAD: throttled. Snapshots the world here, solves off-thread. */
     public void tick(ServerLevel level, long serverTick) {
-        int interval = Math.max(1, LethalBreedConfig.flowRecomputeInterval);
+        int interval = Math.max(1, FlowConfig.flowRecomputeInterval);
         if (serverTick - lastComputeTick < interval) {
             return;
         }
@@ -58,7 +58,7 @@ public final class FlowFieldManager {
         }
 
         lastComputeTick = serverTick;
-        CpuFlowField.Snapshot snapshot = CpuFlowField.snapshot(level, players); // main thread read
+        Snapshot snapshot = CpuFlowField.snapshot(level, players); // main thread read
         computing.set(true);
         POOL.submit(() -> {
             try {

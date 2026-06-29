@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.entity;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.Level;
@@ -17,9 +16,10 @@ public final class ZombieRegistry {
     private final Map<Integer, SmartZombie> byId = new ConcurrentHashMap<>();
 
     public SmartZombie add(Zombie zombie, ResourceKey<Level> dimension) {
-        int buckets = Math.max(1, LethalBreedConfig.tickBuckets);
-        int bucket = Math.floorMod(zombie.getId(), buckets);
-        SmartZombie sz = new SmartZombie(zombie, dimension, bucket);
+        // Bucket membership is derived live from the entity id + current tickBuckets (see LodBucketPass),
+        // not cached here — so changing tickBuckets at runtime re-spreads the whole population immediately
+        // instead of stranding zombies on a stale bucket index.
+        SmartZombie sz = new SmartZombie(zombie, dimension);
         byId.put(zombie.getId(), sz);
         return sz;
     }

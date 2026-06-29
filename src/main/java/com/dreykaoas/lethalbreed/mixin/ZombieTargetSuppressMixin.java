@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.mixin;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +20,7 @@ public abstract class ZombieTargetSuppressMixin {
 
     @Inject(method = "registerGoals", at = @At("TAIL"))
     private void lethalbreed$clearVanillaTargeting(CallbackInfo ci) {
-        if (!LethalBreedConfig.forceNearestTarget) {
+        if (!TargetingConfig.forceNearestTarget) {
             return;
         }
         Mob self = (Mob) (Object) this;

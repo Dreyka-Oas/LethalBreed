@@ -12,6 +12,9 @@ run/
 .project
 # OS
 *.log
+# Claude Code local skills/config — not pushed
+.skills/
+.claude/
 # Dev run-output dumps (gradle log captures)
 rc.txt
 rs.txt
