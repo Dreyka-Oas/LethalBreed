@@ -29,6 +29,9 @@ dependencies {
     // runtime. `include` packages it into the remapped jar so a dedicated server needs no extra dep.
     implementation("org.jocl:jocl:2.0.5")
     include("org.jocl:jocl:2.0.5")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
@@ -41,6 +44,10 @@ java {
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.release.set(21)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 loom {
