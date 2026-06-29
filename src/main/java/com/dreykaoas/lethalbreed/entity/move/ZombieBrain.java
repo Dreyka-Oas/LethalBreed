@@ -6,6 +6,7 @@ import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+import net.minecraft.world.entity.LivingEntity;
 import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;
@@ -15,7 +16,6 @@ import com.dreykaoas.lethalbreed.entity.ZombiePursuit;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -66,11 +66,10 @@ public final class ZombieBrain {
             return;
         }
 
-        // Actually attack the chosen target (damage animals/villagers/mobs, not just approach).
+        // The vanilla attack target (melee) is set authoritatively in LODManager.classify, which runs in the
+        // SAME activation immediately before this tick — so no setTarget re-assert is needed here (was
+        // duplicate work). We still read the pursuit target to drive movement dispatch below.
         LivingEntity te = p.targetEntity();
-        if (TargetingConfig.attackAllTargets && te != null && te.isAlive() && entity.getTarget() != te) {
-            entity.setTarget(te);
-        }
         double dx = p.tgtX() - entity.getX();
         double dz = p.tgtZ() - entity.getZ();
         double dy = p.tgtY() - entity.getY();

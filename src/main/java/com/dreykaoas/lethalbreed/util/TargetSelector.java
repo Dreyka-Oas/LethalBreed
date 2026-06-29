@@ -52,28 +52,33 @@ public final class TargetSelector {
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
         AABB box = self.getBoundingBox().inflate(radius);
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
-        double hearSq = TargetingConfig.soundEnabled
-                ? TargetingConfig.soundBaseRadius * TargetingConfig.soundBaseRadius : -1.0;
-        LivingEntity best = null;
-        double bestSq = Double.MAX_VALUE;
+        // Hearing range scales with how LOUD the entity is, mirroring SoundEventBus: a normal noise carries
+        // soundBaseRadius, a LOUD action (mining/attacking/placing = arm swing, like a block break) carries
+        // soundBaseRadius × soundLoudMultiplier. -1 disables hearing entirely (soundEnabled off).
+        double base = TargetingConfig.soundBaseRadius;
+        double loud = base * TargetingConfig.soundLoudMultiplier;
+        double baseHearSq = TargetingConfig.soundEnabled ? base * base : -1.0;
+        double loudHearSq = TargetingConfig.soundEnabled ? loud * loud : -1.0;
+        // Sort nearest-first so the FIRST detected candidate is the nearest detected one — then return
+        // immediately. The detection test on the far miss-list is what's expensive (canSee is a voxel
+        // raycast), so visiting candidates closest-first lets us stop after the fewest possible raycasts:
+        // only the entities nearer than the winner (all unseen+unheard) ever get raycast.
+        candidates.sort((a, b) -> Double.compare(self.distanceToSqr(a), self.distanceToSqr(b)));
         for (LivingEntity e : candidates) {
             double d = self.distanceToSqr(e);
-            if (d >= bestSq) {
-                continue;
-            }
             // Heard (close, through walls) OR seen (line of sight). Hearing requires the entity to be making
             // NOISE this tick (not mere proximity) — a motionless, silent entity emits no sound and can only
-            // be acquired by sight. Only when LOS is required AND it's not heard do we fall back to needing
-            // sight — a distant/quiet entity behind an opaque wall is unseen and unheard, so it isn't a target
-            // until it makes itself known.
-            boolean heard = d <= hearSq && isAudible(e);
+            // be acquired by sight. A loud action (arm swing) is heard from the louder radius; a mere footstep
+            // only from the base radius. Only when LOS is required AND it's not heard do we fall back to
+            // needing sight — a distant/quiet entity behind an opaque wall is unseen and unheard, so it isn't
+            // a target until it makes itself known.
+            boolean heard = isAudible(e) && d <= (e.swinging ? loudHearSq : baseHearSq);
             if (TargetingConfig.requireLineOfSight && !heard && !canSee(level, self, e)) {
                 continue;
             }
-            bestSq = d;
-            best = e;
+            return e; // nearest detected (list is distance-sorted) — done
         }
-        return best;
+        return null;
     }
 
     /** An entity is audible only when it actually emits noise this tick: walking (moved at least
