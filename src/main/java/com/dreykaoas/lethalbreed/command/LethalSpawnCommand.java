@@ -1,8 +1,8 @@
 package com.dreykaoas.lethalbreed.command;
 
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 
-import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.dev.DevSpawnScheduler;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -21,8 +21,8 @@ import net.minecraft.world.entity.EntityType;
 
 /**
  * {@code /lethalspawn <entity> <count> [delaySeconds]} — dev/load-test tool. Spawns {@code count}
- * entities in a ring around the player after an optional delay, and turns on the dev perf recap.
- * Op-gated (permission level 2).
+ * entities in a ring around the player after an optional delay, and reports the dev perf-recap state
+ * (driven by {@code debugLogInterval}). Op-gated (permission level 2).
  *
  * <p>The {@code entity} argument is a vanilla {@link ResourceArgument} over the entity-type registry, so it
  * shows the same summonable-entity suggestion list as {@code /summon} (the popup above the input) and
@@ -54,15 +54,20 @@ public final class LethalSpawnCommand {
         long dueTick = level.getServer().getTickCount() + (long) delaySeconds * 20L;
         DevSpawnScheduler.schedule(dueTick, level, player.blockPosition(), type, count, ProgressionConfig.devSpawnRadius);
 
-        // Activate the dev perf recap (dev environment only; see TickScheduler).
-        GameState.perfRecapActive = true;
+        // The dev perf recap is driven solely by SchedulerConfig.debugLogInterval (and only logs in a dev
+        // env). The command does NOT mutate config — ConfigIo serialises every static field on the next save,
+        // so a runtime tweak here would silently become permanent. Just report the current state truthfully.
+        int recapInterval = SchedulerConfig.debugLogInterval;
+        String recap = recapInterval > 0
+                ? ("perf recap every " + recapInterval + " ticks (dev only)")
+                : "perf recap OFF — set debugLogInterval > 0 to enable";
 
         final int n = count;
         final String e = EntityType.getKey(type).toString();
         final int d = delaySeconds;
         src.sendSuccess(() -> Component.literal(
                 "[LethalBreed] queued " + n + " x " + e + (d > 0 ? (" in " + d + "s") : " now")
-                        + " (radius " + ProgressionConfig.devSpawnRadius + "). Perf recap ON (dev only)."), true);
+                        + " (radius " + ProgressionConfig.devSpawnRadius + "). " + recap + "."), true);
         return count;
     }
 }

@@ -6,6 +6,7 @@ import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.mechanics.MechTestArena;
 import com.dreykaoas.lethalbreed.dev.mechanics.MechTestEvaluator;
 import com.dreykaoas.lethalbreed.dev.mechanics.MechTestState;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
@@ -20,7 +21,9 @@ public final class MechanicsTestHarness {
     private static final MechTestState STATE = new MechTestState();
 
     public static void onTick(MinecraftServer server) {
-        if (!ProgressionConfig.devMechTest) {
+        // Dev-env gate: builds an arena + force-spawns mobs. Never run on a shipped jar / real world even if
+        // the GUI toggle is on — only under gradle runServer (a development environment).
+        if (!ProgressionConfig.devMechTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
             return;
         }
         tick++;

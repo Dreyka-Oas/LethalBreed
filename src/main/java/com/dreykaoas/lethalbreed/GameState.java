@@ -13,7 +13,4 @@ public final class GameState {
 
     public static final ZombieRegistry REGISTRY = new ZombieRegistry();
     public static final DimensionManager DIMENSIONS = new DimensionManager();
-
-    /** Turns on the dev perf recap (dev environment only). Set by /lethalspawn. */
-    public static volatile boolean perfRecapActive = false;
 }

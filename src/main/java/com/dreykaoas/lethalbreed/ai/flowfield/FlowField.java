@@ -68,6 +68,17 @@ public final class FlowField {
         return true;
     }
 
+    /** Cost-to-nearest-goal at world (wx,wz), or {@link #IMPASSABLE} when the cell is outside the field.
+     *  Exposed for diagnostics and the CPU/GPU parity self-test (the field is otherwise direction-sampled). */
+    public int costAt(int wx, int wz) {
+        int cx = wx - originX;
+        int cz = wz - originZ;
+        if (cx < 0 || cx >= width || cz < 0 || cz >= depth) {
+            return IMPASSABLE;
+        }
+        return cost[index(cx, cz)];
+    }
+
     /** Flag for the cell at world (wx,wz): break/build needed to enter it, or none/out-of-bounds. */
     public byte flagAt(int wx, int wz) {
         int cx = wx - originX;
