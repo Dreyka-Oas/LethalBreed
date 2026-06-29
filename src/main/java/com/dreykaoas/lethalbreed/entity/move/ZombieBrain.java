@@ -27,6 +27,7 @@ public final class ZombieBrain {
     private final SmartZombie owner;
     private final Zombie entity;
     private final PillarClimb pillar;
+    private final WallClimb wall;
     private final Leap leap;
 
     private int activations;
@@ -41,10 +42,11 @@ public final class ZombieBrain {
         this.owner = owner;
         this.entity = owner.entity();
         this.pillar = new PillarClimb(owner);
+        this.wall = new WallClimb(owner);
         this.leap = new Leap(owner);
     }
 
-    public boolean isClimbing() { return pillar.active(); }
+    public boolean isClimbing() { return pillar.active() || wall.active(); }
     public boolean isSwimming() { return swimming; }
 
     /** Distance-tier throttle: true on 1 of every {@code divisor} activations of this zombie. */
@@ -60,7 +62,8 @@ public final class ZombieBrain {
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LODLevel.FROZEN) return;
         pillar.tickCooldown();
-        if (pillar.active()) return; // mid jump-pillar; the scheduler's per-tick climbStep finishes it
+        wall.tickCooldown();
+        if (pillar.active() || wall.active()) return; // mid climb; the per-tick climbStep finishes it
         if (!p.hasTarget()) {
             owner.setState(p.hasSound() && navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
             return;
@@ -77,6 +80,7 @@ public final class ZombieBrain {
         // In water never build — rise/dive is driven every tick by the scheduler's swim pass (swimStep).
         if (CombatMoveConfig.floatInWater && entity.isInWater()) {
             pillar.cancel();
+            wall.cancel();
             swimming = true;
             owner.setState(ZombieState.PURSUING_PLAYER);
             return;
@@ -100,7 +104,7 @@ public final class ZombieBrain {
         navTo(ctx, p.tgtX(), navY, p.tgtZ());
         owner.setState(ZombieState.PURSUING_PLAYER);
         debugClimb(p, horizSq, dy, stuck);
-        MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz);
+        MoveDispatch.choose(owner, level, ctx, pillar, wall, te, dx, dz, dy, horizSq, stuck, bx, bz);
     }
 
     private void debugClimb(ZombiePursuit p, double horizSq, double dy, boolean stuck) {
@@ -111,8 +115,15 @@ public final class ZombieBrain {
                 entity.onGround());
     }
 
-    /** Scheduler entry point each tick for an ascending zombie. Drives the jump-and-place pillar. */
-    public void climbStep(ServerLevel level, WorldAIContext ctx) { pillar.step(level, ctx); }
+    /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the spider
+     *  wall-scale when one is running, else the jump-and-place pillar. */
+    public void climbStep(ServerLevel level, WorldAIContext ctx) {
+        if (wall.active()) {
+            wall.step(level, ctx);
+        } else {
+            pillar.step(level, ctx);
+        }
+    }
 
     /** Per-tick while in water. Guards the swim state, then delegates the driving to {@link Swim}. */
     public void swimStep(ServerLevel level, WorldAIContext ctx) {

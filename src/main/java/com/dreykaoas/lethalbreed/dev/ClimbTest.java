@@ -64,6 +64,13 @@ public final class ClimbTest {
             }
         }
 
+        // Carve a 3-tall WINDOW through the centre climbing column (z=cz, y +4..+6). Regression cover for the
+        // wall-scale's face-end scan: a zombie scaling here must climb PAST the gap (wall resumes above) to the
+        // roof target, not hop off into the window. Off-centre columns stay solid for the plain-wall path.
+        for (int dyy = 4; dyy <= 6; dyy++) {
+            level.setBlock(new BlockPos(wallX, gy + dyy, cz), Blocks.AIR.defaultBlockState(), 3);
+        }
+
         // Stationary, weightless, invulnerable villager target on top-centre of the wall.
         int villagerY = gy + wallH;
         Entity v = EntityType.VILLAGER.spawn(level, new BlockPos(wallX, villagerY, cz), EntitySpawnReason.COMMAND);

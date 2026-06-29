@@ -94,7 +94,7 @@ public final class SmartZombie {
             return;
         }
         if (level.canSeeSky(entity.blockPosition())) {
-            entity.setRemainingFireTicks(160); // 8s, like vanilla sun burn
+            entity.setRemainingFireTicks(WorldSpawnConfig.sunBurnDurationTicks); // default 160 = 8s, like vanilla
         }
     }
 }

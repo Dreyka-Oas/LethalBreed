@@ -18,6 +18,8 @@ public final class MechanicsTestHarness {
     private MechanicsTestHarness() {}
 
     private static int tick = -1;
+    /** Evaluate after a generous window so sun-burn reliably ignites in the playerless headless arena. */
+    private static final int EVAL_TICK = 400;
     private static final MechTestState STATE = new MechTestState();
 
     public static void onTick(MinecraftServer server) {
@@ -30,7 +32,13 @@ public final class MechanicsTestHarness {
         ServerLevel ow = server.overworld();
         if (tick == 5) {
             MechTestArena.build(ow, server, STATE);
-        } else if (tick == 200) {
+        } else if (tick > 5 && tick < EVAL_TICK) {
+            // Latch the fire state every tick: a husk/zombie can ignite in daylight and burn to death before
+            // the eval tick, so the evaluator must know it WAS on fire, not just whether it still is right now.
+            // The window is generous (EVAL_TICK) because sun-burn only fires on a LOD bucket activation and a
+            // freshly force-loaded headless arena needs a few ticks for skylight to settle before it ignites.
+            STATE.latchFire();
+        } else if (tick == EVAL_TICK) {
             MechTestEvaluator.evaluate(ow, STATE);
             LethalBreed.LOGGER.info("[MechTest] DONE");
         }

@@ -17,6 +17,9 @@ public final class MaterialRegistry {
         if (!state.getFluidState().isEmpty()) {
             return false; // never "break" liquids
         }
+        if (CombatMoveConfig.breakProtectBlockEntities && state.hasBlockEntity()) {
+            return false; // anti-grief: spare chests, furnaces, spawners, beds, etc.
+        }
         float hardness = state.getDestroySpeed(level, pos);
         if (hardness < 0.0f) {
             return false; // bedrock, barrier, etc.
