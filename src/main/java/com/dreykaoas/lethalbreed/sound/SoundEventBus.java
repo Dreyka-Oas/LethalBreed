@@ -69,7 +69,7 @@ public final class SoundEventBus {
         }
         boolean useMemory = TargetingConfig.targetMemoryTicks > 0;
         for (double[] e : events) {
-            List<SmartZombie> near = grid.queryRadius(e[0], e[2], e[3]);
+            List<SmartZombie> near = grid.queryRadius(e[0], e[1], e[2], e[3]);
             for (SmartZombie z : near) {
                 if (z.entity().getTarget() != null) {
                     continue; // already chasing a player directly

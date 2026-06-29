@@ -20,6 +20,7 @@ import java.util.Set;
  * {@link PerfRecap}. The scheduling math and pass order are deliberate; the helpers are pure splits.
  */
 public final class TickScheduler {
+    private final ZombieRegistry registry;
     private final LodBucketPass bucketPass;
     private final EveryTickPass everyTickPass;
     private final WorldMaintenance world;
@@ -30,6 +31,7 @@ public final class TickScheduler {
     private final Set<SmartZombie> swimmers = new HashSet<>(); // zombies in water, ticked every tick (rise/dive)
 
     public TickScheduler(ZombieRegistry registry, DimensionManager dimensions) {
+        this.registry = registry;
         this.bucketPass = new LodBucketPass(registry, dimensions);
         this.everyTickPass = new EveryTickPass(dimensions);
         this.world = new WorldMaintenance(dimensions);
@@ -38,7 +40,15 @@ public final class TickScheduler {
 
     public void onServerTick(MinecraftServer server) {
         long t0 = System.nanoTime();
-        int buckets = Math.max(1, SchedulerConfig.tickBuckets);
+        // Auto-scale: pick the bucket count so each tick processes ~autoScaleBucketLoad zombies, instead of a
+        // fixed tickBuckets. buckets is computed once here and handed to the pass so membership stays consistent.
+        int buckets;
+        if (SchedulerConfig.autoScaleBuckets) {
+            int load = Math.max(1, SchedulerConfig.autoScaleBucketLoad);
+            buckets = Math.max(1, (registry.size() + load - 1) / load);
+        } else {
+            buckets = Math.max(1, SchedulerConfig.tickBuckets);
+        }
         int currentBucket = (int) Math.floorMod(tickCounter, buckets);
 
         world.enforceWorldRules(server);
@@ -46,7 +56,7 @@ public final class TickScheduler {
         com.dreykaoas.lethalbreed.effect.ContaminationManager.tick(server);
         world.processSound(server);
 
-        bucketPass.run(server, currentBucket, climbers, swimmers);
+        bucketPass.run(server, buckets, currentBucket, climbers, swimmers);
 
         everyTickPass.processClimbers(server, climbers);
         everyTickPass.processSwimmers(server, swimmers);

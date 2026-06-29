@@ -140,7 +140,15 @@ public final class ZombieBrain {
     /** Re-path only when the previous path finished or the re-issue interval elapsed. */
     private void navTo(double x, double y, double z) {
         PathNavigation nav = entity.getNavigation();
-        if (nav.isDone() || sinceNav >= SchedulerConfig.navReissueInterval) {
+        // Distant zombies re-path less: a stale path costs little when far, so MEDIUM/LOW stretch the
+        // re-issue interval by their multiplier. nav.isDone() still re-paths immediately for any tier.
+        int mult = switch (owner.lod()) {
+            case MEDIUM -> Math.max(1, SchedulerConfig.lodMediumNavMultiplier);
+            case LOW -> Math.max(1, SchedulerConfig.lodLowNavMultiplier);
+            default -> 1;
+        };
+        int reissue = Math.max(1, SchedulerConfig.navReissueInterval) * mult;
+        if (nav.isDone() || sinceNav >= reissue) {
             nav.moveTo(x, y, z, FlowConfig.navSpeed);
             sinceNav = 0;
         } else {
