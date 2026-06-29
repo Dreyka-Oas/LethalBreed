@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.block;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -47,8 +48,8 @@ public final class BreakManager {
         if (active.isEmpty()) {
             return;
         }
-        float rate = LethalBreedConfig.breakProgressPerTick;
-        long grace = LethalBreedConfig.breakGraceTicks;
+        float rate = CombatMoveConfig.breakProgressPerTick;
+        long grace = CombatMoveConfig.breakGraceTicks;
 
         Iterator<Map.Entry<Long, State>> it = active.entrySet().iterator();
         while (it.hasNext()) {

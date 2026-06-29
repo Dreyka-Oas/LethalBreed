@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.block;
 
-import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -26,7 +27,7 @@ public final class PlacedBlockTracker {
         if (placedAtTick.isEmpty()) {
             return;
         }
-        long lifetime = LethalBreedConfig.placedBlockLifetimeTicks;
+        long lifetime = CombatMoveConfig.placedBlockLifetimeTicks;
         Iterator<Map.Entry<Long, Long>> it = placedAtTick.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Long, Long> e = it.next();

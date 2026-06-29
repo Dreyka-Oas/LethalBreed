@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.spatial;
 
+import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 
 import java.util.ArrayList;
@@ -16,38 +17,44 @@ import java.util.Map;
  * reads will go through immutable snapshots instead.
  */
 public final class SpatialGrid {
-    private final int cellSize;
     private final Map<Long, List<SmartZombie>> cells = new HashMap<>();
 
-    public SpatialGrid(int cellSize) {
-        this.cellSize = Math.max(1, cellSize);
+    public SpatialGrid() {
+    }
+
+    /** Cell width read live from config, so editing spatialCellSize at runtime takes effect: keys computed
+     *  with the new size diverge from each zombie's stored cellKey, so the next {@link #update} re-buckets it.
+     *  The whole grid migrates within one bucket cycle (tickBuckets ticks); queries are correct once migrated. */
+    private int cellSize() {
+        return Math.max(1, SchedulerConfig.spatialCellSize);
     }
 
     private long key(int blockX, int blockZ) {
-        int cx = Math.floorDiv(blockX, cellSize);
-        int cz = Math.floorDiv(blockZ, cellSize);
+        int cell = cellSize();
+        int cx = Math.floorDiv(blockX, cell);
+        int cz = Math.floorDiv(blockZ, cell);
         return (((long) cx) << 32) ^ (cz & 0xffffffffL);
     }
 
     /** Re-bucket a zombie if it crossed a cell boundary. Returns the new cell key. */
     public long update(SmartZombie z, int blockX, int blockZ) {
         long newKey = key(blockX, blockZ);
-        long oldKey = z.cellKey();
-        if (z.inGrid() && oldKey == newKey) {
+        long oldKey = z.pursuit().cellKey();
+        if (z.pursuit().inGrid() && oldKey == newKey) {
             return newKey;
         }
-        if (z.inGrid()) {
+        if (z.pursuit().inGrid()) {
             removeFrom(oldKey, z);
         }
         cells.computeIfAbsent(newKey, k -> new ArrayList<>(4)).add(z);
-        z.setCell(newKey, true);
+        z.pursuit().setCell(newKey, true);
         return newKey;
     }
 
     public void remove(SmartZombie z) {
-        if (z.inGrid()) {
-            removeFrom(z.cellKey(), z);
-            z.setCell(0L, false);
+        if (z.pursuit().inGrid()) {
+            removeFrom(z.pursuit().cellKey(), z);
+            z.pursuit().setCell(0L, false);
         }
     }
 
@@ -64,10 +71,11 @@ public final class SpatialGrid {
     /** Collect zombies within {@code radius} blocks of (x,z). Cheap broad-phase + exact filter. */
     public List<SmartZombie> queryRadius(double x, double z, double radius) {
         List<SmartZombie> out = new ArrayList<>();
-        int minCx = Math.floorDiv((int) Math.floor(x - radius), cellSize);
-        int maxCx = Math.floorDiv((int) Math.floor(x + radius), cellSize);
-        int minCz = Math.floorDiv((int) Math.floor(z - radius), cellSize);
-        int maxCz = Math.floorDiv((int) Math.floor(z + radius), cellSize);
+        int cell = cellSize();
+        int minCx = Math.floorDiv((int) Math.floor(x - radius), cell);
+        int maxCx = Math.floorDiv((int) Math.floor(x + radius), cell);
+        int minCz = Math.floorDiv((int) Math.floor(z - radius), cell);
+        int maxCz = Math.floorDiv((int) Math.floor(z + radius), cell);
         double r2 = radius * radius;
         for (int cx = minCx; cx <= maxCx; cx++) {
             for (int cz = minCz; cz <= maxCz; cz++) {

@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.client;
 
-import com.dreykaoas.lethalbreed.LethalBreedMod;
+import com.dreykaoas.lethalbreed.LethalBreed;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -92,11 +92,11 @@ public final class LethalBreedClientConfig {
                 }
             }
         } catch (Exception e) {
-            LethalBreedMod.LOGGER.warn("[LethalBreed] client config load failed, using defaults: {}", e.toString());
+            LethalBreed.LOGGER.warn("[LethalBreed] client config load failed, using defaults: {}", e.toString());
             instance = new LethalBreedClientConfig();
         }
 
-        LethalBreedMod.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, maxRender={}, sodium={}, iris={}",
+        LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, maxRender={}, sodium={}, iris={}",
                 instance.enabled, instance.cullDistantZombies, instance.zombieRenderDistance,
                 instance.maxRenderedZombies, sodiumPresent, irisPresent);
     }

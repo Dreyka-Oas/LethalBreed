@@ -74,10 +74,58 @@ Baby zombies and drowned are discarded; equipment is stripped (config-gated). Ea
 UUID-deterministic size/speed/damage/leap variation — applied in `Zombie.finalizeSpawn` (**before** the
 client sees the entity) so there is no visible resize on spawn.
 
+### Super Contamination — the zombifying plague
+A zombie hit can infect any non-zombie living entity (chance rises with the phase), applying **Super
+Contamination** (skull icon). It deals **ramping wither damage to death** and drains a player's hunger faster
+and faster. **Milk doesn't cure it** — a persistent counter re-applies it. The only escape is to **stay
+crouched**: each check has a tiny random chance (5–8%) to shake it off. When a contaminated mob dies it
+**transforms into a zombie**, so an outbreak snowballs. Config: `contamination*`.
+
+### Special zombie variants
+Each spawn may roll one of **12 special types** (chance scales with the phase; harder types unlock at higher
+phases), shown as a floating name:
+- **Passifs** — *Sprinteur* (rapide), *Bondisseur* (pounce LEAP), *Juggernaut* (blindé/PV), *Fouisseur* (Haste/creuse).
+- **Actifs** — *Cracheur* (projectile), *Bombeur* (explose près de la cible), *Toxique* (Poison au contact),
+  *Givré* (Slowness), *Hurleur* (aggro la horde), *Soigneur* (Regen de zone), *Nécromancien* (invoque).
+- **À la mort** — *Splitter* (se divise en 2 petits).
+
+`/lethalspecial <type> [count]` pour tester. Config : `specialEnabled`, `specialBaseChance`,
+`specialPhaseScale`, `specialMaxChance`, `specialShowName`, `specialActionInterval`.
+
+### Difficulty phases — 15 escalating waves
+A server-global phase (1→15) auto-advances on a ~10-minute timer (jittered), **only ever rising**, and is
+announced in chat (`☠ Phase N — <Nom>`). The higher the phase, the harder: each spawned zombie rolls more
+HP / damage / speed from **widening** random ranges, wears better & more **enchanted** gear (a random
+tool/weapon type — sword/axe/pickaxe/shovel/hoe — plus armor, material tier rising leather→netherite), and
+gets more/stronger effects. Gear has a 2% drop chance per item. Names are scientific Latin binomials
+(language-neutral — same FR/EN) on a *biodivergence* theme; the full list is logged to the console at start:
+
+| # | Nom | # | Nom | # | Nom |
+|---|-----|---|-----|---|-----|
+| 1 | *Cadaver dormiens* | 6 | *Praedator vorax* | 11 | *Veteranus pestifer* |
+| 2 | *Mortifera vulgaris* | 7 | *Miles necroticus* | 12 | *Biodivergence* |
+| 3 | *Reanimatus gregarius* | 8 | *Legio necrotica* | 13 | *Tyrannus letalis* |
+| 4 | *Putredo errans* | 9 | *Venator pernix* | 14 | *Pestis apocalyptica* |
+| 5 | *Caterva putrescens* | 10 | *Bestia immanis* | 15 | *Necrosis terminalis* |
+
+`/lethalphase [n]` shows or forces the phase. Config: `phaseSystemEnabled`, `phaseIntervalTicks`,
+`phaseJitterTicks`, `phaseGearDropChance`. Tune the per-phase table in `phase/PhaseConfig.java`.
+
+### Random effects — zombie "types"
+~25% of spawned zombies carry one **random beneficial** effect for their whole life (infinite duration,
+random level I–III), rolled UUID-seeded in `finalizeSpawn`. The pool is everything useful to a predator:
+Speed, Strength, Resistance, Regeneration, Jump Boost, Haste (digs faster), Health Boost, Absorption —
+plus a **custom zombie-only `LEAP` effect** (no Fire Resistance: every zombie must burn in daylight) (a registered Holder-based MobEffect
+that shows particles only). Vanilla **Jump Boost** makes a zombie jump *higher* (folded into the vertical
+impulse); the custom **LEAP** makes it lunge *farther* (folded into the horizontal leap) — both dynamic,
+read live, never hard-coded. Config: `randomEffectChance`, `randomEffectMaxAmplifier`, `leapEffectPerLevel`.
+
 ### GPU compute
 The per-dimension flow field is solved off the server thread. When an OpenCL GPU is present it is used
-automatically (`useGpu=true` default; logs `GPU: <device> — OpenCL OK`), otherwise the CPU solver runs
-transparently. Any GPU error degrades to CPU — it is never load-bearing.
+automatically (`useGpu=true` default; logs `GPU: <device> — OpenCL OK`); otherwise the **multi-core** CPU
+solver runs transparently — one flow field is solved across `cores-2` threads with a parallel Bellman-Ford
+relaxation (the same algorithm as the GPU kernel), not a single-core Dijkstra. Any GPU error degrades to the
+CPU path — the GPU is never load-bearing. Config: `flowCpuThreads` (0 = auto cores-2).
 
 ### Client rendering
 Sodium/Iris-aware client config with a distance-cull mixin for zombies.
@@ -132,6 +180,10 @@ src/main/java/com/dreykaoas/lethalbreed/
 ├── ai/ flowfield/ goals/      # flow field, LOD, target selection
 ├── block/                     # break/build coordinators, op queue, placed-block tracker
 ├── sound/  spatial/  tick/    # sound bus, spatial grid, staggered scheduler (climbers/swimmers passes)
+├── effect/                    # custom MobEffect registration (LEAP) + holder
+├── phase/                     # 15-phase escalation: manager, data table, gear equipper
+├── special/                   # 12 special zombie variants: type, roller, runtime behavior
+├── contamination/             # Super Contamination plague manager (infect/ramp/cure/zombify)
 ├── gpu/                       # OpenCL/JOCL compute manager + kernel dispatch
 ├── mixin/                     # finalizeSpawn (size), float-in-water, goal accessor/suppress
 └── config/                    # LethalBreedConfig
