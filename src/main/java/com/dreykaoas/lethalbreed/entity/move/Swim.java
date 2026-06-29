@@ -6,7 +6,6 @@ import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -42,12 +41,7 @@ public final class Swim {
         int sdx = MoveMath.stepSign(hx);
         int sdz = MoveMath.stepSign(hz);
 
-        if (hlen > 1.0e-2) {
-            float yaw = (float) (Mth.atan2(hz, hx) * (180.0 / Math.PI)) - 90.0f;
-            entity.setYRot(yaw);
-            entity.yBodyRot = yaw;
-            entity.yHeadRot = yaw;
-        }
+        MoveMath.faceHeading(entity, hx, hz);
 
         // Horizontal: ease toward the target (blend with current velocity so it accelerates/decelerates
         // smoothly instead of teleport-gliding at a fixed speed). Zero the drive within ~0.6 blocks.

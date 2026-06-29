@@ -2,8 +2,6 @@ package com.dreykaoas.lethalbreed.ai.flowfield.gpu;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
-import org.jocl.Pointer;
-import org.jocl.Sizeof;
 import org.jocl.cl_command_queue;
 import org.jocl.cl_context;
 import org.jocl.cl_context_properties;
@@ -18,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.jocl.CL.CL_CONTEXT_PLATFORM;
-import static org.jocl.CL.CL_DEVICE_MAX_WORK_GROUP_SIZE;
-import static org.jocl.CL.CL_DEVICE_NAME;
 import static org.jocl.CL.CL_DEVICE_TYPE_GPU;
 import static org.jocl.CL.clBuildProgram;
 import static org.jocl.CL.clCreateCommandQueueWithProperties;
@@ -27,7 +23,6 @@ import static org.jocl.CL.clCreateContext;
 import static org.jocl.CL.clCreateKernel;
 import static org.jocl.CL.clCreateProgramWithSource;
 import static org.jocl.CL.clGetDeviceIDs;
-import static org.jocl.CL.clGetDeviceInfo;
 import static org.jocl.CL.clGetPlatformIDs;
 import static org.jocl.CL.setExceptionsEnabled;
 
@@ -37,9 +32,6 @@ import static org.jocl.CL.setExceptionsEnabled;
  * any failure so the caller can degrade to the CPU solver — the GPU is never load-bearing.
  */
 final class GpuContext {
-    /** AMD extension: the commercial board name (e.g. "AMD Radeon RX 9060 XT") vs CL_DEVICE_NAME ("gfx1200"). */
-    private static final int CL_DEVICE_BOARD_NAME_AMD = 0x4038;
-
     final cl_context context;
     final cl_command_queue queue;
     final cl_kernel kernel;
@@ -79,7 +71,7 @@ final class GpuContext {
             for (cl_device_id device : devices) {
                 platList.add(platform);
                 devList.add(device);
-                nameList.add(queryDeviceName(device));
+                nameList.add(GpuDeviceInfo.name(device));
             }
         }
         if (devList.isEmpty()) {
@@ -118,44 +110,7 @@ final class GpuContext {
         clBuildProgram(program, 0, null, null, null, null);
         this.kernel = clCreateKernel(program, "relax_step", null);
         this.deviceName = chosenName;
-        this.maxWorkGroupSize = queryMaxWorkGroupSize(chosenDevice);
-    }
-
-    /** Query CL_DEVICE_MAX_WORK_GROUP_SIZE (a size_t). Falls back to a conservative 256 if the query fails
-     *  or reports a nonsense value, so the solver still has a safe upper bound to validate against. */
-    private static long queryMaxWorkGroupSize(cl_device_id device) {
-        try {
-            long[] out = new long[1];
-            clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, Sizeof.size_t, Pointer.to(out), null);
-            return out[0] > 0 ? out[0] : 256L;
-        } catch (Throwable t) {
-            return 256L;
-        }
-    }
-
-    private static String queryDeviceName(cl_device_id device) {
-        String board = queryStringInfo(device, CL_DEVICE_BOARD_NAME_AMD); // prefer the marketing name
-        if (board != null && !board.isEmpty()) {
-            return board;
-        }
-        String name = queryStringInfo(device, CL_DEVICE_NAME); // fallback: short arch name (gfx1200)
-        return name == null ? "GPU" : name;
-    }
-
-    /** Query a string device-info param; returns null if the param is unsupported by the driver. */
-    private static String queryStringInfo(cl_device_id device, int param) {
-        try {
-            long[] size = new long[1];
-            clGetDeviceInfo(device, param, 0, null, size);
-            if (size[0] <= 0) {
-                return null;
-            }
-            byte[] buffer = new byte[(int) size[0]];
-            clGetDeviceInfo(device, param, buffer.length, Pointer.to(buffer), null);
-            return new String(buffer, 0, Math.max(0, buffer.length - 1), StandardCharsets.UTF_8).trim();
-        } catch (Throwable t) {
-            return null; // extension not supported on this device/driver
-        }
+        this.maxWorkGroupSize = GpuDeviceInfo.maxWorkGroupSize(chosenDevice);
     }
 
     private static String loadKernelSource() {
