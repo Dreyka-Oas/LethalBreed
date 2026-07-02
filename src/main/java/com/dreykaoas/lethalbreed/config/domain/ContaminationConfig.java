@@ -47,4 +47,9 @@ public final class ContaminationConfig {
     /** Cure chance window per roll (percent). Tiny on purpose. */
     public static double contamCureMinPct = 5.0;
     public static double contamCureMaxPct = 8.0;
+
+    /** Dev time-compression for plague timers: every pulse/symptom interval is divided by this factor, so a
+     *  developer can watch the (normally days-long) progression fast. Default 1.0 = real timing. Only ever
+     *  changed by the dev-only {@code /lethaldev timescale} command; a shipped config keeps it at 1.0. */
+    public static double contamDevTimeScale = 1.0;
 }

@@ -57,9 +57,11 @@ public final class DevBootstrap {
             }
         });
 
-        // Dev/load-test command: /lethalspawn <entity> <count> [delaySeconds].
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
-                LethalSpawnCommand.register(dispatcher, registryAccess));
+        // Dev commands: /lethalspawn (load-test spawn) + /lethaldev (exercise slow effects on demand).
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            LethalSpawnCommand.register(dispatcher, registryAccess);
+            LethalDevCommand.register(dispatcher);
+        });
 
         LethalBreed.LOGGER.info("[LethalBreed] dev hooks installed (dev environment only).");
     }

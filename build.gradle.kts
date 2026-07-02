@@ -1,3 +1,5 @@
+import net.fabricmc.loom.task.RemapJarTask
+
 plugins {
     id("fabric-loom") version "1.17.12"
     java
@@ -59,6 +61,23 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+// ---- Two build flavours ----
+// The default `remapJar` (→ `build`) packages ONLY the main source set: the shipped PLAYER jar, with zero
+// dev/test code. The `remapDevJar` task below packages main + the dev source set (harnesses + /lethaldev &
+// /lethalspawn commands): the DEVELOPER jar. Use build-player.bat / build-dev.bat to produce each.
+val devJar = tasks.register<Jar>("devJar") {
+    archiveClassifier.set("dev-unmapped")
+    from(sourceSets.main.get().output)
+    from(devSourceSet.output)
+}
+
+val remapDevJar = tasks.register<RemapJarTask>("remapDevJar") {
+    dependsOn(devJar)
+    inputFile.set(devJar.flatMap { it.archiveFile })
+    archiveClassifier.set("dev")
+    addNestedDependencies.set(true)
 }
 
 loom {

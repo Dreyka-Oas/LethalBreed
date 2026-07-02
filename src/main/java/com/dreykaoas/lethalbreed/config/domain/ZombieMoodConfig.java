@@ -37,6 +37,19 @@ public final class ZombieMoodConfig {
     /** After giving up a blocked flee, fight for at least this many ticks before flee can re-trigger — keeps
      *  a cornered zombie attacking instead of flip-flopping flee/fight against the wall. Default 60 = 3 s. */
     public static int corneredFightTicks = 60;
+    /** Activations of failing to open distance before giving up when the threat is at least as fast as the
+     *  fleer (retreating can't win). Lower than {@link #fleeStuckActivations} so a hopeless flee ends fast
+     *  instead of the fleer running straight until it dies. Default 2. */
+    public static int fleeFastThreatGiveUp = 2;
+
+    // ---- Sun-shelter (wounded + burning → break off the hunt and reach shade) ----
+    /** Master toggle: a burning, low-health zombie leaves the hunt/retreat and paths to the nearest shaded
+     *  block (no open sky above) to stop taking sun damage. Only fires while below {@link #fleeHealthFraction}. */
+    public static boolean sunShelterEnabled = true;
+    /** Horizontal block radius searched for a shaded refuge column when sheltering. Default 12. */
+    public static int shelterSearchRadius = 12;
+    /** Navigation speed multiplier while dashing to shade (matches the flee sprint). */
+    public static double shelterSpeed = 1.3;
 
     // ---- Distress scream (rallies idle zombies to the fleer) ----
     /** Once the fleer is at least this far from its threat, it screams for help (once per flee episode). */

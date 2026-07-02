@@ -57,6 +57,15 @@ public final class ZombieBrain {
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LODLevel.FROZEN) return;
+        // Sun-shelter overrides even the retreat: a burning wounded zombie dashes to shade (mood already found
+        // the refuge and dropped the target). Checked before flee so shade-seeking wins over the straight run.
+        if (owner.mood().isSheltering()) {
+            pillar.cancel();
+            wall.cancel();
+            owner.setState(ZombieState.SHELTERING);
+            owner.mood().driveShelter(level);
+            return;
+        }
         // Low-health retreat overrides the hunt: the mood step already dropped the target; here we just steer
         // away from the threat (vanilla nav, so climb/descend still work). No leap/dig/dispatch while fleeing.
         if (owner.mood().isFleeing()) {

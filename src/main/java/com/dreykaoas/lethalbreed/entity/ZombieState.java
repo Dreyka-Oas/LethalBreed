@@ -10,5 +10,6 @@ public enum ZombieState {
     CLIMBING,
     DESCENDING,
     FLEEING,
+    SHELTERING,
     CELEBRATING
 }
