@@ -1,4 +1,16 @@
 import net.fabricmc.loom.task.RemapJarTask
+import proguard.gradle.ProGuardTask
+
+buildscript {
+    repositories {
+        mavenCentral()
+        google()
+    }
+    dependencies {
+        // ProGuard runs as a post-remap step to obfuscate/strip the shipped player jar.
+        classpath("com.guardsquare:proguard-gradle:7.5.0")
+    }
+}
 
 plugins {
     id("fabric-loom") version "1.17.12"
@@ -121,4 +133,44 @@ loom {
             )
         }
     }
+}
+
+// ---- Obfuscation: strip debug + rename internals on the shipped PLAYER jar ----
+// Runs after Loom's remapJar. Input = the remapped named jar; output = an obfuscated jar that
+// replaces build/libs/<name>-<ver>.jar. Keep rules in proguard-rules.pro preserve everything the
+// Fabric loader, Mixin, reflection (ConfigSchema) and serialization reference by name.
+val proguardJar = tasks.register<ProGuardTask>("proguardJar") {
+    val remap = tasks.named<RemapJarTask>("remapJar")
+    dependsOn(remap)
+
+    val inJar = remap.flatMap { it.archiveFile }
+    val outJar = layout.buildDirectory.file("libs/${base.archivesName.get()}-${project.version}-obf.jar")
+
+    injars(inJar)
+    outjars(outJar)
+
+    // Library jars: the JDK modules + every jar on the runtime classpath (Minecraft, Fabric, JOCL).
+    // ProGuard needs these to resolve supertypes it must NOT rename.
+    val javaHome = System.getProperty("java.home")
+    libraryjars(mapOf("jarfilter" to "!**.jar", "filter" to "!module-info.class"),
+        "$javaHome/jmods/java.base.jmod")
+    libraryjars(configurations.named("runtimeClasspath"))
+
+    configuration("proguard-rules.pro")
+
+    doLast {
+        // Overwrite the canonical player jar with the obfuscated one so build-player.bat ships it.
+        val canonical = layout.buildDirectory.file(
+            "libs/${base.archivesName.get()}-${project.version}.jar").get().asFile
+        val obf = outJar.get().asFile
+        canonical.delete()
+        obf.copyTo(canonical, overwrite = true)
+        obf.delete()
+        logger.lifecycle("[proguard] obfuscated player jar -> ${canonical.name}")
+    }
+}
+
+// `gradlew build` (and build-player.bat) now produce the obfuscated player jar.
+tasks.named("build") {
+    dependsOn(proguardJar)
 }
