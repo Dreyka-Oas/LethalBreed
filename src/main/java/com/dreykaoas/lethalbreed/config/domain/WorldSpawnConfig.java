@@ -9,7 +9,7 @@ public final class WorldSpawnConfig {
 
     // ---- World rules ----
     /** Force the overworld to stay daytime. */
-    public static boolean forceDayTime = true;
+    public static boolean forceDayTime = false;
     /** Time of day to hold (6000 = noon). */
     public static long forcedDayTime = 6000L;
     /** Keep the weather clear (no rain/thunder). */
@@ -36,6 +36,22 @@ public final class WorldSpawnConfig {
     public static int randomEffectMaxAmplifier = 3;
     /** Custom LEAP effect: extra horizontal leap reach per level (0.35 = +35%/level). */
     public static double leapEffectPerLevel = 0.35;
+
+    // ---- Night-only phased spawning ----
+    /** Master toggle: hostile spawns are driven by the phase (0 = classic, nothing spawns). */
+    public static boolean nightSpawnEnabled = true;
+    /** Only plain Zombie spawns. When ON, every other hostile (skeleton, creeper, husk, drowned, zombie
+     *  villager, zombified piglin, spider, …) is cancelled at spawn, in EVERY phase. */
+    public static boolean onlyPlainZombie = true;
+    /** Per-phase multiplier on the zombie night mob-cap (how many can exist at once). Index = phase 0..15.
+     *  Phase 0 = 0 (classic, no spawns). */
+    public static double[] mobcapPerPhase = {
+            0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.1, 2.4, 2.7, 3.0, 3.4, 3.8, 4.2, 4.7, 5.3, 6.0
+    };
+    /** Per-phase multiplier on the spawn frequency (how fast they appear). Index = phase 0..15. */
+    public static double[] frequencyPerPhase = {
+            0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.1, 2.4, 2.7, 3.0, 3.4, 3.8, 4.2, 4.7, 5.3, 6.0
+    };
 
     // ---- Spawn control (Phase 1) ----
     /** Discard baby zombies on load. */

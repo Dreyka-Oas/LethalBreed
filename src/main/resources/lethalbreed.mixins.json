@@ -4,14 +4,21 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "LivingEntityCanBeAffectedMixin",
+    "MilkKeepsPlagueMixin",
     "MobGoalsAccessor",
+    "PlagueBlocksRegenMixin",
+    "SpawnFrequencyMixin",
+    "SpawnStateInvoker",
+    "SpawnStateMobcapMixin",
     "ZombieFinalizeSpawnMixin",
     "ZombieFloatInWaterMixin",
     "ZombieGoalSuppressMixin"
   ],
   "client": [
+    "client.AvatarRendererHallucinationMixin",
     "client.EndermanParticleMixin",
     "client.EntityRendererMixin",
+    "client.PlayerModelZombieArmsMixin",
     "client.GuiContaminationHudMixin",
     "client.LivingEntityRenderStateMixin",
     "client.LivingEntityRendererMixin",

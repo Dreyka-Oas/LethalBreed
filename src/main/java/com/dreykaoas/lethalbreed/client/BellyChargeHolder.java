@@ -13,4 +13,10 @@ public interface BellyChargeHolder {
     float lethalbreed$bellyCharge();
 
     void lethalbreed$bellyCharge(float charge);
+
+    /** True when this render state belongs to a player the local (symptomatic) viewer is hallucinating as a
+     *  zombie — swap texture + arm pose. Set in the AvatarRenderer extract hook, read in texture/model hooks. */
+    boolean lethalbreed$hallucinateZombie();
+
+    void lethalbreed$hallucinateZombie(boolean on);
 }

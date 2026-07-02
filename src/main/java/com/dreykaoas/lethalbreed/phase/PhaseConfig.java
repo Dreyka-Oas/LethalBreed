@@ -20,6 +20,8 @@ public final class PhaseConfig {
 
     public static final PhaseDef[] PHASES = {
             //              name                hp         dmg        spd        armor      weapon     ench eff
+            // Phase 0 = "classic": no mod zombies, no hostile mobs spawn at all (handled in the spawn hook).
+            new PhaseDef("Classic", 1.00,1.00, 1.00,1.00, 1.00,1.00, 0.00,0, 0.00,0, 0, 0.00,0,0),
             new PhaseDef("Cadaver dormiens", 1.00,1.00, 1.00,1.00, 1.00,1.00, 0.00,0, 0.00,0, 0, 0.00,0,0),
             new PhaseDef("Mortifera vulgaris", 1.00,1.15, 1.00,1.10, 1.00,1.05, 0.10,0, 0.00,0, 0, 0.10,1,0),
             new PhaseDef("Reanimatus gregarius", 1.05,1.25, 1.05,1.15, 1.00,1.10, 0.20,0, 0.05,0, 0, 0.15,1,0),
@@ -37,12 +39,14 @@ public final class PhaseConfig {
             new PhaseDef("Necrosis terminalis", 3.00,4.50, 2.50,3.20, 1.40,1.60, 1.00,5, 1.00,5, 5, 1.00,3,3),
     };
 
+    /** Phase index maps directly: phase 0 = PHASES[0] ("Classic"), phase 15 = PHASES[15]. */
     public static PhaseDef def(int phase) {
-        int i = Math.max(1, Math.min(PHASES.length, phase)) - 1;
+        int i = Math.max(0, Math.min(PHASES.length - 1, phase));
         return PHASES[i];
     }
 
+    /** Highest phase number (15). Phase 0 is the classic base, so the escalation runs 0..count(). */
     public static int count() {
-        return PHASES.length;
+        return PHASES.length - 1;
     }
 }

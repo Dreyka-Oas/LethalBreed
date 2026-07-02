@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
@@ -28,6 +29,8 @@ import java.util.List;
  * <ul>
  *   <li>{@code contaminate} — infect now (starts the latent stage).</li>
  *   <li>{@code symptoms} — force the symptomatic stage now (skips the 5–10 in-game-day roll).</li>
+ *   <li>{@code level <1..5>} — jump the target straight to a plague level (infects + surfaces symptoms first if
+ *       needed); rerolls its per-victim intensity for that level.</li>
  *   <li>{@code cure} — clear the plague outright.</li>
  *   <li>{@code status} — report the plague stage of the target.</li>
  *   <li>{@code timescale [factor]} — read/set the plague time-compression factor (e.g. 2 = twice as fast,
@@ -46,6 +49,9 @@ public final class LethalDevCommand {
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("contaminate").executes(LethalDevCommand::contaminate))
                 .then(Commands.literal("symptoms").executes(LethalDevCommand::symptoms))
+                .then(Commands.literal("level")
+                        .then(Commands.argument("n", IntegerArgumentType.integer(1, 5))
+                                .executes(ctx -> setLevel(ctx, IntegerArgumentType.getInteger(ctx, "n")))))
                 .then(Commands.literal("cure").executes(LethalDevCommand::cure))
                 .then(Commands.literal("status").executes(LethalDevCommand::status))
                 .then(Commands.literal("timescale")
@@ -75,6 +81,16 @@ public final class LethalDevCommand {
         return 1;
     }
 
+    private static int setLevel(CommandContext<CommandSourceStack> ctx, int n) throws CommandSyntaxException {
+        LivingEntity target = target(ctx);
+        ContaminationManager.forceLevel(target, n);
+        int got = ContaminationManager.plagueLevel(target);
+        reply(ctx, got > 0 ? ChatFormatting.RED : ChatFormatting.YELLOW,
+                got > 0 ? "set " + name(target) + " to plague level " + got
+                        : "could not set level on " + name(target) + " (zombie / disabled)");
+        return got > 0 ? 1 : 0;
+    }
+
     private static int cure(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         LivingEntity target = target(ctx);
         ContaminationManager.clearPlague(target);
@@ -86,7 +102,9 @@ public final class LethalDevCommand {
         LivingEntity target = target(ctx);
         String stage = !ContaminationManager.isContaminated(target) ? "clean"
                 : ContaminationManager.isSymptomatic(target) ? "symptomatic" : "latent";
+        int lvl = ContaminationManager.plagueLevel(target);
         reply(ctx, ChatFormatting.GRAY, name(target) + " — plague: " + stage
+                + (lvl > 0 ? " (level " + lvl + ")" : "")
                 + " | timescale x" + ContaminationConfig.contamDevTimeScale);
         return 1;
     }

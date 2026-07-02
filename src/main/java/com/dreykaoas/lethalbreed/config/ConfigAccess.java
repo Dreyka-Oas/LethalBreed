@@ -31,7 +31,8 @@ public final class ConfigAccess {
 
     public static String read(Field f) {
         try {
-            return String.valueOf(f.get(null));
+            Object v = f.get(null);
+            return v instanceof double[] arr ? ConfigType.csv(arr) : String.valueOf(v);
         } catch (IllegalAccessException e) {
             return "?";
         }
@@ -39,7 +40,8 @@ public final class ConfigAccess {
 
     public static String defaultOf(String name) {
         Object d = DEFAULTS.get(name);
-        return d == null ? "?" : String.valueOf(d);
+        if (d == null) return "?";
+        return d instanceof double[] arr ? ConfigType.csv(arr) : String.valueOf(d);
     }
 
     /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}. */

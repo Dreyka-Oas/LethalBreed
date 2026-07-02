@@ -14,6 +14,7 @@ public final class LethalBreedClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         LethalBreedClientConfig.load();
+        ContaminationScreenOverlay.register(); // faint green plague overlay while symptomatic
         // /lethalconfig → server sends the snapshot → open the config GUI on the client thread.
         ClientPlayNetworking.registerGlobalReceiver(LethalConfigPayloads.OpenConfig.TYPE, (payload, context) ->
                 context.client().execute(() -> context.client().setScreen(

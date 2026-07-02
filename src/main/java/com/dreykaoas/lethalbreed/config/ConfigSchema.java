@@ -65,6 +65,6 @@ public final class ConfigSchema {
 
     public static boolean isSupported(Class<?> t) {
         return t == boolean.class || t == int.class || t == long.class
-                || t == double.class || t == float.class;
+                || t == double.class || t == float.class || t == double[].class;
     }
 }

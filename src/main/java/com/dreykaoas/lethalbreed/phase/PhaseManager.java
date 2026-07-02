@@ -26,7 +26,7 @@ public final class PhaseManager {
     }
 
     // Cached mirror of the persisted state, so the hot static read in the spawn hook needs no server lookup.
-    private int phase = 1;
+    private int phase = 0;
     private long lastAdvanceGameTime = Long.MIN_VALUE;
     private long nextIntervalTicks = -1;
     private final Random rng = new Random();
@@ -67,7 +67,7 @@ public final class PhaseManager {
 
     /** Reset to phase 1 (e.g. a future /lethalphase reset). Persists, so the reset survives a reload too. */
     public void reset() {
-        phase = 1;
+        phase = 0;
         lastAdvanceGameTime = Long.MIN_VALUE;
         nextIntervalTicks = -1;
         persist();
@@ -77,7 +77,7 @@ public final class PhaseManager {
     /** Dump the full phase list to the server console so it's visible at a glance. */
     public void logPhases() {
         com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("[LethalBreed] Phases ({}):", PhaseConfig.count());
-        for (int i = 1; i <= PhaseConfig.count(); i++) {
+        for (int i = 0; i <= PhaseConfig.count(); i++) {
             com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("  Phase {} — {}", i, PhaseConfig.def(i).name());
         }
     }
@@ -113,7 +113,7 @@ public final class PhaseManager {
 
     /** Force a phase (e.g. /lethalphase) and announce it. */
     public void setPhase(MinecraftServer server, int p) {
-        phase = Math.max(1, Math.min(PhaseConfig.count(), p));
+        phase = Math.max(0, Math.min(PhaseConfig.count(), p));
         lastAdvanceGameTime = server.overworld().getGameTime();
         scheduleNext();
         persist();
