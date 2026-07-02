@@ -8,5 +8,7 @@ public enum ZombieState {
     BUILDING,
     BREAKING,
     CLIMBING,
-    DESCENDING
+    DESCENDING,
+    FLEEING,
+    CELEBRATING
 }

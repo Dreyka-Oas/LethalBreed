@@ -1,9 +1,7 @@
-package com.dreykaoas.lethalbreed.command;
+package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
-
-import com.dreykaoas.lethalbreed.dev.DevSpawnScheduler;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;

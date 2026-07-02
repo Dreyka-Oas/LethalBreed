@@ -263,11 +263,11 @@ Se faire toucher peut t'infecter ; la maladie fait mal de plus en plus jusqu'à 
 | ☐ | `contamBaseChance` | Chance de base d'être infecté quand on est touché. |
 | ☐ | `contamPhaseScale` | Chance d'infection en plus à chaque phase. |
 | ☐ | `contamMaxChance` | Chance maximum d'être infecté. |
-| ☐ | `contamDamageBase` | Dégâts au tout début de l'infection (1.0 = un demi-cœur). |
-| ☐ | `contamDamageRamp` | Les dégâts augmentent un peu à chaque instant qui passe. |
-| ☐ | `contamDamageCap` | Dégâts maximum par coup de maladie. |
-| ☐ | `contamDamageInterval` | Temps entre deux coups de maladie. |
-| ☐ | `contamHungerInterval` | Temps entre deux pertes de faim à cause de la maladie. |
+| ☐ | `contamDamageMin` | Dégâts min par pulsation, sur la vie ET la faim (1.0 = un demi-cœur). |
+| ☐ | `contamDamageMax` | Dégâts max par pulsation (vie + faim). Chaque pulsation tire dans [min, max]. |
+| ☐ | `contamIntervalMinSec` | Secondes réelles min entre deux pulsations de maladie. |
+| ☐ | `contamIntervalMaxSec` | Secondes réelles max entre deux pulsations de maladie. |
+| ☐ | `contamReanimateHumanoids` | Un humanoïde infecté qui meurt se relève en zombie. |
 | ☐ | `contamCureCheckTicks` | Temps entre deux chances de guérir (seulement accroupi). |
 | ☐ | `contamCureMinPct` | Chance minimum de guérir à chaque essai (toute petite). |
 | ☐ | `contamCureMaxPct` | Chance maximum de guérir à chaque essai. |

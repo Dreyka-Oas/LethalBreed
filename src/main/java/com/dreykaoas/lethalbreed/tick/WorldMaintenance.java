@@ -61,6 +61,7 @@ final class WorldMaintenance {
             }
             WorldAIContext ctx = e.getValue();
             ctx.soundBus().tickPlayers(level);
+            ctx.soundBus().tickEntities(level);
             ctx.soundBus().process(ctx.spatialGrid(), level.getGameTime());
         }
     }

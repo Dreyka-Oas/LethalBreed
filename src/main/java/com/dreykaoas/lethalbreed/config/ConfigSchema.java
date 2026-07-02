@@ -7,6 +7,7 @@ import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
+import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -35,6 +36,7 @@ public final class ConfigSchema {
             CombatMoveConfig.class,
             ProgressionConfig.class,
             ContaminationConfig.class,
+            ZombieMoodConfig.class,
     };
 
     /** Editable fields in source-declaration order, across all holders. */

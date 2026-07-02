@@ -41,10 +41,17 @@ public final class MechTestEvaluator {
         LethalBreed.LOGGER.info("[MechTest] phasegear : {} (armored={} tanky={} hp={}–{})",
                 gearPass ? "PASS" : "FAIL", armored, tanky, String.format("%.1f", minHp), String.format("%.1f", maxHp));
 
-        // Contamination: infected at least one + zombified on death.
+        // Contamination: infected at least one + the ramping DoT killed it.
         int infect = ContaminationManager.INFECT_COUNT.get();
-        int zomb = ContaminationManager.ZOMBIFY_COUNT.get();
-        LethalBreed.LOGGER.info("[MechTest] contamination : {} (infect={} zombify={})",
-                infect > 0 && zomb > 0 ? "PASS" : "FAIL", infect, zomb);
+        int died = ContaminationManager.DEATH_COUNT.get();
+        LethalBreed.LOGGER.info("[MechTest] contamination : {} (infect={} died={})",
+                infect > 0 && died > 0 ? "PASS" : "FAIL", infect, died);
+
+        // Flee + distress-rally: the wounded zombie must have screamed for help (distress emit) AND at least
+        // one idle helper must have picked up sound-memory of the fleer (rallied to come help).
+        int distress = com.dreykaoas.lethalbreed.entity.ZombieMood.DISTRESS_COUNT.get();
+        boolean rallyPass = distress > 0 && s.rallyHelped;
+        LethalBreed.LOGGER.info("[MechTest] flee-rally : {} (distressScreams={} helpersRallied={})",
+                rallyPass ? "PASS" : "FAIL", distress, s.rallyHelped);
     }
 }

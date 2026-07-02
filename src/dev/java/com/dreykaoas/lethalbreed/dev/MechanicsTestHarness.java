@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 
 /**
  * Headless verification of the non-special mechanics: daylight burn (incl. Husk), phase-scaled gear/health,
- * and the Super Contamination plague (infect → death → zombify). Gated by {@code devMechTest}.
+ * and the Super Contamination plague (infect → ramping DoT → death). Gated by {@code devMechTest}.
  */
 public final class MechanicsTestHarness {
     private MechanicsTestHarness() {}
@@ -38,6 +38,7 @@ public final class MechanicsTestHarness {
             // The window is generous (EVAL_TICK) because sun-burn only fires on a LOD bucket activation and a
             // freshly force-loaded headless arena needs a few ticks for skylight to settle before it ignites.
             STATE.latchFire();
+            STATE.latchRally();
         } else if (tick == EVAL_TICK) {
             MechTestEvaluator.evaluate(ow, STATE);
             LethalBreed.LOGGER.info("[MechTest] DONE");

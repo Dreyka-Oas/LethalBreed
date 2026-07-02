@@ -74,6 +74,7 @@ final class ConfigBoundsTable {
         // ---- TargetingConfig (Targeting / Sound) ----
         b("targetDetectRadius", 0, 128);
         b("targetMemoryTicks", 0, 72_000);
+        b("targetSwitchMargin", 1, 8);
         b("soundBaseRadius", 0, 128);
         b("soundLoudMultiplier", 1, 16);
         b("soundMoveThreshold", 0, 10);
@@ -137,13 +138,36 @@ final class ConfigBoundsTable {
         b("contamBaseChance", 0, 1);
         b("contamPhaseScale", 0, 1);
         b("contamMaxChance", 0, 1);
-        b("contamDamageBase", 0, 1000);
-        b("contamDamageRamp", 0, 1000);
-        b("contamDamageCap", 0, 1000);
-        b("contamDamageInterval", 1, 72_000);
-        b("contamHungerInterval", 1, 72_000);
+        b("contamDamageMin", 0, 1000);
+        b("contamDamageMax", 0, 1000);
+        b("contamIntervalMinSec", 0, 3600);
+        b("contamIntervalMaxSec", 0, 3600);
         b("contamCureCheckTicks", 1, 72_000);
         b("contamCureMinPct", 0, 100);
         b("contamCureMaxPct", 0, 100);
+        b("contamSymptomMinDays", 0, 365);
+        b("contamSymptomMaxDays", 0, 365);
+        b("contamSymptomMinPct", 0, 100);
+        b("contamSymptomMaxPct", 0, 100);
+        b("contamLatentSlowAmount", 0, 1);
+        b("contamLatentSlowTicks", 1, 72_000);
+
+        // ---- ZombieMoodConfig (Mood) ----
+        b("fleeHealthFraction", 0, 1);
+        b("regainHealthFraction", 0, 1);
+        b("regenAmount", 0, 1024);
+        b("regenIntervalTicks", 1, 72_000);
+        b("fleeSpeed", 0, 10);
+        b("fleeThreatRadius", 0, 128);
+        b("fleeDistance", 0, 128);
+        b("fleeStuckActivations", 0, 1024);
+        b("corneredFightTicks", 0, 72_000);
+        b("distressDistance", 0, 128);
+        b("distressRallyRadius", 0, 128);
+        b("celebrateRadius", 0, 128);
+        b("celebrateTicks", 0, 72_000);
+        b("screamVolume", 0, 64);
+        b("victoryPitch", 0.5, 2.0);
+        b("distressPitch", 0.5, 2.0);
     }
 }

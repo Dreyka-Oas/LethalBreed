@@ -26,15 +26,18 @@ public final class SmartZombie {
 
     private final ZombiePursuit pursuit;
     private final ZombieBrain brain;
+    private final ZombieMood mood;
 
     public SmartZombie(Zombie entity, ResourceKey<Level> dimension) {
         this.entity = entity;
         this.dimension = dimension;
         this.pursuit = new ZombiePursuit(entity);
         this.brain = new ZombieBrain(this);
+        this.mood = new ZombieMood(entity, this);
     }
 
     public ZombiePursuit pursuit() { return pursuit; }
+    public ZombieMood mood() { return mood; }
 
     /**
      * Reconcile this zombie's vanilla target-selection goals to {@link TargetingConfig#forceNearestTarget}
@@ -73,8 +76,9 @@ public final class SmartZombie {
     public double tgtY() { return pursuit.tgtY(); }
     public double tgtZ() { return pursuit.tgtZ(); }
 
-    // --- per-tick behaviour (delegate to brain) ---
+    // --- per-tick behaviour (delegate to brain / mood) ---
     public void tick(ServerLevel level, WorldAIContext ctx) { brain.tick(level, ctx); }
+    public void updateMood(ServerLevel level, WorldAIContext ctx) { mood.update(level, ctx); }
     public void climbStep(ServerLevel level, WorldAIContext ctx) { brain.climbStep(level, ctx); }
     public boolean isClimbing() { return brain.isClimbing(); }
     public void swimStep(ServerLevel level, WorldAIContext ctx) { brain.swimStep(level, ctx); }

@@ -96,6 +96,10 @@ final class LodBucketPass {
             ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
             // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
             sz.applySunBurn(level);
+            // Mood (celebrate/flee/regen) also runs before the FROZEN skip so a targetless fleeing/celebrating
+            // zombie still gets processed; it can un-freeze itself (LOD→HIGH), so re-read the tier afterward.
+            sz.updateMood(level, ctx);
+            lod = sz.lod();
             if (lod == LODLevel.FROZEN) {
                 continue;
             }

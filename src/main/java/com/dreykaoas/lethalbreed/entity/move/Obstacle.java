@@ -27,16 +27,23 @@ public final class Obstacle {
         int az = bz + sdz;
         BlockOperationQueue ops = ctx.blockOps();
 
-        // Clear only as many vertical cells as the zombie actually occupies (size-aware): break the lowest
-        // blocking breakable cell first (feet up); one per activation, the rest clear over the next ticks.
+        // Clear as many vertical cells as the zombie actually occupies (size-aware, ceil of its height): a
+        // 3-tall zombie needs all 3 cells ahead gone to fit through. Request EVERY breakable cell of the column
+        // at once (BreakManager runs concurrent breaks) instead of one-per-activation feet-up — clearing the
+        // bottom first let the zombie shuffle forward before the head cell (y+2) was done, leaving its head
+        // stuck in the wall so it never passed. Breaking the whole column together opens a hole it fits through.
         int cells = MoveMath.breakHeight(entity);
+        boolean requested = false;
         for (int i = 0; i < cells; i++) {
             BlockPos p = new BlockPos(ax, y + i, az);
             if (MoveMath.breakableSolid(level, p)) {
                 ctx.breakManager().request(p, entity);
-                owner.setState(ZombieState.BREAKING);
-                return;
+                requested = true;
             }
+        }
+        if (requested) {
+            owner.setState(ZombieState.BREAKING);
+            return;
         }
         BlockState fs = level.getBlockState(new BlockPos(ax, y, az));
         if (!fs.blocksMotion()) {

@@ -2,18 +2,19 @@ package com.dreykaoas.lethalbreed.init;
 
 import com.dreykaoas.lethalbreed.command.LethalConfigCommand;
 import com.dreykaoas.lethalbreed.command.LethalPhaseCommand;
-import com.dreykaoas.lethalbreed.command.LethalSpawnCommand;
 import com.dreykaoas.lethalbreed.command.LethalSpecialCommand;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
-/** Registers the mod's dev/load-test commands. */
+/**
+ * Registers the mod's user-facing commands ({@code /lethalphase}, {@code /lethalspecial},
+ * {@code /lethalconfig}). The dev/load-test {@code /lethalspawn} command lives in the {@code dev} source set
+ * and is registered by {@code DevBootstrap}, not here.
+ */
 public final class CommandInit {
     private CommandInit() {}
 
     public static void register() {
-        // Dev/load-test command: /lethalspawn <entity> <count> [delaySeconds]; /lethalphase [n]; /lethalspecial
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            LethalSpawnCommand.register(dispatcher, registryAccess);
             LethalPhaseCommand.register(dispatcher);
             LethalSpecialCommand.register(dispatcher);
             LethalConfigCommand.register(dispatcher);

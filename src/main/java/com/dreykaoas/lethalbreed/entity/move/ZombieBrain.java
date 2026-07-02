@@ -31,6 +31,7 @@ public final class ZombieBrain {
     private int stuckTicks = 0;
     private int dbgN = 0;
     private boolean swimming = false;
+    private boolean breaking = false; // latched last tick: hold position on the block instead of re-pathing
 
     public ZombieBrain(SmartZombie owner) {
         this.owner = owner;
@@ -56,6 +57,15 @@ public final class ZombieBrain {
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LODLevel.FROZEN) return;
+        // Low-health retreat overrides the hunt: the mood step already dropped the target; here we just steer
+        // away from the threat (vanilla nav, so climb/descend still work). No leap/dig/dispatch while fleeing.
+        if (owner.mood().isFleeing()) {
+            pillar.cancel();
+            wall.cancel();
+            owner.setState(ZombieState.FLEEING);
+            owner.mood().driveFlee(level);
+            return;
+        }
         pillar.tickCooldown();
         wall.tickCooldown();
         if (pillar.active() || wall.active()) return; // mid climb; the per-tick climbStep finishes it
@@ -72,8 +82,11 @@ public final class ZombieBrain {
         double dz = p.tgtZ() - entity.getZ();
         double dy = p.tgtY() - entity.getY();
         double horizSq = dx * dx + dz * dz;
-        // In water never build — rise/dive is driven every tick by the scheduler's swim pass (swimStep).
-        if (CombatMoveConfig.floatInWater && entity.isInWater()) {
+        // Swim mode only when actually floating/submerged (off the ground, or head underwater). A shallow
+        // puddle the zombie is STANDING in (on ground, head clear) must NOT lock it into swim — it still needs
+        // to pillar/jump out, so we fall through to the normal dispatch below. Deep water → swimStep drives it.
+        if (CombatMoveConfig.floatInWater && entity.isInWater()
+                && (!entity.onGround() || entity.isUnderWater())) {
             pillar.cancel();
             wall.cancel();
             swimming = true;
@@ -81,25 +94,38 @@ public final class ZombieBrain {
             return;
         }
         swimming = false;
-        // Occasional leap; a successful leap carries the arc this tick.
-        leap.tickCooldown();
-        if (leap.tryLeap(level, dx, dz, dy, horizSq)) {
-            owner.setState(ZombieState.PURSUING_PLAYER);
-            return;
-        }
 
-        // Block ops only when STUCK (no horizontal progress) — else it walks/auto-steps normally.
+        // Block ops only when STUCK (no horizontal progress) — else it walks/auto-steps normally. Computed
+        // BEFORE the leap so a stuck zombie (mid-break/pillar) never leaps: a leap would move it off the block
+        // it's breaking, stop renewing the break request, and let the progress lapse (never reaching 100%).
         boolean progressing = lastHorizDistSq < 0.0 || horizSq < lastHorizDistSq - CombatMoveConfig.stuckProgressEpsilon;
         stuckTicks = progressing ? 0 : stuckTicks + 1;
         lastHorizDistSq = horizSq;
         boolean stuck = stuckTicks >= CombatMoveConfig.stuckActivations;
 
-        // Aim at the BASE of an overhead target's column (our own Y) so we walk up and close the gap.
-        double navY = (dy > 1.0) ? entity.getY() : p.tgtY();
-        nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
+        // Occasional leap; a successful leap carries the arc this tick. Suppressed while stuck (breaking).
+        leap.tickCooldown();
+        if (!stuck && leap.tryLeap(level, dx, dz, dy, horizSq)) {
+            owner.setState(ZombieState.PURSUING_PLAYER);
+            return;
+        }
+
+        if (breaking) {
+            // Was breaking a block last tick — CONCENTRATE: hold position, don't re-path. Re-pathing would let
+            // the flow field drag the zombie sideways around the wall, so it stops renewing the break request
+            // and the progress lapses (block never reaches 100%). Just keep facing the block/target.
+            entity.getNavigation().stop();
+            MoveMath.faceHeading(entity, dx, dz);
+        } else {
+            // Aim at the BASE of an overhead target's column (our own Y) so we walk up and close the gap.
+            double navY = (dy > 1.0) ? entity.getY() : p.tgtY();
+            nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
+        }
         owner.setState(ZombieState.PURSUING_PLAYER);
         debugClimb(p, horizSq, dy, stuck);
         MoveDispatch.choose(owner, level, ctx, pillar, wall, te, dx, dz, dy, horizSq, stuck, bx, bz);
+        // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
+        breaking = owner.state() == ZombieState.BREAKING;
     }
 
     private void debugClimb(ZombiePursuit p, double horizSq, double dy, boolean stuck) {

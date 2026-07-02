@@ -31,7 +31,7 @@ public final class EntityEventsInit {
         registerTracking(registry);
         registerSound(dimensions);
         registerDamage(registry);
-        registerDeath();
+        registerDeath(registry);
     }
 
     /** Register / unregister vanilla zombies as they load into a server level, applying spawn control. */
@@ -98,14 +98,24 @@ public final class EntityEventsInit {
         });
     }
 
-    /** Splitter (and other DEATH specials) act when the zombie dies; contaminated victims zombify. */
-    private static void registerDeath() {
+    /** Splitter (and other DEATH specials) act when the zombie dies; contaminated victims clear their plague
+     *  state; a zombie that landed a direct kill may celebrate a cleared area. */
+    private static void registerDeath(ZombieRegistry registry) {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (entity.level() instanceof ServerLevel sl) {
-                if (entity instanceof Zombie z) {
-                    SpecialBehavior.onDeath(z, sl);
+            if (!(entity.level() instanceof ServerLevel sl)) {
+                return;
+            }
+            if (entity instanceof Zombie z) {
+                SpecialBehavior.onDeath(z, sl);
+            }
+            ContaminationManager.onDeath(entity, sl);
+            // Victory celebration: if a tracked zombie dealt the direct killing blow on non-kin prey, let it
+            // celebrate — ZombieMood.tryCelebrate no-ops unless the area is now clear of other prey.
+            if (!(entity instanceof Zombie) && source.getEntity() instanceof Zombie killer) {
+                com.dreykaoas.lethalbreed.entity.SmartZombie sz = registry.get(killer.getId());
+                if (sz != null) {
+                    sz.mood().tryCelebrate(sl);
                 }
-                ContaminationManager.onDeath(entity, sl);
             }
         });
     }

@@ -74,12 +74,20 @@ Baby zombies and drowned are discarded; equipment is stripped (config-gated). Ea
 UUID-deterministic size/speed/damage/leap variation — applied in `Zombie.finalizeSpawn` (**before** the
 client sees the entity) so there is no visible resize on spawn.
 
-### Super Contamination — the zombifying plague
+### Super Contamination — the wasting plague
 A zombie hit can infect any non-zombie living entity (chance rises with the phase), applying **Super
 Contamination** (skull icon). It deals **ramping wither damage to death** and drains a player's hunger faster
 and faster. **Milk doesn't cure it** — a persistent counter re-applies it. The only escape is to **stay
-crouched**: each check has a tiny random chance (5–8%) to shake it off. When a contaminated mob dies it
-**transforms into a zombie**, so an outbreak snowballs. Config: `contamination*`.
+crouched**: each check has a tiny random chance (5–8%) to shake it off. A contaminated victim simply **dies**
+from the plague — nothing is reanimated. Config: `contamination*`.
+
+### Zombie mood — celebrate / flee / regen
+Real zombies react to the fight. After a **direct kill that clears the area** (no other prey nearby) a zombie
+**raises its arms and lets out a loud triumphant groan**. A zombie that drops **below 1⁄3 health** while a
+threat is around **flees** directly away from it; once far enough it **screams for help**, a sound that
+**rallies nearby idle zombies** to its position. While fleeing (or celebrating) and still hurt it **slowly
+self-heals** (0.5 HP / 5 s) until it climbs back to **1⁄2 health**, at which point it stops fleeing and
+rejoins the hunt. Config: `mood*` / `flee*` / `regen*` / `distress*` / `celebrate*`.
 
 ### Special zombie variants
 Each spawn may roll one of **12 special types** (chance scales with the phase; harder types unlock at higher
@@ -183,7 +191,7 @@ src/main/java/com/dreykaoas/lethalbreed/
 ├── effect/                    # custom MobEffect registration (LEAP) + holder
 ├── phase/                     # 15-phase escalation: manager, data table, gear equipper
 ├── special/                   # 12 special zombie variants: type, roller, runtime behavior
-├── contamination/             # Super Contamination plague manager (infect/ramp/cure/zombify)
+├── contamination/             # Super Contamination plague manager (infect/ramp/cure/death)
 ├── gpu/                       # OpenCL/JOCL compute manager + kernel dispatch
 ├── mixin/                     # finalizeSpawn (size), float-in-water, goal accessor/suppress
 └── config/                    # LethalBreedConfig

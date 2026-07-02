@@ -16,6 +16,9 @@ import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.block.Blocks;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.dreykaoas.lethalbreed.dev.mechanics.MechTestState.Y;
 
 /** Builds the three mechanics test areas: sun-burn, phase-gear, and contamination. */
@@ -31,6 +34,7 @@ public final class MechTestArena {
         buildSunburn(ow, s);
         buildPhaseGear(ow, server, s);
         buildContamination(ow, s);
+        buildFleeRally(ow, s);
         LethalBreed.LOGGER.info("[MechTest] arena built");
     }
 
@@ -83,14 +87,21 @@ public final class MechTestArena {
         }
     }
 
-    /** Contamination area: roofed. A zombie infects a vulnerable cow → it dies → zombifies. */
+    /** Contamination area: roofed. A zombie infects a vulnerable cow → the ramping DoT kills it. */
     private static void buildContamination(ServerLevel ow, MechTestState s) {
         ContaminationConfig.contaminationEnabled = true;
         ContaminationConfig.contamBaseChance = 1.0;   // infect on the first hit
-        ContaminationConfig.contamDamageBase = 5.0;   // kill the cow well within the window
-        ContaminationConfig.contamDamageInterval = 10;
+        ContaminationConfig.contamDamageMin = 5.0;    // kill the cow well within the window
+        ContaminationConfig.contamDamageMax = 5.0;
+        ContaminationConfig.contamIntervalMinSec = 0.5;
+        ContaminationConfig.contamIntervalMaxSec = 0.5;
+        // Force symptoms to surface immediately so the DoT applies within the test window (no 5–10 day wait).
+        ContaminationConfig.contamSymptomMinDays = 0.0;
+        ContaminationConfig.contamSymptomMaxDays = 0.0;
+        ContaminationConfig.contamSymptomMinPct = 100.0;
+        ContaminationConfig.contamSymptomMaxPct = 100.0;
         ContaminationManager.INFECT_COUNT.set(0);
-        ContaminationManager.ZOMBIFY_COUNT.set(0);
+        ContaminationManager.DEATH_COUNT.set(0);
         ArenaBuilder.forceChunks(ow, 150);
         floor(ow, 150, true);
         s.contamPos = new BlockPos(150, Y, 0);
@@ -99,9 +110,63 @@ public final class MechTestArena {
             cow.setNoAi(true);
             cow.setPersistenceRequired();
             // Deterministic: infect directly (the on-hit spread is the ALLOW_DAMAGE hook, exercised in play),
-            // then the ramping DoT must kill it and the death must zombify it.
+            // then the ramping DoT must kill it.
             ContaminationManager.contaminate(cow);
         }
+    }
+
+    /**
+     * Flee + distress-rally area: roofed (no burn). A wounded zombie (HP below the flee fraction) with a live
+     * threat 15 blocks away must drop its hunt, retreat, and — once ≥ distressDistance from the threat — scream
+     * for help. Idle helper zombies within the rally radius must then pick up sound-memory of the fleer's spot.
+     * The threat is a Cow (zombies never target cows, and a NoAi cow is silent), so the ONLY sound event in the
+     * world is the distress emit — any helper memory therefore proves the rally fired, not incidental noise.
+     */
+    private static void buildFleeRally(ServerLevel ow, MechTestState s) {
+        com.dreykaoas.lethalbreed.entity.ZombieMood.DISTRESS_COUNT.set(0);
+        ArenaBuilder.forceChunks(ow, 210);
+        floor(ow, 210, true);
+        // Widen the roofed floor toward the fleer (x=225) and helpers so nobody walks off into the void/shade.
+        for (int x = 207; x <= 229; x++) {
+            for (int dz = -4; dz <= 6; dz++) {
+                ow.setBlock(new BlockPos(x, Y - 1, dz), Blocks.STONE.defaultBlockState(), 3);
+                ow.setBlock(new BlockPos(x, Y + 4, dz), Blocks.GLOWSTONE.defaultBlockState(), 3);
+            }
+        }
+
+        // Threat: a silent, stationary cow the fleer "was last hurt by".
+        Cow threat = EntityType.COW.create(ow, EntitySpawnReason.COMMAND);
+        if (threat != null) {
+            threat.setPos(210.5, Y, 0.5);
+            threat.setNoAi(true);
+            threat.setPersistenceRequired();
+            ow.addFreshEntity(threat);
+        }
+
+        // Fleer: wounded adult (HP well below fleeHealthFraction=1/3 of 20) with the cow as its damager memory.
+        Zombie fleer = EntityType.ZOMBIE.create(ow, EntitySpawnReason.COMMAND);
+        if (fleer != null) {
+            fleer.setPos(225.5, Y, 0.5);
+            fleer.setPersistenceRequired();
+            fleer.setHealth(4.0f); // 20% < 33% → enters FLEEING as soon as a threat is in range
+            if (threat != null) {
+                fleer.setLastHurtByMob(threat);
+            }
+            ow.addFreshEntity(fleer);
+        }
+        s.fleer = fleer;
+
+        // Idle helpers: targetless zombies within distressRallyRadius (32) of the fleer. Spawn via spawn() so
+        // the mod's ENTITY_LOAD hook registers them (needed for their pursuit to receive the rally memory).
+        List<Zombie> helpers = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            Zombie h = EntityType.ZOMBIE.spawn(ow, new BlockPos(223 + i % 2, Y, 3 + i), EntitySpawnReason.COMMAND);
+            if (h != null) {
+                h.setPersistenceRequired();
+                helpers.add(h);
+            }
+        }
+        s.rallyHelpers = helpers;
     }
 
     private static void floor(ServerLevel ow, int cx, boolean roof) {

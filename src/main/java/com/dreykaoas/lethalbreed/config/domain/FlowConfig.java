@@ -77,8 +77,10 @@ public final class FlowConfig {
     public static double climbHorizRadius = 5.0;
     /** Spider wall-scale: when a flush vertical wall blocks the path to an overhead target, the zombie scales
      *  it directly (drives upward velocity, hugging the face — NO blocks placed) instead of pillaring beside
-     *  it. ON leaves a clean world (no dirt columns); OFF falls back to the dirt pillar for every overhead. */
-    public static boolean wallClimbEnabled = true;
+     *  it. ON leaves a clean world (no dirt columns); OFF falls back to the dirt pillar for every overhead.
+     *  Default OFF: velocity-scaling reads as a levitation glitch (zombie rises a bare wall with nothing under
+     *  it), so pillar-with-blocks is the intuitive default. */
+    public static boolean wallClimbEnabled = false;
     /** Upward speed (blocks/tick) when a zombie scales a flush wall toward an overhead target (≈ vanilla
      *  ladder 0.2). Spider-style — no blocks are placed, so nothing is ever left stranding the zombie. */
     public static double wallClimbSpeed = 0.2;
