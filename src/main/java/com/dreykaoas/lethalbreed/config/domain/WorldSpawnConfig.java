@@ -46,11 +46,11 @@ public final class WorldSpawnConfig {
     /** Per-phase multiplier on the zombie night mob-cap (how many can exist at once). Index = phase 0..15.
      *  Phase 0 = 0 (classic, no spawns). */
     public static double[] mobcapPerPhase = {
-            0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.1, 2.4, 2.7, 3.0, 3.4, 3.8, 4.2, 4.7, 5.3, 6.0
+            0.0, 1.5, 2.0, 2.6, 3.3, 4.1, 5.0, 6.0, 7.1, 8.3, 9.6, 11.0, 12.5, 14.1, 15.8, 18.0
     };
     /** Per-phase multiplier on the spawn frequency (how fast they appear). Index = phase 0..15. */
     public static double[] frequencyPerPhase = {
-            0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.1, 2.4, 2.7, 3.0, 3.4, 3.8, 4.2, 4.7, 5.3, 6.0
+            0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0
     };
 
     // ---- Spawn control (Phase 1) ----
