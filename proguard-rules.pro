@@ -11,7 +11,12 @@
 
 # ---- Global: keep it working, kill readability ----
 -dontshrink                         # do not remove code (avoids nuking reflectively/loader-used bits)
--dontoptimize                       # optimization can reorder/inline in ways that confuse Mixin @Inject
+# Optimization ON but conservative: inline/merge internal methods, fold constants, simplify control flow —
+# all of which make decompiled output harder to follow. Our mixins target Minecraft classes (fully kept),
+# never our own internals, so inlining internals is safe. Keep class merging off (it can move members
+# across the kept/renamed boundary and confuse the loader). 3 passes.
+-optimizations !class/merging/*
+-optimizationpasses 3
 -allowaccessmodification
 -repackageclasses 'com.dreykaoas.lethalbreed.z'   # flatten renamed internals into one opaque package
 -overloadaggressively

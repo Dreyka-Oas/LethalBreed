@@ -75,6 +75,30 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// ---- Kernel obfuscation: XOR-encrypt the OpenCL source in the packaged resources ----
+// The plaintext bellman_ford.cl (the flow-field pathfinding algorithm) is never shipped. This task
+// runs inside processResources: it reads the source .cl, XORs it with the same 32-byte key baked into
+// GpuContext.K, writes bellman_ford.clx, and drops the original so only the encrypted form is in the jar.
+val kernelKey = intArrayOf(
+    0x9E, 0x2C, 0xB7, 0x41, 0xD3, 0x6A, 0x1F, 0x88,
+    0x53, 0xE0, 0x0D, 0xAA, 0x74, 0xC5, 0x36, 0xF1,
+    0x2B, 0x9D, 0x60, 0x18, 0xBE, 0x47, 0xD2, 0x05,
+    0x8C, 0x33, 0xE7, 0x7A, 0xA1, 0x1C, 0xF8, 0x49,
+).map { it.toByte() }.toByteArray()
+
+tasks.processResources {
+    // Exclude the plaintext kernel from the output; the encrypted .clx is written by doLast below.
+    exclude("kernels/*.cl")
+    doLast {
+        val src = file("src/main/resources/kernels/bellman_ford.cl").readBytes()
+        val enc = ByteArray(src.size) { i -> (src[i].toInt() xor kernelKey[i and 31].toInt()).toByte() }
+        val outDir = destinationDir.resolve("kernels")
+        outDir.mkdirs()
+        outDir.resolve("bellman_ford.clx").writeBytes(enc)
+        logger.lifecycle("[kernel] encrypted bellman_ford.cl -> .clx (${enc.size} bytes)")
+    }
+}
+
 // ---- Two build flavours ----
 // The default `remapJar` (→ `build`) packages ONLY the main source set: the shipped PLAYER jar, with zero
 // dev/test code. The `remapDevJar` task below packages main + the dev source set (harnesses + /lethaldev &
