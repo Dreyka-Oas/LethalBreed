@@ -162,6 +162,9 @@ final class ConfigBoundsTable {
         b("fleeDistance", 0, 128);
         b("fleeStuckActivations", 0, 1024);
         b("corneredFightTicks", 0, 72_000);
+        b("fleeFastThreatGiveUp", 1, 1024);
+        b("shelterSearchRadius", 1, 64);
+        b("shelterSpeed", 0, 10);
         b("distressDistance", 0, 128);
         b("distressRallyRadius", 0, 128);
         b("celebrateRadius", 0, 128);

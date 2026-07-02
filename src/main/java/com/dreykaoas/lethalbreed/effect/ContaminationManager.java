@@ -230,7 +230,7 @@ public final class ContaminationManager {
     private static long rollSymptomIntervalTicks() {
         double min = Math.max(0.0, ContaminationConfig.contamSymptomMinDays);
         double max = Math.max(min, ContaminationConfig.contamSymptomMaxDays);
-        return Math.max(1L, Math.round((min + RNG.nextDouble() * (max - min)) * 24000.0));
+        return Math.max(1L, Math.round((min + RNG.nextDouble() * (max - min)) * 24000.0 / devTimeScale()));
     }
 
     /** Apply the brief, particleless latent slow as a transient movement-speed modifier. Its removal tick is
@@ -259,7 +259,12 @@ public final class ContaminationManager {
     private static long rollIntervalTicks() {
         double min = Math.max(0.0, ContaminationConfig.contamIntervalMinSec);
         double max = Math.max(min, ContaminationConfig.contamIntervalMaxSec);
-        return Math.max(1L, Math.round((min + RNG.nextDouble() * (max - min)) * 20.0));
+        return Math.max(1L, Math.round((min + RNG.nextDouble() * (max - min)) * 20.0 / devTimeScale()));
+    }
+
+    /** Positive plague time-compression factor (dev command sets it; clamped to ≥ 1e-3 to avoid div-by-zero). */
+    private static double devTimeScale() {
+        return Math.max(1.0e-3, ContaminationConfig.contamDevTimeScale);
     }
 
     private static void cure(LivingEntity e) {
@@ -300,6 +305,27 @@ public final class ContaminationManager {
      *  effects once infected. */
     public static boolean isContaminated(LivingEntity e) {
         return age(e) > 0;
+    }
+
+    /** True when the victim has already turned symptomatic (visible + damaging stage). */
+    public static boolean isSymptomatic(LivingEntity e) {
+        return symptomatic(e);
+    }
+
+    /** Dev tool: immediately surface symptoms on a contaminated victim (skips the 5–10 in-game-day roll), so
+     *  the visible/damaging stage can be inspected on demand. No-op if the victim isn't contaminated. */
+    public static void forceSymptomatic(LivingEntity e) {
+        if (age(e) <= 0 || symptomatic(e)) {
+            return;
+        }
+        e.setAttached(SYMPTOMATIC, true);
+        applyIcon(e);
+        nextSymptomRoll.remove(e);
+    }
+
+    /** Dev tool: clear the plague from a victim outright (public wrapper over the internal cure). */
+    public static void clearPlague(LivingEntity e) {
+        cure(e);
     }
 
     private static int age(LivingEntity e) {

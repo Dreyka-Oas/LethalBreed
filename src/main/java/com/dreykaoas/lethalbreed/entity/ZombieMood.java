@@ -4,9 +4,11 @@ import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.util.TargetSelector;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +34,7 @@ import java.util.List;
  * fleeing/celebrating zombie still ticks); {@link #driveFlee} runs from {@code ZombieBrain} while fleeing.
  */
 public final class ZombieMood {
-    private enum State { NORMAL, FLEEING, CELEBRATING }
+    private enum State { NORMAL, FLEEING, SHELTERING, CELEBRATING }
 
     /** Dev instrumentation: incremented each time a fleer fires its distress scream + rally emit. */
     public static final java.util.concurrent.atomic.AtomicInteger DISTRESS_COUNT =
@@ -50,6 +52,8 @@ public final class ZombieMood {
     private double lastThreatDistSq = -1.0;
     private int fleeStuckActivations = 0;
     private long corneredUntil = Long.MIN_VALUE;
+    // Sun-shelter target: the shaded block a burning wounded zombie is dashing to, if one was found.
+    private BlockPos shelterTarget = null;
 
     public ZombieMood(Zombie entity, SmartZombie owner) {
         this.entity = entity;
@@ -58,6 +62,10 @@ public final class ZombieMood {
 
     public boolean isFleeing() {
         return state == State.FLEEING;
+    }
+
+    public boolean isSheltering() {
+        return state == State.SHELTERING;
     }
 
     /** Once-per-activation mood step: state transitions, distress scream, and self-heal. */
@@ -96,7 +104,13 @@ public final class ZombieMood {
                 boolean gaining = lastThreatDistSq < 0.0 || d > lastThreatDistSq + 0.25;
                 fleeStuckActivations = gaining ? 0 : fleeStuckActivations + 1;
                 lastThreatDistSq = d;
-                if (fleeStuckActivations >= ZombieMoodConfig.fleeStuckActivations) {
+                // A retreat only works if the fleer can actually outpace the threat. When the threat is at least
+                // as fast (running from a same-/faster-speed pursuer just delays death), give up after far fewer
+                // failed activations than the normal wall-blocked threshold and turn to fight instead.
+                int giveUp = threatAtLeastAsFast(threat)
+                        ? Math.min(ZombieMoodConfig.fleeFastThreatGiveUp, ZombieMoodConfig.fleeStuckActivations)
+                        : ZombieMoodConfig.fleeStuckActivations;
+                if (fleeStuckActivations >= giveUp) {
                     state = State.NORMAL;
                     distressScreamed = false;
                     corneredUntil = now + ZombieMoodConfig.corneredFightTicks;
@@ -113,7 +127,38 @@ public final class ZombieMood {
             resetFleeStuck();
         }
 
-        if (state == State.FLEEING) {
+        // Sun-shelter override: a wounded zombie (already fleeing/sheltering) that is burning under open sky
+        // breaks off the straight retreat and dashes to the nearest shade — burning to death while running in a
+        // line is worse than a short detour into cover. Symmetric exit: once it's no longer on fire (or reached
+        // a shaded block) it drops back to the plain FLEEING recover state.
+        if (ZombieMoodConfig.sunShelterEnabled
+                && (state == State.FLEEING || state == State.SHELTERING)
+                && frac < ZombieMoodConfig.fleeHealthFraction) {
+            boolean exposed = entity.isOnFire() && level.canSeeSky(entity.blockPosition());
+            if (exposed) {
+                if (shelterTarget == null || level.canSeeSky(shelterTarget)) {
+                    shelterTarget = findShade(level); // (re)acquire a shaded refuge; may stay null if none near
+                }
+                state = State.SHELTERING;
+            } else {
+                // Safe now (in shade or fire out) — resume the ordinary wounded retreat/heal.
+                shelterTarget = null;
+                if (state == State.SHELTERING) {
+                    state = State.FLEEING;
+                }
+            }
+        } else if (state == State.SHELTERING) {
+            shelterTarget = null; // no longer eligible (healed up / threat gone path handled above)
+            state = State.FLEEING;
+        }
+
+        if (state == State.SHELTERING) {
+            entity.setTarget(null);
+            owner.pursuit().clearTarget();
+            owner.pursuit().clearMemory();
+            owner.pursuit().clearSound();
+            owner.setLod(LODLevel.HIGH);
+        } else if (state == State.FLEEING) {
             // Drop the hunt: no melee target, no stale memory/sound pursuit.
             entity.setTarget(null);
             owner.pursuit().clearTarget();
@@ -136,7 +181,8 @@ public final class ZombieMood {
 
         // Self-heal while fleeing or celebrating and still hurt; otherwise hold the timer at "now" so the next
         // eligible spell waits a full interval before its first heal.
-        boolean regenEligible = (state == State.FLEEING || state == State.CELEBRATING)
+        boolean regenEligible = (state == State.FLEEING || state == State.SHELTERING
+                || state == State.CELEBRATING)
                 && frac < ZombieMoodConfig.regainHealthFraction;
         if (regenEligible) {
             if (now - lastRegenTime >= ZombieMoodConfig.regenIntervalTicks) {
@@ -164,6 +210,67 @@ public final class ZombieMood {
         entity.getNavigation().moveTo(entity.getX() + away.x, entity.getY(), entity.getZ() + away.z,
                 ZombieMoodConfig.fleeSpeed);
         entity.getLookControl().setLookAt(entity.getX() + away.x, entity.getEyeY(), entity.getZ() + away.z);
+    }
+
+    /** Drive the dash to shade: path to the shaded refuge found in {@link #update}. Called each tick from the
+     *  brain while sheltering. Falls back to a plain retreat when no shade was located (so a burning zombie in
+     *  the open still moves rather than standing still and cooking). */
+    public void driveShelter(ServerLevel level) {
+        if (shelterTarget != null) {
+            entity.getNavigation().moveTo(shelterTarget.getX() + 0.5, shelterTarget.getY(),
+                    shelterTarget.getZ() + 0.5, ZombieMoodConfig.shelterSpeed);
+            entity.getLookControl().setLookAt(shelterTarget.getX() + 0.5,
+                    shelterTarget.getY() + 0.5, shelterTarget.getZ() + 0.5);
+            return;
+        }
+        driveFlee(level); // no shade nearby — keep retreating from the threat rather than stalling in the sun
+    }
+
+    /** Search a horizontal ring around the zombie for the nearest standable block whose column is NOT under
+     *  open sky (a shaded refuge). Returns the closest such foot position, or null when none is within range. */
+    private BlockPos findShade(ServerLevel level) {
+        BlockPos origin = entity.blockPosition();
+        int r = ZombieMoodConfig.shelterSearchRadius;
+        BlockPos best = null;
+        double bestSq = Double.MAX_VALUE;
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dz = -r; dz <= r; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                int x = origin.getX() + dx;
+                int z = origin.getZ() + dz;
+                // Column is shaded if the sky is blocked at the zombie's own height there.
+                m.set(x, origin.getY(), z);
+                if (level.canSeeSky(m)) {
+                    continue;
+                }
+                // Require a solid floor + head clearance so the zombie can actually stand there.
+                if (!level.getBlockState(m.below()).isSolid()
+                        || !level.getBlockState(m).isAir()
+                        || !level.getBlockState(m.above()).isAir()) {
+                    continue;
+                }
+                double distSq = origin.distSqr(m);
+                if (distSq < bestSq) {
+                    bestSq = distSq;
+                    best = m.immutable();
+                }
+            }
+        }
+        return best;
+    }
+
+    /** True when the threat's movement speed is at least the fleer's effective flee speed — meaning a straight
+     *  retreat can't open ground, so fleeing is futile and the fleer should give up sooner and fight. */
+    private boolean threatAtLeastAsFast(LivingEntity threat) {
+        double zombieBase = entity.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        double fleerSpeed = zombieBase * ZombieMoodConfig.fleeSpeed;
+        double threatSpeed = threat.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED)
+                ? threat.getAttributeValue(Attributes.MOVEMENT_SPEED)
+                : zombieBase; // no speed attribute (e.g. a player uses a different model) → assume peer speed
+        return threatSpeed >= fleerSpeed;
     }
 
     /** A zombie landed a direct kill: if the area is now clear of other prey, celebrate (arms up + a loud
