@@ -14,6 +14,9 @@ public final class ConfigCategory {
         // devClimbTest/debugClimb would otherwise be pulled into Climb by the "climb" rule below).
         if (n.startsWith("dev") || n.startsWith("debug")) return "Dev";
         if (n.contains("contam")) return "Contamination";
+        if (n.contains("flee") || n.contains("regen") || n.contains("regain") || n.contains("distress")
+                || n.contains("celebrat") || n.contains("mood") || n.contains("scream")
+                || n.contains("victory")) return "Mood";
         if (n.startsWith("special")) return "Specials";
         if (n.startsWith("phase")) return "Phases";
         if (n.contains("sound")) return "Sound";

@@ -53,6 +53,18 @@ public final class Swim {
         // Vertical: dive after a submerged target, else surface gently and hold at the top.
         double vy = targetBelow ? -CombatMoveConfig.waterDiveSpeed
                 : (entity.isUnderWater() ? CombatMoveConfig.waterRiseSpeed : 0.0);
+        // Step-out / stack-up: at the surface (not diving) a solid block ahead blocks horizontal progress and
+        // swimming disables auto-step. Hop up when the edge is solid at foot level (climb onto shore) OR when
+        // it's too tall (solid at foot+1) — repeated hops let zombies pile onto EACH OTHER (collision) and
+        // scale a high bank they can't step onto alone.
+        if (!targetBelow && (sdx != 0 || sdz != 0)) {
+            BlockPos ahead = entity.blockPosition().offset(sdx, 0, sdz);
+            boolean blockedFoot = level.getBlockState(ahead).isSolidRender();
+            boolean tooTall = level.getBlockState(ahead.above()).isSolidRender();
+            if (blockedFoot || tooTall) {
+                vy = 0.42; // vanilla jump impulse; kept up each tick so a stalled group keeps hopping/stacking
+            }
+        }
 
         entity.setDeltaMovement(nvx, vy, nvz);
         entity.hurtMarked = true;

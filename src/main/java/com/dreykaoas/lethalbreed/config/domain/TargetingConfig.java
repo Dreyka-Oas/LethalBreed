@@ -25,6 +25,12 @@ public final class TargetingConfig {
      *  known position for this many ticks before giving up (200 = 10s). Any live detection (a nearer/visible
      *  or heard entity) overrides the memory immediately — the nearest DETECTED target always wins. 0 = off. */
     public static int targetMemoryTicks = 200;
+    /** Target stickiness: once committed to a target, don't switch to a newly-visible other unless the new one
+     *  is CLOSER than (current distance ÷ this factor). >1 = sticky (1.5 = only switch when the other is ~33%
+     *  nearer). Stops a zombie mid-dig from thrashing between two equally-far targets — while breaking a wall
+     *  toward its prey, LOS to that prey is blocked BY the wall, so without this it would keep flipping to
+     *  whatever else is momentarily visible and never finish the block. 1 = off (always nearest visible). */
+    public static double targetSwitchMargin = 1.5;
 
     // ---- Coexistence with optimization mods ----
     /** Remove vanilla wander/idle goals we replace with flow-field nav (less CPU + less friction with

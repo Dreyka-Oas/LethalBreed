@@ -10,6 +10,17 @@ base {
     archivesName.set(project.property("archives_base_name") as String)
 }
 
+// Development-only source set: headless test harnesses + the /lethalspawn load-test command. It compiles
+// against main but is NEVER packaged into the shipped/remapped jar (see below), so a production jar contains
+// zero test/dev code and stays as light as possible. It is added to the runClient/runServer classpath so the
+// harnesses run under `gradlew runServer` / start.bat only.
+val devSourceSet: SourceSet = sourceSets.create("dev") {
+    java.srcDir("src/dev/java")
+    // Compile/run against everything main sees (Minecraft, Fabric loader/API, JOCL) plus main's own classes.
+    compileClasspath += sourceSets.main.get().compileClasspath + sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.fabricmc.net/") { name = "Fabric" }
@@ -53,6 +64,7 @@ tasks.test {
 loom {
     runs {
         named("client") {
+            source(devSourceSet) // dev harnesses on the client run classpath (dev env only)
             // Optimized JVM args for Liberica NIK 23 (GraalVM JIT) + tuned G1GC.
             // Conservative set: forces Graal as top-tier JIT, G1 with aikar-style tuning.
             vmArgs(
@@ -77,6 +89,7 @@ loom {
             programArgs("--quickPlaySingleplayer", "Nouveau monde")
         }
         named("server") {
+            source(devSourceSet) // dev harnesses on the dedicated-server run classpath (start.bat / runServer)
             vmArgs(
                 "-Xms2G",
                 "-Xmx6G",

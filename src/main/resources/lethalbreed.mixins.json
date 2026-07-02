@@ -3,13 +3,19 @@
   "package": "com.dreykaoas.lethalbreed.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "LivingEntityCanBeAffectedMixin",
     "MobGoalsAccessor",
     "ZombieFinalizeSpawnMixin",
     "ZombieFloatInWaterMixin",
     "ZombieGoalSuppressMixin"
   ],
   "client": [
-    "client.EntityRendererMixin"
+    "client.EndermanParticleMixin",
+    "client.EntityRendererMixin",
+    "client.GuiContaminationHudMixin",
+    "client.LivingEntityRenderStateMixin",
+    "client.LivingEntityRendererMixin",
+    "client.ZombieBellyModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

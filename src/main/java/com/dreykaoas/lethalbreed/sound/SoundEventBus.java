@@ -5,8 +5,13 @@ import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.spatial.SpatialGrid;
 import com.dreykaoas.lethalbreed.util.Players;
+import com.dreykaoas.lethalbreed.util.TargetSelector;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,6 +60,27 @@ public final class SoundEventBus {
                 emit(x, y, z, radius);
             }
             prev[0] = x; prev[1] = y; prev[2] = z;
+        }
+    }
+
+    /** Emit noise for NON-PLAYER living entities that are making sound this tick (walking, acting, hurt), so
+     *  zombies hear villagers/animals/mobs move behind walls the same way they hear players. Players are handled
+     *  by {@link #tickPlayers} (their server-side delta is unreliable, so that path uses positional delta);
+     *  every other creature has reliable {@code getDeltaMovement}, so {@link TargetSelector#isAudible} is enough.
+     *  A loud action (arm swing) carries {@code ×soundLoudMultiplier}, mirroring the acquisition hearing rule. */
+    public void tickEntities(ServerLevel level) {
+        if (!TargetingConfig.soundEnabled) {
+            return;
+        }
+        double base = TargetingConfig.soundBaseRadius;
+        double loud = base * Math.max(1.0, TargetingConfig.soundLoudMultiplier);
+        for (Entity ent : level.getAllEntities()) {
+            if (!(ent instanceof LivingEntity e) || ent instanceof Player || ent instanceof Zombie) {
+                continue; // players covered by tickPlayers; zombies never hunt their own kind
+            }
+            if (TargetSelector.isAudible(e)) {
+                emit(e.getX(), e.getY(), e.getZ(), e.swinging ? loud : base);
+            }
         }
     }
 

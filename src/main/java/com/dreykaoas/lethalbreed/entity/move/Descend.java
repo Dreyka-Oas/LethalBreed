@@ -112,6 +112,21 @@ public final class Descend {
             }
         }
 
+        // 2b) Target hid straight DOWN a deep shaft (it fell/dug and is nearly right below us): the safe-carve
+        //     above bailed because the shaft is deeper than safeDropBlocks, and a lateral staircase would only
+        //     walk us away from a prey that is directly under our feet. Dig straight down after it anyway — one
+        //     block per activation — so the zombie follows its target down the hole instead of stranding above.
+        double hx = owner.tgtX() - entity.getX();
+        double hz = owner.tgtZ() - entity.getZ();
+        boolean directlyBelow = hx * hx + hz * hz <= 2.25; // within ~1.5 blocks horizontally
+        BlockPos straightUnder = new BlockPos(bx, by - 1, bz);
+        if (directlyBelow && MoveMath.breakableSolid(level, straightUnder)) {
+            entity.getNavigation().stop();
+            ctx.breakManager().request(straightUnder, entity);
+            owner.setState(ZombieState.DESCENDING);
+            return;
+        }
+
         // 3) Target directly below over a deep void: can't drop straight safely. Don't strand — build a
         //    descending staircase out over the air toward the target.
         StairDescent.build(owner, level, ctx, bx, by, bz, sdx, sdz);

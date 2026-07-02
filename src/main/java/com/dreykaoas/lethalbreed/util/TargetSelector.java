@@ -36,6 +36,9 @@ public final class TargetSelector {
         if (e instanceof EnderDragon || e instanceof WitherBoss) {
             return false; // bosses
         }
+        if (e.getBbHeight() > 5.0f) {
+            return false; // too tall (giants / large modded mobs) — never attack these
+        }
         if (e instanceof ArmorStand) {
             return false; // not a creature
         }
@@ -48,50 +51,67 @@ public final class TargetSelector {
         return !e.isSpectator();
     }
 
-    /** Nearest valid living target within {@code radius}, or null. A candidate is detected if the zombie can
-     *  SEE it (opaque blocks block sight; glass/ice/leaves do not) OR HEAR it — anything within hearing range
-     *  ({@code soundBaseRadius}) is sensed even through solid walls (zombies hear through walls by design). So
-     *  a close entity hidden behind blocks still beats a far visible one: the nearest DETECTED entity wins. */
+    /** Nearest valid living target that the zombie can SEE within {@code radius}, or null. VISION ONLY — sight
+     *  primes over sound by design: a live combat target is acquired only by line of sight (opaque blocks block
+     *  it; glass/ice/leaves do not). Hearing is handled separately by the sound bus: a heard noise feeds
+     *  the zombie's short-term MEMORY so it walks to investigate the SPOT, and this seen target overrides that
+     *  memory in {@code LODManager} the instant something comes into view. So a zombie hears a mob move behind a
+     *  wall and commits to the noise location; once it rounds the wall and sees the mob, sight takes over. */
+    /** Sticky variant: prefer the already-committed {@code current} target over a marginally-closer new one
+     *  (see {@link TargetingConfig#targetSwitchMargin}). While a zombie digs through a wall toward its prey the
+     *  wall blocks LOS to that prey, so the plain nearest-visible pick would flip to whatever else is in view
+     *  and abandon the block — this keeps it committed until something is genuinely closer. */
+    public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, LivingEntity current) {
+        LivingEntity best = findNearest(level, self, radius);
+        double margin = TargetingConfig.targetSwitchMargin;
+        if (margin <= 1.0 || current == null || current == self || !isValid(self, current)) {
+            return best;
+        }
+        double curSq = self.distanceToSqr(current);
+        if (curSq > radius * radius) {
+            return best; // committed target left the detection radius → let the fresh pick take over
+        }
+        if (best == null) {
+            return current; // nothing else detected → stay committed and keep digging toward it
+        }
+        // Keep current unless the new candidate is closer than current ÷ margin (compare in squared space).
+        return curSq <= self.distanceToSqr(best) * margin * margin ? current : best;
+    }
+
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
-        // The candidate AABB must cover the FULL detection reach, which is the max of the visual radius and the
-        // loud-hearing reach (soundBaseRadius × soundLoudMultiplier). Inflating by radius alone dropped loud
-        // entities sitting between radius and hearReach, silently truncating hearing.
-        // Cap the hearing reach used to size the query box: soundBaseRadius (≤128) × soundLoudMultiplier (≤16)
-        // could otherwise reach ~2048, and a 2048-block getEntitiesOfClass AABB would scan a colossal volume
-        // every acquisition = a TPS cliff. 128 is well past any sane hearing range and matches the detect cap.
-        double hearReach = TargetingConfig.soundEnabled
-                ? Math.min(128.0, TargetingConfig.soundBaseRadius * Math.max(1.0, TargetingConfig.soundLoudMultiplier))
-                : 0.0;
-        AABB box = self.getBoundingBox().inflate(Math.max(radius, hearReach));
+        AABB box = self.getBoundingBox().inflate(radius);
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
-        // Hearing range scales with how LOUD the entity is, mirroring SoundEventBus: a normal noise carries
-        // soundBaseRadius, a LOUD action (mining/attacking/placing = arm swing, like a block break) carries
-        // soundBaseRadius × soundLoudMultiplier. -1 disables hearing entirely (soundEnabled off).
-        double base = TargetingConfig.soundBaseRadius;
-        double loud = base * TargetingConfig.soundLoudMultiplier;
-        double baseHearSq = TargetingConfig.soundEnabled ? base * base : -1.0;
-        double loudHearSq = TargetingConfig.soundEnabled ? loud * loud : -1.0;
-        // Sort nearest-first so the FIRST detected candidate is the nearest detected one — then return
-        // immediately. The detection test on the far miss-list is what's expensive (canSee is a voxel
-        // raycast), so visiting candidates closest-first lets us stop after the fewest possible raycasts:
-        // only the entities nearer than the winner (all unseen+unheard) ever get raycast.
-        candidates.sort((a, b) -> Double.compare(self.distanceToSqr(a), self.distanceToSqr(b)));
+        // Shuffle first so entities that end up EXACTLY tied (same distance band AND same height gap) resolve
+        // at random — List.sort is stable, so it preserves this randomised order for equal keys.
+        for (int i = candidates.size() - 1; i > 0; i--) {
+            int j = self.getRandom().nextInt(i + 1);
+            LivingEntity tmp = candidates.get(i);
+            candidates.set(i, candidates.get(j));
+            candidates.set(j, tmp);
+        }
+        // Sort nearest-first, but treat distances within TIE_BAND as "equally close": among two roughly-as-close
+        // candidates (e.g. one overhead, one at our level) prefer the one nearest in HEIGHT — a target at the
+        // zombie's own level is reachable without a climb, so it wins over one perched above at the same range.
+        // Exact ties (same band + same height) keep the random order from the shuffle above.
+        final double TIE_BAND = 4.0; // 4 = (2 blocks)²: distances differing by <2 blocks count as equal
+        candidates.sort((a, b) -> {
+            long ba = (long) (self.distanceToSqr(a) / TIE_BAND);
+            long bb = (long) (self.distanceToSqr(b) / TIE_BAND);
+            if (ba != bb) {
+                return Long.compare(ba, bb);
+            }
+            double dya = Math.abs(a.getY() - self.getY());
+            double dyb = Math.abs(b.getY() - self.getY());
+            return Double.compare(dya, dyb);
+        });
         double radiusSq = radius * radius;
         for (LivingEntity e : candidates) {
-            double d = self.distanceToSqr(e);
-            // Two independent detection channels, each with its OWN range:
-            //  - SIGHT is bounded by the visual detect radius (targetDetectRadius). The candidate box is sized
-            //    to the LARGER of sight/hearing reach, so a visible entity beyond the detect radius is in the
-            //    box but must NOT be acquired by sight — that is what keeps targetDetectRadius authoritative.
-            //  - HEARING reaches soundBaseRadius (or ×loud for a noisy arm-swing), through walls, but only for
-            //    an entity actually emitting noise this tick; a motionless, silent entity makes no sound.
-            // Detected = seen within sight range OR heard within hearing range. List is distance-sorted, so the
-            // first detected candidate is the nearest detected one.
-            boolean heard = isAudible(e) && d <= (e.swinging ? loudHearSq : baseHearSq);
-            boolean seen = d <= radiusSq
+            // SIGHT only: within the visual detect radius AND (if required) an unobstructed line of sight.
+            // List is distance-sorted, so the first visible candidate is the nearest visible one.
+            boolean seen = self.distanceToSqr(e) <= radiusSq
                     && (!TargetingConfig.requireLineOfSight || canSee(level, self, e));
-            if (heard || seen) {
-                return e; // nearest detected — done
+            if (seen) {
+                return e; // nearest seen — done
             }
         }
         return null;
@@ -103,7 +123,7 @@ public final class TargetSelector {
      *  burning). A
      *  motionless, silent entity makes no sound and can only be acquired by line of sight. Mirrors the
      *  player-footstep rule in {@code SoundEventBus.tickPlayers} so hearing is consistent for all entities. */
-    private static boolean isAudible(LivingEntity e) {
+    public static boolean isAudible(LivingEntity e) {
         Vec3 v = e.getDeltaMovement();
         double hMove = Math.sqrt(v.x * v.x + v.z * v.z); // horizontal only — ignore gravity on a standing mob
         boolean walking = hMove >= TargetingConfig.soundMoveThreshold && !e.isCrouching();

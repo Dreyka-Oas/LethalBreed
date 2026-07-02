@@ -9,6 +9,7 @@ import com.dreykaoas.lethalbreed.init.LifecycleInit;
 import com.dreykaoas.lethalbreed.init.TickInit;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * Entry point for LethalBreed.
@@ -33,5 +34,28 @@ public final class LethalBreedMod implements ModInitializer {
         TickInit.register(SCHEDULER);
         CommandInit.register();
         LifecycleInit.register(REGISTRY, DIMENSIONS);
+        installDevHooks();
+    }
+
+    /**
+     * Wire the development-only harnesses and load-test command — but ONLY in a development environment.
+     * The dev code lives in a separate {@code dev} source set that is never packaged into the shipped jar,
+     * so we load its entry point ({@code com.dreykaoas.lethalbreed.dev.DevBootstrap}) reflectively: on a
+     * production jar the class is absent and the lookup fails silently, leaving zero dev wiring active.
+     */
+    private static void installDevHooks() {
+        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            return;
+        }
+        try {
+            Class.forName("com.dreykaoas.lethalbreed.dev.DevBootstrap")
+                    .getMethod("install")
+                    .invoke(null);
+        } catch (ClassNotFoundException e) {
+            // Dev source set not on the classpath (shipped jar) — expected, nothing to install.
+            LethalBreed.LOGGER.debug("[LethalBreed] no dev source set on classpath; skipping dev hooks.");
+        } catch (ReflectiveOperationException e) {
+            LethalBreed.LOGGER.warn("[LethalBreed] failed to install dev hooks", e);
+        }
     }
 }

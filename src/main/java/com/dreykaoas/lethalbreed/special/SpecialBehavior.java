@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class SpecialBehavior {
     private SpecialBehavior() {}
 
+    /** Per-activation increment of the BOMBEUR belly charge (0..1). ~17 activations from arm to detonation. */
+    private static final float BOMBEUR_CHARGE_PER_TICK = 0.06f;
+
     // Dev instrumentation (headless test harness reads these to confirm abilities fired).
     public static final AtomicInteger SPIT_COUNT = new AtomicInteger();
     public static final AtomicInteger SUMMON_COUNT = new AtomicInteger();
@@ -54,8 +57,18 @@ public final class SpecialBehavior {
                 }
             }
             case BOMBEUR -> {
-                if (tgt != null && z.distanceToSqr(tgt) <= 9.0) {
-                    SpecialAbilities.bomb(level, z);
+                // Belly-swell fuse: once the target is within 3 blocks the zombie commits — the belly
+                // charge ramps (synced to clients for the render-side inflation) and it explodes at full.
+                float charge = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_CHARGE, 0.0f);
+                boolean armed = charge > 0.0f;
+                boolean inRange = tgt != null && z.distanceToSqr(tgt) <= 9.0;
+                if (armed || inRange) {
+                    charge += BOMBEUR_CHARGE_PER_TICK;
+                    if (charge >= 1.0f) {
+                        SpecialAbilities.bomb(level, z);
+                    } else {
+                        z.setAttached(SpecialAttachment.BOMBEUR_CHARGE, charge);
+                    }
                 }
             }
             case HURLEUR -> {

@@ -82,10 +82,21 @@ public final class PillarClimb extends Ascent {
         }
         boolean stalled = updateStallWatchdog();
 
-        // Height budget spent, a solid ceiling blocks further rise, or the rung stalled → give up; the column
-        // stays (and is auto-removed by the tracker). The zombie stands on what it built.
-        boolean ceiling = level.getBlockState(BlockPos.containing(
-                entity.getX(), entity.getY() + entity.getBbHeight() + 0.25, entity.getZ())).blocksMotion();
+        // A solid ceiling straight overhead blocks the rise. Instead of giving up, mine it out like a player
+        // pillaring into a roof: request the block each tick (progressive break) and keep the column running so
+        // the zombie resumes climbing once it's gone. Only break breakable blocks — bedrock/containers stop us.
+        BlockPos ceilPos = BlockPos.containing(
+                entity.getX(), entity.getY() + entity.getBbHeight() + 0.25, entity.getZ());
+        boolean ceiling = level.getBlockState(ceilPos).blocksMotion();
+        if (ceiling && MoveMath.breakableSolid(level, ceilPos)) {
+            ctx.breakManager().request(ceilPos, entity);
+            owner.setState(ZombieState.BREAKING);
+            entity.setJumping(false);
+            return; // hold position (don't jump into an unbroken ceiling) — retry next tick
+        }
+
+        // Height budget spent, an unbreakable ceiling, or the rung stalled → give up; the column stays (and is
+        // auto-removed by the tracker). The zombie stands on what it built.
         if (risen() >= FlowConfig.pillarMaxHeight || ceiling || stalled) {
             entity.setJumping(false);
             running = false;

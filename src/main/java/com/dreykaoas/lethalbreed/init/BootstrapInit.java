@@ -22,6 +22,7 @@ public final class BootstrapInit {
         ConfigIo.load(); // JSON override: config/oas/lethalbreed.json
         LethalConfigPayloads.registerCommon(); // live-config networking + receiver
         LethalBreedEffects.register(); // custom effects FIRST — spawn/leap code references them
+        com.dreykaoas.lethalbreed.effect.LethalBreedPotions.register(); // brewable Super Contamination potion
         SpecialAttachment.init(); // register the special-type attachment
         ContaminationManager.init(); // register the contamination attachment
         InstalledMods.detect();
