@@ -119,6 +119,7 @@ val remapDevJar = tasks.register<RemapJarTask>("remapDevJar") {
 loom {
     runs {
         named("client") {
+            runDir("run") // primary client keeps the default run dir
             source(devSourceSet) // dev harnesses on the client run classpath (dev env only)
             // Optimized JVM args for Liberica NIK 23 (GraalVM JIT) + tuned G1GC.
             // Conservative set: forces Graal as top-tier JIT, G1 with aikar-style tuning.
@@ -143,7 +144,28 @@ loom {
             // MC drops to the menu (no crash). Create it once, then it auto-enters.
             programArgs("--quickPlaySingleplayer", "Nouveau monde")
         }
+        // Second dev client for local multiplayer tests: its OWN run dir (so it never fights the
+        // primary client / server over run/.fabric/processedMods) and it auto-connects to the local
+        // dedicated server on launch. Username is overridden so the two offline clients don't collide.
+        create("client2") {
+            client()
+            runDir("run/client2")
+            configName = "Minecraft Client 2"
+            source(devSourceSet)
+            vmArgs("-Xms2G", "-Xmx4G", "-XX:+UseG1GC")
+            programArgs("--username", "Tester2", "--quickPlayMultiplayer", "localhost:25565")
+        }
+        // First multiplayer test client (own run dir, auto-joins the local server as "Tester1").
+        create("client1") {
+            client()
+            runDir("run/client1")
+            configName = "Minecraft Client 1"
+            source(devSourceSet)
+            vmArgs("-Xms2G", "-Xmx4G", "-XX:+UseG1GC")
+            programArgs("--username", "Tester1", "--quickPlayMultiplayer", "localhost:25565")
+        }
         named("server") {
+            runDir("run/server") // dedicated server gets its own run dir under run/ — no lock war with the clients
             source(devSourceSet) // dev harnesses on the dedicated-server run classpath (start.bat / runServer)
             vmArgs(
                 "-Xms2G",

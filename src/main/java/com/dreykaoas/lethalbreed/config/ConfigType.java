@@ -15,7 +15,18 @@ public final class ConfigType {
         if (t == int.class) return "int";
         if (t == long.class) return "long";
         if (t == double.class) return "double";
+        if (t == double[].class) return "list";
         return "float";
+    }
+
+    /** Format a double[] as a compact CSV (the storage + edit form for list options). */
+    public static String csv(double[] arr) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < arr.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(arr[i]);
+        }
+        return sb.toString();
     }
 
     /** Parse a string into the field's primitive type. Throws on malformed input. */
@@ -29,6 +40,19 @@ public final class ConfigType {
         if (type == long.class) return Long.parseLong(raw.trim());
         if (type == double.class) return Double.parseDouble(raw.trim());
         if (type == float.class) return Float.parseFloat(raw.trim());
+        if (type == double[].class) {
+            String body = raw.trim();
+            if (body.startsWith("[") && body.endsWith("]")) {
+                body = body.substring(1, body.length() - 1);
+            }
+            if (body.isBlank()) return new double[0];
+            String[] parts = body.split(",");
+            double[] out = new double[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+                out[i] = Double.parseDouble(parts[i].trim());
+            }
+            return out;
+        }
         throw new IllegalArgumentException("unsupported type " + type.getSimpleName());
     }
 }

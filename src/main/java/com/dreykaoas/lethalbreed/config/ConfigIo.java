@@ -45,7 +45,13 @@ public final class ConfigIo {
                 int applied = 0;
                 for (Field f : ConfigFields.all()) {
                     if (json.has(f.getName())) {
-                        if (ConfigFields.apply(f.getName(), json.get(f.getName()).getAsString(), false)) {
+                        // Arrays are stored as a JSON array; primitives as a scalar. Feed apply() the CSV /
+                        // string form it parses back (parse() accepts a bracketed or bare comma list).
+                        String raw = json.get(f.getName()).toString();
+                        if (!json.get(f.getName()).isJsonArray()) {
+                            raw = json.get(f.getName()).getAsString();
+                        }
+                        if (ConfigFields.apply(f.getName(), raw, false)) {
                             applied++;
                         }
                     }
@@ -77,6 +83,12 @@ public final class ConfigIo {
                     json.add(f.getName(), new JsonPrimitive(f.getDouble(null)));
                 } else if (t == float.class) {
                     json.add(f.getName(), new JsonPrimitive(f.getFloat(null)));
+                } else if (t == double[].class) {
+                    com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+                    for (double v : (double[]) f.get(null)) {
+                        arr.add(v);
+                    }
+                    json.add(f.getName(), arr);
                 }
             } catch (IllegalAccessException ignored) {
             }

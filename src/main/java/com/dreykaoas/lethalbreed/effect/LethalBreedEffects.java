@@ -22,12 +22,19 @@ public final class LethalBreedEffects {
     /** "Super Contamination" — lethal ramping plague that zombifies its victim (skull icon). */
     public static Holder<MobEffect> SUPER_CONTAMINATION;
 
+    /** "Zombie Vision" — transient hallucination episode; while present the victim's client draws other players as
+     *  zombies. Flares on its own random timer like the other symptomatic episodes. No icon, purely a client cue. */
+    public static Holder<MobEffect> ZOMBIE_VISION;
+
     public static void register() {
         LEAP = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
                 Identifier.fromNamespaceAndPath(LethalBreed.MOD_ID, "leap"),
                 new LeapEffect(MobEffectCategory.BENEFICIAL, 0x66FF66));
         SUPER_CONTAMINATION = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
                 Identifier.fromNamespaceAndPath(LethalBreed.MOD_ID, "super_contamination"),
+                new SuperContaminationEffect(MobEffectCategory.HARMFUL, 0x3A5F0B));
+        ZOMBIE_VISION = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+                Identifier.fromNamespaceAndPath(LethalBreed.MOD_ID, "zombie_vision"),
                 new SuperContaminationEffect(MobEffectCategory.HARMFUL, 0x3A5F0B));
     }
 }

@@ -17,7 +17,7 @@ public final class NumOptionEntry extends OptionEntry {
     public NumOptionEntry(Font font, ConfigScreenData.Row row, BiConsumer<String, String> onChange, String gpuInfo) {
         super(font, row, onChange, gpuInfo);
         this.edit = new EditBox(font, 0, 0, 70, 16, Component.literal(row.name()));
-        this.edit.setMaxLength(32);
+        this.edit.setMaxLength(row.kind().equals("list") ? 256 : 32);
         this.edit.setValue(value);
         this.edit.setResponder(text -> {
             if (isValid(text)) {
@@ -31,7 +31,11 @@ public final class NumOptionEntry extends OptionEntry {
         try {
             if (row.kind().equals("int")) Integer.parseInt(t.trim());
             else if (row.kind().equals("long")) Long.parseLong(t.trim());
-            else Double.parseDouble(t.trim());
+            else if (row.kind().equals("list")) {
+                for (String p : t.trim().split(",")) {
+                    if (!p.isBlank()) Double.parseDouble(p.trim());
+                }
+            } else Double.parseDouble(t.trim());
             return true;
         } catch (NumberFormatException e) {
             return false;

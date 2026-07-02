@@ -9,6 +9,7 @@ import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SpawnControl;
+import com.dreykaoas.lethalbreed.entity.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
@@ -37,6 +38,13 @@ public final class EntityEventsInit {
     /** Register / unregister vanilla zombies as they load into a server level, applying spawn control. */
     private static void registerTracking(ZombieRegistry registry) {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            // Phase-gated hostile filtering. In phase 0 (classic) NOTHING hostile spawns; in phases 1..15 only
+            // plain Zombie is allowed (every other hostile is culled). Applies only to freshly-added entities,
+            // not chunk-reloads (isAddedToLevel true == first add). We gate on the type filter regardless.
+            if (WorldSpawnConfig.nightSpawnEnabled && SpawnFilter.shouldCull(entity)) {
+                entity.discard();
+                return;
+            }
             // Discard blocked drowned/babies BEFORE tracking, so we don't contamination-track an entity we
             // then toss this same load.
             if (WorldSpawnConfig.blockDrowned && entity.getType() == EntityType.DROWNED) {

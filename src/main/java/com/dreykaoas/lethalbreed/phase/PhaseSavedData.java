@@ -29,9 +29,9 @@ public final class PhaseSavedData extends SavedData {
     public static final SavedDataType<PhaseSavedData> TYPE =
             new SavedDataType<>("lethalbreed_phase", PhaseSavedData::new, CODEC, DataFixTypes.LEVEL);
 
-    /** Fresh-world defaults: phase 1, timer un-started (first tick seeds it from the current world age). */
+    /** Fresh-world defaults: phase 0 (classic), timer un-started (first tick seeds it from the world age). */
     public PhaseSavedData() {
-        this(1, Long.MIN_VALUE, -1L);
+        this(0, Long.MIN_VALUE, -1L);
     }
 
     public PhaseSavedData(int phase, long lastAdvanceGameTime, long nextIntervalTicks) {
