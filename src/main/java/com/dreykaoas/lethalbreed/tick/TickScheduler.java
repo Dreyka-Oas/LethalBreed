@@ -55,6 +55,7 @@ public final class TickScheduler {
         com.dreykaoas.lethalbreed.phase.PhaseManager.get().tick(server);
         com.dreykaoas.lethalbreed.effect.ContaminationManager.tick(server);
         world.processSound(server);
+        world.recomputeFlowFields(server, tickCounter);
 
         bucketPass.run(server, buckets, currentBucket, climbers, swimmers);
 

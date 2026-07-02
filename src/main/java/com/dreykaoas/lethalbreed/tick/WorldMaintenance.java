@@ -28,55 +28,48 @@ final class WorldMaintenance {
         if (ow == null) {
             return;
         }
-        if (WorldSpawnConfig.forceDayTime) {
-            // Hold only the time-of-day, preserving the day counter (don't reset to day 0 each tick).
-            long target = Math.floorMod(WorldSpawnConfig.forcedDayTime, 24000L);
-            long current = ow.getDayTime();
-            long timeOfDay = Math.floorMod(current, 24000L);
-            if (timeOfDay != target) {
-                ow.setDayTime(current - timeOfDay + target);
-            }
-        }
         if (WorldSpawnConfig.clearWeather && ow.isRaining()) {
             ow.setWeatherParameters(6000, 0, false, false);
         }
     }
 
-    /** Recompute each active dimension's flow field once per tick (throttled inside the manager). */
-    void recomputeFlowFields(MinecraftServer server, long tickCounter) {
-        for (Map.Entry<ResourceKey<Level>, WorldAIContext> e : dimensions.contexts().entrySet()) {
-            ServerLevel level = server.getLevel(e.getKey());
-            if (level != null) {
-                e.getValue().flowFieldManager().tick(level, tickCounter);
-            }
-        }
-    }
-
     /** Emit player/loud sounds and distribute them to nearby zombies, per dimension. */
     void processSound(MinecraftServer server) {
-        for (Map.Entry<ResourceKey<Level>, WorldAIContext> e : dimensions.contexts().entrySet()) {
-            ServerLevel level = server.getLevel(e.getKey());
-            if (level == null) {
-                continue;
-            }
-            WorldAIContext ctx = e.getValue();
+        forEachLoadedContext(server, (level, ctx) -> {
             ctx.soundBus().tickPlayers(level);
             ctx.soundBus().tickEntities(level);
             ctx.soundBus().process(ctx.spatialGrid(), level.getGameTime());
-        }
+        });
+    }
+
+    /** Recompute each dimension's shared flow field (throttled + move-gated inside {@code tick}). */
+    void recomputeFlowFields(MinecraftServer server, long tickCounter) {
+        forEachLoadedContext(server, (level, ctx) -> ctx.flowFieldManager().tick(level, tickCounter));
     }
 
     /** Apply queued world mutations under budget and expire old zombie-placed blocks. */
     void drainBlockOps(MinecraftServer server, long tickCounter) {
+        forEachLoadedContext(server, (level, ctx) -> {
+            ctx.blockOps().drain(level, ctx.placedBlocks(), tickCounter);
+            ctx.breakManager().tick(level, tickCounter);
+            ctx.placedBlocks().tick(level, tickCounter);
+        });
+    }
+
+    /** Run {@code action} for every dimension context whose {@link ServerLevel} is currently loaded, skipping
+     *  the unloaded ones. The single place the per-dimension iterate-and-null-check lives. */
+    private void forEachLoadedContext(MinecraftServer server, LoadedContextAction action) {
         for (Map.Entry<ResourceKey<Level>, WorldAIContext> e : dimensions.contexts().entrySet()) {
             ServerLevel level = server.getLevel(e.getKey());
             if (level == null) {
                 continue;
             }
-            WorldAIContext ctx = e.getValue();
-            ctx.blockOps().drain(level, ctx.placedBlocks(), tickCounter);
-            ctx.breakManager().tick(level, tickCounter);
-            ctx.placedBlocks().tick(level, tickCounter);
+            action.run(level, e.getValue());
         }
+    }
+
+    @FunctionalInterface
+    private interface LoadedContextAction {
+        void run(ServerLevel level, WorldAIContext ctx);
     }
 }
