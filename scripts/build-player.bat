@@ -10,8 +10,8 @@ setlocal
 REM Scripts live in scripts\ — run gradle from the repo root (parent dir).
 cd /d "%~dp0.."
 
-echo [build-player] Building lean PLAYER jar (no dev code)...
-call gradlew.bat clean remapJar %*
+echo [build-player] Building lean, OBFUSCATED PLAYER jar (no dev code)...
+call gradlew.bat clean proguardJar %*
 if errorlevel 1 (
     echo [build-player] BUILD FAILED
     exit /b 1
