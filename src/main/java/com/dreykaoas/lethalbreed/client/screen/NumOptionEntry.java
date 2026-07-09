@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.client.screen;
 
+import com.dreykaoas.lethalbreed.config.ConfigType;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -20,26 +21,11 @@ public final class NumOptionEntry extends OptionEntry {
         this.edit.setMaxLength(row.kind().equals("list") ? 256 : 32);
         this.edit.setValue(value);
         this.edit.setResponder(text -> {
-            if (isValid(text)) {
+            if (ConfigType.isValidNumber(row.kind(), text)) {
                 value = text.trim();
                 onChange.accept(row.name(), value);
             }
         });
-    }
-
-    private boolean isValid(String t) {
-        try {
-            if (row.kind().equals("int")) Integer.parseInt(t.trim());
-            else if (row.kind().equals("long")) Long.parseLong(t.trim());
-            else if (row.kind().equals("list")) {
-                for (String p : t.trim().split(",")) {
-                    if (!p.isBlank()) Double.parseDouble(p.trim());
-                }
-            } else Double.parseDouble(t.trim());
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
     @Override
@@ -50,13 +36,7 @@ public final class NumOptionEntry extends OptionEntry {
 
     @Override
     public void renderContent(GuiGraphics g, int mouseX, int mouseY, boolean hovering, float partial) {
-        drawLabel(g, 16 + 4 + 70);
-        int right = getContentX() + getContentWidth();
-        edit.setX(right - 16 - 4 - 70);
-        edit.setY(getContentY() + 2);
-        edit.render(g, mouseX, mouseY, partial);
-        placeReset(g, mouseX, mouseY, partial);
-        maybeTooltip(g, mouseX, mouseY, hovering);
+        renderRow(g, edit, 70, mouseX, mouseY, hovering, partial);
     }
 
     @Override

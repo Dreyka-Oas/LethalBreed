@@ -57,19 +57,10 @@ public final class WallClimb extends Ascent {
      * height cap or the stall watchdog, leaving a cooldown so it falls back to a pillar instead of re-scaling.
      */
     public void step(ServerLevel level, WorldAIContext ctx) {
-        if (!running) {
+        if (!beginStep()) {
             return;
         }
-        if (!owner.isValid()) {
-            running = false;
-            return;
-        }
-        age++;
-
-        double dyToTarget = owner.hasTarget() ? (owner.tgtY() - entity.getY()) : -1.0;
-        double hx = owner.tgtX() - entity.getX();
-        double hz = owner.tgtZ() - entity.getZ();
-        double h = Math.sqrt(hx * hx + hz * hz);
+        computeHeading();
 
         BlockPos p = entity.blockPosition();
         boolean wallHead = WallProbe.headWall(level, p, wallDx, wallDz);
@@ -92,8 +83,7 @@ public final class WallClimb extends Ascent {
             double oz = h > 0.001 ? hz / h : wallDz;
             entity.setDeltaMovement(ox * 0.4, MoveMath.jumpVelocity(entity, 0.42), oz * 0.4);
             entity.hurtMarked = true;
-            entity.setJumping(false);
-            running = false;
+            finish();
             return;
         }
 
@@ -102,9 +92,7 @@ public final class WallClimb extends Ascent {
         // dirt pillar rather than immediately re-scaling the same face.
         boolean stalled = updateStallWatchdog();
         if (risen() >= FlowConfig.maxClimbHeight || stalled) {
-            entity.setJumping(false);
-            running = false;
-            climbCd = FlowConfig.climbGiveUpCooldown;
+            giveUp();
             return;
         }
 

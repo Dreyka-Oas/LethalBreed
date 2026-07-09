@@ -19,8 +19,6 @@ public final class InstalledMods {
     public static boolean scalablelux;
     public static boolean immersiveOptimization;
     public static boolean spark;
-    public static boolean sodium;
-    public static boolean iris;
 
     public static void detect() {
         FabricLoader fl = FabricLoader.getInstance();
@@ -33,8 +31,6 @@ public final class InstalledMods {
         scalablelux = fl.isModLoaded("scalablelux");
         immersiveOptimization = fl.isModLoaded("immersive_optimization") || fl.isModLoaded("immersive-optimization");
         spark = fl.isModLoaded("spark");
-        sodium = fl.isModLoaded("sodium");
-        iris = fl.isModLoaded("iris");
 
         LethalBreed.LOGGER.info(
                 "[LethalBreed] perf mods: krypton={} lithium={} vmp={} c2me={} ferritecore={} servercore={} scalablelux={} immersiveOpt={} spark={}",

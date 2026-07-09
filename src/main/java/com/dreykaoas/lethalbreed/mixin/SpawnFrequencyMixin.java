@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.mixin;
 
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
-import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.phase.PhaseTable;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobCategory;
@@ -30,7 +30,7 @@ public abstract class SpawnFrequencyMixin {
         if (!WorldSpawnConfig.nightSpawnEnabled || !categories.contains(MobCategory.MONSTER)) {
             return;
         }
-        int extra = (int) Math.ceil(frequencyFactor()) - 1;
+        int extra = (int) Math.ceil(PhaseTable.sample(WorldSpawnConfig.frequencyPerPhase)) - 1;
         SpawnStateInvoker inv = (SpawnStateInvoker) state;
         if (extra <= 0 || !inv.lethalbreed$canSpawnLocal(MobCategory.MONSTER, chunk.getPos())) {
             return;
@@ -39,12 +39,5 @@ public abstract class SpawnFrequencyMixin {
             NaturalSpawner.spawnCategoryForChunk(MobCategory.MONSTER, level, chunk,
                     inv::lethalbreed$canSpawn, inv::lethalbreed$afterSpawn);
         }
-    }
-
-    private static double frequencyFactor() {
-        double[] table = WorldSpawnConfig.frequencyPerPhase;
-        int phase = PhaseManager.current();
-        if (phase < 0) return 0.0;
-        return phase < table.length ? table[phase] : (table.length > 0 ? table[table.length - 1] : 1.0);
     }
 }

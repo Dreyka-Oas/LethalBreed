@@ -78,21 +78,14 @@ public final class ComputeSelfTest {
 
     /** Flat passable field with one vertical wall (gap at the top) and a single seed in a corner. */
     private static Snapshot buildSnapshot() {
-        int w = SIZE, d = SIZE, n = w * d;
-        boolean[] passable = new boolean[n];
-        int[] extraCost = new int[n];
-        byte[] flags = new byte[n];
-        for (int cx = 0; cx < w; cx++) {
-            for (int cz = 0; cz < d; cz++) {
-                int i = cx * d + cz;
-                // Wall at x=WALL_X blocks z in [0..d-4]; leave a 3-cell gap near the far edge.
-                passable[i] = !(cx == WALL_X && cz < d - 3);
-            }
+        int d = SIZE;
+        Snapshot s = Snapshot.openSquare(SIZE);
+        // Carve a wall at x=WALL_X blocking z in [0..d-4], leaving a 3-cell gap near the far edge.
+        for (int cz = 0; cz < d - 3; cz++) {
+            s.passable[WALL_X * d + cz] = false;
         }
-        int seed = 0; // corner (0,0)
-        passable[seed] = true;
-        int[] seedCells = {seed};
-        return new Snapshot(0, 0, w, d, 64, passable, extraCost, flags, seedCells);
+        s.passable[0] = true; // keep the corner (0,0) seed passable
+        return s;
     }
 
     /** Solve again with a different thread count to force a pool rebuild; field must be unchanged. */

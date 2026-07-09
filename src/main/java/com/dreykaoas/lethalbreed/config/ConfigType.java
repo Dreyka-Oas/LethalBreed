@@ -29,6 +29,27 @@ public final class ConfigType {
         return sb.toString();
     }
 
+    /** Whether {@code raw} parses for a numeric/list {@code kind} ("int"/"long"/"double"/"list") — the same
+     *  acceptance {@link #parse} enforces, exposed for live edit-field validation that only has the kind label. */
+    public static boolean isValidNumber(String kind, String raw) {
+        try {
+            String t = raw.trim();
+            switch (kind) {
+                case "int" -> Integer.parseInt(t);
+                case "long" -> Long.parseLong(t);
+                case "list" -> {
+                    for (String p : t.split(",")) {
+                        if (!p.isBlank()) Double.parseDouble(p.trim());
+                    }
+                }
+                default -> Double.parseDouble(t);
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     /** Parse a string into the field's primitive type. Throws on malformed input. */
     public static Object parse(Class<?> type, String raw) {
         if (type == boolean.class) {

@@ -10,6 +10,7 @@
     "SpawnFrequencyMixin",
     "SpawnStateInvoker",
     "SpawnStateMobcapMixin",
+    "WorldSoundEventMixin",
     "ZombieFinalizeSpawnMixin",
     "ZombieFloatInWaterMixin",
     "ZombieGoalSuppressMixin"

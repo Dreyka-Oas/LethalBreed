@@ -25,6 +25,15 @@ public final class Snapshot {
         this.seedCells = seedCells;
     }
 
+    /** A flat, fully passable {@code side×side} field with a single corner seed at (0,0) — the clean synthetic
+     *  workload shared by the calibration bench and the self-test (which then carves its own wall). */
+    static Snapshot openSquare(int side) {
+        int n = side * side;
+        boolean[] passable = new boolean[n];
+        java.util.Arrays.fill(passable, true);
+        return new Snapshot(0, 0, side, side, 64, passable, new int[n], new byte[n], new int[]{0});
+    }
+
     public int originX() { return originX; }
     public int originZ() { return originZ; }
     public int width() { return width; }

@@ -57,6 +57,6 @@ public class GuiContaminationHudMixin {
     private static boolean lethalbreed$contaminated() {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer p = mc.player;
-        return p != null && p.hasEffect(LethalBreedEffects.SUPER_CONTAMINATION);
+        return p != null && LethalBreedEffects.isSuperContaminated(p);
     }
 }

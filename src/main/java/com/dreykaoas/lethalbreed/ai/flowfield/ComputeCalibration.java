@@ -55,12 +55,7 @@ public final class ComputeCalibration {
 
     /** Flat, fully passable square field with a single corner seed — a clean timing workload. */
     private static Snapshot openField(int side) {
-        int n = side * side;
-        boolean[] passable = new boolean[n];
-        java.util.Arrays.fill(passable, true);
-        int[] extraCost = new int[n];
-        byte[] flags = new byte[n];
-        return new Snapshot(0, 0, side, side, 64, passable, extraCost, flags, new int[]{0});
+        return Snapshot.openSquare(side);
     }
 
     private static long bestOf(Runnable solve) {

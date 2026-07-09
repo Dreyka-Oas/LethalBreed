@@ -57,14 +57,10 @@ public final class Descend {
                 return;
             }
             if (fl.blocksMotion()) {
-                if (!headClear && MoveMath.breakableSolid(level, head)) {
-                    ctx.breakManager().request(head, entity);
-                    owner.setState(ZombieState.DESCENDING);
+                if (MoveMath.requestBreakBodyBlock(owner, level, ctx, head, hd, ZombieState.DESCENDING)) {
                     return;
                 }
-                if (!feetClear && MoveMath.breakableSolid(level, feet)) {
-                    ctx.breakManager().request(feet, entity);
-                    owner.setState(ZombieState.DESCENDING);
+                if (MoveMath.requestBreakBodyBlock(owner, level, ctx, feet, ft, ZombieState.DESCENDING)) {
                     return;
                 }
                 // Clean 1-block step down with a floor → walk to it (keeps the zombie on the stair, no leap).

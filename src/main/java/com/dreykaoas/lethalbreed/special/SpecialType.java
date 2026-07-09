@@ -12,15 +12,11 @@ import java.util.List;
 public enum SpecialType {
     NONE("none", "", Kind.PASSIVE, 0, 0),
     SPRINTEUR("sprinteur", "Sprinteur", Kind.PASSIVE, 2, 10),
-    TOXIQUE("toxique", "Toxique", Kind.ACTIVE, 2, 10),
     BONDISSEUR("bondisseur", "Bondisseur", Kind.PASSIVE, 3, 9),
-    CRACHEUR("cracheur", "Cracheur", Kind.ACTIVE, 3, 9),
     BOMBEUR("bombeur", "Bombeur", Kind.ACTIVE, 4, 7),
-    GIVRE("givre", "Givré", Kind.ACTIVE, 4, 8),
     HURLEUR("hurleur", "Hurleur", Kind.ACTIVE, 5, 7),
     SOIGNEUR("soigneur", "Soigneur", Kind.ACTIVE, 6, 6),
     JUGGERNAUT("juggernaut", "Juggernaut", Kind.PASSIVE, 6, 6),
-    FOUISSEUR("fouisseur", "Fouisseur", Kind.PASSIVE, 8, 5),
     NECROMANCIEN("necromancien", "Nécromancien", Kind.ACTIVE, 9, 4),
     SPLITTER("splitter", "Splitter", Kind.DEATH, 11, 4);
 

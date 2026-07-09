@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.mixin;
 
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
-import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.phase.PhaseTable;
 
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.NaturalSpawner;
@@ -38,16 +38,9 @@ public abstract class SpawnStateMobcapMixin {
         if (!WorldSpawnConfig.nightSpawnEnabled || category != MobCategory.MONSTER) {
             return;
         }
-        double factor = mobcapFactor();
+        double factor = PhaseTable.sample(WorldSpawnConfig.mobcapPerPhase);
         int base = category.getMaxInstancesPerChunk() * spawnableChunkCount / 289; // MAGIC_NUMBER = 17^2
         int scaled = (int) Math.floor(base * factor);
         cir.setReturnValue(mobCategoryCounts.getInt(category) < scaled);
-    }
-
-    private static double mobcapFactor() {
-        double[] table = WorldSpawnConfig.mobcapPerPhase;
-        int phase = PhaseManager.current();
-        if (phase < 0) return 0.0;
-        return phase < table.length ? table[phase] : (table.length > 0 ? table[table.length - 1] : 1.0);
     }
 }

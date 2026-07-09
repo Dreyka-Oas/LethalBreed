@@ -79,22 +79,6 @@ public final class FlowField {
         return cost[index(cx, cz)];
     }
 
-    /** Flag for the cell at world (wx,wz): break/build needed to enter it, or none/out-of-bounds. */
-    public byte flagAt(int wx, int wz) {
-        int cx = wx - originX;
-        int cz = wz - originZ;
-        if (cx < 0 || cx >= width || cz < 0 || cz >= depth) {
-            return FLAG_NONE;
-        }
-        return flags[index(cx, cz)];
-    }
-
-    public boolean contains(int wx, int wz) {
-        int cx = wx - originX;
-        int cz = wz - originZ;
-        return cx >= 0 && cx < width && cz >= 0 && cz < depth;
-    }
-
     public int width() {
         return width;
     }

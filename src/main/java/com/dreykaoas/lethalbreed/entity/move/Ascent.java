@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -19,6 +20,13 @@ abstract class Ascent {
     protected int topY = 0;     // highest block-Y reached this ascent (for the stall watchdog)
     protected int rungAge = 0;  // activations since the last full-block height gain
     protected int climbCd = 0;  // post-give-up cooldown before another ascent may start
+
+    // Per-tick heading scratch, refilled by computeHeading() at the top of each step (few climbing zombies, so
+    // reusing fields over a throwaway struct keeps the ascent allocation-free without hurting readability).
+    protected double dyToTarget = -1.0; // target height above the feet, or -1 when there is no target
+    protected double hx = 0.0;          // horizontal delta to the target (x, z) and its length
+    protected double hz = 0.0;
+    protected double h = 0.0;
 
     protected Ascent(SmartZombie owner) {
         this.owner = owner;
@@ -63,5 +71,41 @@ abstract class Ascent {
     /** Height risen since this ascent began. */
     protected double risen() {
         return entity.getY() - startY;
+    }
+
+    /** Common {@code step} preamble: bail while inactive, drop out (and clear {@code running}) if the owner is
+     *  no longer valid, otherwise age the ascent one tick. Returns true when the subclass should keep stepping. */
+    protected boolean beginStep() {
+        if (!running) {
+            return false;
+        }
+        if (!owner.isValid()) {
+            running = false;
+            return false;
+        }
+        age++;
+        return true;
+    }
+
+    /** Refill the heading scratch ({@link #dyToTarget}, {@link #hx}, {@link #hz}, {@link #h}) toward the current
+     *  target — or a downward {@code dyToTarget} when there is none. */
+    protected void computeHeading() {
+        dyToTarget = owner.hasTarget() ? (owner.tgtY() - entity.getY()) : -1.0;
+        hx = owner.tgtX() - entity.getX();
+        hz = owner.tgtZ() - entity.getZ();
+        h = Math.sqrt(hx * hx + hz * hz);
+    }
+
+    /** End the ascent normally (topped out / reached height): drop the jump intent and clear {@code running}. */
+    protected void finish() {
+        entity.setJumping(false);
+        running = false;
+    }
+
+    /** Abort the ascent (height cap / stall / ceiling) and arm the give-up cooldown so the dispatcher falls back
+     *  to the other ascent instead of immediately retrying this one. */
+    protected void giveUp() {
+        finish();
+        climbCd = FlowConfig.climbGiveUpCooldown;
     }
 }
