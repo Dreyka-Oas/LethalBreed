@@ -36,13 +36,7 @@ public final class BoolOptionEntry extends OptionEntry {
 
     @Override
     public void renderContent(GuiGraphics g, int mouseX, int mouseY, boolean hovering, float partial) {
-        drawLabel(g, 16 + 4 + 50);
-        int right = getContentX() + getContentWidth();
-        toggle.setX(right - 16 - 4 - 50);
-        toggle.setY(getContentY() + 2);
-        toggle.render(g, mouseX, mouseY, partial);
-        placeReset(g, mouseX, mouseY, partial);
-        maybeTooltip(g, mouseX, mouseY, hovering);
+        renderRow(g, toggle, 50, mouseX, mouseY, hovering, partial);
     }
 
     @Override

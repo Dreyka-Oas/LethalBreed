@@ -18,10 +18,8 @@ import java.util.Map;
  * block position.
  */
 public final class PlacedBlockTracker {
-    private static final class State {
+    private static final class State extends CrackingBlock {
         long placedAt;
-        int breakerId;
-        int lastStage = -1;
     }
 
     private final HashMap<Long, State> placed = new HashMap<>();
@@ -48,24 +46,20 @@ public final class PlacedBlockTracker {
             BlockState bs = level.getBlockState(p);
             if (bs.getBlock() != Blocks.DIRT) {
                 // Block already gone/replaced → clear any cracks and stop tracking it.
-                level.destroyBlockProgress(s.breakerId, p, -1);
+                s.clearCracks(level, p);
                 it.remove();
                 continue;
             }
             long age = now - s.placedAt;
             if (age >= lifetime) {
-                level.destroyBlockProgress(s.breakerId, p, -1);
+                s.clearCracks(level, p);
                 // Same effect as breaking by hand (particles + sound) but NO drop.
                 level.destroyBlock(p, false, null, 512);
                 it.remove();
                 continue;
             }
             // Ramp the cracking overlay across the block's lifetime (0..9).
-            int stage = (int) Math.max(0, Math.min(9, (age * 10L) / lifetime));
-            if (stage != s.lastStage) {
-                level.destroyBlockProgress(s.breakerId, p, stage);
-                s.lastStage = stage;
-            }
+            s.showStage(level, p, CrackingBlock.stage((age * 10L) / (double) lifetime));
         }
     }
 

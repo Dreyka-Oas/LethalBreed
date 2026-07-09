@@ -87,8 +87,8 @@ public final class LethalConfigCommand {
     }
 
     private static int list(CommandContext<CommandSourceStack> ctx) {
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[LethalBreed] " + ConfigFields.all().size() + " options").withStyle(ChatFormatting.GOLD), false);
+        CommandFeedback.success(ctx.getSource(),
+                ConfigFields.all().size() + " options", ChatFormatting.GOLD, false);
         for (Field f : ConfigFields.all()) {
             String line = "  " + f.getName() + " = " + ConfigFields.read(f) + "  (" + ConfigFields.kind(f) + ")";
             ctx.getSource().sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GRAY), false);
@@ -102,9 +102,9 @@ public final class LethalConfigCommand {
         if (f == null) {
             return unknown(ctx, name);
         }
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[LethalBreed] " + f.getName() + " = " + ConfigFields.read(f)
-                + "  (default " + ConfigFields.defaultOf(f.getName()) + ")"), false);
+        CommandFeedback.success(ctx.getSource(),
+                f.getName() + " = " + ConfigFields.read(f) + "  (default " + ConfigFields.defaultOf(f.getName()) + ")",
+                false);
         return 1;
     }
 
@@ -116,12 +116,12 @@ public final class LethalConfigCommand {
             return unknown(ctx, name);
         }
         if (!ConfigFields.apply(name, raw, true)) {
-            ctx.getSource().sendFailure(Component.literal(
-                    "[LethalBreed] bad value '" + raw + "' for " + ConfigFields.kind(f) + " " + name));
+            CommandFeedback.failure(ctx.getSource(),
+                    "bad value '" + raw + "' for " + ConfigFields.kind(f) + " " + name);
             return 0;
         }
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[LethalBreed] " + name + " -> " + ConfigFields.read(f)).withStyle(ChatFormatting.GREEN), true);
+        CommandFeedback.success(ctx.getSource(),
+                name + " -> " + ConfigFields.read(f), ChatFormatting.GREEN, true);
         return 1;
     }
 
@@ -132,21 +132,21 @@ public final class LethalConfigCommand {
             return unknown(ctx, name);
         }
         ConfigFields.apply(name, ConfigFields.defaultOf(name), true);
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[LethalBreed] " + name + " reset to " + ConfigFields.read(f)).withStyle(ChatFormatting.YELLOW), true);
+        CommandFeedback.success(ctx.getSource(),
+                name + " reset to " + ConfigFields.read(f), ChatFormatting.YELLOW, true);
         return 1;
     }
 
     private static int resetAll(CommandContext<CommandSourceStack> ctx) {
         int n = ConfigFields.resetAll();
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[LethalBreed] reset " + n + " options to defaults").withStyle(ChatFormatting.YELLOW), true);
+        CommandFeedback.success(ctx.getSource(),
+                "reset " + n + " options to defaults", ChatFormatting.YELLOW, true);
         return n;
     }
 
     private static int unknown(CommandContext<CommandSourceStack> ctx, String name) {
-        ctx.getSource().sendFailure(Component.literal(
-                "[LethalBreed] unknown option '" + name + "' — /lethalconfig list"));
+        CommandFeedback.failure(ctx.getSource(),
+                "unknown option '" + name + "' — /lethalconfig list");
         return 0;
     }
 }

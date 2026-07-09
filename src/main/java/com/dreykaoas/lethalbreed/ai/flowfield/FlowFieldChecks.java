@@ -49,8 +49,6 @@ final class FlowFieldChecks {
         int[] extra = s.extraCost();
         int orth = Math.max(1, FlowConfig.flowOrthoCost);
         int diag = Math.max(orth, FlowConfig.flowDiagonalCost);
-        int[] ndx = {1, -1, 0, 0, 1, 1, -1, -1};
-        int[] ndz = {0, 0, 1, -1, 1, -1, 1, -1};
         for (int cx = 0; cx < w; cx++) {
             for (int cz = 0; cz < d; cz++) {
                 if (!pass[cx * d + cz]) {
@@ -62,19 +60,18 @@ final class FlowFieldChecks {
                 }
                 int best = Integer.MAX_VALUE;
                 for (int k = 0; k < 8; k++) {
-                    int nx = cx + ndx[k], nz = cz + ndz[k];
+                    int nx = cx + Neighbors8.DX[k], nz = cz + Neighbors8.DZ[k];
                     if (nx < 0 || nx >= w || nz < 0 || nz >= d) {
                         continue;
                     }
-                    boolean dg = ndx[k] != 0 && ndz[k] != 0;
-                    if (dg && (!pass[cx * d + nz] || !pass[nx * d + cz])) {
+                    if (Neighbors8.cornerBlocked(pass, cx, cz, nx, nz, d, k)) {
                         continue; // no corner cutting
                     }
                     int nc = f.costAt(nx, nz);
                     if (nc >= FlowField.IMPASSABLE) {
                         continue;
                     }
-                    best = Math.min(best, nc + (dg ? diag : orth) + extra[cx * d + cz]);
+                    best = Math.min(best, nc + (Neighbors8.isDiagonal(k) ? diag : orth) + extra[cx * d + cz]);
                 }
                 if (best != here) {
                     return false; // could be relaxed (suboptimal) or inconsistent

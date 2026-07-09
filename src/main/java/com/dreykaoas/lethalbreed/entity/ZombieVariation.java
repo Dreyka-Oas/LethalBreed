@@ -7,15 +7,13 @@ import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.phase.PhaseConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.phase.ZombieEquipper;
+import com.dreykaoas.lethalbreed.util.AttributeModifiers;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -93,7 +91,7 @@ public final class ZombieVariation {
             // Math.max(1,..) guards nextInt against a 0/negative bound (mirrors applyRandomEffect): a phase
             // with effMaxAmp 0 still rolls amp 0, never throws IllegalArgumentException.
             int amp = r.nextInt(Math.max(1, maxAmp + 1));
-            z.addEffect(new MobEffectInstance(pick, MobEffectInstance.INFINITE_DURATION, amp, false, false, true));
+            LethalBreedEffects.applyInfinite(z, pick, amp);
         }
     }
 
@@ -115,7 +113,7 @@ public final class ZombieVariation {
         Holder<MobEffect> pick = pool[r.nextInt(pool.length)];
         int amp = r.nextInt(Math.max(1, WorldSpawnConfig.randomEffectMaxAmplifier + 1));
         // showParticles=false → no swirling cloud, so players can't read a zombie's buff loadout by sight.
-        z.addEffect(new MobEffectInstance(pick, MobEffectInstance.INFINITE_DURATION, amp, false, false, true));
+        LethalBreedEffects.applyInfinite(z, pick, amp);
     }
 
     /** Beneficial effects useful to a hunting zombie (chase / damage / tank / dig) + custom LEAP. No
@@ -142,11 +140,7 @@ public final class ZombieVariation {
         if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
             factor = Math.max(0.05, factor);
         }
-        AttributeInstance inst = e.getAttribute(attr);
-        if (inst != null) {
-            inst.addOrReplacePermanentModifier(
-                    new AttributeModifier(id, factor - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-        }
+        AttributeModifiers.multiplyBase(e, attr, id, factor);
     }
 
     private static Random seeded(Zombie z, long salt) {

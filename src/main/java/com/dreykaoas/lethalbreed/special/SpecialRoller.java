@@ -3,16 +3,13 @@ package com.dreykaoas.lethalbreed.special;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
+import com.dreykaoas.lethalbreed.util.AttributeModifiers;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
@@ -82,7 +79,6 @@ public final class SpecialRoller {
                 mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", 1.35);
             }
             case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, 2);
-            case FOUISSEUR -> infinite(z, MobEffects.HASTE, 2);
             case JUGGERNAUT -> {
                 mul(z, Attributes.SCALE, "spc_scale", 1.4);
                 mul(z, Attributes.MAX_HEALTH, "spc_hp", 2.0);
@@ -95,16 +91,11 @@ public final class SpecialRoller {
     }
 
     private static void infinite(Zombie z, Holder<MobEffect> effect, int amp) {
-        z.addEffect(new MobEffectInstance(effect, MobEffectInstance.INFINITE_DURATION, amp, false, false, true));
+        LethalBreedEffects.applyInfinite(z, effect, amp);
     }
 
     private static void mul(Zombie z, Holder<Attribute> attr, String idPath, double factor) {
-        AttributeInstance inst = z.getAttribute(attr);
-        if (inst != null) {
-            inst.addOrReplacePermanentModifier(new AttributeModifier(
-                    Identifier.fromNamespaceAndPath("lethalbreed", idPath),
-                    factor - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-        }
+        AttributeModifiers.multiplyBase(z, attr, idPath, factor);
     }
 
     private static void ironArmor(Zombie z) {

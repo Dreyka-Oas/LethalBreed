@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.client.screen;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.ChatFormatting;
@@ -36,12 +37,18 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
 
     protected abstract void doReset();
 
+    /** Trim a string from the tail (2 chars at a time) until it fits {@code maxW} pixels — the shared label/desc
+     *  ellipsis-free truncation. Keeps at least a few characters so a very narrow row still shows something. */
+    private String truncateToWidth(String s, int maxW) {
+        while (font.width(s) > maxW && s.length() > 4) {
+            s = s.substring(0, s.length() - 2);
+        }
+        return s;
+    }
+
     protected void drawLabel(GuiGraphics g, int rightControlsW) {
         String label = Component.translatable("lethalbreed.option." + row.name()).getString();
-        int maxW = getContentWidth() - rightControlsW - 6;
-        while (font.width(label) > maxW && label.length() > 4) {
-            label = label.substring(0, label.length() - 2);
-        }
+        label = truncateToWidth(label, getContentWidth() - rightControlsW - 6);
         g.drawString(font, label, getContentX(), getContentY() + 3, 0xFFFFFFFF);
         drawDesc(g, rightControlsW);
     }
@@ -59,15 +66,25 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
             }
         }
         float sc = 0.8f;
-        int maxW = (int) ((getContentWidth() - rightControlsW - 6) / sc);
-        while (font.width(s) > maxW && s.length() > 4) {
-            s = s.substring(0, s.length() - 2);
-        }
+        s = truncateToWidth(s, (int) ((getContentWidth() - rightControlsW - 6) / sc));
         g.pose().pushMatrix();
         g.pose().translate(getContentX(), getContentY() + 15f);
         g.pose().scale(sc, sc);
         g.drawString(font, s, 0, 0, 0xFF808080, false); // darker grey, no shadow
         g.pose().popMatrix();
+    }
+
+    /** Render a value row: draw the (truncated) label, right-align {@code control} of width {@code controlW}
+     *  before the reset icon, then draw the reset button and hover tooltip. The shared body of every subclass's
+     *  {@code renderContent} — only the control widget and its width differ. */
+    protected void renderRow(GuiGraphics g, AbstractWidget control, int controlW,
+            int mouseX, int mouseY, boolean hovering, float partial) {
+        drawLabel(g, 16 + 4 + controlW);
+        control.setX(getContentX() + getContentWidth() - 16 - 4 - controlW);
+        control.setY(getContentY() + 2);
+        control.render(g, mouseX, mouseY, partial);
+        placeReset(g, mouseX, mouseY, partial);
+        maybeTooltip(g, mouseX, mouseY, hovering);
     }
 
     protected void placeReset(GuiGraphics g, int mouseX, int mouseY, float partial) {

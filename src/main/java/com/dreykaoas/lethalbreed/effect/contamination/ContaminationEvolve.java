@@ -1,0 +1,36 @@
+package com.dreykaoas.lethalbreed.effect.contamination;
+
+import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
+
+import net.minecraft.world.entity.LivingEntity;
+
+/** Level-up roll while symptomatic: every 1-2 in-game days a chance to climb one level toward the cap. */
+public final class ContaminationEvolve {
+    private ContaminationEvolve() {}
+
+    public static void tickEvolve(LivingEntity e, long t) {
+        if (ContaminationState.level(e) >= Math.max(1, ContaminationConfig.contamMaxLevel)) {
+            return;
+        }
+        Long roll = ContaminationState.nextEvolveRoll.get(e);
+        if (roll == null) {
+            ContaminationState.nextEvolveRoll.put(e, t + rollEvolveIntervalTicks());
+            return;
+        }
+        if (t >= roll) {
+            double pct = ContaminationConfig.contamEvolveMinPct
+                    + ContaminationState.RNG.nextDouble()
+                    * (ContaminationConfig.contamEvolveMaxPct - ContaminationConfig.contamEvolveMinPct);
+            if (ContaminationState.RNG.nextDouble() * 100.0 < pct) {
+                ContaminationState.setLevel(e, ContaminationState.level(e) + 1);
+            }
+            ContaminationState.nextEvolveRoll.put(e, t + rollEvolveIntervalTicks());
+        }
+    }
+
+    /** Next level-up roll delay in ticks, uniform in [minDays, maxDays] x 24000. */
+    private static long rollEvolveIntervalTicks() {
+        return ContaminationState.rollScaled(ContaminationConfig.contamEvolveMinDays,
+                ContaminationConfig.contamEvolveMaxDays, 1.0, 24000.0);
+    }
+}

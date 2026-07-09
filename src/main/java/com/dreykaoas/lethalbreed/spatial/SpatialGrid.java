@@ -31,8 +31,12 @@ public final class SpatialGrid {
 
     private long key(int blockX, int blockZ) {
         int cell = cellSize();
-        int cx = Math.floorDiv(blockX, cell);
-        int cz = Math.floorDiv(blockZ, cell);
+        return packKey(Math.floorDiv(blockX, cell), Math.floorDiv(blockZ, cell));
+    }
+
+    /** Pack a cell coordinate pair into one long key. The single source of truth for the cell hashing, so the
+     *  radius scan and {@link #key} can never drift into two different packings. */
+    private static long packKey(int cx, int cz) {
         return (((long) cx) << 32) ^ (cz & 0xffffffffL);
     }
 
@@ -68,11 +72,6 @@ public final class SpatialGrid {
         }
     }
 
-    /** Collect zombies within {@code radius} blocks of (x,z), ignoring vertical distance (column query). */
-    public List<SmartZombie> queryRadius(double x, double z, double radius) {
-        return queryRadius(x, Double.NaN, z, radius);
-    }
-
     /** Collect zombies within {@code radius} blocks of (x,z) and within {@link SchedulerConfig#spatialVerticalLimit}
      *  blocks vertically of {@code y}. The grid is flat XZ, so without the Y filter a zombie far above/below in the
      *  same column counts as "near"; passing a real {@code y} (and a limit > 0) drops those. Pass {@code y = NaN}
@@ -89,7 +88,7 @@ public final class SpatialGrid {
         boolean checkY = vlim > 0.0 && !Double.isNaN(y);
         for (int cx = minCx; cx <= maxCx; cx++) {
             for (int cz = minCz; cz <= maxCz; cz++) {
-                long k = (((long) cx) << 32) ^ (cz & 0xffffffffL);
+                long k = packKey(cx, cz);
                 List<SmartZombie> list = cells.get(k);
                 if (list == null) continue;
                 for (SmartZombie sz : list) {
@@ -102,10 +101,6 @@ public final class SpatialGrid {
             }
         }
         return out;
-    }
-
-    public int cellCount() {
-        return cells.size();
     }
 
     public void clear() {

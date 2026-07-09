@@ -112,8 +112,4 @@ public final class SoundEventBus {
         events.clear();
     }
 
-    public void clear() {
-        events.clear();
-        lastPlayerPos.clear();
-    }
 }

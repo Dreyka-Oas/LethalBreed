@@ -7,7 +7,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 
 /**
  * {@code /lethalphase [n]} — show the current difficulty phase, or force it to {@code n} (1..15) for
@@ -25,8 +24,7 @@ public final class LethalPhaseCommand {
 
     private static int show(CommandContext<CommandSourceStack> ctx) {
         int p = PhaseManager.current();
-        ctx.getSource().sendSuccess(
-                () -> Component.literal("[LethalBreed] Phase " + p + " — " + PhaseConfig.def(p).name()), false);
+        CommandFeedback.success(ctx.getSource(), "Phase " + p + " — " + PhaseConfig.def(p).name(), false);
         return p;
     }
 

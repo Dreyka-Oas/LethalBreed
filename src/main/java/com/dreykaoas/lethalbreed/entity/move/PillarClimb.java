@@ -50,19 +50,10 @@ public final class PillarClimb extends Ascent {
      * height, the height cap, or a ceiling.
      */
     public void step(ServerLevel level, WorldAIContext ctx) {
-        if (!running) {
+        if (!beginStep()) {
             return;
         }
-        if (!owner.isValid()) {
-            running = false;
-            return;
-        }
-        age++;
-
-        double dyToTarget = owner.hasTarget() ? (owner.tgtY() - entity.getY()) : -1.0;
-        double hx = owner.tgtX() - entity.getX();
-        double hz = owner.tgtZ() - entity.getZ();
-        double h = Math.sqrt(hx * hx + hz * hz);
+        computeHeading();
 
         if (ProgressionConfig.debugClimb && (age % 3 == 1)) {
             LethalBreed.LOGGER.info("[ClimbDbg] z{} PILLAR y={} dyTgt={} horiz={} age={} risen={} ground={}",
@@ -76,8 +67,7 @@ public final class PillarClimb extends Ascent {
                 entity.setDeltaMovement(hx / h * 0.4, MoveMath.jumpVelocity(entity, 0.42), hz / h * 0.4);
                 entity.hurtMarked = true;
             }
-            entity.setJumping(false);
-            running = false;
+            finish();
             return;
         }
         boolean stalled = updateStallWatchdog();
@@ -98,9 +88,7 @@ public final class PillarClimb extends Ascent {
         // Height budget spent, an unbreakable ceiling, or the rung stalled → give up; the column stays (and is
         // auto-removed by the tracker). The zombie stands on what it built.
         if (risen() >= FlowConfig.pillarMaxHeight || ceiling || stalled) {
-            entity.setJumping(false);
-            running = false;
-            climbCd = FlowConfig.climbGiveUpCooldown;
+            giveUp();
             return;
         }
 

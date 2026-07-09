@@ -42,14 +42,10 @@ final class StairDescent {
         BlockState sFt = level.getBlockState(sFeet);
         BlockState sLd = level.getBlockState(sLand);
         // Clear the body space for the step if a breakable block blocks it.
-        if (sHd.blocksMotion() && MoveMath.breakableSolid(level, sHead)) {
-            ctx.breakManager().request(sHead, entity);
-            owner.setState(ZombieState.DESCENDING);
+        if (MoveMath.requestBreakBodyBlock(owner, level, ctx, sHead, sHd, ZombieState.DESCENDING)) {
             return;
         }
-        if (sFt.blocksMotion() && MoveMath.breakableSolid(level, sFeet)) {
-            ctx.breakManager().request(sFeet, entity);
-            owner.setState(ZombieState.DESCENDING);
+        if (MoveMath.requestBreakBodyBlock(owner, level, ctx, sFeet, sFt, ZombieState.DESCENDING)) {
             return;
         }
         boolean headClear = sHd.isAir() || !sHd.blocksMotion();

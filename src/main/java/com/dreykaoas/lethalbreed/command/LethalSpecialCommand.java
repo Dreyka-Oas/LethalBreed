@@ -13,7 +13,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -56,7 +55,7 @@ public final class LethalSpecialCommand {
         String typeArg = StringArgumentType.getString(ctx, "type");
         SpecialType type = SpecialType.fromId(typeArg);
         if (type == SpecialType.NONE) {
-            src.sendFailure(Component.literal("[LethalBreed] unknown special type: " + typeArg));
+            CommandFeedback.failure(src, "unknown special type: " + typeArg);
             return 0;
         }
 
@@ -75,9 +74,7 @@ public final class LethalSpecialCommand {
             }
         }
 
-        final int n = count;
-        final String tn = type.frName();
-        src.sendSuccess(() -> Component.literal("[LethalBreed] spawned " + n + " x " + tn), true);
+        CommandFeedback.success(src, "spawned " + count + " x " + type.frName(), true);
         return count;
     }
 }

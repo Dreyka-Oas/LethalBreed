@@ -4,7 +4,10 @@ import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.block.MaterialRegistry;
+import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
+import com.dreykaoas.lethalbreed.entity.SmartZombie;
+import com.dreykaoas.lethalbreed.entity.ZombieState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -21,6 +24,19 @@ public final class MoveMath {
     /** Quantise a signed delta to a cardinal step: +1 / -1 / 0 (dead-zone within 0.5). */
     public static int stepSign(double d) {
         return d > 0.5 ? 1 : (d < -0.5 ? -1 : 0);
+    }
+
+    /** Clear one body-space cell for a step: if a breakable solid stands at {@code pos}, request its progressive
+     *  break, set the zombie to {@code busyState} and return true (the caller should hold/wait this tick). Returns
+     *  false when the cell is already clear or unbreakable — the single place the descent steps clear their path. */
+    public static boolean requestBreakBodyBlock(SmartZombie owner, ServerLevel level, WorldAIContext ctx,
+            BlockPos pos, BlockState state, ZombieState busyState) {
+        if (state.blocksMotion() && breakableSolid(level, pos)) {
+            ctx.breakManager().request(pos, owner.entity());
+            owner.setState(busyState);
+            return true;
+        }
+        return false;
     }
 
     /**

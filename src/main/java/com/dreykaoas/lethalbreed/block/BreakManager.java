@@ -19,11 +19,9 @@ import java.util.Map;
  * whose block changes doesn't leave a half-broken ghost.
  */
 public final class BreakManager {
-    private static final class State {
-        int breakerId;
+    private static final class State extends CrackingBlock {
         float progress;
         long lastRequest;
-        int lastStage = -1;
         LivingEntity breaker;
     }
 
@@ -66,13 +64,13 @@ public final class BreakManager {
             BlockPos pos = BlockPos.of(e.getKey());
 
             if (now - s.lastRequest > grace) {
-                level.destroyBlockProgress(s.breakerId, pos, -1); // clear cracks
+                s.clearCracks(level, pos); // request went stale
                 it.remove();
                 continue;
             }
             BlockState bs = level.getBlockState(pos);
             if (!MaterialRegistry.isBreakable(level, pos, bs)) {
-                level.destroyBlockProgress(s.breakerId, pos, -1);
+                s.clearCracks(level, pos);
                 it.remove();
                 continue;
             }
@@ -86,24 +84,13 @@ public final class BreakManager {
                 }
             }
             s.progress += rate * toolSpeed / hardness;
-            int stage = (int) Math.max(0, Math.min(9, s.progress * 10f));
-            if (stage != s.lastStage) {
-                level.destroyBlockProgress(s.breakerId, pos, stage);
-                s.lastStage = stage;
-            }
+            s.showStage(level, pos, CrackingBlock.stage(s.progress * 10f));
             if (s.progress >= 1.0f) {
                 level.destroyBlock(pos, CombatMoveConfig.breakDropsItems, null, 512); // break effects; drops per config
-                level.destroyBlockProgress(s.breakerId, pos, -1);
+                s.clearCracks(level, pos);
                 it.remove();
             }
         }
     }
 
-    public int activeCount() {
-        return active.size();
-    }
-
-    public void clear() {
-        active.clear();
-    }
 }

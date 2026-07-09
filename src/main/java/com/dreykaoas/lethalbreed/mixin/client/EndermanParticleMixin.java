@@ -32,8 +32,7 @@ public abstract class EndermanParticleMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         // Black dust when the enderman is contaminated (carries the effect, synced to the client so it reads
         // correctly render-side). Uninfected endermen keep the vanilla purple swirl.
-        boolean infected = LethalBreedEffects.SUPER_CONTAMINATION != null
-                && self.hasEffect(LethalBreedEffects.SUPER_CONTAMINATION);
+        boolean infected = LethalBreedEffects.isSuperContaminated(self);
         if (infected) {
             level.addParticle(LETHALBREED$BLACK, x, y, z, xd, yd, zd);
         } else {

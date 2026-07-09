@@ -18,7 +18,6 @@ public final class SpecialBehavior {
     private static final float BOMBEUR_CHARGE_PER_TICK = 0.06f;
 
     // Dev instrumentation (headless test harness reads these to confirm abilities fired).
-    public static final AtomicInteger SPIT_COUNT = new AtomicInteger();
     public static final AtomicInteger SUMMON_COUNT = new AtomicInteger();
     public static final AtomicInteger HURL_COUNT = new AtomicInteger();
     public static final AtomicInteger HEAL_COUNT = new AtomicInteger();
@@ -35,27 +34,6 @@ public final class SpecialBehavior {
             tgt = sz.targetEntity(); // fall back to our own target (vanilla getTarget is set later in the tick)
         }
         switch (t) {
-            case TOXIQUE -> {
-                if (tgt != null && z.distanceToSqr(tgt) <= 5.0 && sz.pursuit().specialReady()) {
-                    SpecialAbilities.poison(tgt);
-                    sz.pursuit().resetSpecialCd();
-                }
-            }
-            case GIVRE -> {
-                if (tgt != null && z.distanceToSqr(tgt) <= 5.0 && sz.pursuit().specialReady()) {
-                    SpecialAbilities.slow(tgt);
-                    sz.pursuit().resetSpecialCd();
-                }
-            }
-            case CRACHEUR -> {
-                if (tgt != null) {
-                    double d2 = z.distanceToSqr(tgt);
-                    if (d2 >= 9.0 && d2 <= 576.0 && sz.pursuit().specialReady()) { // 3–24 blocks
-                        SpecialAbilities.spit(level, z, tgt);
-                        sz.pursuit().resetSpecialCd();
-                    }
-                }
-            }
             case BOMBEUR -> {
                 // Belly-swell fuse: once the target is within 3 blocks the zombie commits — the belly
                 // charge ramps (synced to clients for the render-side inflation) and it explodes at full.

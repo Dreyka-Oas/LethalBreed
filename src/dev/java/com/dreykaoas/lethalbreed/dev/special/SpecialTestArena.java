@@ -44,8 +44,7 @@ public final class SpecialTestArena {
         TargetingConfig.soundEnabled = false;
 
         SpecialType[] types = {
-                SpecialType.SPRINTEUR, SpecialType.BONDISSEUR, SpecialType.JUGGERNAUT, SpecialType.FOUISSEUR,
-                SpecialType.TOXIQUE, SpecialType.GIVRE, SpecialType.CRACHEUR, SpecialType.BOMBEUR,
+                SpecialType.SPRINTEUR, SpecialType.BONDISSEUR, SpecialType.JUGGERNAUT, SpecialType.BOMBEUR,
                 SpecialType.HURLEUR, SpecialType.SOIGNEUR, SpecialType.NECROMANCIEN, SpecialType.SPLITTER,
         };
 
@@ -82,7 +81,7 @@ public final class SpecialTestArena {
 
     private static Cow spawnCow(ServerLevel ow, int cx, SpecialType type, Zombie z) {
         // Cow target position differs per type so the ability's trigger condition can be met.
-        int cowZ = type == SpecialType.CRACHEUR ? 7 : (type == SpecialType.HURLEUR ? -2 : 2);
+        int cowZ = type == SpecialType.HURLEUR ? -2 : 2;
         Cow cow = EntityType.COW.spawn(ow, new BlockPos(cx, Y, cowZ), EntitySpawnReason.COMMAND);
         if (cow != null) {
             cow.setNoAi(true);
@@ -90,8 +89,8 @@ public final class SpecialTestArena {
             cow.setPersistenceRequired();
         }
         z.setTarget(cow);
-        if (type == SpecialType.CRACHEUR || type == SpecialType.HURLEUR) {
-            // Keep the special anchored: CRACHEUR needs the target at spit range; HURLEUR must not dive into
+        if (type == SpecialType.HURLEUR) {
+            // Keep the special anchored: HURLEUR must not dive into
             // the invulnerable cow and pile up — repeatedly bonking it triggers zombie reinforcements that
             // crowd in, shove the "lone" extra and the cow around, and flake the rally check. noAi specials
             // still run their ability each activation (it keeps its cow target by sight at 2 blocks).

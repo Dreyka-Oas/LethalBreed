@@ -30,17 +30,8 @@ public final class ConfigFields {
         return ConfigSchema.find(name);
     }
 
-    public static boolean isSupported(Class<?> t) {
-        return ConfigSchema.isSupported(t);
-    }
-
     public static String kind(Field f) {
         return ConfigType.kind(f);
-    }
-
-    /** Parse a string into the field's primitive type. Throws on malformed input. */
-    public static Object parse(Class<?> type, String raw) {
-        return ConfigType.parse(type, raw);
     }
 
     /** Group an option into a tab category by name (first match wins; ordered specific→generic). */
@@ -59,10 +50,6 @@ public final class ConfigFields {
     /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}. */
     public static boolean apply(String name, String raw, boolean persist) {
         return ConfigAccess.apply(name, raw, persist);
-    }
-
-    public static void reset(Field f) {
-        ConfigAccess.reset(f);
     }
 
     public static int resetAll() {

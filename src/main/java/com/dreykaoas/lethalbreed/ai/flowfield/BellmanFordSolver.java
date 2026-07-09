@@ -26,9 +26,6 @@ import java.util.stream.IntStream;
 final class BellmanFordSolver {
     private BellmanFordSolver() {}
 
-    private static final int[] NDX = {1, -1, 0, 0, 1, 1, -1, -1};
-    private static final int[] NDZ = {0, 0, 1, -1, 1, -1, 1, -1};
-
     /** Daemon worker factory for the CPU solve pool. */
     private static final ForkJoinPool.ForkJoinWorkerThreadFactory SOLVE_FACTORY = pool -> {
         ForkJoinWorkerThread t = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
@@ -95,8 +92,8 @@ final class BellmanFordSolver {
                 int cur = cost[i];
                 int best = cur;
                 for (int k = 0; k < 8; k++) {
-                    int nx = cx + NDX[k];
-                    int nz = cz + NDZ[k];
+                    int nx = cx + Neighbors8.DX[k];
+                    int nz = cz + Neighbors8.DZ[k];
                     if (nx < 0 || nx >= width || nz < 0 || nz >= depth) {
                         continue;
                     }
@@ -104,11 +101,10 @@ final class BellmanFordSolver {
                     if (nc >= FlowField.IMPASSABLE) {
                         continue;
                     }
-                    boolean diag = NDX[k] != 0 && NDZ[k] != 0;
-                    if (diag && (!passable[cx * depth + nz] || !passable[nx * depth + cz])) {
+                    if (Neighbors8.cornerBlocked(passable, cx, cz, nx, nz, depth, k)) {
                         continue; // no corner cutting
                     }
-                    int cand = nc + (diag ? diagCost : orth) + extra[i]; // entering i costs extra[i]
+                    int cand = nc + (Neighbors8.isDiagonal(k) ? diagCost : orth) + extra[i]; // entering i costs extra[i]
                     if (cand < best) {
                         best = cand;
                     }
@@ -134,8 +130,8 @@ final class BellmanFordSolver {
             int bestCost = cost[i];
             int bdx = 0, bdz = 0;
             for (int k = 0; k < 8; k++) {
-                int nx = cx + NDX[k];
-                int nz = cz + NDZ[k];
+                int nx = cx + Neighbors8.DX[k];
+                int nz = cz + Neighbors8.DZ[k];
                 if (nx < 0 || nx >= width || nz < 0 || nz >= depth) {
                     continue;
                 }
@@ -143,14 +139,13 @@ final class BellmanFordSolver {
                 if (cost[ni] >= FlowField.IMPASSABLE) {
                     continue;
                 }
-                boolean diag = NDX[k] != 0 && NDZ[k] != 0;
-                if (diag && (!passable[cx * depth + nz] || !passable[nx * depth + cz])) {
+                if (Neighbors8.cornerBlocked(passable, cx, cz, nx, nz, depth, k)) {
                     continue;
                 }
                 if (cost[ni] < bestCost) {
                     bestCost = cost[ni];
-                    bdx = NDX[k];
-                    bdz = NDZ[k];
+                    bdx = Neighbors8.DX[k];
+                    bdz = Neighbors8.DZ[k];
                 }
             }
             dirX[i] = (byte) bdx;

@@ -9,6 +9,8 @@ import com.dreykaoas.lethalbreed.util.TargetSelector;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 
+import static com.dreykaoas.lethalbreed.util.Scalars.sq;
+
 /**
  * Acquires each zombie's nearest valid target (any living entity except bosses/other zombies) and
  * classifies its LOD from the distance to that target. No target in range → FROZEN.
@@ -97,9 +99,5 @@ public final class LODManager {
             return LODLevel.LOW;
         }
         return LODLevel.FROZEN;
-    }
-
-    private static double sq(double v) {
-        return v * v;
     }
 }

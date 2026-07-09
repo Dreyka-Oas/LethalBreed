@@ -65,15 +65,6 @@ public final class PhaseManager {
         }
     }
 
-    /** Reset to phase 1 (e.g. a future /lethalphase reset). Persists, so the reset survives a reload too. */
-    public void reset() {
-        phase = 0;
-        lastAdvanceGameTime = Long.MIN_VALUE;
-        nextIntervalTicks = -1;
-        persist();
-        logPhases();
-    }
-
     /** Dump the full phase list to the server console so it's visible at a glance. */
     public void logPhases() {
         com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("[LethalBreed] Phases ({}):", PhaseConfig.count());

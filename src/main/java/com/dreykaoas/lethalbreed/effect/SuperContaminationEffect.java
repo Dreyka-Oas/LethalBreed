@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.effect;
 
-import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -10,7 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
  * {@code effect.ContaminationManager}, with a persistent counter attachment as the source of truth so
  * drinking milk only hides the icon for a tick before it's re-applied.
  */
-public class SuperContaminationEffect extends MobEffect {
+public class SuperContaminationEffect extends MarkerEffect {
     public SuperContaminationEffect(MobEffectCategory category, int particleColor) {
         super(category, particleColor);
     }
