@@ -7,15 +7,12 @@ threat. They navigate with a per-dimension flow field, **pillar up** to reach pe
 and hunt the nearest living entity — all built to scale toward ~1000 active zombies. Heavy pathfinding runs
 off the server thread, with an optional **AMD GPU (OpenCL)** compute path and a multithreaded CPU fallback.
 
-See [`PLAN.md`](PLAN.md) for the full design and phase breakdown, and [`.skills/`](.skills/) for hard-won
-gotchas (each documents a problem + the fix).
-
 ## Toolchain
 
 | Thing | Value |
 |-------|-------|
 | Minecraft | 1.21.11 (Mojang mappings) |
-| Java | 21 — **BellSoft Liberica NIK 23** (GraalVM JIT) |
+| Java | 21 — **BellSoft Liberica NIK 23.1.4** (GraalVM JIT) |
 | Loader / API | fabric-loader `0.19.3` / fabric-api `0.141.4+1.21.11` |
 | Loom / Gradle | `1.17.12` / `9.5.1` (wrapper) |
 | GPU compute | any AMD GPU via OpenCL/JOCL (auto-used when present; CPU fallback) |
@@ -90,76 +87,92 @@ self-heals** (0.5 HP / 5 s) until it climbs back to **1⁄2 health**, at which p
 rejoins the hunt. Config: `mood*` / `flee*` / `regen*` / `distress*` / `celebrate*`.
 
 ### Special zombie variants
-Each spawn may roll one of **12 special types** (chance scales with the phase; harder types unlock at higher
-phases), shown as a floating name:
-- **Passifs** — *Sprinteur* (rapide), *Bondisseur* (pounce LEAP), *Juggernaut* (blindé/PV), *Fouisseur* (Haste/creuse).
-- **Actifs** — *Cracheur* (projectile), *Bombeur* (explose près de la cible), *Toxique* (Poison au contact),
-  *Givré* (Slowness), *Hurleur* (aggro la horde), *Soigneur* (Regen de zone), *Nécromancien* (invoque).
-- **À la mort** — *Splitter* (se divise en 2 petits).
+Each spawn may roll **one of 8 special types** (chance scales with the phase; harder types unlock at higher
+phases via each type's `unlockPhase`), shown as a floating name. `Kind` decides where the behaviour lives —
+**PASSIVE** = spawn-time buffs only, **ACTIVE** = a per-tick action, **DEATH** = fires on death:
+- **Passifs** — *Sprinteur* (rapide), *Bondisseur* (bond/pounce), *Juggernaut* (blindé / gros PV).
+- **Actifs** — *Bombeur* (explose près de la cible), *Hurleur* (aggro la horde), *Soigneur* (Regen de zone),
+  *Nécromancien* (invoque des renforts).
+- **À la mort** — *Splitter* (se divise en 2 petits zombies).
 
-`/lethalspecial <type> [count]` pour tester. Config : `specialEnabled`, `specialBaseChance`,
-`specialPhaseScale`, `specialMaxChance`, `specialShowName`, `specialActionInterval`.
+`/lethalspecial <type> [count]` pour en faire apparaître. Config globale : `specialEnabled`,
+`specialBaseChance`, `specialPhaseScale`, `specialMaxChance`, `specialShowName`, `specialActionInterval`.
+**Tout est configurable, aucune valeur en dur.** Par type : `special<Type>Phase` (phase de déblocage, `0` =
+toujours), `special<Type>Weight` (poids de tirage, `0` = jamais), **et chaque magnitude de comportement** —
+puissance/portée/fusible du Bombeur, rayons du Hurleur/Soigneur, nombre d'invocations du Nécromancien,
+enfants/taille du Splitter, vitesse du Sprinteur, bond du Bondisseur, taille/PV/résistance/armure du
+Juggernaut. Les défauts reproduisent la table d'origine, donc ne rien toucher ne change rien.
 
-### Difficulty phases — 15 escalating waves
-A server-global phase (1→15) auto-advances on a ~10-minute timer (jittered), **only ever rising**, and is
-announced in chat (`☠ Phase N — <Nom>`). The higher the phase, the harder: each spawned zombie rolls more
-HP / damage / speed from **widening** random ranges, wears better & more **enchanted** gear (a random
-tool/weapon type — sword/axe/pickaxe/shovel/hoe — plus armor, material tier rising leather→netherite), and
-gets more/stronger effects. Gear has a 2% drop chance per item. Names are scientific Latin binomials
-(language-neutral — same FR/EN) on a *biodivergence* theme; the full list is logged to the console at start:
+### Difficulty phases — endless escalation
+A **server-global phase** starts at 1 and auto-advances on a ~10-minute jittered timer. It is **monotonic
+(only ever rises)** and **persists across sessions** — it never resets. By default it is **unbounded** and
+keeps climbing forever; the per-phase stat curve is a saturating function tuned to match the old hand-built
+table near phase 15 but continue cleanly toward infinity (see `phase/PhaseConfig.java`). Each advance is
+announced in chat as **`☠ Phase N`** with a cyclic tier colour.
 
-| # | Nom | # | Nom | # | Nom |
-|---|-----|---|-----|---|-----|
-| 1 | *Cadaver dormiens* | 6 | *Praedator vorax* | 11 | *Veteranus pestifer* |
-| 2 | *Mortifera vulgaris* | 7 | *Miles necroticus* | 12 | *Biodivergence* |
-| 3 | *Reanimatus gregarius* | 8 | *Legio necrotica* | 13 | *Tyrannus letalis* |
-| 4 | *Putredo errans* | 9 | *Venator pernix* | 14 | *Pestis apocalyptica* |
-| 5 | *Caterva putrescens* | 10 | *Bestia immanis* | 15 | *Necrosis terminalis* |
+Higher phase → each spawned zombie rolls more HP / damage / speed from **widening** random ranges, wears
+better and more **enchanted** gear (a random tool/weapon type — sword/axe/pickaxe/shovel/hoe — plus armor,
+material tier rising leather→netherite), and gets more/stronger effects. Gear has a small per-item drop
+chance. Optional cap: set `phaseMaxEnabled=true` to stop climbing at `phaseMax` (default 50) — then either
+**loop** back to phase 1 or **pin** at the ceiling (`phaseLoop`).
 
-`/lethalphase [n]` shows or forces the phase. Config: `phaseSystemEnabled`, `phaseIntervalTicks`,
-`phaseJitterTicks`, `phaseGearDropChance`. Tune the per-phase table in `phase/PhaseConfig.java`.
+`/lethalphase [n]` shows or forces the phase (a manual force ignores the cap). Config lives in
+`config/domain/ProgressionConfig.java` (`phaseSystemEnabled`, `phaseIntervalTicks`, `phaseJitterTicks`,
+`phaseMaxEnabled`, `phaseMax`, `phaseLoop`, gear/effect decay curves).
 
 ### Random effects — zombie "types"
 ~25% of spawned zombies carry one **random beneficial** effect for their whole life (infinite duration,
 random level I–III), rolled UUID-seeded in `finalizeSpawn`. The pool is everything useful to a predator:
 Speed, Strength, Resistance, Regeneration, Jump Boost, Haste (digs faster), Health Boost, Absorption —
-plus a **custom zombie-only `LEAP` effect** (no Fire Resistance: every zombie must burn in daylight) (a registered Holder-based MobEffect
-that shows particles only). Vanilla **Jump Boost** makes a zombie jump *higher* (folded into the vertical
-impulse); the custom **LEAP** makes it lunge *farther* (folded into the horizontal leap) — both dynamic,
-read live, never hard-coded. Config: `randomEffectChance`, `randomEffectMaxAmplifier`, `leapEffectPerLevel`.
+plus a **custom zombie-only `LEAP` effect** (no Fire Resistance: every zombie must burn in daylight; a
+registered Holder-based MobEffect that shows particles only). Vanilla **Jump Boost** makes a zombie jump
+*higher* (folded into the vertical impulse); the custom **LEAP** makes it lunge *farther* (folded into the
+horizontal leap) — both dynamic, read live, never hard-coded. Config: `randomEffectChance`,
+`randomEffectMaxAmplifier`, `leapEffectPerLevel`.
 
 ### GPU compute
 The per-dimension flow field is solved off the server thread. When an OpenCL GPU is present it is used
 automatically (`useGpu=true` default; logs `GPU: <device> — OpenCL OK`); otherwise the **multi-core** CPU
 solver runs transparently — one flow field is solved across `cores-2` threads with a parallel Bellman-Ford
 relaxation (the same algorithm as the GPU kernel), not a single-core Dijkstra. Any GPU error degrades to the
-CPU path — the GPU is never load-bearing. Config: `flowCpuThreads` (0 = auto cores-2).
+CPU path — the GPU is never load-bearing (`GPU: unavailable — CPU fallback` in the log). Config:
+`flowCpuThreads` (0 = auto cores-2).
 
 ### Client rendering
 Sodium/Iris-aware client config with a distance-cull mixin for zombies.
 
 ## Build & run
 
-```powershell
-# Build the mod jar (build/libs/)
-.\gradlew.bat build
+The Gradle wrapper works the same on every OS — use `./gradlew` on Linux/macOS or `.\gradlew.bat` on Windows:
+
+```bash
+# Build the obfuscated player jar (build/libs/) — ProGuard runs as a post-remap step
+./gradlew build
 
 # Launch the dev client (loads run/mods/, e.g. Sodium + Iris + perf mods)
-.\gradlew.bat runClient
+./gradlew runClient
 
-# Launch a dev server (headless)
-.\gradlew.bat runServer
+# Launch a headless dev server (also runs the /lethaldev test harnesses)
+./gradlew runServer
 ```
 
-> **Bash is broken on this dev box (fork errors) — run Gradle via PowerShell.**
+There are two jars: `./gradlew build` (or `scripts/build-player.bat`) ships the **player** jar (obfuscated
+via `proguard-rules.pro`); `scripts/build-dev.bat` packages main + the `src/dev` source set (test harnesses
+and the `/lethaldev` & `/lethalspawn` commands) as the **developer** jar. The `scripts/*.bat` helpers are
+Windows conveniences; on other platforms call the Gradle tasks directly.
 
 ### `runClient` remap crash (`ClosedFileSystemException`)
 
 Fabric Loom's dev launch intermittently fails to remap the dependency mods (a known Loom bug, not a mod
 bug). When it recurs, do a clean relaunch — kill stray game JVMs, wipe the runtime remap cache, then a
-single `runClient` with no Gradle task in between:
+single `runClient`:
 
+```bash
+# Linux/macOS
+pkill -f 'fabric.*devlaunch' ; rm -rf run/.fabric ; ./gradlew runClient
+```
 ```powershell
+# Windows
 Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Remove-Item -Recurse -Force "run\.fabric" -ErrorAction SilentlyContinue
@@ -170,36 +183,56 @@ See the `fix-gradle-runclient-remap-error` skill for the full escalation order.
 
 ## Config
 
-- Server defaults live in `LethalBreedConfig` (climb, water, targeting, LOD, block-op budgets, GPU, spawn
-  control, variation). Key flags: `pillarJumpPower`, `pillarMaxHeight`, `floatInWater`, `waterSwimSpeed`,
-  `waterDiveSpeed`, `targetDetectRadius`, `useGpu`, `debugLogInterval` (0 = no perf-recap spam).
-- Client optimizations: `config/lethalbreed-client.json` — cull distance, max rendered zombies, Sodium
+- **Server** defaults live in the `config` package: the `LethalBreedConfig` facade over per-topic holders in
+  `config/domain/` (climb, water, targeting, LOD, block-op budgets, GPU, spawn control, variation,
+  progression, contamination, mood). Fields are exposed to `/lethalconfig` and the config screen by reflection
+  (`ConfigSchema` scans the holders' declared fields). Key flags: `pillarJumpPower`, `pillarMaxHeight`,
+  `floatInWater`, `waterSwimSpeed`, `waterDiveSpeed`, `targetDetectRadius`, `useGpu`.
+- **Full custom — nothing hard-coded.** Every gameplay magnitude is a config field (special-zombie behaviour,
+  phase curves, swim/leap/pillar/descend tuning, contamination, mood…). Even the low-level numeric constants
+  (math tolerances, safety clamps, the vanilla mob-cap divisor) are exposed via `ExpertConfig` under a
+  dedicated **Expert** tab — changing those can break movement/spawn/plague correctness, so they are kept
+  out of the normal gameplay tabs. Defaults reproduce the original behaviour exactly.
+- **Client** optimizations: `config/lethalbreed-client.json` — cull distance, max rendered zombies, Sodium
   adaptation.
-- Dev: `devClimbTest=true` builds a headless wall+target+zombies arena on server start and logs
-  `[ClimbDbg]` (run `runServer` to watch climb behaviour without a client). Turn it back off before
-  shipping.
+- **Dev**: `devClimbTest=true` (in `ProgressionConfig`) builds a headless wall+target+zombies arena on
+  server start and logs `[ClimbDbg]` (run `runServer` to watch climb behaviour without a client). Turn it
+  back off before shipping.
+
+## Commands
+
+| Command | Source set | Purpose |
+|---------|-----------|---------|
+| `/lethalconfig` | main | view/set config fields at runtime |
+| `/lethalphase [n]` | main | show or force the difficulty phase |
+| `/lethalspecial <type> [count]` | main | spawn a specific special variant |
+| `/lethaldev …` | dev | headless test harness controls |
+| `/lethalspawn …` | dev | spawn helpers for testing |
 
 ## Project layout
 
 ```
 src/main/java/com/dreykaoas/lethalbreed/
-├── LethalBreedMod.java        # entry point: events, spawn handling, GPU warm-up
-├── entity/                    # SmartZombie (climb/water/pursuit), registry, variation, spawn control
-├── ai/ flowfield/ goals/      # flow field, LOD, target selection
-├── block/                     # break/build coordinators, op queue, placed-block tracker
-├── sound/  spatial/  tick/    # sound bus, spatial grid, staggered scheduler (climbers/swimmers passes)
-├── effect/                    # custom MobEffect registration (LEAP) + holder
-├── phase/                     # 15-phase escalation: manager, data table, gear equipper
-├── special/                   # 12 special zombie variants: type, roller, runtime behavior
-├── contamination/             # Super Contamination plague manager (infect/ramp/cure/death)
-├── gpu/                       # OpenCL/JOCL compute manager + kernel dispatch
-├── mixin/                     # finalizeSpawn (size), float-in-water, goal accessor/suppress
-└── config/                    # LethalBreedConfig
+├── LethalBreedMod.java     # entry point: events, spawn handling, GPU warm-up (client: client/LethalBreedClient)
+├── entity/                 # SmartZombie + brain, registry, variation, spawn control
+│   ├── mood/               # celebrate / flee / distress / regen
+│   └── move/               # pillar-up (Ascent), descend, water swim/dive + dispatch
+├── ai/  ai/flowfield/      # flow field, LOD; flowfield/gpu = OpenCL/JOCL compute manager + kernel
+├── block/                  # break/build coordinators, op queue, placed-block tracker
+├── sound/  spatial/  tick/ # sound bus, spatial grid, staggered LOD scheduler
+├── effect/                 # custom LEAP MobEffect; effect/contamination = Super Contamination plague
+├── phase/                  # endless phase escalation: manager, saturating stat curve, gear equipper
+├── special/                # 8 special variants: type, roller, runtime behavior
+├── command/                # /lethalconfig, /lethalphase, /lethalspecial
+├── config/  config/domain/ # config facade + per-topic holders (reflection-scanned)
+├── client/  client/screen/ # Sodium/Iris-aware client config + config screen
+├── dimension/ net/ init/   # per-dimension AI context, networking, registration
+└── mixin/  mixin/client/   # finalizeSpawn (size), float-in-water, goal accessor/suppress, client render hooks
 ```
 
 ## In-game test
 
-1. `.\gradlew.bat runClient`, flat Creative world.
+1. `./gradlew runClient`, flat Creative world.
 2. Spawn zombies beyond vanilla aggro range → they stream toward you, break a glass wall, bridge a pit.
 3. Stand on a tower/ledge → they pillar dirt up to reach you, facing you, no levitation.
 4. Lure them into water and dive → they float at the surface, dive after you when you're below, and break
