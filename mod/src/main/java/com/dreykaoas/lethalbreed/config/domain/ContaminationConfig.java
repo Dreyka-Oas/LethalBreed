@@ -63,7 +63,7 @@ public final class ContaminationConfig {
     // Three independent, particleless attribute episodes flare at random. Each has its own on/off timer, so they
     // may overlap or fire alone. All applied as transient attribute modifiers (no effect icon).
 
-    /** Movement-slow episode: fraction of base movement speed removed while active. Default 30%. */
+    /** Movement-slow episode: fraction of base movement speed removed while active. Default 15%. */
     public static double contamSlowAmount = 0.15;
     /** Min/max seconds a slow episode lasts. Default 5–10 s. */
     public static double contamSlowDurMinSec = 5.0;
@@ -98,6 +98,18 @@ public final class ContaminationConfig {
 
     /** On death of a contaminated HUMANOID victim (player/villager/piglin...), reanimate it as a zombie. */
     public static boolean contamReanimateHumanoids = true;
+    // Auto-detection of a "humanoid" (upright biped) from its standing hitbox — no hardcoded mob list. Defaults
+    // keep creepers (1.7 tall) and golems/quadrupeds (wide) out while covering villagers/piglins/modded bipeds.
+    /** Min hitbox height (blocks) to qualify as a reanimatable humanoid. */
+    public static double contamReanimateMinHeight = 1.75;
+    /** Max hitbox width (blocks) to qualify as a reanimatable humanoid. */
+    public static double contamReanimateMaxWidth = 0.7;
+    /** Min height-to-width ratio to qualify as a reanimatable humanoid (upright, biped-shaped). */
+    public static double contamReanimateAspect = 2.4;
+    /** Cap on the fraction a SLOW/WEAK episode can remove, so the victim is never fully frozen/harmless. */
+    public static double contamEpisodeCap = 0.9;
+    /** Exhaustion applied to a player's food per point of plague damage (vanilla: 4.0 exhaustion = 1 food). */
+    public static double contamFoodExhaustionMult = 4.0;
     /** Ticks between cure rolls (only while crouched). */
     public static int contamCureCheckTicks = 40;
     /** Cure chance window per roll (percent). Tiny on purpose. */
