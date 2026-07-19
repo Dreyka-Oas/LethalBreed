@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.special;
 
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialAbilities;
@@ -13,9 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** Runtime behaviour for ACTIVE special zombies (per-activation, cooldown-gated) and DEATH specials. */
 public final class SpecialBehavior {
     private SpecialBehavior() {}
-
-    /** Per-activation increment of the BOMBEUR belly charge (0..1). ~17 activations from arm to detonation. */
-    private static final float BOMBEUR_CHARGE_PER_TICK = 0.06f;
 
     // Dev instrumentation (headless test harness reads these to confirm abilities fired).
     public static final AtomicInteger SUMMON_COUNT = new AtomicInteger();
@@ -39,9 +37,10 @@ public final class SpecialBehavior {
                 // charge ramps (synced to clients for the render-side inflation) and it explodes at full.
                 float charge = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_CHARGE, 0.0f);
                 boolean armed = charge > 0.0f;
-                boolean inRange = tgt != null && z.distanceToSqr(tgt) <= 9.0;
+                double armRange = ProgressionConfig.specialBombeurArmRange;
+                boolean inRange = tgt != null && z.distanceToSqr(tgt) <= armRange * armRange;
                 if (armed || inRange) {
-                    charge += BOMBEUR_CHARGE_PER_TICK;
+                    charge += (float) ProgressionConfig.specialBombeurFusePerTick;
                     if (charge >= 1.0f) {
                         SpecialAbilities.bomb(level, z);
                     } else {

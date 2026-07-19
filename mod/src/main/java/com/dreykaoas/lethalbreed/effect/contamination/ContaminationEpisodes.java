@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.effect.contamination;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
@@ -90,7 +91,8 @@ public final class ContaminationEpisodes {
 
     /** Gap-between-flares in ticks, scaled DOWN by intensity (more frequent at higher levels). */
     private static long rollGap(Episode ep, double mult) {
-        return ContaminationState.rollWindow(ep.gapMin.getAsDouble(), ep.gapMax.getAsDouble(), 1.0 / Math.max(1.0e-3, mult));
+        return ContaminationState.rollWindow(ep.gapMin.getAsDouble(), ep.gapMax.getAsDouble(),
+                1.0 / Math.max(ExpertConfig.expertContamIntensityFloor, mult));
     }
 
     /** Turn an episode ON: add its transient attribute modifier. Fraction removed is scaled by intensity, capped
@@ -102,7 +104,7 @@ public final class ContaminationEpisodes {
             return;
         }
         if (ep != Episode.NO_JUMP) {
-            amt = Math.min(0.9, amt * mult);
+            amt = Math.min(ContaminationConfig.contamEpisodeCap, amt * mult);
         }
         inst.addOrUpdateTransientModifier(new AttributeModifier(
                 ep.id, -amt, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));

@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.config;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
@@ -37,6 +38,7 @@ public final class ConfigSchema {
             ProgressionConfig.class,
             ContaminationConfig.class,
             ZombieMoodConfig.class,
+            ExpertConfig.class,
     };
 
     /** Editable fields in source-declaration order, across all holders. */

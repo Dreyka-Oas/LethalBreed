@@ -59,13 +59,13 @@ final class ConfigBoundsTable {
         b("flowVerticalTolerance", 0, 64);
         b("flowWaypointStep", 1, 64);
         b("navSpeed", 0, 10);
+        b("navYThreshold", 0, 64);
         b("flowBreakCost", 0, 100_000);
         b("flowBuildCost", 0, 100_000);
         b("flowOrthoCost", 1, 1000);
         b("flowDiagonalCost", 1, 1000);
         b("climbThreshold", 0, 64);
         b("climbHorizRadius", 0, 64);
-        b("wallClimbSpeed", 0, 2);
         b("maxClimbHeight", 1, 256);
         b("climbGiveUpCooldown", 0, 1000);
         b("pillarMaxHeight", 1, 256);
@@ -123,15 +123,89 @@ final class ConfigBoundsTable {
         b("breakMaxHardness", 0, 50);
         b("placedBlockLifetimeTicks", 20, 72_000);
         b("maxConcurrentBreaks", 1, 4096);     // new option (Breaking)
+        b("leapLandingScanDist", 1, 64);
+        b("leapLandingScanDepth", 1, 64);
+        b("waterSubmergeOffset", 0, 8);
+        b("waterArriveDistance", 0, 8);
+        b("waterVelocityBlend", 0, 1);
+        b("waterSurfaceJump", 0, 2);
+        b("pillarFinishHeight", 0, 8);
+        b("pillarFinishSpeed", 0, 5);
+        b("pillarFinishJump", 0, 2);
+        b("descendDirectlyBelowRadius", 0, 16);
 
         // ---- ProgressionConfig (Phases / Specials / Dev) ----
         b("phaseIntervalTicks", 1, 1_000_000);
         b("phaseJitterTicks", 0, 1_000_000);
         b("phaseGearDropChance", 0, 1);
+        b("phaseHpMaxGrowth", 0, 10);
+        b("phaseHpMinGrowth", 0, 10);
+        b("phaseHpExponent", 0.5, 3.0);
+        b("phaseDmgMaxGrowth", 0, 10);
+        b("phaseDmgMinGrowth", 0, 10);
+        b("phaseDmgExponent", 0.5, 3.0);
+        b("phaseSpdMaxGrowth", 0, 10);
+        b("phaseSpdMinGrowth", 0, 10);
+        b("phaseSpdExponent", 0.5, 3.0);
+        b("phaseArmorChanceDecay", 0.5, 0.999);
+        b("phaseWeaponChanceDecay", 0.5, 0.999);
+        b("phaseArmorTierDecay", 0.5, 0.999);
+        b("phaseWeaponTierDecay", 0.5, 0.999);
+        b("phaseEnchantDecay", 0.5, 0.999);
+        b("phaseEnchantCeiling", 1, 10);
+        b("phaseEffChanceDecay", 0.5, 0.999);
+        b("phaseEffCountDecay", 0.5, 0.999);
+        b("phaseEffCountCeiling", 1, 9);
+        b("phaseEffAmpDecay", 0.5, 0.999);
+        b("phaseEffAmpCeiling", 0, 10);
+        b("phaseMobcapGrowth", 0, 100);
+        b("phaseMobcapExponent", 0.5, 3.0);
+        b("phaseFrequencyGrowth", 0, 100);
+        b("phaseFrequencyExponent", 0.5, 3.0);
+        b("phaseMax", 1, 1_000_000);
         b("specialBaseChance", 0, 1);
         b("specialPhaseScale", 0, 1);
         b("specialMaxChance", 0, 1);
         b("specialActionInterval", 1, 1000);
+        // Per-type unlock phase (0 = always available) + selection weight (0 = never picked).
+        b("specialSprinteurPhase", 0, 1_000_000);
+        b("specialSprinteurWeight", 0, 1_000_000);
+        b("specialBondisseurPhase", 0, 1_000_000);
+        b("specialBondisseurWeight", 0, 1_000_000);
+        b("specialBombeurPhase", 0, 1_000_000);
+        b("specialBombeurWeight", 0, 1_000_000);
+        b("specialHurleurPhase", 0, 1_000_000);
+        b("specialHurleurWeight", 0, 1_000_000);
+        b("specialSoigneurPhase", 0, 1_000_000);
+        b("specialSoigneurWeight", 0, 1_000_000);
+        b("specialJuggernautPhase", 0, 1_000_000);
+        b("specialJuggernautWeight", 0, 1_000_000);
+        b("specialNecromancienPhase", 0, 1_000_000);
+        b("specialNecromancienWeight", 0, 1_000_000);
+        b("specialSplitterPhase", 0, 1_000_000);
+        b("specialSplitterWeight", 0, 1_000_000);
+        // Per-type behaviour magnitudes.
+        b("specialBombeurPower", 0, 100);
+        b("specialBombeurArmRange", 0, 64);
+        b("specialBombeurFusePerTick", 0.001, 1.0);
+        b("specialHurleurRadius", 0, 128);
+        b("specialSoigneurRadius", 0, 128);
+        b("specialSoigneurRegenTicks", 1, 72_000);
+        b("specialSoigneurRegenAmp", 0, 9);
+        b("specialNecromancienMinChildren", 0, 64);
+        b("specialNecromancienMaxChildren", 0, 64);
+        b("specialNecromancienDensityCap", 0, 10_000);
+        b("specialNecromancienDensityRadius", 0, 128);
+        b("specialNecromancienSpread", 0, 16);
+        b("specialSplitterChildren", 0, 64);
+        b("specialSplitterChildScale", 0.05, 10);
+        b("specialSplitterSpread", 0, 16);
+        b("specialSprinteurSpeedAmp", 0, 9);
+        b("specialSprinteurSpeedMul", 0, 10);
+        b("specialBondisseurLeapAmp", 0, 9);
+        b("specialJuggernautScale", 0.05, 10);
+        b("specialJuggernautHealthMul", 0.05, 100);
+        b("specialJuggernautResistanceAmp", 0, 9);
         b("devSpawnRadius", 1, 256);
 
         // ---- ContaminationConfig (Contamination) ----
@@ -151,6 +225,11 @@ final class ConfigBoundsTable {
         b("contamSymptomMaxPct", 0, 100);
         b("contamLatentSlowAmount", 0, 1);
         b("contamLatentSlowTicks", 1, 72_000);
+        b("contamReanimateMinHeight", 0, 16);
+        b("contamReanimateMaxWidth", 0, 16);
+        b("contamReanimateAspect", 0, 100);
+        b("contamEpisodeCap", 0, 1);
+        b("contamFoodExhaustionMult", 0, 100);
 
         // ---- ZombieMoodConfig (Mood) ----
         b("fleeHealthFraction", 0, 1);
@@ -160,6 +239,7 @@ final class ConfigBoundsTable {
         b("fleeSpeed", 0, 10);
         b("fleeThreatRadius", 0, 128);
         b("fleeDistance", 0, 128);
+        b("fleeGroundGainThreshold", 0, 100);
         b("fleeStuckActivations", 0, 1024);
         b("corneredFightTicks", 0, 72_000);
         b("fleeFastThreatGiveUp", 1, 1024);
@@ -172,5 +252,17 @@ final class ConfigBoundsTable {
         b("screamVolume", 0, 64);
         b("victoryPitch", 0.5, 2.0);
         b("distressPitch", 0.5, 2.0);
+
+        // ---- ExpertConfig (Expert) — floors kept strictly > 0, divisor >= 1, to preserve the guards ----
+        b("expertStepDeadzone", 0, 4);
+        b("expertBreakHeightEpsilon", 0, 1);
+        b("expertHeadingEpsilon", 0, 1);
+        b("expertPillarHeadingEpsilon", 0, 1);
+        b("expertPillarCeilingOffset", 0, 8);
+        b("expertPillarSupportHeight", 0, 8);
+        b("expertAttributeFloor", 0, 10);
+        b("expertMobcapChunkDivisor", 1, 1_000_000);
+        b("expertContamIntensityFloor", 0.000_001, 1000);
+        b("expertContamTimeScaleFloor", 0.000_001, 1000);
     }
 }

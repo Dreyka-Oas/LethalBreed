@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "lethalbreed:item/ecorche_spawn_egg"
+  }
+}

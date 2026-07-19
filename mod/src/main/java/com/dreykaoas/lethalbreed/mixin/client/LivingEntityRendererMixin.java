@@ -15,9 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 
 /**
- * Copies the synced BOMBEUR belly charge from a zombie onto its render state each frame, so the model
- * mixin can inflate the body without touching the entity. Runs for every living entity (cheap guard);
- * non-zombies write 0, which resets the shared model part's scale to normal on the next frame.
+ * Copies synced zombie-only cosmetic state (BOMBEUR belly charge) onto the render
+ * state each frame, so model mixins can react without touching the entity. Runs for every living entity
+ * (cheap guard); non-zombies write the neutral defaults, resetting shared model parts on the next frame.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(LivingEntityRenderer.class)

@@ -122,7 +122,6 @@ final class GpuFlowFieldSolver {
             clReleaseMemObject(changedMem);
         }
 
-        // Flags come from the snapshot's block classification (break/build), independent of the GPU solve.
-        return new FlowField(s.originX(), s.originZ(), width, depth, s.focusY(), cost, dirX, dirZ, s.flags());
+        return new FlowField(s.originX(), s.originZ(), width, depth, cost, dirX, dirZ);
     }
 }

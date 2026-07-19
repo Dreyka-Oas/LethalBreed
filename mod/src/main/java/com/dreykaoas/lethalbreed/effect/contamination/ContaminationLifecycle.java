@@ -100,13 +100,21 @@ public final class ContaminationLifecycle {
         }
     }
 
-    /** A humanoid the plague can raise: players and the bipedal mob families (villagers, piglins, illagers). */
+    /** A biped the plague can raise into a zombie. Players always qualify; every other mob is auto-detected from
+     *  its standing hitbox — tall, narrow and clearly upright. This is dynamic (no hardcoded mob list), so it
+     *  covers villagers, piglins, illagers, witches, skeletons, endermen AND modded humanoids alike, while
+     *  excluding creepers (too short), golems/quadrupeds (too wide) and small mobs. */
     public static boolean isHumanoid(LivingEntity e) {
-        return e instanceof Player
-                || e instanceof net.minecraft.world.entity.npc.villager.AbstractVillager
-                || e instanceof net.minecraft.world.entity.monster.piglin.AbstractPiglin
-                || e instanceof net.minecraft.world.entity.monster.illager.AbstractIllager
-                || e instanceof net.minecraft.world.entity.monster.Witch;
+        if (e instanceof Player) {
+            return true;
+        }
+        float w = e.getBbWidth();
+        float h = e.getBbHeight();
+        // >= 1.75 tall drops the creeper (1.7); <= 0.7 wide drops iron/snow-golem-width & quadrupeds;
+        // h >= 2.4×w keeps only genuinely upright, biped-shaped hitboxes. All three thresholds are configurable.
+        return h >= (float) ContaminationConfig.contamReanimateMinHeight
+                && w <= (float) ContaminationConfig.contamReanimateMaxWidth
+                && h >= w * (float) ContaminationConfig.contamReanimateAspect;
     }
 
     public static void cure(LivingEntity e) {

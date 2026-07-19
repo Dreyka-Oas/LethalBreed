@@ -1,6 +1,8 @@
 package com.dreykaoas.lethalbreed.mixin;
 
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.phase.PhaseTable;
 
 import net.minecraft.world.entity.MobCategory;
@@ -17,8 +19,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 /**
  * Scales the global MONSTER mob-cap by the current phase (LethalBreed owns the hostile population). Vanilla
  * lets a category spawn while its live count is under {@code maxPerChunk * spawnableChunks / MAGIC_NUMBER};
- * we widen that ceiling by {@link WorldSpawnConfig#mobcapPerPhase}[phase] so higher phases hold more zombies
- * at once. Phase 0 → factor 0 → the cap is 0 → nothing spawns (the "classic" base).
+ * we widen that ceiling by {@link PhaseTable#mobcap(int)} so higher phases hold more zombies at once
+ * (unbounded — no per-phase ceiling). Phase 0 → factor 0 → the cap is 0 → nothing spawns (the "classic" base).
  *
  * <p>Only MONSTER is touched; other categories keep vanilla behaviour.
  */
@@ -38,8 +40,9 @@ public abstract class SpawnStateMobcapMixin {
         if (!WorldSpawnConfig.nightSpawnEnabled || category != MobCategory.MONSTER) {
             return;
         }
-        double factor = PhaseTable.sample(WorldSpawnConfig.mobcapPerPhase);
-        int base = category.getMaxInstancesPerChunk() * spawnableChunkCount / 289; // MAGIC_NUMBER = 17^2
+        double factor = PhaseTable.mobcap(PhaseManager.current());
+        int base = category.getMaxInstancesPerChunk() * spawnableChunkCount
+                / Math.max(1, ExpertConfig.expertMobcapChunkDivisor); // vanilla MAGIC_NUMBER = 17^2
         int scaled = (int) Math.floor(base * factor);
         cir.setReturnValue(mobCategoryCounts.getInt(category) < scaled);
     }

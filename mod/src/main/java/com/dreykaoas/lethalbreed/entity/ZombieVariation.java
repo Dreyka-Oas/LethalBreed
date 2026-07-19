@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.entity;
 
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
@@ -138,7 +139,7 @@ public final class ZombieVariation {
     private static void applyMultiplier(LivingEntity e, Holder<Attribute> attr, Identifier id, double factor) {
         // Floor SCALE/SPEED so an extreme low roll can't make a zombie invisibly tiny or frozen in place.
         if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
-            factor = Math.max(0.05, factor);
+            factor = Math.max(ExpertConfig.expertAttributeFloor, factor);
         }
         AttributeModifiers.multiplyBase(e, attr, id, factor);
     }

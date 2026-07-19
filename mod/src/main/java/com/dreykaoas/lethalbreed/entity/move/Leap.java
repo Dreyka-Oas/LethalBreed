@@ -69,11 +69,11 @@ public final class Leap {
 
     /** True if there is solid ground near where a leap would land (so we don't jump into a gap). */
     private boolean hasLanding(ServerLevel level, double ndx, double ndz) {
-        int dist = 3;
+        int dist = CombatMoveConfig.leapLandingScanDist;
         int lx = Mth.floor(entity.getX() + ndx * dist);
         int lz = Mth.floor(entity.getZ() + ndz * dist);
         int ly = Mth.floor(entity.getY());
-        for (int yy = ly + 1; yy >= ly - 3; yy--) {
+        for (int yy = ly + 1; yy >= ly - CombatMoveConfig.leapLandingScanDepth; yy--) {
             if (level.getBlockState(new BlockPos(lx, yy, lz)).blocksMotion()) {
                 return true;
             }

@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.special;
 
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,39 +10,69 @@ import java.util.List;
  * {@link SpecialRoller}); the choice is stored as a persistent Fabric attachment and read by the
  * {@code SmartZombie}. {@link Kind} decides where the behaviour lives:
  * PASSIVE = spawn-time buffs only; ACTIVE = per-tick action ({@link SpecialBehavior#tick}); DEATH = on death.
+ *
+ * <p>The {@linkplain #unlockPhase() unlock phase} (from which phase a type can appear) and the
+ * {@linkplain #weight() selection weight} (relative frequency) are NOT hard-coded here — they are read live
+ * from {@link ProgressionConfig} ({@code special<Type>Phase} / {@code special<Type>Weight}), so both are
+ * editable through the config JSON / GUI / {@code /lethalconfig}. The switches below are only the routing to
+ * those config fields; the field defaults hold the built-in values.
  */
 public enum SpecialType {
-    NONE("none", "", Kind.PASSIVE, 0, 0),
-    SPRINTEUR("sprinteur", "Sprinteur", Kind.PASSIVE, 2, 10),
-    BONDISSEUR("bondisseur", "Bondisseur", Kind.PASSIVE, 3, 9),
-    BOMBEUR("bombeur", "Bombeur", Kind.ACTIVE, 4, 7),
-    HURLEUR("hurleur", "Hurleur", Kind.ACTIVE, 5, 7),
-    SOIGNEUR("soigneur", "Soigneur", Kind.ACTIVE, 6, 6),
-    JUGGERNAUT("juggernaut", "Juggernaut", Kind.PASSIVE, 6, 6),
-    NECROMANCIEN("necromancien", "Nécromancien", Kind.ACTIVE, 9, 4),
-    SPLITTER("splitter", "Splitter", Kind.DEATH, 11, 4);
+    NONE("none", "", Kind.PASSIVE),
+    SPRINTEUR("sprinteur", "Sprinteur", Kind.PASSIVE),
+    BONDISSEUR("bondisseur", "Bondisseur", Kind.PASSIVE),
+    BOMBEUR("bombeur", "Bombeur", Kind.ACTIVE),
+    HURLEUR("hurleur", "Hurleur", Kind.ACTIVE),
+    SOIGNEUR("soigneur", "Soigneur", Kind.ACTIVE),
+    JUGGERNAUT("juggernaut", "Juggernaut", Kind.PASSIVE),
+    NECROMANCIEN("necromancien", "Nécromancien", Kind.ACTIVE),
+    SPLITTER("splitter", "Splitter", Kind.DEATH);
 
     public enum Kind { PASSIVE, ACTIVE, DEATH }
 
     private final String id;
     private final String frName;
     private final Kind kind;
-    private final int unlockPhase;
-    private final int weight;
 
-    SpecialType(String id, String frName, Kind kind, int unlockPhase, int weight) {
+    SpecialType(String id, String frName, Kind kind) {
         this.id = id;
         this.frName = frName;
         this.kind = kind;
-        this.unlockPhase = unlockPhase;
-        this.weight = weight;
     }
 
     public String id() { return id; }
     public String frName() { return frName; }
     public Kind kind() { return kind; }
-    public int unlockPhase() { return unlockPhase; }
-    public int weight() { return weight; }
+
+    /** Phase from which this type can appear — configurable via {@link ProgressionConfig}. */
+    public int unlockPhase() {
+        return switch (this) {
+            case SPRINTEUR -> ProgressionConfig.specialSprinteurPhase;
+            case BONDISSEUR -> ProgressionConfig.specialBondisseurPhase;
+            case BOMBEUR -> ProgressionConfig.specialBombeurPhase;
+            case HURLEUR -> ProgressionConfig.specialHurleurPhase;
+            case SOIGNEUR -> ProgressionConfig.specialSoigneurPhase;
+            case JUGGERNAUT -> ProgressionConfig.specialJuggernautPhase;
+            case NECROMANCIEN -> ProgressionConfig.specialNecromancienPhase;
+            case SPLITTER -> ProgressionConfig.specialSplitterPhase;
+            case NONE -> 0;
+        };
+    }
+
+    /** Relative selection weight (higher = more frequent; 0 = never picked) — configurable via {@link ProgressionConfig}. */
+    public int weight() {
+        return switch (this) {
+            case SPRINTEUR -> ProgressionConfig.specialSprinteurWeight;
+            case BONDISSEUR -> ProgressionConfig.specialBondisseurWeight;
+            case BOMBEUR -> ProgressionConfig.specialBombeurWeight;
+            case HURLEUR -> ProgressionConfig.specialHurleurWeight;
+            case SOIGNEUR -> ProgressionConfig.specialSoigneurWeight;
+            case JUGGERNAUT -> ProgressionConfig.specialJuggernautWeight;
+            case NECROMANCIEN -> ProgressionConfig.specialNecromancienWeight;
+            case SPLITTER -> ProgressionConfig.specialSplitterWeight;
+            case NONE -> 0;
+        };
+    }
 
     public static SpecialType fromId(String id) {
         if (id == null || id.isEmpty()) {
@@ -58,7 +90,7 @@ public enum SpecialType {
     public static List<SpecialType> available(int phase) {
         List<SpecialType> out = new ArrayList<>();
         for (SpecialType t : values()) {
-            if (t != NONE && phase >= t.unlockPhase) {
+            if (t != NONE && phase >= t.unlockPhase()) {
                 out.add(t);
             }
         }

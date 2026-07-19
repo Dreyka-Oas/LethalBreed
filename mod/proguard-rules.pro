@@ -80,6 +80,17 @@
 -keep class com.dreykaoas.lethalbreed.entity.ZombieRegistry { *; }
 -keep class com.dreykaoas.lethalbreed.entity.ZombieVariation { *; }
 
+# ---- GeckoLib-animated horror zombie ----
+# HorrorZombie subclasses Zombie + implements GeoEntity; it overrides MC-mapped methods and GeoEntity
+# methods that GeckoLib calls virtually/reflectively (registerControllers, getAnimatableInstanceCache).
+# LethalEntities is a registration holder (static EntityType wired by Identifier). The client renderer/model
+# are instantiated by GeckoLib via EntityRendererProvider + reflection, and the model's resource getters are
+# resolved at render time. Keep all four whole so obfuscation never breaks registration or rendering.
+-keep class com.dreykaoas.lethalbreed.entity.gecko.HorrorZombie { *; }
+-keep class com.dreykaoas.lethalbreed.entity.gecko.LethalEntities { *; }
+-keep class com.dreykaoas.lethalbreed.entity.gecko.LethalEntities$* { *; }
+-keep class com.dreykaoas.lethalbreed.client.gecko.HorrorRenderer { *; }
+
 # Any class that OVERRIDES a Minecraft method must not have that override renamed. Blanket-safe:
 # never rename members that override a net.minecraft.* / mixin-visible method. ProGuard keeps
 # overrides of kept supertypes automatically, but MC supertypes are libraryjars (kept), so this

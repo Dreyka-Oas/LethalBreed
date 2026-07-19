@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.init;
 
 import com.dreykaoas.lethalbreed.command.LethalConfigCommand;
+import com.dreykaoas.lethalbreed.command.LethalHorrorCommand;
 import com.dreykaoas.lethalbreed.command.LethalPhaseCommand;
 import com.dreykaoas.lethalbreed.command.LethalSpecialCommand;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -17,6 +18,7 @@ public final class CommandInit {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             LethalPhaseCommand.register(dispatcher);
             LethalSpecialCommand.register(dispatcher);
+            LethalHorrorCommand.register(dispatcher);
             LethalConfigCommand.register(dispatcher);
         });
     }

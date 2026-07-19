@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.phase;
 
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -9,8 +10,9 @@ import net.minecraft.server.level.ServerLevel;
 import java.util.Random;
 
 /**
- * Server-global difficulty phase (1..15). Auto-advances on a ~10-minute timer (with random jitter),
- * monotonic (only up), capped at the last phase. Announces each change in chat. {@link ZombieVariation}
+ * Server-global difficulty phase (0, unbounded above). Auto-advances on a ~10-minute timer (with random
+ * jitter), monotonic (only up) unless {@link ProgressionConfig#phaseMaxEnabled} pins/loops it. Announces
+ * each change in chat, colored by {@link ProgressionConfig#phaseColorThresholds}. {@link ZombieVariation}
  * reads {@link #current()} when scaling a freshly-spawned zombie.
  *
  * <p>State is PERSISTED per-world via {@link PhaseSavedData} (in {@code <world>/data}), so the phase AND the
@@ -65,17 +67,43 @@ public final class PhaseManager {
         }
     }
 
-    /** Dump the full phase list to the server console so it's visible at a glance. */
+    /** Fixed preview range logged to the console on load, for a quick sanity glance (phase is unbounded,
+     *  so there's no full list to dump any more). */
+    private static final int[] LOG_PREVIEW_PHASES = {0, 1, 5, 10, 15, 20, 30, 50, 100};
+
+    /** Cyclic color palette for the phase broadcast/command text — only the tier THRESHOLDS
+     *  ({@link ProgressionConfig#phaseColorThresholds}) are configurable, this list is fixed. */
+    private static final ChatFormatting[] COLOR_PALETTE = {
+            ChatFormatting.GRAY, ChatFormatting.GREEN, ChatFormatting.YELLOW, ChatFormatting.GOLD,
+            ChatFormatting.RED, ChatFormatting.DARK_RED, ChatFormatting.LIGHT_PURPLE, ChatFormatting.DARK_PURPLE,
+    };
+
+    /** Dump a preview of the phase curve to the server console so it's visible at a glance. */
     public void logPhases() {
-        com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("[LethalBreed] Phases ({}):", PhaseConfig.count());
-        for (int i = 0; i <= PhaseConfig.count(); i++) {
-            com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("  Phase {} — {}", i, PhaseConfig.def(i).name());
+        com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("[LethalBreed] Phase curve preview:");
+        for (int i : LOG_PREVIEW_PHASES) {
+            PhaseConfig.PhaseDef d = PhaseConfig.def(i);
+            com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
+                    "  Phase {} — hp[{},{}] dmg[{},{}] spd[{},{}]",
+                    i, d.hpMin(), d.hpMax(), d.dmgMin(), d.dmgMax(), d.spdMin(), d.spdMax());
         }
+    }
+
+    /** Color for a given phase, per the configured tier thresholds (largest threshold <= phase wins). */
+    public static ChatFormatting colorFor(int phase) {
+        double[] thresholds = ProgressionConfig.phaseColorThresholds;
+        int tier = 0;
+        for (int i = 0; i < thresholds.length; i++) {
+            if (phase >= thresholds[i]) {
+                tier = i;
+            }
+        }
+        return COLOR_PALETTE[tier % COLOR_PALETTE.length];
     }
 
     /** SERVER THREAD (END_SERVER_TICK): advance the phase when its (jittered) interval has elapsed. */
     public void tick(MinecraftServer server) {
-        if (!ProgressionConfig.phaseSystemEnabled || phase >= PhaseConfig.count()) {
+        if (!ProgressionConfig.phaseSystemEnabled) {
             return;
         }
         long now = server.overworld().getGameTime();
@@ -86,7 +114,7 @@ public final class PhaseManager {
             return;
         }
         if (now - lastAdvanceGameTime >= nextIntervalTicks) {
-            phase++;
+            phase = applyCeiling(phase + 1);
             lastAdvanceGameTime = now;
             scheduleNext();
             persist();
@@ -96,15 +124,25 @@ public final class PhaseManager {
         }
     }
 
+    /** Applies the optional {@code phaseMax}/{@code phaseLoopEnabled} ceiling to a freshly-advanced phase.
+     *  Pure function (no server/instance state) so it's directly unit-testable. */
+    static int applyCeiling(int advancedPhase) {
+        if (ProgressionConfig.phaseMaxEnabled && advancedPhase >= ProgressionConfig.phaseMax) {
+            return ProgressionConfig.phaseLoopEnabled ? 1 : ProgressionConfig.phaseMax;
+        }
+        return advancedPhase;
+    }
+
     private void scheduleNext() {
         int jitter = Math.max(0, ProgressionConfig.phaseJitterTicks);
         int j = jitter > 0 ? rng.nextInt(2 * jitter + 1) - jitter : 0;
         nextIntervalTicks = Math.max(1, ProgressionConfig.phaseIntervalTicks + j);
     }
 
-    /** Force a phase (e.g. /lethalphase) and announce it. */
+    /** Force a phase (e.g. /lethalphase) and announce it. Manual override ignores {@code phaseMax} — an
+     *  admin can deliberately force any phase past the auto-advance ceiling. */
     public void setPhase(MinecraftServer server, int p) {
-        phase = Math.max(0, Math.min(PhaseConfig.count(), p));
+        phase = Math.max(0, p);
         lastAdvanceGameTime = server.overworld().getGameTime();
         scheduleNext();
         persist();
@@ -112,8 +150,8 @@ public final class PhaseManager {
     }
 
     public void broadcast(MinecraftServer server) {
-        PhaseConfig.PhaseDef d = PhaseConfig.def(phase);
+        ChatFormatting color = colorFor(phase);
         server.getPlayerList().broadcastSystemMessage(
-                Component.literal("§c☠ §lPhase " + phase + "§r§c — §6" + d.name()), false);
+                Component.literal("☠ Phase " + phase).withStyle(color, ChatFormatting.BOLD), false);
     }
 }

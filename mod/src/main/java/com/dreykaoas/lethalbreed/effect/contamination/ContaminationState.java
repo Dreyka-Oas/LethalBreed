@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.effect.contamination;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -102,7 +103,7 @@ public final class ContaminationState {
 
     /** Positive plague time-compression factor (dev command sets it; clamped to ≥ 1e-3 to avoid div-by-zero). */
     public static double devTimeScale() {
-        return Math.max(1.0e-3, ContaminationConfig.contamDevTimeScale);
+        return Math.max(ExpertConfig.expertContamTimeScaleFloor, ContaminationConfig.contamDevTimeScale);
     }
 
     /** Roll a random [minSec, maxSec] window as ticks × factor, honouring dev time-compression. */

@@ -55,6 +55,12 @@ dependencies {
     implementation("org.jocl:jocl:2.0.5")
     include("org.jocl:jocl:2.0.5")
 
+    // GeckoLib (animated entity rendering + .geo.json/.animation.json loading). Served by the Modrinth
+    // maven already declared above. `include` = Fabric Jar-in-Jar so the shipped/server jar needs no
+    // separately-installed GeckoLib. Same idiom as JOCL.
+    modImplementation("maven.modrinth:${project.property("geckolib_project")}:${project.property("geckolib_version")}")
+    include("maven.modrinth:${project.property("geckolib_project")}:${project.property("geckolib_version")}")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -121,28 +127,40 @@ loom {
         named("client") {
             runDir("run") // primary client keeps the default run dir
             source(devSourceSet) // dev harnesses on the client run classpath (dev env only)
-            // Optimized JVM args for Liberica NIK 23 (GraalVM JIT) + tuned G1GC.
-            // Conservative set: forces Graal as top-tier JIT, G1 with aikar-style tuning.
+            // Optimized JVM args for Liberica NIK 23 (GraalVM JIT) + aggressive G1GC (Aikar-style).
+            // Fixed 8G heap (no resize pauses), tight G1 pause target, pretouch + NUMA-aware — tuned for
+            // max/steady FPS on a beefy dev box (62G RAM / 16 cores) rather than a small/shared machine.
             vmArgs(
-                "-Xms2G",
-                "-Xmx4G",
+                "-Xms8G",
+                "-Xmx8G",
                 "-XX:+UnlockExperimentalVMOptions",
+                "-XX:+UnlockDiagnosticVMOptions",
                 "-XX:+UseG1GC",
-                "-XX:G1NewSizePercent=30",
-                "-XX:G1MaxNewSizePercent=40",
-                "-XX:G1HeapRegionSize=8M",
-                "-XX:G1ReservePercent=20",
-                "-XX:MaxGCPauseMillis=50",
+                "-XX:MaxGCPauseMillis=25",
+                "-XX:G1NewSizePercent=40",
+                "-XX:G1MaxNewSizePercent=50",
+                "-XX:G1HeapRegionSize=16M",
+                "-XX:G1ReservePercent=15",
                 "-XX:G1HeapWastePercent=5",
-                "-XX:InitiatingHeapOccupancyPercent=15",
+                "-XX:G1MixedGCCountTarget=4",
+                "-XX:G1MixedGCLiveThresholdPercent=90",
+                "-XX:G1RSetUpdatingPauseTimePercent=5",
+                "-XX:InitiatingHeapOccupancyPercent=10",
+                "-XX:SurvivorRatio=32",
+                "-XX:MaxTenuringThreshold=1",
                 "-XX:+ParallelRefProcEnabled",
                 "-XX:+PerfDisableSharedMem",
-                "-XX:+AlwaysActAsServerClassMachine"
+                "-XX:+AlwaysActAsServerClassMachine",
+                "-XX:+AlwaysPreTouch",
+                "-XX:+DisableExplicitGC",
+                "-XX:+UseNUMA"
             )
             // Auto-load the test world on launch (skip menus) — like StormCore.
             // World dir must exist under run/saves/ with this exact name; if absent,
             // MC drops to the menu (no crash). Create it once, then it auto-enters.
-            programArgs("--quickPlaySingleplayer", "Nouveau monde")
+            // Greenfield (huge 1:1-scale city, run/saves/Greenfield v0.5.4) makes a good stress test
+            // for zombie pathing/climbing across dense multi-story buildings.
+            programArgs("--quickPlaySingleplayer", "Greenfield v0.5.4")
         }
         // Second dev client for local multiplayer tests: its OWN run dir (so it never fights the
         // primary client / server over run/.fabric/processedMods) and it auto-connects to the local
