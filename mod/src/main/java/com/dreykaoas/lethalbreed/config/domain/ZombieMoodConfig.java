@@ -31,6 +31,9 @@ public final class ZombieMoodConfig {
     public static double fleeThreatRadius = 24.0;
     /** How far past itself (blocks) the fleer aims its retreat path, directly away from the threat. */
     public static double fleeDistance = 8.0;
+    /** Min distance² gain (blocks²) over the previous activation that still counts as "gaining ground" while
+     *  fleeing. Below this, the activation counts toward {@link #fleeStuckActivations}. 0.25 = 0.5 blocks. */
+    public static double fleeGroundGainThreshold = 0.25;
     /** Activations of failing to open distance from the threat (cornered/wall-blocked) before the fleer gives
      *  up retreating and turns to fight. Stops a cornered wounded zombie from standing passively. Default 6. */
     public static int fleeStuckActivations = 6;

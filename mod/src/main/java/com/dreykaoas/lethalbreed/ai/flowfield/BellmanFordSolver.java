@@ -152,6 +152,6 @@ final class BellmanFordSolver {
             dirZ[i] = (byte) bdz;
         })).join();
 
-        return new FlowField(s.originX, s.originZ, width, depth, s.focusY, cost, dirX, dirZ, s.flags);
+        return new FlowField(s.originX, s.originZ, width, depth, cost, dirX, dirZ);
     }
 }

@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
@@ -17,11 +18,14 @@ public final class SpecialDeath {
         if (SpecialType.fromId(z.getAttached(SpecialAttachment.SPECIAL)) != SpecialType.SPLITTER) {
             return;
         }
-        for (int i = 0; i < 2; i++) {
-            Zombie child = ChildSpawner.spawnNear(level, z, 1);
+        int count = ProgressionConfig.specialSplitterChildren;
+        int spread = ProgressionConfig.specialSplitterSpread;
+        double scale = ProgressionConfig.specialSplitterChildScale;
+        for (int i = 0; i < count; i++) {
+            Zombie child = ChildSpawner.spawnNear(level, z, spread);
             if (child != null) {
                 SpecialRoller.assign(child, SpecialType.NONE); // no chain-splitting
-                AttributeModifiers.multiplyBase(child, Attributes.SCALE, "split_small", 0.6); // 0.6x size
+                AttributeModifiers.multiplyBase(child, Attributes.SCALE, "split_small", scale);
             }
         }
     }

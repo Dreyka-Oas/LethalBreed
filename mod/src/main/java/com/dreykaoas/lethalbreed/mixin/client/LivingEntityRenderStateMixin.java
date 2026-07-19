@@ -7,7 +7,9 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-/** Adds the BOMBEUR belly-charge field to every living render state. See {@link BellyChargeHolder}. */
+/**
+ * Adds the BOMBEUR belly-charge field to every living render state. See {@link BellyChargeHolder}.
+ */
 @Environment(EnvType.CLIENT)
 @Mixin(LivingEntityRenderState.class)
 public class LivingEntityRenderStateMixin implements BellyChargeHolder {

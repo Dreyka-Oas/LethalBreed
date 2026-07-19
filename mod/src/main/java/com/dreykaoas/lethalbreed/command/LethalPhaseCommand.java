@@ -9,8 +9,9 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 /**
- * {@code /lethalphase [n]} — show the current difficulty phase, or force it to {@code n} (1..15) for
- * testing. Forcing broadcasts the phase to all players, same as an auto-advance.
+ * {@code /lethalphase [n]} — show the current difficulty phase, or force it to {@code n} (unbounded) for
+ * testing. Forcing broadcasts the phase to all players, same as an auto-advance, and ignores any
+ * configured {@code phaseMax} ceiling (manual override is deliberate).
  */
 public final class LethalPhaseCommand {
     private LethalPhaseCommand() {}
@@ -18,13 +19,13 @@ public final class LethalPhaseCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lethalphase")
                 .executes(LethalPhaseCommand::show)
-                .then(Commands.argument("n", IntegerArgumentType.integer(1, PhaseConfig.count()))
+                .then(Commands.argument("n", IntegerArgumentType.integer(1))
                         .executes(ctx -> set(ctx, IntegerArgumentType.getInteger(ctx, "n")))));
     }
 
     private static int show(CommandContext<CommandSourceStack> ctx) {
         int p = PhaseManager.current();
-        CommandFeedback.success(ctx.getSource(), "Phase " + p + " — " + PhaseConfig.def(p).name(), false);
+        CommandFeedback.success(ctx.getSource(), PhaseConfig.def(p).name(), false);
         return p;
     }
 

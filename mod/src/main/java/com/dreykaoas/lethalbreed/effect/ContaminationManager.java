@@ -4,7 +4,6 @@ import com.dreykaoas.lethalbreed.effect.contamination.ContaminationLifecycle;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationTick;
 
-import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -32,17 +31,12 @@ import net.minecraft.world.entity.LivingEntity;
  * <p>This class is the public facade, kept thin: it owns no state and no logic of its own. The actual attachments,
  * shared state, and behavior live under {@code com.dreykaoas.lethalbreed.effect.contamination} (state, episodes,
  * hallucination, lifecycle, symptoms, and the per-tick sweep) — this class only re-exports
- * {@link com.dreykaoas.lethalbreed.effect.contamination.ContaminationState}'s public attachments/counters for
- * external callers and delegates every method straight through, so the dependency stays one-way (this facade
+ * {@link com.dreykaoas.lethalbreed.effect.contamination.ContaminationState}'s dev counters for the headless
+ * harness and delegates every method straight through, so the dependency stays one-way (this facade
  * depends on {@code contamination}, never the reverse).
  */
 public final class ContaminationManager {
     private ContaminationManager() {}
-
-    public static final AttachmentType<Integer> CONTAM = ContaminationState.CONTAM;
-    public static final AttachmentType<Boolean> SYMPTOMATIC = ContaminationState.SYMPTOMATIC;
-    public static final AttachmentType<Integer> LEVEL = ContaminationState.LEVEL;
-    public static final AttachmentType<Double> INTENSITY = ContaminationState.INTENSITY;
 
     // Dev instrumentation (headless harness).
     public static final java.util.concurrent.atomic.AtomicInteger INFECT_COUNT = ContaminationState.INFECT_COUNT;

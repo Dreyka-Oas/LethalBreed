@@ -16,13 +16,21 @@ import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
 import com.dreykaoas.lethalbreed.util.Players;
 import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
+import com.dreykaoas.lethalbreed.entity.gecko.HorrorZombie;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Witch;
+import net.minecraft.world.entity.monster.illager.AbstractIllager;
+import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
 
 /** Registers the entity-driven gameplay hooks: load/unload tracking, sound, damage, and death specials. */
 public final class EntityEventsInit {
@@ -117,6 +125,11 @@ public final class EntityEventsInit {
                 SpecialBehavior.onDeath(z, sl);
             }
             ContaminationManager.onDeath(entity, sl);
+            // A biped slain by a horror zombie rises as a horror zombie of the same strain — always, not
+            // just on the difficulties where vanilla converts villagers. The horde grows.
+            if (source.getEntity() instanceof HorrorZombie hz && !(entity instanceof Zombie) && isBiped(entity)) {
+                raiseAsHorror(hz, entity, sl);
+            }
             // Victory celebration: if a tracked zombie dealt the direct killing blow on non-kin prey, let it
             // celebrate — ZombieMood.tryCelebrate no-ops unless the area is now clear of other prey.
             if (!(entity instanceof Zombie) && source.getEntity() instanceof Zombie killer) {
@@ -126,5 +139,21 @@ public final class EntityEventsInit {
                 }
             }
         });
+    }
+
+    /** Humanoid "bipeds" that rise when a horror zombie kills them (villagers, illagers, piglins, witches). */
+    private static boolean isBiped(Entity e) {
+        return e instanceof AbstractVillager || e instanceof AbstractIllager
+                || e instanceof AbstractPiglin || e instanceof Witch;
+    }
+
+    /** Spawn a horror zombie of the killer's variant on the fallen victim's spot, facing the victim's way. */
+    private static void raiseAsHorror(HorrorZombie killer, LivingEntity victim, ServerLevel level) {
+        @SuppressWarnings("unchecked")
+        EntityType<HorrorZombie> type = (EntityType<HorrorZombie>) killer.getType();
+        HorrorZombie risen = type.spawn(level, victim.blockPosition(), EntitySpawnReason.CONVERSION);
+        if (risen != null) {
+            risen.absSnapTo(victim.getX(), victim.getY(), victim.getZ(), victim.getYRot(), 0.0f);
+        }
     }
 }

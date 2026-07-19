@@ -13,6 +13,8 @@ public final class ConfigCategory {
         // dev/debug-named options belong in the Dev tab regardless of other keyword matches (e.g.
         // devClimbTest/debugClimb would otherwise be pulled into Climb by the "climb" rule below).
         if (n.startsWith("dev") || n.startsWith("debug")) return "Dev";
+        // Expert / low-level constants (tolerances, safety clamps, vanilla magic numbers) get their own tab.
+        if (n.startsWith("expert")) return "Expert";
         if (n.contains("contam")) return "Contamination";
         if (n.contains("flee") || n.contains("regen") || n.contains("regain") || n.contains("distress")
                 || n.contains("celebrat") || n.contains("mood") || n.contains("scream")

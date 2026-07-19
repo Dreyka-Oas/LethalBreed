@@ -1,9 +1,20 @@
 package com.dreykaoas.lethalbreed.phase;
 
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+
 /**
- * The 15-phase escalation table as data. Each {@link PhaseDef} holds the per-zombie roll RANGES (which widen
- * with phase = "plus haut, plus random") and the gear/effect parameters (which rise = "plus agressif").
- * Tier indices map into {@link ZombieEquipper}'s material ladders (0 = wood/leather … 5 = netherite).
+ * The escalation curve as FORMULAS of the phase number, not a static table — so difficulty keeps rising
+ * forever instead of plateauing past some fixed phase count. Each {@link PhaseDef} holds the per-zombie
+ * roll RANGES (which widen with phase = "plus haut, plus random") and the gear/effect parameters (which
+ * rise = "plus agressif"). Tier indices map into {@link ZombieEquipper}'s material ladders (0 = wood/
+ * leather … 5 = netherite).
+ *
+ * <p>Stat curves (hp/dmg/spd) use an accelerating power curve {@code 1.0 + growth * phase^exponent};
+ * gear/effect curves use a saturating curve {@code ceiling - ceiling * decay^phase} (rises then approaches
+ * a ceiling, matching the old table's shape near phase 15 but continuing cleanly to infinity instead of
+ * clamping on an array index). All growth/decay/ceiling parameters live in {@link ProgressionConfig} and
+ * are tuned so {@code def(15)} reproduces the old hand-tuned table almost exactly — no difficulty jump for
+ * a world already at phase 15 when this ships.
  */
 public final class PhaseConfig {
     private PhaseConfig() {}
@@ -18,35 +29,52 @@ public final class PhaseConfig {
             int enchantLevel,
             double effChance, int effCount, int effMaxAmp) {}
 
-    public static final PhaseDef[] PHASES = {
-            //              name                hp         dmg        spd        armor      weapon     ench eff
-            // Phase 0 = "classic": no mod zombies, no hostile mobs spawn at all (handled in the spawn hook).
-            new PhaseDef("Classic", 1.00,1.00, 1.00,1.00, 1.00,1.00, 0.00,0, 0.00,0, 0, 0.00,0,0),
-            new PhaseDef("Cadaver dormiens", 1.00,1.00, 1.00,1.00, 1.00,1.00, 0.00,0, 0.00,0, 0, 0.00,0,0),
-            new PhaseDef("Mortifera vulgaris", 1.00,1.15, 1.00,1.10, 1.00,1.05, 0.10,0, 0.00,0, 0, 0.10,1,0),
-            new PhaseDef("Reanimatus gregarius", 1.05,1.25, 1.05,1.15, 1.00,1.10, 0.20,0, 0.05,0, 0, 0.15,1,0),
-            new PhaseDef("Putredo errans",   1.10,1.35, 1.10,1.20, 1.00,1.10, 0.35,0, 0.10,0, 0, 0.20,1,1),
-            new PhaseDef("Caterva putrescens", 1.20,1.50, 1.15,1.30, 1.05,1.15, 0.50,0, 0.20,1, 0, 0.25,2,1),
-            new PhaseDef("Praedator vorax",  1.30,1.70, 1.25,1.45, 1.05,1.20, 0.60,1, 0.30,1, 0, 0.30,2,1),
-            new PhaseDef("Miles necroticus", 1.40,1.90, 1.35,1.60, 1.10,1.25, 0.70,2, 0.40,3, 0, 0.35,2,1),
-            new PhaseDef("Legio necrotica",  1.50,2.10, 1.45,1.75, 1.10,1.30, 0.80,2, 0.50,3, 0, 0.40,2,2),
-            new PhaseDef("Venator pernix",   1.60,2.30, 1.55,1.90, 1.20,1.40, 0.85,3, 0.55,3, 0, 0.50,2,2),
-            new PhaseDef("Bestia immanis",   1.80,2.60, 1.80,2.20, 1.15,1.35, 0.90,3, 0.60,3, 0, 0.55,2,2),
-            new PhaseDef("Veteranus pestifer", 2.00,2.90, 1.90,2.30, 1.20,1.40, 0.95,3, 0.65,3, 1, 0.60,3,2),
-            new PhaseDef("Biodivergence",    2.20,3.20, 2.00,2.50, 1.25,1.45, 1.00,4, 0.70,4, 2, 0.70,3,2),
-            new PhaseDef("Tyrannus letalis", 2.40,3.50, 2.20,2.80, 1.30,1.50, 1.00,4, 0.80,4, 3, 0.80,3,3),
-            new PhaseDef("Pestis apocalyptica", 2.70,4.00, 2.40,3.00, 1.35,1.55, 1.00,5, 0.90,4, 4, 0.90,3,3),
-            new PhaseDef("Necrosis terminalis", 3.00,4.50, 2.50,3.20, 1.40,1.60, 1.00,5, 1.00,5, 5, 1.00,3,3),
-    };
-
-    /** Phase index maps directly: phase 0 = PHASES[0] ("Classic"), phase 15 = PHASES[15]. */
-    public static PhaseDef def(int phase) {
-        int i = Math.max(0, Math.min(PHASES.length - 1, phase));
-        return PHASES[i];
+    /** Accelerating stat curve: {@code 1.0 + growth * phase^exponent}. */
+    private static double stat(double growth, double exponent, int phase) {
+        return 1.0 + growth * Math.pow(phase, exponent);
     }
 
-    /** Highest phase number (15). Phase 0 is the classic base, so the escalation runs 0..count(). */
-    public static int count() {
-        return PHASES.length - 1;
+    /** Saturating gear/effect curve: rises from 0 toward {@code ceiling}, never exceeding it. */
+    private static double sat(double ceiling, double decay, int phase) {
+        return ceiling - ceiling * Math.pow(decay, phase);
+    }
+
+    private static double clamp01(double v) {
+        return Math.max(0.0, Math.min(1.0, v));
+    }
+
+    /** Phase 0 = "Classic" (no bonus, no gear, no hostile spawns — handled in the spawn hook). Phase is
+     *  unbounded above; every field is computed live from the configured curve. */
+    public static PhaseDef def(int phase) {
+        int p = Math.max(0, phase);
+
+        double hpMax = stat(ProgressionConfig.phaseHpMaxGrowth, ProgressionConfig.phaseHpExponent, p);
+        double hpMin = stat(ProgressionConfig.phaseHpMinGrowth, ProgressionConfig.phaseHpExponent, p);
+        double dmgMax = stat(ProgressionConfig.phaseDmgMaxGrowth, ProgressionConfig.phaseDmgExponent, p);
+        double dmgMin = stat(ProgressionConfig.phaseDmgMinGrowth, ProgressionConfig.phaseDmgExponent, p);
+        double spdMax = stat(ProgressionConfig.phaseSpdMaxGrowth, ProgressionConfig.phaseSpdExponent, p);
+        double spdMin = stat(ProgressionConfig.phaseSpdMinGrowth, ProgressionConfig.phaseSpdExponent, p);
+
+        double armorChance = clamp01(sat(1.0, ProgressionConfig.phaseArmorChanceDecay, p));
+        double weaponChance = clamp01(sat(1.0, ProgressionConfig.phaseWeaponChanceDecay, p));
+        // Hard array-bounds clamp [0,5]: ZombieEquipper's material ladders have exactly 6 tiers.
+        int armorMaxTier = clampTier((int) Math.floor(sat(5, ProgressionConfig.phaseArmorTierDecay, p)));
+        int weaponMaxTier = clampTier((int) Math.floor(sat(5, ProgressionConfig.phaseWeaponTierDecay, p)));
+        int enchantLevel = (int) Math.floor(
+                sat(ProgressionConfig.phaseEnchantCeiling, ProgressionConfig.phaseEnchantDecay, p));
+
+        double effChance = clamp01(sat(1.0, ProgressionConfig.phaseEffChanceDecay, p));
+        int effCount = (int) Math.floor(
+                sat(ProgressionConfig.phaseEffCountCeiling, ProgressionConfig.phaseEffCountDecay, p));
+        int effMaxAmp = (int) Math.floor(
+                sat(ProgressionConfig.phaseEffAmpCeiling, ProgressionConfig.phaseEffAmpDecay, p));
+
+        return new PhaseDef("Phase " + p, hpMin, hpMax, dmgMin, dmgMax, spdMin, spdMax,
+                armorChance, armorMaxTier, weaponChance, weaponMaxTier, enchantLevel,
+                effChance, effCount, effMaxAmp);
+    }
+
+    private static int clampTier(int tier) {
+        return Math.max(0, Math.min(5, tier));
     }
 }

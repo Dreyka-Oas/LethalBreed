@@ -22,6 +22,10 @@ public final class CombatMoveConfig {
     public static double leapUpward = 0.42;
     /** Max absolute vertical offset (blocks) to target for a leap to fire (too high/low = no pounce). */
     public static double leapMaxVerticalDiff = 3.0;
+    /** Horizontal distance (blocks) ahead a leap probes for solid ground before committing (never leap into a gap). */
+    public static int leapLandingScanDist = 3;
+    /** Vertical depth (blocks below foot level) the leap-landing probe scans for ground. */
+    public static int leapLandingScanDepth = 3;
 
     /** Max vertical blocks a zombie breaks to pass an obstacle (size-aware, ceil of its height). */
     public static int maxBreakHeight = 4;
@@ -38,6 +42,14 @@ public final class CombatMoveConfig {
     /** Horizontal swim speed per tick toward the target while in water (driven directly, not via nav, so
      *  the zombie heads straight at the target instead of circling). Kept modest — vanilla swim pace. */
     public static double waterSwimSpeed = 0.06;
+    /** Vertical offset (blocks) below the zombie past which a target counts as "submerged below" (triggers a dive). */
+    public static double waterSubmergeOffset = 0.5;
+    /** Horizontal distance (blocks) to the target within which the swim drive stops pushing. */
+    public static double waterArriveDistance = 0.6;
+    /** Swim velocity smoothing: fraction of the DESIRED velocity blended in each tick (the rest keeps current). */
+    public static double waterVelocityBlend = 0.4;
+    /** Upward impulse (blocks/tick) used to hop/stack at the water surface when a solid edge blocks progress. */
+    public static double waterSurfaceJump = 0.42;
 
     // ---- Climb pacing ----
     /** Activations of no horizontal progress before the zombie is "stuck" and may break/build/pillar.
@@ -65,6 +77,14 @@ public final class CombatMoveConfig {
     /** Max vertical gap (blocks) for the arrived/melee stop to apply (a target far above/below isn't a
      *  melee, so block ops may still run to climb/descend to it). */
     public static double meleeStopHeight = 1.5;
+    /** Target within this vertical distance (blocks) → the pillar climb is done and hops off toward the target. */
+    public static double pillarFinishHeight = 1.0;
+    /** Horizontal speed (blocks/tick) of the hop off the top of a finished pillar. */
+    public static double pillarFinishSpeed = 0.4;
+    /** Upward impulse (blocks/tick) of the hop off the top of a finished pillar. */
+    public static double pillarFinishJump = 0.42;
+    /** Target within this horizontal distance (blocks) counts as "directly below" → dig straight down after it. */
+    public static double descendDirectlyBelowRadius = 1.5;
 
     // ---- Progressive breaking (player-like) ----
     /** Break progress added per tick (divided by block hardness). Lower = slower mining. */

@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.mixin;
 
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.phase.PhaseTable;
 
 import net.minecraft.server.level.ServerLevel;
@@ -16,8 +17,9 @@ import java.util.List;
 
 /**
  * Scales MONSTER spawn FREQUENCY by the phase. Vanilla runs one spawn pass per chunk per tick; we add
- * {@code ceil(frequencyPerPhase[phase]) - 1} extra passes for MONSTER (each pass still honours the mob-cap,
- * so this raises how FAST the population fills up, not the ceiling — that's the mob-cap mixin's job).
+ * {@code ceil(PhaseTable.frequency(phase)) - 1} extra passes for MONSTER (each pass still honours the
+ * mob-cap, so this raises how FAST the population fills up, not the ceiling — that's the mob-cap mixin's
+ * job). Unbounded — no per-phase ceiling.
  *
  * <p>Phase 0 → factor 0 → no extra passes (and the mob-cap is 0 anyway, so nothing spawns).
  */
@@ -30,7 +32,7 @@ public abstract class SpawnFrequencyMixin {
         if (!WorldSpawnConfig.nightSpawnEnabled || !categories.contains(MobCategory.MONSTER)) {
             return;
         }
-        int extra = (int) Math.ceil(PhaseTable.sample(WorldSpawnConfig.frequencyPerPhase)) - 1;
+        int extra = (int) Math.ceil(PhaseTable.frequency(PhaseManager.current())) - 1;
         SpawnStateInvoker inv = (SpawnStateInvoker) state;
         if (extra <= 0 || !inv.lethalbreed$canSpawnLocal(MobCategory.MONSTER, chunk.getPos())) {
             return;

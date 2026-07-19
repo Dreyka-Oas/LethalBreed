@@ -114,7 +114,8 @@ public final class Descend {
         //     block per activation — so the zombie follows its target down the hole instead of stranding above.
         double hx = owner.tgtX() - entity.getX();
         double hz = owner.tgtZ() - entity.getZ();
-        boolean directlyBelow = hx * hx + hz * hz <= 2.25; // within ~1.5 blocks horizontally
+        double dbr = CombatMoveConfig.descendDirectlyBelowRadius;
+        boolean directlyBelow = hx * hx + hz * hz <= dbr * dbr; // within ~1.5 blocks horizontally by default
         BlockPos straightUnder = new BlockPos(bx, by - 1, bz);
         if (directlyBelow && MoveMath.breakableSolid(level, straightUnder)) {
             entity.getNavigation().stop();

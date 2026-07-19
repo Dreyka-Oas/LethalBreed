@@ -56,6 +56,9 @@ public final class FlowConfig {
     public static int flowWaypointStep = 6;
     /** Navigation speed modifier when following the flow field. */
     public static double navSpeed = 1.0;
+    /** Target more than this many blocks above → navigate to the base of its column (own Y) so the zombie walks
+     *  up and closes the vertical gap, instead of aiming at the target's own (higher) Y. */
+    public static double navYThreshold = 1.0;
     /** Extra path cost to route THROUGH a breakable block (vs detour). Lower = break more eagerly. */
     public static int flowBreakCost = 60;
     /** Extra path cost to BRIDGE a gap with dirt (vs detour). */
@@ -75,18 +78,8 @@ public final class FlowConfig {
      *  horizontal distance of it. Generous on purpose — the climb tops out then walks to the target, so it no
      *  longer needs to be perfectly lined up. Too tight and zombies stall below a target they can't reach. */
     public static double climbHorizRadius = 5.0;
-    /** Spider wall-scale: when a flush vertical wall blocks the path to an overhead target, the zombie scales
-     *  it directly (drives upward velocity, hugging the face — NO blocks placed) instead of pillaring beside
-     *  it. ON leaves a clean world (no dirt columns); OFF falls back to the dirt pillar for every overhead.
-     *  Default OFF: velocity-scaling reads as a levitation glitch (zombie rises a bare wall with nothing under
-     *  it), so pillar-with-blocks is the intuitive default. */
-    public static boolean wallClimbEnabled = false;
-    /** Upward speed (blocks/tick) when a zombie scales a flush wall toward an overhead target (≈ vanilla
-     *  ladder 0.2). Spider-style — no blocks are placed, so nothing is ever left stranding the zombie. */
-    public static double wallClimbSpeed = 0.2;
-    /** Give up a wall-scale after rising this many blocks without topping out / reaching the target — safety
-     *  cap against scaling an endless wall toward an unreachable sky target. The scale places no blocks, so a
-     *  tall attempt leaves nothing behind. On give-up the zombie falls back to a dirt pillar. */
+    /** Safety cap: give up an ascent after rising this many blocks without topping out / reaching the target
+     *  (guards against chasing an unreachable sky target). On give-up the zombie falls back to a dirt pillar. */
     public static int maxClimbHeight = 24;
     /** Activations a zombie waits before re-attempting a climb it just gave up on (too tall / no progress) —
      *  stops it jittering up-and-down the same unreachable wall or column forever. */

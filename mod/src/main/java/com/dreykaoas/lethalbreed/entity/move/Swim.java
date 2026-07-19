@@ -18,6 +18,11 @@ public final class Swim {
     private Swim() {
     }
 
+    // Scratch pos for the every-tick surface-edge reads below (server-thread only). Avoids allocating a fresh
+    // BlockPos (+ another via .above()) each swim tick. NOT used for tryBreak, which must hand an immutable
+    // BlockPos to the break queue.
+    private static final BlockPos.MutableBlockPos EDGE = new BlockPos.MutableBlockPos();
+
     /** Drive the swim. Called every tick by {@code SmartZombie.swimStep} after its guard has passed. */
     public static void drive(SmartZombie owner, ServerLevel level, WorldAIContext ctx) {
         Zombie entity = owner.entity();
@@ -29,7 +34,8 @@ public final class Swim {
         double txx = haveLive ? target.getX() : owner.tgtX();
         double tyy = haveLive ? target.getY() : owner.tgtY();
         double tzz = haveLive ? target.getZ() : owner.tgtZ();
-        boolean targetBelow = haveLive && target.isInWater() && tyy < entity.getY() - 0.5;
+        boolean targetBelow = haveLive && target.isInWater()
+                && tyy < entity.getY() - CombatMoveConfig.waterSubmergeOffset;
 
         // Drive the swim directly instead of via the path navigation — the water pathfinder kept failing to
         // settle and the zombie spun in circles. Stop nav, face the target, ease toward it.
@@ -46,10 +52,12 @@ public final class Swim {
         // Horizontal: ease toward the target (blend with current velocity so it accelerates/decelerates
         // smoothly instead of teleport-gliding at a fixed speed). Zero the drive within ~0.6 blocks.
         net.minecraft.world.phys.Vec3 v = entity.getDeltaMovement();
-        double desiredX = hlen > 0.6 ? hx / hlen * CombatMoveConfig.waterSwimSpeed : 0.0;
-        double desiredZ = hlen > 0.6 ? hz / hlen * CombatMoveConfig.waterSwimSpeed : 0.0;
-        double nvx = v.x * 0.6 + desiredX * 0.4;
-        double nvz = v.z * 0.6 + desiredZ * 0.4;
+        double arrive = CombatMoveConfig.waterArriveDistance;
+        double desiredX = hlen > arrive ? hx / hlen * CombatMoveConfig.waterSwimSpeed : 0.0;
+        double desiredZ = hlen > arrive ? hz / hlen * CombatMoveConfig.waterSwimSpeed : 0.0;
+        double blend = CombatMoveConfig.waterVelocityBlend;
+        double nvx = v.x * (1.0 - blend) + desiredX * blend;
+        double nvz = v.z * (1.0 - blend) + desiredZ * blend;
         // Vertical: dive after a submerged target, else surface gently and hold at the top.
         double vy = targetBelow ? -CombatMoveConfig.waterDiveSpeed
                 : (entity.isUnderWater() ? CombatMoveConfig.waterRiseSpeed : 0.0);
@@ -58,11 +66,13 @@ public final class Swim {
         // it's too tall (solid at foot+1) — repeated hops let zombies pile onto EACH OTHER (collision) and
         // scale a high bank they can't step onto alone.
         if (!targetBelow && (sdx != 0 || sdz != 0)) {
-            BlockPos ahead = entity.blockPosition().offset(sdx, 0, sdz);
-            boolean blockedFoot = level.getBlockState(ahead).isSolidRender();
-            boolean tooTall = level.getBlockState(ahead.above()).isSolidRender();
+            BlockPos base = entity.blockPosition();
+            int ax = base.getX() + sdx, ay = base.getY(), az = base.getZ() + sdz;
+            boolean blockedFoot = level.getBlockState(EDGE.set(ax, ay, az)).isSolidRender();
+            boolean tooTall = level.getBlockState(EDGE.set(ax, ay + 1, az)).isSolidRender();
             if (blockedFoot || tooTall) {
-                vy = 0.42; // vanilla jump impulse; kept up each tick so a stalled group keeps hopping/stacking
+                // kept up each tick so a stalled group keeps hopping/stacking
+                vy = CombatMoveConfig.waterSurfaceJump;
             }
         }
 

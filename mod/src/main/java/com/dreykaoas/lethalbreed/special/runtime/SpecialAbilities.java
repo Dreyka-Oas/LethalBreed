@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
@@ -19,13 +20,15 @@ public final class SpecialAbilities {
 
     /** BOMBEUR: explode and remove self when close to the target. */
     public static void bomb(ServerLevel level, Zombie z) {
-        level.explode(z, z.getX(), z.getY() + 0.5, z.getZ(), 3.0f, Level.ExplosionInteraction.NONE);
+        level.explode(z, z.getX(), z.getY() + 0.5, z.getZ(),
+                (float) ProgressionConfig.specialBombeurPower, Level.ExplosionInteraction.NONE);
         z.discard();
     }
 
     /** HURLEUR: hand the caller's target to nearby target-less smart zombies. */
     public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAIContext ctx) {
-        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(), 24.0)) {
+        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
+                ProgressionConfig.specialHurleurRadius)) {
             if (o != sz && !o.hasTarget()) {
                 o.entity().setTarget(tgt);
                 o.pursuit().setTarget(tgt, tgt.getX(), tgt.getY(), tgt.getZ());
@@ -36,22 +39,30 @@ public final class SpecialAbilities {
 
     /** SOIGNEUR: grant regeneration to nearby living smart zombies. */
     public static void heal(SmartZombie sz, Zombie z, WorldAIContext ctx) {
-        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(), 8.0)) {
+        for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
+                ProgressionConfig.specialSoigneurRadius)) {
             if (o != sz && o.entity().isAlive()) {
-                o.entity().addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0, false, false, true));
+                o.entity().addEffect(new MobEffectInstance(MobEffects.REGENERATION,
+                        ProgressionConfig.specialSoigneurRegenTicks, ProgressionConfig.specialSoigneurRegenAmp,
+                        false, false, true));
                 SpecialBehavior.HEAL_COUNT.incrementAndGet();
             }
         }
     }
 
-    /** NECROMANCIEN: summon 1–2 child zombies, capped against an already-dense local pack. */
+    /** NECROMANCIEN: summon child zombies, capped against an already-dense local pack. */
     public static void summon(ServerLevel level, Zombie z, WorldAIContext ctx) {
-        if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(), 12.0).size() > 40) {
+        if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
+                ProgressionConfig.specialNecromancienDensityRadius).size()
+                > ProgressionConfig.specialNecromancienDensityCap) {
             return;
         }
-        int n = 1 + level.getRandom().nextInt(2);
+        int min = ProgressionConfig.specialNecromancienMinChildren;
+        int max = Math.max(min, ProgressionConfig.specialNecromancienMaxChildren);
+        int n = min + level.getRandom().nextInt(max - min + 1);
+        int spread = ProgressionConfig.specialNecromancienSpread;
         for (int i = 0; i < n; i++) {
-            if (ChildSpawner.spawnNear(level, z, 2) != null) {
+            if (ChildSpawner.spawnNear(level, z, spread) != null) {
                 SpecialBehavior.SUMMON_COUNT.incrementAndGet();
             }
         }

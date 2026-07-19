@@ -43,15 +43,9 @@ public final class WorldSpawnConfig {
     /** Only plain Zombie spawns. When ON, every other hostile (skeleton, creeper, husk, drowned, zombie
      *  villager, zombified piglin, spider, …) is cancelled at spawn, in EVERY phase. */
     public static boolean onlyPlainZombie = true;
-    /** Per-phase multiplier on the zombie night mob-cap (how many can exist at once). Index = phase 0..15.
-     *  Phase 0 = 0 (classic, no spawns). */
-    public static double[] mobcapPerPhase = {
-            0.0, 1.5, 2.0, 2.6, 3.3, 4.1, 5.0, 6.0, 7.1, 8.3, 9.6, 11.0, 12.5, 14.1, 15.8, 18.0
-    };
-    /** Per-phase multiplier on the spawn frequency (how fast they appear). Index = phase 0..15. */
-    public static double[] frequencyPerPhase = {
-            0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0
-    };
+    // Mob-cap and spawn-frequency multipliers are formula-driven (unbounded, no per-phase table any
+    // more) — see PhaseTable.mobcap()/frequency() and the phaseMobcap*/phaseFrequency* knobs in
+    // ProgressionConfig.
 
     // ---- Spawn control (Phase 1) ----
     /** Discard baby zombies on load. */

@@ -9,7 +9,6 @@ import com.dreykaoas.lethalbreed.entity.move.Descend;
 import com.dreykaoas.lethalbreed.entity.move.MoveMath;
 import com.dreykaoas.lethalbreed.entity.move.Obstacle;
 import com.dreykaoas.lethalbreed.entity.move.PillarClimb;
-import com.dreykaoas.lethalbreed.entity.move.WallClimb;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -23,7 +22,7 @@ public final class MoveDispatch {
     }
 
     public static void choose(SmartZombie owner, ServerLevel level, WorldAIContext ctx, PillarClimb pillar,
-                              WallClimb wall, LivingEntity te, double dx, double dz, double dy, double horizSq,
+                              LivingEntity te, double dx, double dz, double dy, double horizSq,
                               boolean stuck, int bx, int bz) {
         // Arrived (in range + line of sight) → let vanilla melee finish it; do no block ops.
         boolean canHit = te != null && te.isAlive()
@@ -45,11 +44,11 @@ public final class MoveDispatch {
         int sdx = MoveMath.stepSign(dx);
         int sdz = MoveMath.stepSign(dz);
         if (targetOverhead) {
-            // Prefer a clean spider wall-scale the moment a flush wall is adjacent. With no wall to scale, only
-            // build a dirt pillar once genuinely STUCK (no horizontal progress) — otherwise keep walking toward
-            // the wall/target this tick, so a zombie still 2-5 blocks out reaches the wall and scales it instead
-            // of pillaring a dirt tower in open ground short of it.
-            if (!wall.initiate(level, dx, dz) && stuck) {
+            // Build a dirt pillar to reach an overhead target, but only once genuinely STUCK (no horizontal
+            // progress) — otherwise keep walking toward the wall/target this tick, so a zombie still 2-5 blocks
+            // out reaches the base instead of pillaring a dirt tower in open ground short of it. The pillar
+            // always places blocks under itself (it stands on what it builds) — never a bare velocity wall-scale.
+            if (stuck) {
                 pillar.initiate();
             }
         } else if (targetUnderfoot) {

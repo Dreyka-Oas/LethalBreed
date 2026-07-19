@@ -53,10 +53,6 @@ public final class LethalBreedClientConfig {
         return instance;
     }
 
-    public static boolean sodiumPresent() {
-        return sodiumPresent;
-    }
-
     /** Effective per-frame distance cull, honoring the master + Sodium-adapt flags. */
     public double effectiveCullDistanceSq() {
         if (!enabled || !cullDistantZombies) {

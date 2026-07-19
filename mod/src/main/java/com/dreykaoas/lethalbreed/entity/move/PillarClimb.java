@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
@@ -62,9 +64,11 @@ public final class PillarClimb extends Ascent {
         }
 
         // Reached the target's height → hop forward off the column toward the target and stop.
-        if (!owner.hasTarget() || dyToTarget < 1.0) {
-            if (h > 0.001) {
-                entity.setDeltaMovement(hx / h * 0.4, MoveMath.jumpVelocity(entity, 0.42), hz / h * 0.4);
+        if (!owner.hasTarget() || dyToTarget < CombatMoveConfig.pillarFinishHeight) {
+            if (h > ExpertConfig.expertPillarHeadingEpsilon) {
+                double fs = CombatMoveConfig.pillarFinishSpeed;
+                entity.setDeltaMovement(hx / h * fs,
+                        MoveMath.jumpVelocity(entity, CombatMoveConfig.pillarFinishJump), hz / h * fs);
                 entity.hurtMarked = true;
             }
             finish();
@@ -76,7 +80,8 @@ public final class PillarClimb extends Ascent {
         // pillaring into a roof: request the block each tick (progressive break) and keep the column running so
         // the zombie resumes climbing once it's gone. Only break breakable blocks — bedrock/containers stop us.
         BlockPos ceilPos = BlockPos.containing(
-                entity.getX(), entity.getY() + entity.getBbHeight() + 0.25, entity.getZ());
+                entity.getX(), entity.getY() + entity.getBbHeight() + ExpertConfig.expertPillarCeilingOffset,
+                entity.getZ());
         boolean ceiling = level.getBlockState(ceilPos).blocksMotion();
         if (ceiling && MoveMath.breakableSolid(level, ceilPos)) {
             ctx.breakManager().request(ceilPos, entity);
@@ -109,7 +114,7 @@ public final class PillarClimb extends Ascent {
             entity.hurtMarked = true;
         } else {
             // Airborne and clear of the block we left → drop a support into that cell so we land one higher.
-            if (entity.getY() >= pillarStandY + 1.0) {
+            if (entity.getY() >= pillarStandY + ExpertConfig.expertPillarSupportHeight) {
                 ctx.blockOps().enqueuePlace(new BlockPos(pillarColX, pillarStandY, pillarColZ));
             }
         }

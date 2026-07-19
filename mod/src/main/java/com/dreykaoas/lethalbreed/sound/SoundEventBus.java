@@ -24,10 +24,17 @@ import java.util.Map;
  * grid, setting their sound target. Server-thread only.
  */
 public final class SoundEventBus {
+    // How often the full-world entity scan (tickEntities) actually runs. A moving creature's noise refreshes a
+    // zombie's short-term memory (~10 s window), so scanning every Nth tick instead of every tick is imperceptible
+    // for pursuit while cutting the per-tick getAllEntities() sweep by N×. Player footsteps (tickPlayers) and event
+    // distribution (process) still run EVERY tick — only the O(all entities) creature scan is throttled.
+    private static final int ENTITY_SCAN_INTERVAL = 4;
+
     // event = {x, y, z, radius}
     private final List<double[]> events = new ArrayList<>();
     // playerId -> last {x, y, z}
     private final Map<Integer, double[]> lastPlayerPos = new HashMap<>();
+    private int entityScanCounter = 0;
 
     /** Queue a sound at a world position with a hearing radius. */
     public void emit(double x, double y, double z, double radius) {
@@ -70,6 +77,10 @@ public final class SoundEventBus {
      *  A loud action (arm swing) carries {@code ×soundLoudMultiplier}, mirroring the acquisition hearing rule. */
     public void tickEntities(ServerLevel level) {
         if (!TargetingConfig.soundEnabled) {
+            return;
+        }
+        // Throttle the O(all entities) sweep — see ENTITY_SCAN_INTERVAL. Cheap early-out on the off ticks.
+        if ((entityScanCounter++ % ENTITY_SCAN_INTERVAL) != 0) {
             return;
         }
         double base = TargetingConfig.soundBaseRadius;

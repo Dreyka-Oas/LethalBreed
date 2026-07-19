@@ -9,7 +9,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 /**
  * The main per-server-tick sweep over tracked victims: cure roll, aging, latent/symptomatic branching, the
@@ -19,12 +19,20 @@ import java.util.HashSet;
 public final class ContaminationTick {
     private ContaminationTick() {}
 
+    // Reused snapshot buffer so the per-tick sweep can mutate `tracked` (cure/removals) mid-iteration without a
+    // ConcurrentModificationException — WITHOUT allocating and rehashing a fresh HashSet every server tick.
+    // Server-thread only, non-reentrant (nothing in the loop calls tick() again), so a static scratch is safe.
+    private static final ArrayList<LivingEntity> SNAPSHOT = new ArrayList<>();
+
     public static void tick(MinecraftServer server) {
         if (!ContaminationConfig.contaminationEnabled || ContaminationState.tracked.isEmpty()) {
             return;
         }
         long t = server.getTickCount();
-        for (LivingEntity e : new HashSet<>(ContaminationState.tracked)) {
+        SNAPSHOT.clear();
+        SNAPSHOT.addAll(ContaminationState.tracked);
+        for (int i = 0; i < SNAPSHOT.size(); i++) {
+            LivingEntity e = SNAPSHOT.get(i);
             if (e == null || e.isRemoved() || !e.isAlive() || !(e.level() instanceof ServerLevel level)) {
                 ContaminationState.tracked.remove(e);
                 continue;
@@ -102,7 +110,7 @@ public final class ContaminationTick {
                 }
                 if (e instanceof Player p) {
                     // Exhaustion drains food gradually: 4.0 exhaustion = 1 food point, so this removes ~dmg food.
-                    p.getFoodData().addExhaustion(dmg * 4.0f);
+                    p.getFoodData().addExhaustion(dmg * (float) ContaminationConfig.contamFoodExhaustionMult);
                 }
                 ContaminationState.nextPulse.put(e, t + rollIntervalTicks());
             }

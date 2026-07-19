@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.special;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
+import com.dreykaoas.lethalbreed.entity.gecko.HorrorZombie;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -28,7 +29,10 @@ public final class SpecialRoller {
     private SpecialRoller() {}
 
     public static void roll(Zombie z, Random r, int phase) {
-        if (!ProgressionConfig.specialEnabled) {
+        // The custom horror zombie is its own distinct boss-type entity — it never rolls a vanilla-zombie
+        // special (its horror comes from its own model/animations, and vanilla-model specials like the
+        // BOMBEUR belly-swell can't render on GeckoLib anyway).
+        if (!ProgressionConfig.specialEnabled || z instanceof HorrorZombie) {
             return;
         }
         double chance = Math.min(ProgressionConfig.specialMaxChance,
@@ -75,16 +79,18 @@ public final class SpecialRoller {
     private static void applyPassive(Zombie z, SpecialType type) {
         switch (type) {
             case SPRINTEUR -> {
-                infinite(z, MobEffects.SPEED, 1);
-                mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", 1.35);
+                infinite(z, MobEffects.SPEED, ProgressionConfig.specialSprinteurSpeedAmp);
+                mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", ProgressionConfig.specialSprinteurSpeedMul);
             }
-            case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, 2);
+            case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, ProgressionConfig.specialBondisseurLeapAmp);
             case JUGGERNAUT -> {
-                mul(z, Attributes.SCALE, "spc_scale", 1.4);
-                mul(z, Attributes.MAX_HEALTH, "spc_hp", 2.0);
+                mul(z, Attributes.SCALE, "spc_scale", ProgressionConfig.specialJuggernautScale);
+                mul(z, Attributes.MAX_HEALTH, "spc_hp", ProgressionConfig.specialJuggernautHealthMul);
                 z.setHealth(z.getMaxHealth());
-                infinite(z, MobEffects.RESISTANCE, 1);
-                ironArmor(z);
+                infinite(z, MobEffects.RESISTANCE, ProgressionConfig.specialJuggernautResistanceAmp);
+                if (ProgressionConfig.specialJuggernautIronArmor) {
+                    ironArmor(z);
+                }
             }
             default -> { /* ACTIVE / DEATH: handled at runtime */ }
         }

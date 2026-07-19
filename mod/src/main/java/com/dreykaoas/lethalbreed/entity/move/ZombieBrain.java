@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import net.minecraft.world.entity.LivingEntity;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
@@ -22,7 +23,6 @@ public final class ZombieBrain {
     private final SmartZombie owner;
     private final Zombie entity;
     private final PillarClimb pillar;
-    private final WallClimb wall;
     private final Leap leap;
     private final BrainNavigator nav;
 
@@ -37,12 +37,11 @@ public final class ZombieBrain {
         this.owner = owner;
         this.entity = owner.entity();
         this.pillar = new PillarClimb(owner);
-        this.wall = new WallClimb(owner);
         this.leap = new Leap(owner);
         this.nav = new BrainNavigator(owner);
     }
 
-    public boolean isClimbing() { return pillar.active() || wall.active(); }
+    public boolean isClimbing() { return pillar.active(); }
     public boolean isSwimming() { return swimming; }
 
     /** Distance-tier throttle: true on 1 of every {@code divisor} activations of this zombie. */
@@ -53,7 +52,9 @@ public final class ZombieBrain {
         ZombiePursuit p = owner.pursuit();
         int bx = entity.blockPosition().getX();
         int bz = entity.blockPosition().getZ();
-        ctx.spatialGrid().update(owner, bx, bz);
+        // No spatialGrid().update() here: LodBucketPass already refreshed this zombie's grid cell THIS same
+        // activation (before the FROZEN/throttle skips) and it hasn't moved since — tick() is only reached from
+        // that pass, so repeating the update is pure redundant work. bx/bz are kept for MoveDispatch below.
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LODLevel.FROZEN) return;
@@ -61,7 +62,6 @@ public final class ZombieBrain {
         // the refuge and dropped the target). Checked before flee so shade-seeking wins over the straight run.
         if (owner.mood().isSheltering()) {
             pillar.cancel();
-            wall.cancel();
             owner.setState(ZombieState.SHELTERING);
             owner.mood().driveShelter(level);
             return;
@@ -70,14 +70,12 @@ public final class ZombieBrain {
         // away from the threat (vanilla nav, so climb/descend still work). No leap/dig/dispatch while fleeing.
         if (owner.mood().isFleeing()) {
             pillar.cancel();
-            wall.cancel();
             owner.setState(ZombieState.FLEEING);
             owner.mood().driveFlee(level);
             return;
         }
         pillar.tickCooldown();
-        wall.tickCooldown();
-        if (pillar.active() || wall.active()) return; // mid climb; the per-tick climbStep finishes it
+        if (pillar.active()) return; // mid climb; the per-tick climbStep finishes it
         if (!p.hasTarget()) {
             owner.setState(p.hasSound() && nav.navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
             return;
@@ -97,7 +95,6 @@ public final class ZombieBrain {
         if (CombatMoveConfig.floatInWater && entity.isInWater()
                 && (!entity.onGround() || entity.isUnderWater())) {
             pillar.cancel();
-            wall.cancel();
             swimming = true;
             owner.setState(ZombieState.PURSUING_PLAYER);
             return;
@@ -127,12 +124,12 @@ public final class ZombieBrain {
             MoveMath.faceHeading(entity, dx, dz);
         } else {
             // Aim at the BASE of an overhead target's column (our own Y) so we walk up and close the gap.
-            double navY = (dy > 1.0) ? entity.getY() : p.tgtY();
+            double navY = (dy > FlowConfig.navYThreshold) ? entity.getY() : p.tgtY();
             nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
         }
         owner.setState(ZombieState.PURSUING_PLAYER);
         debugClimb(p, horizSq, dy, stuck);
-        MoveDispatch.choose(owner, level, ctx, pillar, wall, te, dx, dz, dy, horizSq, stuck, bx, bz);
+        MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz);
         // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
         breaking = owner.state() == ZombieState.BREAKING;
     }
@@ -145,14 +142,10 @@ public final class ZombieBrain {
                 entity.onGround());
     }
 
-    /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the spider
-     *  wall-scale when one is running, else the jump-and-place pillar. */
+    /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the jump-and-place
+     *  pillar (places blocks under itself, so it always stands on what it builds). */
     public void climbStep(ServerLevel level, WorldAIContext ctx) {
-        if (wall.active()) {
-            wall.step(level, ctx);
-        } else {
-            pillar.step(level, ctx);
-        }
+        pillar.step(level, ctx);
     }
 
     /** Per-tick while in water. Guards the swim state, then delegates the driving to {@link Swim}. */

@@ -6,9 +6,9 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
- * Shared bookkeeping for the two vertical-ascent state machines — {@link PillarClimb} (jump-and-place) and
- * {@link WallClimb} (velocity wall-scale). Both share the active flag, the post-give-up cooldown and the
- * height/stall watchdog; only the motion itself differs, which each subclass owns in its own {@code step}.
+ * Shared bookkeeping for the vertical-ascent state machine {@link PillarClimb} (jump-and-place). Provides the
+ * active flag, the post-give-up cooldown and the height/stall watchdog; the motion itself lives in the
+ * subclass's own {@code step}.
  */
 abstract class Ascent {
     protected final SmartZombie owner;
@@ -34,7 +34,6 @@ abstract class Ascent {
     }
 
     public boolean active() { return running; }
-    public boolean onCooldown() { return climbCd > 0; }
 
     /** Force the ascent off (used when the zombie enters water and must not climb/build). */
     public void cancel() { running = false; }

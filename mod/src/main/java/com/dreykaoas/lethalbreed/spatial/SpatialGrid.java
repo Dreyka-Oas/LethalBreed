@@ -102,8 +102,4 @@ public final class SpatialGrid {
         }
         return out;
     }
-
-    public void clear() {
-        cells.clear();
-    }
 }

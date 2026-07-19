@@ -91,11 +91,4 @@ public final class FlowFieldManager {
             }
         });
     }
-
-    public void clear() {
-        active.set(null);
-        lastComputeTick = Long.MIN_VALUE;
-        lastFocusX = Double.NaN;
-        lastFocusZ = Double.NaN;
-    }
 }

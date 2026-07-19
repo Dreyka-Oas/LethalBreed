@@ -63,6 +63,15 @@ public final class DevBootstrap {
             LethalDevCommand.register(dispatcher);
         });
 
+        // Opt-in visual smoke test: only on the client and only when LB_SHOWCASE is set. Referencing
+        // HorrorShowcase (which imports client-only classes) is kept inside this guarded branch so the class
+        // is never loaded on a dedicated server (runServer), where those client classes don't exist.
+        if (System.getenv("LB_SHOWCASE") != null
+                && net.fabricmc.loader.api.FabricLoader.getInstance().getEnvironmentType()
+                        == net.fabricmc.api.EnvType.CLIENT) {
+            HorrorShowcase.install();
+        }
+
         LethalBreed.LOGGER.info("[LethalBreed] dev hooks installed (dev environment only).");
     }
 }

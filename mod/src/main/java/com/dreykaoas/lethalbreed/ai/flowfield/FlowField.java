@@ -17,27 +17,19 @@ public final class FlowField {
     private final int originZ;
     private final int width;
     private final int depth;
-    private final int focusY;
     private final short[] cost;
     private final byte[] dirX;
     private final byte[] dirZ;
-    private final byte[] flags;
 
-    public FlowField(int originX, int originZ, int width, int depth, int focusY,
-                     short[] cost, byte[] dirX, byte[] dirZ, byte[] flags) {
+    public FlowField(int originX, int originZ, int width, int depth,
+                     short[] cost, byte[] dirX, byte[] dirZ) {
         this.originX = originX;
         this.originZ = originZ;
         this.width = width;
         this.depth = depth;
-        this.focusY = focusY;
         this.cost = cost;
         this.dirX = dirX;
         this.dirZ = dirZ;
-        this.flags = flags;
-    }
-
-    public int focusY() {
-        return focusY;
     }
 
     private int index(int cellX, int cellZ) {

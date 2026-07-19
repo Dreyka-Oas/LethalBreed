@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.block.MaterialRegistry;
@@ -23,7 +24,8 @@ public final class MoveMath {
 
     /** Quantise a signed delta to a cardinal step: +1 / -1 / 0 (dead-zone within 0.5). */
     public static int stepSign(double d) {
-        return d > 0.5 ? 1 : (d < -0.5 ? -1 : 0);
+        double dz = ExpertConfig.expertStepDeadzone;
+        return d > dz ? 1 : (d < -dz ? -1 : 0);
     }
 
     /** Clear one body-space cell for a step: if a breakable solid stands at {@code pos}, request its progressive
@@ -80,14 +82,14 @@ public final class MoveMath {
      * maxBreakHeight} so a giant doesn't bore a huge tunnel, floored at 1.
      */
     static int breakHeight(LivingEntity entity) {
-        int n = (int) Math.ceil(entity.getBbHeight() - 1.0e-4);
+        int n = (int) Math.ceil(entity.getBbHeight() - ExpertConfig.expertBreakHeightEpsilon);
         return Math.max(1, Math.min(n, CombatMoveConfig.maxBreakHeight));
     }
 
     /** Turn the entity to face a horizontal heading (yaw from the XZ vector), pitch untouched. No-op on a
      *  degenerate heading (|h| ≤ 1e-2) so a zombie sitting on its target doesn't snap to a junk yaw. */
     static void faceHeading(LivingEntity entity, double hx, double hz) {
-        if (hx * hx + hz * hz <= 1.0e-4) { // (1e-2)^2 — same gate as the callers, no sqrt
+        if (hx * hx + hz * hz <= ExpertConfig.expertHeadingEpsilon) { // (1e-2)^2 — same gate as the callers, no sqrt
             return;
         }
         float yaw = (float) (Mth.atan2(hz, hx) * (180.0 / Math.PI)) - 90.0f;
