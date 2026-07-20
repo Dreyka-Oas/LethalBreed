@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "lethalbreed:item/asticot_spawn_egg"
+  }
+}

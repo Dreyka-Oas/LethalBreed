@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.dimension;
 
 import com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldManager;
 import com.dreykaoas.lethalbreed.block.BlockOperationQueue;
+import com.dreykaoas.lethalbreed.block.BreachCoordinator;
 import com.dreykaoas.lethalbreed.block.BreakManager;
 import com.dreykaoas.lethalbreed.block.PlacedBlockTracker;
 import com.dreykaoas.lethalbreed.sound.SoundEventBus;
@@ -17,6 +18,7 @@ public final class WorldAIContext {
     private final BlockOperationQueue blockOps;
     private final PlacedBlockTracker placedBlocks;
     private final BreakManager breakManager;
+    private final BreachCoordinator breachCoordinator;
     private final SoundEventBus soundBus;
 
     public WorldAIContext() {
@@ -25,11 +27,16 @@ public final class WorldAIContext {
         this.blockOps = new BlockOperationQueue();
         this.placedBlocks = new PlacedBlockTracker();
         this.breakManager = new BreakManager();
+        this.breachCoordinator = new BreachCoordinator();
         this.soundBus = new SoundEventBus();
     }
 
     public BreakManager breakManager() {
         return breakManager;
+    }
+
+    public BreachCoordinator breachCoordinator() {
+        return breachCoordinator;
     }
 
     public SoundEventBus soundBus() {

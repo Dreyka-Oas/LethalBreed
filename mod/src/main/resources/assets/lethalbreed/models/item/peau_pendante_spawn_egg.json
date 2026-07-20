@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "lethalbreed:item/peau_pendante_spawn_egg"
+  }
+}

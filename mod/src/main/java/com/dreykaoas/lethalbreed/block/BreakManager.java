@@ -23,6 +23,9 @@ public final class BreakManager {
         float progress;
         long lastRequest;
         LivingEntity breaker;
+        /** Breaker entity id -> tick it last requested this block. Distinct ids within the grace window are
+         *  the "concentration" count: more zombies on the same block break it faster. */
+        final Map<Integer, Long> requesters = new HashMap<>();
     }
 
     private final Map<Long, State> active = new HashMap<>();
@@ -46,6 +49,9 @@ public final class BreakManager {
         });
         s.lastRequest = now;
         s.breaker = breaker;
+        if (breaker != null) {
+            s.requesters.put(breaker.getId(), now); // count this zombie toward the block's concentration
+        }
     }
 
     /** Advance all active breaks. Called once per tick per dimension on the server thread. */
@@ -83,7 +89,13 @@ public final class BreakManager {
                     toolSpeed = ds;
                 }
             }
-            s.progress += rate * toolSpeed / hardness;
+            // Concentration bonus: count distinct zombies that requested this block within the grace window;
+            // more breakers → faster, capped so a huge pile can't shred instantly.
+            s.requesters.values().removeIf(rt -> now - rt > grace);
+            int concentrators = Math.max(1, s.requesters.size());
+            float mult = (float) Math.min(CombatMoveConfig.breakConcentrationCap,
+                    1.0 + (concentrators - 1) * CombatMoveConfig.breakConcentrationPerBreaker);
+            s.progress += rate * toolSpeed * mult / hardness;
             s.showStage(level, pos, CrackingBlock.stage(s.progress * 10f));
             if (s.progress >= 1.0f) {
                 level.destroyBlock(pos, CombatMoveConfig.breakDropsItems, null, 512); // break effects; drops per config

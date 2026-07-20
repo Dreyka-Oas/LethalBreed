@@ -1,7 +1,6 @@
 package com.dreykaoas.lethalbreed.entity;
 
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
-import com.dreykaoas.lethalbreed.entity.gecko.HorrorZombie;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import net.minecraft.world.entity.Entity;
@@ -26,11 +25,6 @@ public final class SpawnFilter {
 
     /** True if this entity must be discarded at load under the current phase + filter config. */
     public static boolean shouldCull(Entity entity) {
-        // Our custom horror zombie is never subject to the phase-gated cull — it is a deliberately-spawned
-        // boss-type entity, not part of the governed ambient zombie population.
-        if (entity instanceof HorrorZombie) {
-            return false;
-        }
         if (!(entity instanceof Mob mob) || mob.getType().getCategory() != MobCategory.MONSTER) {
             return false; // only hostile mobs are governed here
         }

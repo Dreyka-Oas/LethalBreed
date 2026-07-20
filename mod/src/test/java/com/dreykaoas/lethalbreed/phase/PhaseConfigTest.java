@@ -28,11 +28,6 @@ class PhaseConfigTest {
         assertEquals(1.0, d.dmgMax());
         assertEquals(1.0, d.spdMin());
         assertEquals(1.0, d.spdMax());
-        assertEquals(0.0, d.armorChance());
-        assertEquals(0, d.armorMaxTier());
-        assertEquals(0.0, d.weaponChance());
-        assertEquals(0, d.weaponMaxTier());
-        assertEquals(0, d.enchantLevel());
         assertEquals(0.0, d.effChance());
         assertEquals(0, d.effCount());
         assertEquals(0, d.effMaxAmp());
@@ -49,14 +44,6 @@ class PhaseConfigTest {
         assertEquals(3.20, d.dmgMax(), 0.01);
         assertEquals(1.40, d.spdMin(), 0.01);
         assertEquals(1.60, d.spdMax(), 0.01);
-        // Gear/effect curves saturate (rise-then-approach-ceiling), so phase 15 is close to but not yet
-        // at the ceiling — matches the old table's own near-saturation at phase 15 (armorChance 1.00,
-        // weaponMaxTier/enchantLevel already at max there), within the saturating curve's own shape.
-        assertEquals(0.91, d.armorChance(), 0.02);
-        assertEquals(4, d.armorMaxTier());
-        assertEquals(0.79, d.weaponChance(), 0.02);
-        assertEquals(4, d.weaponMaxTier());
-        assertEquals(4, d.enchantLevel());
     }
 
     @Test
@@ -78,10 +65,6 @@ class PhaseConfigTest {
     void hardBoundsNeverViolatedEvenAtExtremePhase() {
         for (int phase : new int[] {0, 1, 15, 100, 1000, 100_000}) {
             PhaseConfig.PhaseDef d = PhaseConfig.def(phase);
-            assertTrue(d.armorMaxTier() >= 0 && d.armorMaxTier() <= 5, "armorMaxTier out of [0,5] at phase " + phase);
-            assertTrue(d.weaponMaxTier() >= 0 && d.weaponMaxTier() <= 5, "weaponMaxTier out of [0,5] at phase " + phase);
-            assertTrue(d.armorChance() >= 0.0 && d.armorChance() <= 1.0, "armorChance out of [0,1] at phase " + phase);
-            assertTrue(d.weaponChance() >= 0.0 && d.weaponChance() <= 1.0, "weaponChance out of [0,1] at phase " + phase);
             assertTrue(d.effChance() >= 0.0 && d.effChance() <= 1.0, "effChance out of [0,1] at phase " + phase);
         }
     }

@@ -11,7 +11,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Headless verification of the non-special mechanics: daylight burn (incl. Husk), phase-scaled gear/health,
+ * Headless verification of the non-special mechanics: daylight burn (incl. Husk), phase-scaled health/stats,
  * and the Super Contamination plague (infect → ramping DoT → death). Gated by {@code devMechTest}.
  */
 public final class MechanicsTestHarness {

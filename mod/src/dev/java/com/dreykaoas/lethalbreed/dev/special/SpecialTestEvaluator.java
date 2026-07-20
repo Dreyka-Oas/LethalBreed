@@ -7,7 +7,6 @@ import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.phys.AABB;
 
@@ -33,7 +32,7 @@ public final class SpecialTestEvaluator {
             switch (c.type()) {
                 case SPRINTEUR -> { pass = z.getEffect(MobEffects.SPEED) != null; detail = "speed effect"; }
                 case BONDISSEUR -> { pass = z.getEffect(LethalBreedEffects.LEAP) != null; detail = "LEAP effect"; }
-                case JUGGERNAUT -> { pass = !z.getItemBySlot(EquipmentSlot.HEAD).isEmpty(); detail = "iron armor"; }
+                case JUGGERNAUT -> { pass = z.getEffect(MobEffects.RESISTANCE) != null; detail = "resistance effect"; }
                 case BOMBEUR -> { pass = z.isRemoved(); detail = "exploded (removed)"; }
                 case HURLEUR -> {
                     pass = SpecialBehavior.HURL_COUNT.get() > 0;

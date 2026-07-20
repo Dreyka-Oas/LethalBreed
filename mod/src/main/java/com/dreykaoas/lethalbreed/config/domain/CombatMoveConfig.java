@@ -92,6 +92,23 @@ public final class CombatMoveConfig {
     /** Ticks a break survives without being re-requested before it's abandoned (crack clears). */
     public static long breakGraceTicks = 10L;
 
+    // ---- Focus-fire breach coordination (concentrate a group on ONE block at a time) ----
+    /** Zombies near each other coordinate to break a SINGLE breach column at a time (converging on it) rather
+     *  than each chipping its own front block so none ever finishes. false = legacy each-breaks-its-own. */
+    public static boolean breachEnabled = true;
+    /** Cluster radius (blocks): a zombie about to break adopts an existing breach within this range that serves
+     *  the same target, instead of starting a new one. Larger = the whole crowd funnels to one hole. */
+    public static double breachRadius = 6.0;
+    /** Max distinct breach columns allowed at once within one cluster/target. 1 = strict one-block-at-a-time. */
+    public static int maxConcurrentBreaches = 1;
+    /** Ticks a breach survives without any zombie working it before it's dropped (frees the slot for the next). */
+    public static long breachGraceTicks = 20L;
+    /** Concentration speed: multiple zombies breaking the SAME block break it faster. Progress is multiplied by
+     *  {@code 1 + (breakers-1) * this}, capped by {@link #breakConcentrationCap}. 0 = no bonus (legacy fixed rate). */
+    public static double breakConcentrationPerBreaker = 0.6;
+    /** Hard cap on the concentration speed multiplier so a huge pile of zombies can't shred blocks instantly. */
+    public static double breakConcentrationCap = 4.0;
+
     // ---- Block ops (Phase 3) ----
     /** Master toggle for ALL world mutation (breaks + placements/bridge/pillar). false = pure vanilla
      *  pathing, zero block ops. Gated at BreakManager.request and BlockOperationQueue.enqueuePlace. */

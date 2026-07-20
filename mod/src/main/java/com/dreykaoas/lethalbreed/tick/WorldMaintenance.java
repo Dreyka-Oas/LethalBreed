@@ -52,6 +52,7 @@ final class WorldMaintenance {
         forEachLoadedContext(server, (level, ctx) -> {
             ctx.blockOps().drain(level, ctx.placedBlocks(), tickCounter);
             ctx.breakManager().tick(level, tickCounter);
+            ctx.breachCoordinator().tick(level, tickCounter);
             ctx.placedBlocks().tick(level, tickCounter);
         });
     }

@@ -113,27 +113,14 @@ final class GpuContext {
         this.maxWorkGroupSize = GpuDeviceInfo.maxWorkGroupSize(chosenDevice);
     }
 
-    // The kernel ships XOR-obfuscated (see the encryptKernels build task) so the OpenCL source
-    // is not readable in the jar; it is decoded in-memory here just before clCreateProgramWithSource.
-    // This is friction, not real crypto — the key travels in the jar — but it hides the pathfinding
-    // algorithm from a casual unzip/decompile. The build strips the plaintext .cl and ships only .clx.
-    private static final byte[] K = {
-            (byte) 0x9E, 0x2C, (byte) 0xB7, 0x41, (byte) 0xD3, 0x6A, 0x1F, (byte) 0x88,
-            0x53, (byte) 0xE0, 0x0D, (byte) 0xAA, 0x74, (byte) 0xC5, 0x36, (byte) 0xF1,
-            0x2B, (byte) 0x9D, 0x60, 0x18, (byte) 0xBE, 0x47, (byte) 0xD2, 0x05,
-            (byte) 0x8C, 0x33, (byte) 0xE7, 0x7A, (byte) 0xA1, 0x1C, (byte) 0xF8, 0x49,
-    };
-
+    // The kernel ships as plaintext OpenCL source under /kernels/bellman_ford.clx (the build copies
+    // the .cl to that name). It is read verbatim here just before clCreateProgramWithSource.
     private static String loadKernelSource() {
         try (var in = GpuContext.class.getResourceAsStream("/kernels/bellman_ford.clx")) {
             if (in == null) {
                 throw new IllegalStateException("kernel resource missing");
             }
-            byte[] enc = in.readAllBytes();
-            for (int i = 0; i < enc.length; i++) {
-                enc[i] ^= K[i & 31];
-            }
-            return new String(enc, StandardCharsets.UTF_8);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalStateException("kernel load failed", e);
         }

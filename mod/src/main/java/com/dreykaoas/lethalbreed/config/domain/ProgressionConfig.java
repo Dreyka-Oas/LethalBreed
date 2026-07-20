@@ -13,8 +13,6 @@ public final class ProgressionConfig {
     public static int phaseIntervalTicks = 12000;
     /** Random +/- jitter (ticks) applied to each interval. */
     public static int phaseJitterTicks = 1200;
-    /** Drop chance per equipped gear item on death (0.02 = 2%). */
-    public static double phaseGearDropChance = 0.02;
 
     // ---- Phase stat-scaling formula: value(phase) = 1.0 + growth * phase^exponent ----
     /** Growth rate for the max-HP multiplier curve. */
@@ -36,19 +34,7 @@ public final class ProgressionConfig {
     /** Exponent shared by the min/max speed curves. */
     public static double phaseSpdExponent = 1.0;
 
-    // ---- Phase gear/effect formula: value(phase) = ceiling - ceiling * decay^phase ----
-    /** Decay rate (closer to 1 = slower saturation) for armor equip chance. */
-    public static double phaseArmorChanceDecay = 0.85;
-    /** Decay rate for weapon equip chance. */
-    public static double phaseWeaponChanceDecay = 0.90;
-    /** Decay rate for armor material-tier progression (ceiling = 5, netherite). */
-    public static double phaseArmorTierDecay = 0.82;
-    /** Decay rate for weapon material-tier progression (ceiling = 5, netherite). */
-    public static double phaseWeaponTierDecay = 0.85;
-    /** Decay rate for enchant-level progression. */
-    public static double phaseEnchantDecay = 0.80;
-    /** Ceiling (max) enchant level reachable at high phase. */
-    public static int phaseEnchantCeiling = 5;
+    // ---- Phase effect formula: value(phase) = ceiling - ceiling * decay^phase ----
     /** Decay rate for the beneficial-effect roll chance. */
     public static double phaseEffChanceDecay = 0.85;
     /** Decay rate for the beneficial-effect count progression. */
@@ -173,8 +159,6 @@ public final class ProgressionConfig {
     public static double specialJuggernautHealthMul = 2.0;
     /** Resistance effect amplifier on a Juggernaut (1 = Resistance II). */
     public static int specialJuggernautResistanceAmp = 1;
-    /** Whether a Juggernaut spawns wearing full iron armor. */
-    public static boolean specialJuggernautIronArmor = true;
 
     /** Dev: headless special-zombie verification arena on server start (logs PASS/FAIL). Off for shipping. */
     public static boolean devSpecialTest = false;

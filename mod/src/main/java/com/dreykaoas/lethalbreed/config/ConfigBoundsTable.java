@@ -123,6 +123,11 @@ final class ConfigBoundsTable {
         b("breakMaxHardness", 0, 50);
         b("placedBlockLifetimeTicks", 20, 72_000);
         b("maxConcurrentBreaks", 1, 4096);     // new option (Breaking)
+        b("breachRadius", 0, 64);              // focus-fire breach coordination
+        b("maxConcurrentBreaches", 1, 64);
+        b("breachGraceTicks", 1, 1000);
+        b("breakConcentrationPerBreaker", 0, 10);
+        b("breakConcentrationCap", 1, 32);
         b("leapLandingScanDist", 1, 64);
         b("leapLandingScanDepth", 1, 64);
         b("waterSubmergeOffset", 0, 8);
@@ -137,7 +142,6 @@ final class ConfigBoundsTable {
         // ---- ProgressionConfig (Phases / Specials / Dev) ----
         b("phaseIntervalTicks", 1, 1_000_000);
         b("phaseJitterTicks", 0, 1_000_000);
-        b("phaseGearDropChance", 0, 1);
         b("phaseHpMaxGrowth", 0, 10);
         b("phaseHpMinGrowth", 0, 10);
         b("phaseHpExponent", 0.5, 3.0);
@@ -147,12 +151,6 @@ final class ConfigBoundsTable {
         b("phaseSpdMaxGrowth", 0, 10);
         b("phaseSpdMinGrowth", 0, 10);
         b("phaseSpdExponent", 0.5, 3.0);
-        b("phaseArmorChanceDecay", 0.5, 0.999);
-        b("phaseWeaponChanceDecay", 0.5, 0.999);
-        b("phaseArmorTierDecay", 0.5, 0.999);
-        b("phaseWeaponTierDecay", 0.5, 0.999);
-        b("phaseEnchantDecay", 0.5, 0.999);
-        b("phaseEnchantCeiling", 1, 10);
         b("phaseEffChanceDecay", 0.5, 0.999);
         b("phaseEffCountDecay", 0.5, 0.999);
         b("phaseEffCountCeiling", 1, 9);

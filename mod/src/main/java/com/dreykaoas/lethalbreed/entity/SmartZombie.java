@@ -65,7 +65,15 @@ public final class SmartZombie {
 
     // --- state / lod ---
     public ZombieState state() { return state; }
-    public void setState(ZombieState state) { this.state = state; }
+
+    public void setState(ZombieState state) {
+        if (this.state != state) {
+            this.state = state;
+            // Sync to the client so the horror render pipeline animates from the AUTHORITATIVE server state
+            // (walk/idle/pillar) instead of guessing from laggy client position. Only on change (no spam).
+            entity.setAttached(HorrorModelAttachment.ANIM_STATE, state.ordinal());
+        }
+    }
     public LODLevel lod() { return lod; }
     public void setLod(LODLevel lod) { this.lod = lod; }
 

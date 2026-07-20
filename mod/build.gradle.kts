@@ -1,16 +1,4 @@
 import net.fabricmc.loom.task.RemapJarTask
-import proguard.gradle.ProGuardTask
-
-buildscript {
-    repositories {
-        mavenCentral()
-        google()
-    }
-    dependencies {
-        // ProGuard runs as a post-remap step to obfuscate/strip the shipped player jar.
-        classpath("com.guardsquare:proguard-gradle:7.5.0")
-    }
-}
 
 plugins {
     id("fabric-loom") version "1.17.12"
@@ -81,27 +69,18 @@ tasks.test {
     useJUnitPlatform()
 }
 
-// ---- Kernel obfuscation: XOR-encrypt the OpenCL source in the packaged resources ----
-// The plaintext bellman_ford.cl (the flow-field pathfinding algorithm) is never shipped. This task
-// runs inside processResources: it reads the source .cl, XORs it with the same 32-byte key baked into
-// GpuContext.K, writes bellman_ford.clx, and drops the original so only the encrypted form is in the jar.
-val kernelKey = intArrayOf(
-    0x9E, 0x2C, 0xB7, 0x41, 0xD3, 0x6A, 0x1F, 0x88,
-    0x53, 0xE0, 0x0D, 0xAA, 0x74, 0xC5, 0x36, 0xF1,
-    0x2B, 0x9D, 0x60, 0x18, 0xBE, 0x47, 0xD2, 0x05,
-    0x8C, 0x33, 0xE7, 0x7A, 0xA1, 0x1C, 0xF8, 0x49,
-).map { it.toByte() }.toByteArray()
-
+// ---- Kernel packaging: copy the OpenCL source to the .clx resource name expected by GpuContext ----
+// The loader reads /kernels/bellman_ford.clx. We simply copy the plaintext .cl to that name (no
+// transformation) and exclude the raw .cl so there is exactly one copy in the jar.
 tasks.processResources {
-    // Exclude the plaintext kernel from the output; the encrypted .clx is written by doLast below.
+    // Exclude the raw .cl from the output; the .clx copy is written by doLast below.
     exclude("kernels/*.cl")
     doLast {
         val src = file("src/main/resources/kernels/bellman_ford.cl").readBytes()
-        val enc = ByteArray(src.size) { i -> (src[i].toInt() xor kernelKey[i and 31].toInt()).toByte() }
         val outDir = destinationDir.resolve("kernels")
         outDir.mkdirs()
-        outDir.resolve("bellman_ford.clx").writeBytes(enc)
-        logger.lifecycle("[kernel] encrypted bellman_ford.cl -> .clx (${enc.size} bytes)")
+        outDir.resolve("bellman_ford.clx").writeBytes(src)
+        logger.lifecycle("[kernel] copied bellman_ford.cl -> .clx (${src.size} bytes)")
     }
 }
 
@@ -199,42 +178,5 @@ loom {
     }
 }
 
-// ---- Obfuscation: strip debug + rename internals on the shipped PLAYER jar ----
-// Runs after Loom's remapJar. Input = the remapped named jar; output = an obfuscated jar that
-// replaces build/libs/<name>-<ver>.jar. Keep rules in proguard-rules.pro preserve everything the
-// Fabric loader, Mixin, reflection (ConfigSchema) and serialization reference by name.
-val proguardJar = tasks.register<ProGuardTask>("proguardJar") {
-    val remap = tasks.named<RemapJarTask>("remapJar")
-    dependsOn(remap)
-
-    val inJar = remap.flatMap { it.archiveFile }
-    val outJar = layout.buildDirectory.file("libs/${base.archivesName.get()}-${project.version}-obf.jar")
-
-    injars(inJar)
-    outjars(outJar)
-
-    // Library jars: the JDK modules + every jar on the runtime classpath (Minecraft, Fabric, JOCL).
-    // ProGuard needs these to resolve supertypes it must NOT rename.
-    val javaHome = System.getProperty("java.home")
-    libraryjars(mapOf("jarfilter" to "!**.jar", "filter" to "!module-info.class"),
-        "$javaHome/jmods/java.base.jmod")
-    libraryjars(configurations.named("runtimeClasspath"))
-
-    configuration("proguard-rules.pro")
-
-    doLast {
-        // Overwrite the canonical player jar with the obfuscated one so build-player.bat ships it.
-        val canonical = layout.buildDirectory.file(
-            "libs/${base.archivesName.get()}-${project.version}.jar").get().asFile
-        val obf = outJar.get().asFile
-        canonical.delete()
-        obf.copyTo(canonical, overwrite = true)
-        obf.delete()
-        logger.lifecycle("[proguard] obfuscated player jar -> ${canonical.name}")
-    }
-}
-
-// `gradlew build` (and build-player.bat) now produce the obfuscated player jar.
-tasks.named("build") {
-    dependsOn(proguardJar)
-}
+// The shipped player jar is Loom's plain remapJar (no obfuscation): the source is MIT and lives in a
+// private repo, so there is nothing to hide. `gradlew build` / build-player.bat produce it directly.
