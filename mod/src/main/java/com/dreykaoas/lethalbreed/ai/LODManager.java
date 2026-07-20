@@ -8,6 +8,9 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.util.TargetSelector;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import static com.dreykaoas.lethalbreed.util.Scalars.sq;
 
@@ -61,7 +64,12 @@ public final class LODManager {
             sz.entity().setTarget(null);
             double d = sz.pursuit().distanceToTargetSq();
             double arrive = TargetingConfig.soundArriveDistance;
-            if (d <= arrive * arrive) {
+            // Only "arrived, nothing here → forget" when the zombie can actually SEE the remembered spot. If an
+            // opaque wall still stands between it and the spot (e.g. a trapped, noisy mob enclosed in blocks),
+            // it is NOT arrived — keep pursuing so it breaks through instead of giving up at the wall and
+            // letting the half-broken block lapse. Memory still expires on its own timer above.
+            if (d <= arrive * arrive && canSeeSpot(level, sz.entity(),
+                    sz.pursuit().tgtX(), sz.pursuit().tgtY(), sz.pursuit().tgtZ())) {
                 sz.pursuit().clearTarget();
                 sz.pursuit().clearMemory();
                 lod = LODLevel.FROZEN;
@@ -75,6 +83,15 @@ public final class LODManager {
         }
         sz.setLod(lod);
         return lod;
+    }
+
+    /** True if the zombie has a clear line of sight to the spot (no solid block between its eyes and it) — i.e.
+     *  it has genuinely reached it, not just gotten close on the far side of a wall it still has to break. */
+    private static boolean canSeeSpot(ServerLevel level, LivingEntity e, double x, double y, double z) {
+        Vec3 from = e.getEyePosition();
+        Vec3 to = new Vec3(x, y + 0.5, z);
+        HitResult hit = level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, e));
+        return hit.getType() == HitResult.Type.MISS || hit.getLocation().distanceToSqr(to) <= 1.0;
     }
 
     private static LODLevel lodFromDistSq(double d, LODLevel prev) {

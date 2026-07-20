@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "lethalbreed:item/decapite_spawn_egg"
+  }
+}

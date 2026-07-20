@@ -1,0 +1,45 @@
+{
+  "id": "vanilla_look",
+  "concept": "Model-0 stand-in worn by ordinary (non-horror) zombies: a faithful-ish plain zombie — green skin, blue-grey shirt, indigo trousers, arms held out front. No gore. Gait is a stiff shuffle with arms held, not swinging.",
+  "vanilla_look": true,
+  "egg_rgb": [79, 111, 43],
+  "gait": { "style": "normal", "walk": 1.0, "idle": 3.0 },
+  "crawler": false,
+  "bones": [
+    ["root", null, [0, 0, 0], null, []],
+    ["body", "root", [0, 24, 0], null, [
+      [[-4, 12, -2], [8, 12, 4], "ZSHIRT"]
+    ]],
+    ["head", "body", [0, 24, 0], null, [
+      [[-4, 25, -4], [8, 7, 8], "ZSKIN"],
+      [[-3, 28, -5], [2, 2, 1], "SOCKET"], [[1, 28, -5], [2, 2, 1], "SOCKET"]
+    ]],
+    ["jaw", "head", [0, 25, -4], null, [
+      [[-4, 24, -4], [8, 1, 8], "ZSKIN"]
+    ]],
+    ["arm_r", "body", [-4, 23, 0], [-80, 0, 0], [
+      [[-8, 15, -2], [4, 9, 4], "ZSHIRT"], [[-8, 12, -2], [4, 3, 4], "ZSKIN"]
+    ]],
+    ["arm_l", "body", [4, 23, 0], [-80, 0, 0], [
+      [[4, 15, -2], [4, 9, 4], "ZSHIRT"], [[4, 12, -2], [4, 3, 4], "ZSKIN"]
+    ]],
+    ["leg_r", "root", [-2, 12, 0], null, [
+      [[-4, 0, -2], [4, 12, 4], "ZPANTS"]
+    ]],
+    ["leg_l", "root", [2, 12, 0], null, [
+      [[0, 0, -2], [4, 12, 4], "ZPANTS"]
+    ]]
+  ],
+  "anim_overrides": {
+    "idle": {
+      "jaw": { "rotation": { "0.0": [0, 0, 0], "1.0": [0, 0, 0] } },
+      "arm_r": { "rotation": { "0.0": [0, 0, 0], "1.5": [2, 0, 0], "3.0": [0, 0, 0] } },
+      "arm_l": { "rotation": { "0.0": [0, 0, 0], "1.5": [-2, 0, 0], "3.0": [0, 0, 0] } },
+      "head": { "rotation": { "0.0": [0, 0, 0], "1.5": [3, -4, 0], "3.0": [0, 0, 0] } }
+    },
+    "walk": {
+      "arm_r": { "rotation": { "0.0": [0, 0, 0], "1.0": [0, 0, 0] } },
+      "arm_l": { "rotation": { "0.0": [0, 0, 0], "1.0": [0, 0, 0] } }
+    }
+  }
+}

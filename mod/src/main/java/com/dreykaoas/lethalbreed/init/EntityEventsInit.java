@@ -8,6 +8,8 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
+import com.dreykaoas.lethalbreed.entity.HorrorModelAttachment;
+import com.dreykaoas.lethalbreed.entity.gecko.HorrorReplacedZombie;
 import com.dreykaoas.lethalbreed.entity.SpawnControl;
 import com.dreykaoas.lethalbreed.entity.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
@@ -16,21 +18,13 @@ import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
 import com.dreykaoas.lethalbreed.util.Players;
 import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
-import com.dreykaoas.lethalbreed.entity.gecko.HorrorZombie;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.Witch;
-import net.minecraft.world.entity.monster.illager.AbstractIllager;
-import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
 
 /** Registers the entity-driven gameplay hooks: load/unload tracking, sound, damage, and death specials. */
 public final class EntityEventsInit {
@@ -96,6 +90,16 @@ public final class EntityEventsInit {
     /** Cancel fall damage for our diggers, and spread Super Contamination on zombie-to-victim hits. */
     private static void registerDamage(ZombieRegistry registry) {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            // A horror-model zombie that lands a hit plays its bespoke attack lunge (client-synced one-shot).
+            if (source.getEntity() instanceof Zombie attacker) {
+                triggerHorrorAnim(attacker, "attack");
+            }
+            // A horror-model zombie flinches ONLY when actually STRUCK by something living — never from
+            // fire/sun-burn/fall/drown, whose per-tick damage would spam the flinch and make a burning zombie
+            // freeze in the hurt pose and slide instead of walking on.
+            if (entity instanceof Zombie victim && source.getEntity() instanceof net.minecraft.world.entity.LivingEntity) {
+                triggerHorrorAnim(victim, "hurt");
+            }
             if (CombatMoveConfig.preventFallDamage && entity instanceof Zombie && source.is(DamageTypeTags.IS_FALL)
                     && registry.get(entity.getId()) != null) {
                 return false;
@@ -114,6 +118,16 @@ public final class EntityEventsInit {
         });
     }
 
+    /** Fire a horror model's one-shot clip (e.g. attack) on a zombie, gated to instances that actually wear a
+     *  horror model (index &gt; 0) so ordinary zombies never emit trigger packets. GeckoLib syncs it to clients. */
+    private static void triggerHorrorAnim(Zombie z, String action) {
+        int model = z.getAttachedOrElse(HorrorModelAttachment.MODEL, 0);
+        if (model > 0) {
+            HorrorReplacedZombie.INSTANCE.triggerAnim(z, HorrorReplacedZombie.CONTROLLER,
+                    HorrorReplacedZombie.clip(model, action));
+        }
+    }
+
     /** Splitter (and other DEATH specials) act when the zombie dies; contaminated victims clear their plague
      *  state; a zombie that landed a direct kill may celebrate a cleared area. */
     private static void registerDeath(ZombieRegistry registry) {
@@ -125,11 +139,6 @@ public final class EntityEventsInit {
                 SpecialBehavior.onDeath(z, sl);
             }
             ContaminationManager.onDeath(entity, sl);
-            // A biped slain by a horror zombie rises as a horror zombie of the same strain — always, not
-            // just on the difficulties where vanilla converts villagers. The horde grows.
-            if (source.getEntity() instanceof HorrorZombie hz && !(entity instanceof Zombie) && isBiped(entity)) {
-                raiseAsHorror(hz, entity, sl);
-            }
             // Victory celebration: if a tracked zombie dealt the direct killing blow on non-kin prey, let it
             // celebrate — ZombieMood.tryCelebrate no-ops unless the area is now clear of other prey.
             if (!(entity instanceof Zombie) && source.getEntity() instanceof Zombie killer) {
@@ -139,21 +148,5 @@ public final class EntityEventsInit {
                 }
             }
         });
-    }
-
-    /** Humanoid "bipeds" that rise when a horror zombie kills them (villagers, illagers, piglins, witches). */
-    private static boolean isBiped(Entity e) {
-        return e instanceof AbstractVillager || e instanceof AbstractIllager
-                || e instanceof AbstractPiglin || e instanceof Witch;
-    }
-
-    /** Spawn a horror zombie of the killer's variant on the fallen victim's spot, facing the victim's way. */
-    private static void raiseAsHorror(HorrorZombie killer, LivingEntity victim, ServerLevel level) {
-        @SuppressWarnings("unchecked")
-        EntityType<HorrorZombie> type = (EntityType<HorrorZombie>) killer.getType();
-        HorrorZombie risen = type.spawn(level, victim.blockPosition(), EntitySpawnReason.CONVERSION);
-        if (risen != null) {
-            risen.absSnapTo(victim.getX(), victim.getY(), victim.getZ(), victim.getYRot(), 0.0f);
-        }
     }
 }

@@ -1,8 +1,10 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 
 import com.dreykaoas.lethalbreed.block.BlockOperationQueue;
+import com.dreykaoas.lethalbreed.block.BreachCoordinator;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
@@ -17,7 +19,7 @@ public final class Obstacle {
     }
 
     public static void handleToward(SmartZombie owner, ServerLevel level, WorldAIContext ctx,
-                                    int bx, int bz, int sdx, int sdz) {
+                                    int bx, int bz, int sdx, int sdz, BlockPos target, boolean committed) {
         if (sdx == 0 && sdz == 0) {
             return;
         }
@@ -33,17 +35,40 @@ public final class Obstacle {
         // bottom first let the zombie shuffle forward before the head cell (y+2) was done, leaving its head
         // stuck in the wall so it never passed. Breaking the whole column together opens a hole it fits through.
         int cells = MoveMath.breakHeight(entity);
-        boolean requested = false;
-        for (int i = 0; i < cells; i++) {
-            BlockPos p = new BlockPos(ax, y + i, az);
-            if (MoveMath.breakableSolid(level, p)) {
-                ctx.breakManager().request(p, entity);
-                requested = true;
-            }
+        BlockPos forwardColumn = new BlockPos(ax, y, az);
+        boolean columnBreakable = false;
+        for (int i = 0; i < cells && !columnBreakable; i++) {
+            columnBreakable = MoveMath.breakableSolid(level, new BlockPos(ax, y + i, az));
         }
-        if (requested) {
-            owner.setState(ZombieState.BREAKING);
-            return;
+        if (columnBreakable) {
+            // FOCUS FIRE: instead of each zombie chipping its own front column, converge on ONE shared breach
+            // column at a time. The coordinator hands back the breach column (mine, or a neighbour's).
+            BreachCoordinator.BreachTarget bt =
+                    ctx.breachCoordinator().resolve(forwardColumn, entity.blockPosition(), target, committed);
+            BlockPos base = bt.column();
+            // Adjacent to the shared breach (mine, or I've funnelled right up to it) → hammer THAT column, so
+            // the few zombies that fit around it pile on (concentration bonus). Otherwise walk to its attack
+            // side first. A zombie already committed (breaking last tick) always gets its own column back and
+            // so never steers — it stays put on the block it started, as it should.
+            boolean withinReach = base.equals(forwardColumn) || entity.blockPosition().distSqr(base) <= 3.0;
+            if (!withinReach) {
+                entity.getNavigation().moveTo(bt.approach().getX() + 0.5, bt.approach().getY(),
+                        bt.approach().getZ() + 0.5, FlowConfig.navSpeed);
+                owner.setState(ZombieState.PURSUING_PLAYER);
+                return;
+            }
+            boolean requested = false;
+            for (int i = 0; i < cells; i++) {
+                BlockPos p = base.above(i);
+                if (MoveMath.breakableSolid(level, p)) {
+                    ctx.breakManager().request(p, entity);
+                    requested = true;
+                }
+            }
+            if (requested) {
+                owner.setState(ZombieState.BREAKING);
+                return;
+            }
         }
         BlockState fs = level.getBlockState(new BlockPos(ax, y, az));
         if (!fs.blocksMotion()) {

@@ -23,11 +23,11 @@ optional AMD GPU (OpenCL) compute path and a multithreaded CPU fallback.
 ## Build
 
 ```bash
-./gradlew build      # obfuscated player jar → build/libs/
+./gradlew build      # player jar → build/libs/
 ./gradlew runClient  # dev client (loads run/mods/)
 ./gradlew runServer  # headless dev server + test harnesses
 ```
 
 ## License
 
-Private licence — © Dreyka Oas. All rights reserved.
+MIT — © Dreyka Oas. See [LICENSE](../LICENSE).

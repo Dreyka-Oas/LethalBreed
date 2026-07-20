@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "lethalbreed:item/titan_spawn_egg"
+  }
+}

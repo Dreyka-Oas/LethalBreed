@@ -7,16 +7,17 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.phase.PhaseConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
-import com.dreykaoas.lethalbreed.phase.ZombieEquipper;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Random;
 
@@ -41,7 +42,13 @@ public final class ZombieVariation {
     private static final Identifier PSPD_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_spd");
     private static final long PHASE_SALT = 91237L;
 
+    /** Deterministic-per-zombie salt for the horror-model roll, and the chance a zombie wears one at all. */
+    private static final long MODEL_SALT = 55501L;
+    public static final double HORROR_MODEL_CHANCE = 0.6; // TODO expose via WorldSpawnConfig once the GUI field is wired
+
     public static void apply(Zombie z) {
+        stripGear(z); // zombies never carry weapons/tools/armor (also clears vanilla natural gear + pickups)
+        rollHorrorModel(z); // pick which render model this zombie wears (0 = plain, 1..15 = a horror model)
         if (WorldSpawnConfig.enableVariation) {
             Random r = seeded(z, 0L);
             applyMultiplier(z, Attributes.SCALE, SCALE_ID, roll(r, WorldSpawnConfig.varScaleMin, WorldSpawnConfig.varScaleMax));
@@ -58,8 +65,36 @@ public final class ZombieVariation {
     }
 
     /**
+     * Roll this zombie's render model once, seeded by UUID so it is stable across reloads. Most zombies keep
+     * model 0 ({@code vanilla_look}); with {@link #HORROR_MODEL_CHANCE} probability one gets a random horror
+     * model 1..15. Same {@code minecraft:zombie} entity — only the client-side model differs.
+     */
+    private static void rollHorrorModel(Zombie z) {
+        Random r = seeded(z, MODEL_SALT);
+        if (r.nextDouble() >= HORROR_MODEL_CHANCE) {
+            return; // ordinary zombie — the default attachment value (0) renders the plain look
+        }
+        z.setAttached(HorrorModelAttachment.MODEL, 1 + r.nextInt(HorrorModels.HORROR_COUNT)); // 1..15
+    }
+
+    /** The six wearable/held slots a zombie could otherwise show gear in. */
+    private static final EquipmentSlot[] GEAR_SLOTS = {
+            EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
+            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+
+    /** Remove every held/worn item so a zombie never appears with a weapon, tool or armor (covers vanilla
+     *  natural spawn gear too), and stop it from picking gear up off the ground. */
+    private static void stripGear(Zombie z) {
+        for (EquipmentSlot slot : GEAR_SLOTS) {
+            z.setItemSlot(slot, ItemStack.EMPTY);
+            z.setDropChance(slot, 0.0f);
+        }
+        z.setCanPickUpLoot(false);
+    }
+
+    /**
      * Scale a freshly-spawned zombie by the CURRENT difficulty phase: extra HP/damage/speed (rolled from the
-     * phase's widening ranges), phase-tiered gear, and phase-scaled effects. Seeded by UUID (distinct salt)
+     * phase's widening ranges) and phase-scaled effects. Seeded by UUID (distinct salt)
      * so a zombie's build is stable. The HP modifier is a permanent attribute modifier; refill to full so the
      * bigger pool isn't left half-empty.
      */
@@ -70,7 +105,6 @@ public final class ZombieVariation {
         applyMultiplier(z, Attributes.ATTACK_DAMAGE, PDMG_ID, roll(r, p.dmgMin(), p.dmgMax()));
         applyMultiplier(z, Attributes.MOVEMENT_SPEED, PSPD_ID, roll(r, p.spdMin(), p.spdMax()));
         z.setHealth(z.getMaxHealth());
-        ZombieEquipper.applyGear(z, r, p);
         applyPhaseEffects(z, r, p);
         com.dreykaoas.lethalbreed.special.SpecialRoller.roll(z, r, PhaseManager.current());
     }

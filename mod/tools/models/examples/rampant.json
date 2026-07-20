@@ -1,0 +1,36 @@
+{
+  "id": "rampant",
+  "concept": "A crawler that LIES FLAT ON THE GROUND — long horizontal torso, head lifted at the front, arms planted forward on the floor to drag itself, legs trailing behind, guts dragging underneath. Every cube y>=0.",
+  "egg_rgb": [86, 66, 52],
+  "gait": { "walk": 1.1, "idle": 3.0 },
+  "crawler": true,
+  "bones": [
+    ["root", null, [0, 0, 0], null, []],
+    ["body", "root", [0, 4, 0], null, [
+      [[-4, 1, -4], [8, 6, 10], "SKIN"],
+      [[-1, 6, 0], [2, 1, 4], "BONE"],
+      [[-2, 0, -7], [3, 4, 3], "ENTRAIL"], [[0, 0, -8], [1, 3, 2], "ENTRAIL"],
+      [[-3, 2, -5], [6, 2, 1], "FLESH"],
+      [[-5, 3, 2], [1, 2, 3], "BONE"], [[4, 3, 3], [1, 2, 3], "BONE"]
+    ]],
+    ["head", "body", [0, 4, -4], [-22, 0, 4], [
+      [[-4, 3, -8], [8, 7, 6], "SKIN"], [[-4, 3, -8], [8, 1, 1], "TEETH"],
+      [[-3, 7, -9], [2, 2, 1], "SOCKET"], [[1, 7, -9], [1, 1, 1], "EYE"]
+    ]],
+    ["jaw", "head", [0, 4, -8], [16, 0, 0], [
+      [[-3, 0, -8], [6, 3, 5], "SKIN"], [[-3, 1, -8], [6, 1, 1], "TEETH"]
+    ]],
+    ["arm_r", "body", [-4, 4, -3], null, [
+      [[-7, 0, -12], [3, 3, 9], "SKIN"], [[-6, 0, -13], [1, 1, 4], "BONE"]
+    ]],
+    ["arm_l", "body", [4, 4, -3], null, [
+      [[4, 0, -12], [3, 3, 9], "SKIN2"]
+    ]],
+    ["leg_r", "root", [-3, 2, 5], null, [
+      [[-4, 0, 4], [3, 3, 5], "SKIN"]
+    ]],
+    ["leg_l", "root", [3, 2, 5], null, [
+      [[1, 0, 4], [3, 3, 5], "SKIN2"]
+    ]]
+  ]
+}

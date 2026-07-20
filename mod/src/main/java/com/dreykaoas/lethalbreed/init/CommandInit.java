@@ -18,8 +18,8 @@ public final class CommandInit {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             LethalPhaseCommand.register(dispatcher);
             LethalSpecialCommand.register(dispatcher);
-            LethalHorrorCommand.register(dispatcher);
             LethalConfigCommand.register(dispatcher);
+            LethalHorrorCommand.register(dispatcher);
         });
     }
 }

@@ -129,7 +129,9 @@ public final class ZombieBrain {
         }
         owner.setState(ZombieState.PURSUING_PLAYER);
         debugClimb(p, horizSq, dy, stuck);
-        MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz);
+        // Pass the current breaking-latch (was I breaking last tick?) so a committed zombie stays anchored on
+        // its block instead of being re-steered to another breach mid-break.
+        MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz, breaking);
         // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
         breaking = owner.state() == ZombieState.BREAKING;
     }

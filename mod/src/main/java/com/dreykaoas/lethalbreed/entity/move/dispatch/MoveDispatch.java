@@ -9,6 +9,7 @@ import com.dreykaoas.lethalbreed.entity.move.Descend;
 import com.dreykaoas.lethalbreed.entity.move.MoveMath;
 import com.dreykaoas.lethalbreed.entity.move.Obstacle;
 import com.dreykaoas.lethalbreed.entity.move.PillarClimb;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -23,7 +24,7 @@ public final class MoveDispatch {
 
     public static void choose(SmartZombie owner, ServerLevel level, WorldAIContext ctx, PillarClimb pillar,
                               LivingEntity te, double dx, double dz, double dy, double horizSq,
-                              boolean stuck, int bx, int bz) {
+                              boolean stuck, int bx, int bz, boolean breaking) {
         // Arrived (in range + line of sight) → let vanilla melee finish it; do no block ops.
         boolean canHit = te != null && te.isAlive()
                 && horizSq <= CombatMoveConfig.meleeStopRange * CombatMoveConfig.meleeStopRange
@@ -57,7 +58,11 @@ public final class MoveDispatch {
             if (dy <= -CombatMoveConfig.descendThreshold) {
                 Descend.step(owner, level, ctx, sdx, sdz);
             } else {
-                Obstacle.handleToward(owner, level, ctx, bx, bz, sdx, sdz);
+                // The hunt target's cell (zombie pos + deltas) — lets the breach coordinator group zombies
+                // converging on the SAME target/wall so they focus one breach at a time.
+                BlockPos target = BlockPos.containing(owner.entity().getX() + dx,
+                        owner.entity().getY() + dy, owner.entity().getZ() + dz);
+                Obstacle.handleToward(owner, level, ctx, bx, bz, sdx, sdz, target, breaking);
             }
         }
     }

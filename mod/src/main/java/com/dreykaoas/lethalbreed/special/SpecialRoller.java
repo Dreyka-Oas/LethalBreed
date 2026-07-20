@@ -3,18 +3,14 @@ package com.dreykaoas.lethalbreed.special;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
-import com.dreykaoas.lethalbreed.entity.gecko.HorrorZombie;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.util.List;
 import java.util.Random;
@@ -29,10 +25,7 @@ public final class SpecialRoller {
     private SpecialRoller() {}
 
     public static void roll(Zombie z, Random r, int phase) {
-        // The custom horror zombie is its own distinct boss-type entity — it never rolls a vanilla-zombie
-        // special (its horror comes from its own model/animations, and vanilla-model specials like the
-        // BOMBEUR belly-swell can't render on GeckoLib anyway).
-        if (!ProgressionConfig.specialEnabled || z instanceof HorrorZombie) {
+        if (!ProgressionConfig.specialEnabled) {
             return;
         }
         double chance = Math.min(ProgressionConfig.specialMaxChance,
@@ -84,13 +77,11 @@ public final class SpecialRoller {
             }
             case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, ProgressionConfig.specialBondisseurLeapAmp);
             case JUGGERNAUT -> {
+                // Bulky tank via size/HP/resistance only — no armor (zombies never wear gear).
                 mul(z, Attributes.SCALE, "spc_scale", ProgressionConfig.specialJuggernautScale);
                 mul(z, Attributes.MAX_HEALTH, "spc_hp", ProgressionConfig.specialJuggernautHealthMul);
                 z.setHealth(z.getMaxHealth());
                 infinite(z, MobEffects.RESISTANCE, ProgressionConfig.specialJuggernautResistanceAmp);
-                if (ProgressionConfig.specialJuggernautIronArmor) {
-                    ironArmor(z);
-                }
             }
             default -> { /* ACTIVE / DEATH: handled at runtime */ }
         }
@@ -102,15 +93,5 @@ public final class SpecialRoller {
 
     private static void mul(Zombie z, Holder<Attribute> attr, String idPath, double factor) {
         AttributeModifiers.multiplyBase(z, attr, idPath, factor);
-    }
-
-    private static void ironArmor(Zombie z) {
-        z.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
-        z.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.IRON_CHESTPLATE));
-        z.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.IRON_LEGGINGS));
-        z.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.IRON_BOOTS));
-        for (EquipmentSlot s : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
-            z.setDropChance(s, 0.0f);
-        }
     }
 }
