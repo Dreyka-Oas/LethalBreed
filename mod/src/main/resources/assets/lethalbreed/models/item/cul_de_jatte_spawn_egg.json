@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "lethalbreed:item/cul_de_jatte_spawn_egg"
-  }
-}

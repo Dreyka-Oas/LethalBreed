@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "lethalbreed:item/traine_bas_spawn_egg"
-  }
-}

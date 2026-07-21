@@ -9,10 +9,10 @@ public final class ProgressionConfig {
     // ---- Difficulty phases (escalation) ----
     /** Master toggle for the infinite phase escalation (stats/gear/effects scale with the phase). */
     public static boolean phaseSystemEnabled = true;
-    /** Ticks between auto phase advances (12000 = 10 min). */
-    public static int phaseIntervalTicks = 12000;
-    /** Random +/- jitter (ticks) applied to each interval. */
-    public static int phaseJitterTicks = 1200;
+    /** Ticks between auto phase advances (36000 = 30 min). */
+    public static int phaseIntervalTicks = 36000;
+    /** Random +/- jitter (ticks) applied to each interval (3600 = ±3 min). */
+    public static int phaseJitterTicks = 3600;
 
     // ---- Phase stat-scaling formula: value(phase) = 1.0 + growth * phase^exponent ----
     /** Growth rate for the max-HP multiplier curve. */

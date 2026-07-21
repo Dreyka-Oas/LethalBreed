@@ -108,6 +108,10 @@ public final class SoundEventBus {
         for (double[] e : events) {
             List<SmartZombie> near = grid.queryRadius(e[0], e[1], e[2], e[3]);
             for (SmartZombie z : near) {
+                // Every zombie in earshot is ROUSED by the noise: notifyHeardSound (re-)arms its day alert so an
+                // awake one keeps hunting, and a sleeping one starts waking (after a short delay) to investigate
+                // this exact spot. A silent, non-attacking player emits nothing, so it never trips this — stealth.
+                z.mood().notifyHeardSound(gameTime, e[0], e[1], e[2]);
                 if (z.entity().getTarget() != null) {
                     continue; // already chasing a player directly
                 }

@@ -96,6 +96,7 @@ final class ConfigBoundsTable {
         b("randomEffectMaxAmplifier", 0, 9);
         b("leapEffectPerLevel", 0, 5);
         b("sunBurnDurationTicks", 20, 6000);   // new option (Spawn)
+        b("sunImmunePhase", 0, 1_000_000);
 
         // ---- CombatMoveConfig (Leap / Water / Climb / Breaking) ----
         b("leapCooldownActivations", 0, 1000);
@@ -250,6 +251,10 @@ final class ConfigBoundsTable {
         b("screamVolume", 0, 64);
         b("victoryPitch", 0.5, 2.0);
         b("distressPitch", 0.5, 2.0);
+        b("daySleepWakeDelayTicks", 0, 6000);
+        b("daySleepAlertTicks", 0, 72_000);
+        b("dayAwakePhaseStart", 0, 1_000_000);
+        b("dayAwakePhaseSlope", 0, 1);
 
         // ---- ExpertConfig (Expert) — floors kept strictly > 0, divisor >= 1, to preserve the guards ----
         b("expertStepDeadzone", 0, 4);

@@ -11,6 +11,10 @@ public final class ZombieMoodConfig {
     /** Master toggle for all three mood behaviours (celebrate / flee / regen). */
     public static boolean moodEnabled = true;
 
+    /** Toggle for the low-health FLEE behaviour (wounded zombie retreats + fires the distress rally scream).
+     *  OFF by default — a wounded zombie keeps hunting instead of running. Turn on to bring the retreat back. */
+    public static boolean fleeEnabled = false;
+
     // ---- Flee / regen health hysteresis (fraction of max health) ----
     /** Drop BELOW this fraction of max health (with a threat around) → start fleeing. Default 1/3. */
     public static double fleeHealthFraction = 0.3333;
@@ -73,4 +77,24 @@ public final class ZombieMoodConfig {
     public static float victoryPitch = 1.4f;
     /** Pitch of the distress scream (low = anguished). */
     public static float distressPitch = 0.6f;
+
+    // ---- Daytime sleep (the day they doze; noise or damage wakes them) ----
+    /** Master toggle: a targetless zombie sleeps during the day (head bowed). Before {@code sunImmunePhase}
+     *  it first shuffles to shade so it doesn't burn; once immune it can doze in the open. */
+    public static boolean daySleepEnabled = true;
+    /** Reaction lag (ticks) between a sleeper HEARING a sound and actually waking to investigate it. 20 = 1s.
+     *  Damage always wakes instantly (no delay). A silent, non-attacking player never wakes them (stealth). */
+    public static int daySleepWakeDelayTicks = 20;
+    /** How long (ticks) a day-zombie stays AWAKE and hunts (by sight AND sound) after being roused by a noise or
+     *  a hit, before an idle one goes back to sheltering/sleeping. Each new noise re-arms it. 200 = 10 s. A
+     *  merely-SEEN silent player never arms it (that is the stealth), so this timer — not a per-tick audibility
+     *  test — decides sleep vs hunt, which is what keeps a chasing zombie from stuttering. */
+    public static int daySleepAlertTicks = 200;
+    /** Phase at (and above) which a growing FRACTION of zombies stays awake during the day. Below it every
+     *  targetless zombie sleeps by day. Default 10. */
+    public static int dayAwakePhaseStart = 10;
+    /** Per-phase increase of the awake fraction past {@link #dayAwakePhaseStart}: awake = clamp((phase -
+     *  start + 1) * slope, 0, 1). 0.05 → 5% at the start phase, +5%/phase, everyone awake ~20 phases later.
+     *  A stable per-zombie roll decides who; the threshold only grows, so the awake set never shrinks. */
+    public static double dayAwakePhaseSlope = 0.05;
 }

@@ -43,12 +43,6 @@ dependencies {
     implementation("org.jocl:jocl:2.0.5")
     include("org.jocl:jocl:2.0.5")
 
-    // GeckoLib (animated entity rendering + .geo.json/.animation.json loading). Served by the Modrinth
-    // maven already declared above. `include` = Fabric Jar-in-Jar so the shipped/server jar needs no
-    // separately-installed GeckoLib. Same idiom as JOCL.
-    modImplementation("maven.modrinth:${project.property("geckolib_project")}:${project.property("geckolib_version")}")
-    include("maven.modrinth:${project.property("geckolib_project")}:${project.property("geckolib_version")}")
-
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

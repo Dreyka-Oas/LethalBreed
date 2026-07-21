@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "lethalbreed:item/bras_ossature_spawn_egg"
-  }
-}

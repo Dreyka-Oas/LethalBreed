@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.entity;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.entity.move.ZombieBrain;
 import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
 import net.minecraft.resources.ResourceKey;
@@ -69,9 +70,9 @@ public final class SmartZombie {
     public void setState(ZombieState state) {
         if (this.state != state) {
             this.state = state;
-            // Sync to the client so the horror render pipeline animates from the AUTHORITATIVE server state
-            // (walk/idle/pillar) instead of guessing from laggy client position. Only on change (no spam).
-            entity.setAttached(HorrorModelAttachment.ANIM_STATE, state.ordinal());
+            // Record the authoritative behaviour state so server-side systems can react to it (e.g. a dozing
+            // zombie stays silent via ZombieSleepSilenceMixin). Only on change (no spam).
+            entity.setAttached(ZombieStateAttachment.STATE, state.ordinal());
         }
     }
     public LODLevel lod() { return lod; }
@@ -89,6 +90,7 @@ public final class SmartZombie {
     public void updateMood(ServerLevel level, WorldAIContext ctx) { mood.update(level, ctx); }
     public void climbStep(ServerLevel level, WorldAIContext ctx) { brain.climbStep(level, ctx); }
     public boolean isClimbing() { return brain.isClimbing(); }
+    public void cancelClimb() { brain.cancelClimb(); }
     public void swimStep(ServerLevel level, WorldAIContext ctx) { brain.swimStep(level, ctx); }
     public boolean isSwimming() { return brain.isSwimming(); }
     public boolean dueThisActivation(int divisor) { return brain.dueThisActivation(divisor); }
@@ -100,6 +102,12 @@ public final class SmartZombie {
      */
     public void applySunBurn(ServerLevel level) {
         if (!WorldSpawnConfig.forceAllZombiesSunBurn || entity.fireImmune()) {
+            return;
+        }
+        // Phase-gated immunity: once the horde reaches WorldSpawnConfig.sunImmunePhase, daylight no longer
+        // burns them (they get tougher as the phases climb). The vanilla burn path is closed by the parallel
+        // ZombieSunImmunityMixin, so nothing re-ignites them here.
+        if (PhaseManager.current() >= WorldSpawnConfig.sunImmunePhase) {
             return;
         }
         if (entity.getRemainingFireTicks() > 0 || !level.isBrightOutside() || entity.isInWaterOrRain()) {

@@ -42,13 +42,8 @@ public final class ZombieVariation {
     private static final Identifier PSPD_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_spd");
     private static final long PHASE_SALT = 91237L;
 
-    /** Deterministic-per-zombie salt for the horror-model roll, and the chance a zombie wears one at all. */
-    private static final long MODEL_SALT = 55501L;
-    public static final double HORROR_MODEL_CHANCE = 0.6; // TODO expose via WorldSpawnConfig once the GUI field is wired
-
     public static void apply(Zombie z) {
         stripGear(z); // zombies never carry weapons/tools/armor (also clears vanilla natural gear + pickups)
-        rollHorrorModel(z); // pick which render model this zombie wears (0 = plain, 1..15 = a horror model)
         if (WorldSpawnConfig.enableVariation) {
             Random r = seeded(z, 0L);
             applyMultiplier(z, Attributes.SCALE, SCALE_ID, roll(r, WorldSpawnConfig.varScaleMin, WorldSpawnConfig.varScaleMax));
@@ -62,19 +57,6 @@ public final class ZombieVariation {
         } else {
             applyRandomEffect(z); // legacy flat effect roll when the phase system is off
         }
-    }
-
-    /**
-     * Roll this zombie's render model once, seeded by UUID so it is stable across reloads. Most zombies keep
-     * model 0 ({@code vanilla_look}); with {@link #HORROR_MODEL_CHANCE} probability one gets a random horror
-     * model 1..15. Same {@code minecraft:zombie} entity — only the client-side model differs.
-     */
-    private static void rollHorrorModel(Zombie z) {
-        Random r = seeded(z, MODEL_SALT);
-        if (r.nextDouble() >= HORROR_MODEL_CHANCE) {
-            return; // ordinary zombie — the default attachment value (0) renders the plain look
-        }
-        z.setAttached(HorrorModelAttachment.MODEL, 1 + r.nextInt(HorrorModels.HORROR_COUNT)); // 1..15
     }
 
     /** The six wearable/held slots a zombie could otherwise show gear in. */

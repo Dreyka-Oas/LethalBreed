@@ -21,10 +21,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * sound bus, exactly like the player-break hook in {@code EntityEventsInit#registerSound}. A zombie then pursues
  * the source position via short-term memory.
  *
- * <p>Covered events: {@code BLOCK_PLACE} (placing a block), {@code BLOCK_OPEN}/{@code BLOCK_CLOSE} (chests,
- * doors, trapdoors, shulker boxes...). Block breaking already routes through {@code PlayerBlockBreakEvents},
- * so {@code BLOCK_DESTROY} is intentionally NOT re-emitted here to avoid a double sound. A zombie source is
- * ignored so zombies don't hear their own digging/door-bashing (mirrors {@code SoundEventBus#tickEntities}).
+ * <p>Covered events: {@code BLOCK_PLACE} (placing a block); {@code BLOCK_OPEN}/{@code BLOCK_CLOSE} (doors,
+ * trapdoors, fence gates); and {@code CONTAINER_OPEN}/{@code CONTAINER_CLOSE} (chests, barrels, shulker boxes,
+ * ender chests — these emit CONTAINER_* game events, NOT BLOCK_*, so they need their own entries). Block
+ * breaking already routes through {@code PlayerBlockBreakEvents}, so {@code BLOCK_DESTROY} is intentionally NOT
+ * re-emitted here to avoid a double sound. Buttons/levers/pressure plates ({@code BLOCK_ACTIVATE}) are left out
+ * on purpose. A zombie source is ignored so zombies don't hear their own digging/door-bashing (mirrors
+ * {@code SoundEventBus#tickEntities}).
  */
 @Mixin(ServerLevel.class)
 public abstract class WorldSoundEventMixin {
@@ -37,8 +40,10 @@ public abstract class WorldSoundEventMixin {
         }
         GameEvent ev = event.value();
         if (ev != GameEvent.BLOCK_PLACE.value()
-                && ev != GameEvent.BLOCK_OPEN.value()
-                && ev != GameEvent.BLOCK_CLOSE.value()) {
+                && ev != GameEvent.BLOCK_OPEN.value()       // doors, trapdoors, fence gates
+                && ev != GameEvent.BLOCK_CLOSE.value()
+                && ev != GameEvent.CONTAINER_OPEN.value()   // chests, barrels, shulker boxes, ender chests
+                && ev != GameEvent.CONTAINER_CLOSE.value()) {
             return; // only these interactions make a noise zombies chase
         }
         Entity source = context.sourceEntity();
