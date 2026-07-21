@@ -10,5 +10,8 @@ public enum ZombieState {
     DESCENDING,
     FLEEING,
     SHELTERING,
-    CELEBRATING
+    CELEBRATING,
+    /** Dozing by day (head bowed). Appended LAST so existing ordinals stay stable — the ordinal is stored in
+     *  {@code ZombieStateAttachment.STATE}, read server-side to keep a sleeper silent. */
+    SLEEPING
 }

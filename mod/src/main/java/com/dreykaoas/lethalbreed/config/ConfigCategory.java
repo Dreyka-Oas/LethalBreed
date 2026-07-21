@@ -18,7 +18,7 @@ public final class ConfigCategory {
         if (n.contains("contam")) return "Contamination";
         if (n.contains("flee") || n.contains("regen") || n.contains("regain") || n.contains("distress")
                 || n.contains("celebrat") || n.contains("mood") || n.contains("scream")
-                || n.contains("victory")) return "Mood";
+                || n.contains("victory") || n.contains("sleep") || n.contains("dayawake")) return "Mood";
         if (n.startsWith("special")) return "Specials";
         if (n.startsWith("phase")) return "Phases";
         if (n.contains("sound")) return "Sound";

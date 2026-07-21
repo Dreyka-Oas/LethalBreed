@@ -68,8 +68,15 @@ public final class LODManager {
             // opaque wall still stands between it and the spot (e.g. a trapped, noisy mob enclosed in blocks),
             // it is NOT arrived — keep pursuing so it breaks through instead of giving up at the wall and
             // letting the half-broken block lapse. Memory still expires on its own timer above.
-            if (d <= arrive * arrive && canSeeSpot(level, sz.entity(),
-                    sz.pursuit().tgtX(), sz.pursuit().tgtY(), sz.pursuit().tgtZ())) {
+            boolean atSpot = d <= arrive * arrive && canSeeSpot(level, sz.entity(),
+                    sz.pursuit().tgtX(), sz.pursuit().tgtY(), sz.pursuit().tgtZ());
+            // A day-sleep SHADE-seek isn't "arrived" until the zombie's OWN foot block is out of the sky: being
+            // 2.5 blocks short with mere line-of-sight to the shade column still leaves it burning under open
+            // sky, so clearing here would strand it (clear → re-find same shade → clear) in a visible stutter.
+            // Ordinary noise memories keep the plain near+line-of-sight arrival.
+            boolean arrived = atSpot
+                    && (!sz.mood().isSeekingShade() || !level.canSeeSky(sz.entity().blockPosition()));
+            if (arrived) {
                 sz.pursuit().clearTarget();
                 sz.pursuit().clearMemory();
                 lod = LODLevel.FROZEN;

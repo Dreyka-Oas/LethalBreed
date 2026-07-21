@@ -4,11 +4,13 @@ import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.LODLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
+import com.dreykaoas.lethalbreed.util.Players;
 import com.dreykaoas.lethalbreed.util.TargetSelector;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
 import static com.dreykaoas.lethalbreed.util.Scalars.sq;
@@ -25,7 +27,7 @@ public final class MoodStateDispatch {
 
     /** ZombieMood's mood states. Owned here (rather than duplicated as a private enum on ZombieMood) so dispatch
      *  is a plain typed switch — no string bridge between the two classes. */
-    public enum State { NORMAL, FLEEING, SHELTERING, CELEBRATING }
+    public enum State { NORMAL, FLEEING, SHELTERING, CELEBRATING, SLEEPING }
 
     /** Returns true if the distress scream fired this call (caller bumps its own counter + latch). No-op for
      *  {@code NORMAL}. */
@@ -77,5 +79,24 @@ public final class MoodStateDispatch {
             return a;
         }
         return null;
+    }
+
+    /** The nearest TARGETABLE player within {@code radius} — the fallback threat a WOUNDED zombie flees from
+     *  even when nothing has hit it recently, so it keeps retreating while you stand near it instead of freezing
+     *  once the "last hurt by" memory lapses. Creative/spectator players are ignored (same rule as targeting). */
+    public static Player nearestTargetablePlayer(Zombie entity, double radius) {
+        Player best = null;
+        double bestSq = sq(radius);
+        for (Player p : entity.level().players()) {
+            if (!Players.isTargetable(p)) {
+                continue;
+            }
+            double dSq = entity.distanceToSqr(p);
+            if (dSq <= bestSq) {
+                bestSq = dSq;
+                best = p;
+            }
+        }
+        return best;
     }
 }

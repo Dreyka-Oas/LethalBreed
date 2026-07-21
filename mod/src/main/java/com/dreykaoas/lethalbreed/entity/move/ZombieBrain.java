@@ -44,6 +44,10 @@ public final class ZombieBrain {
     public boolean isClimbing() { return pillar.active(); }
     public boolean isSwimming() { return swimming; }
 
+    /** Force any in-progress jump-pillar off — used when a day-sleeper dozes so a half-built climb can't leave
+     *  it floating (the climb drain evicts it as soon as {@link #isClimbing()} goes false). */
+    public void cancelClimb() { pillar.cancel(); }
+
     /** Distance-tier throttle: true on 1 of every {@code divisor} activations of this zombie. */
     public boolean dueThisActivation(int divisor) { return divisor <= 1 || (activations++ % divisor) == 0; }
 
@@ -58,6 +62,15 @@ public final class ZombieBrain {
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LODLevel.FROZEN) return;
+        // Daytime sleep: a dozing zombie holds still. It is normally FROZEN (so this isn't even reached); this is
+        // a defensive stop in case it is momentarily active. The walk-to-shade is NOT here — that's a normal
+        // memory-target pursuit (NORMAL state) so the full breaking/pillaring nav carries it to the shade.
+        if (owner.mood().isSleeping()) {
+            pillar.cancel();
+            entity.getNavigation().stop();
+            owner.setState(ZombieState.SLEEPING);
+            return;
+        }
         // Sun-shelter overrides even the retreat: a burning wounded zombie dashes to shade (mood already found
         // the refuge and dropped the target). Checked before flee so shade-seeking wins over the straight run.
         if (owner.mood().isSheltering()) {
@@ -85,6 +98,10 @@ public final class ZombieBrain {
         // SAME activation immediately before this tick — so no setTarget re-assert is needed here (was
         // duplicate work). We still read the pursuit target to drive movement dispatch below.
         LivingEntity te = p.targetEntity();
+        // A day-sleeper calmly walking to its shade block (a memory target, so te == null) must NOT use the
+        // combat approach — leaping toward shade reads as a jerky pounce. Plain navigation only; it still digs
+        // if genuinely walled in (stuck-detection below), just no speculative hops.
+        boolean shadeSeek = te == null && owner.mood().isSeekingShade();
         double dx = p.tgtX() - entity.getX();
         double dz = p.tgtZ() - entity.getZ();
         double dy = p.tgtY() - entity.getY();
@@ -109,9 +126,10 @@ public final class ZombieBrain {
         lastHorizDistSq = horizSq;
         boolean stuck = stuckTicks >= CombatMoveConfig.stuckActivations;
 
-        // Occasional leap; a successful leap carries the arc this tick. Suppressed while stuck (breaking).
+        // Occasional leap; a successful leap carries the arc this tick. Suppressed while stuck (breaking) and
+        // while calmly walking to shade for a day-doze (no pouncing at a shady spot).
         leap.tickCooldown();
-        if (!stuck && leap.tryLeap(level, dx, dz, dy, horizSq)) {
+        if (!stuck && !shadeSeek && leap.tryLeap(level, dx, dz, dy, horizSq)) {
             owner.setState(ZombieState.PURSUING_PLAYER);
             return;
         }

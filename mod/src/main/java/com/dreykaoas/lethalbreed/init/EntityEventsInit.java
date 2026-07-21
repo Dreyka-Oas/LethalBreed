@@ -8,8 +8,6 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
-import com.dreykaoas.lethalbreed.entity.HorrorModelAttachment;
-import com.dreykaoas.lethalbreed.entity.gecko.HorrorReplacedZombie;
 import com.dreykaoas.lethalbreed.entity.SpawnControl;
 import com.dreykaoas.lethalbreed.entity.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
@@ -90,16 +88,6 @@ public final class EntityEventsInit {
     /** Cancel fall damage for our diggers, and spread Super Contamination on zombie-to-victim hits. */
     private static void registerDamage(ZombieRegistry registry) {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            // A horror-model zombie that lands a hit plays its bespoke attack lunge (client-synced one-shot).
-            if (source.getEntity() instanceof Zombie attacker) {
-                triggerHorrorAnim(attacker, "attack");
-            }
-            // A horror-model zombie flinches ONLY when actually STRUCK by something living — never from
-            // fire/sun-burn/fall/drown, whose per-tick damage would spam the flinch and make a burning zombie
-            // freeze in the hurt pose and slide instead of walking on.
-            if (entity instanceof Zombie victim && source.getEntity() instanceof net.minecraft.world.entity.LivingEntity) {
-                triggerHorrorAnim(victim, "hurt");
-            }
             if (CombatMoveConfig.preventFallDamage && entity instanceof Zombie && source.is(DamageTypeTags.IS_FALL)
                     && registry.get(entity.getId()) != null) {
                 return false;
@@ -116,16 +104,6 @@ public final class EntityEventsInit {
             }
             return true;
         });
-    }
-
-    /** Fire a horror model's one-shot clip (e.g. attack) on a zombie, gated to instances that actually wear a
-     *  horror model (index &gt; 0) so ordinary zombies never emit trigger packets. GeckoLib syncs it to clients. */
-    private static void triggerHorrorAnim(Zombie z, String action) {
-        int model = z.getAttachedOrElse(HorrorModelAttachment.MODEL, 0);
-        if (model > 0) {
-            HorrorReplacedZombie.INSTANCE.triggerAnim(z, HorrorReplacedZombie.CONTROLLER,
-                    HorrorReplacedZombie.clip(model, action));
-        }
     }
 
     /** Splitter (and other DEATH specials) act when the zombie dies; contaminated victims clear their plague

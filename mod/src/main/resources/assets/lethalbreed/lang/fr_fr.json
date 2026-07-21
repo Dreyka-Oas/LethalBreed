@@ -335,7 +335,6 @@
   "lethalbreed.option.soundLoudMultiplier.desc": "Multiplicateur de rayon pour les sons forts.",
   "lethalbreed.option.soundMoveThreshold.desc": "Mouvement min pour émettre un pas.",
   "lethalbreed.option.soundArriveDistance.desc": "Distance considérée comme atteinte de la source.",
-  "lethalbreed.option.climbCooldown.desc": "Activations entre étapes de pilier.",
   "lethalbreed.option.stuckActivations.desc": "Activations sans progrès avant d'agir.",
   "lethalbreed.option.climbJumpMaxAge.desc": "Abandonne un rung de pilier sans gain de hauteur en tant d'activations.",
   "lethalbreed.option.descendThreshold.desc": "Creuse vers le bas si la cible est si bas.",

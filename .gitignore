@@ -18,3 +18,8 @@ run/
 # Dev run-output dumps (gradle log captures)
 rc.txt
 rs.txt
+# Cloudflare Wrangler local cache
+.wrangler/
+# OS junk
+.DS_Store
+Thumbs.db

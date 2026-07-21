@@ -59,4 +59,8 @@ public final class WorldSpawnConfig {
     public static boolean forceAllZombiesSunBurn = true;
     /** Fire ticks applied per sun-burn trigger (160 = 8s, like vanilla). */
     public static int sunBurnDurationTicks = 160;
+    /** Difficulty phase at (and above) which zombies become IMMUNE to daylight burning — the more the phases
+     *  climb, the tougher they get. Below it they still burn (and flee to shade + sleep by day). Set very high
+     *  to effectively disable the immunity. Default 5. */
+    public static int sunImmunePhase = 5;
 }
