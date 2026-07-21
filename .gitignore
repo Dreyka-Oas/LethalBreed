@@ -23,3 +23,5 @@ rs.txt
 # OS junk
 .DS_Store
 Thumbs.db
+# Nested LethalBreed-web repo (separate, private git repo — do not track/embed)
+/web/
