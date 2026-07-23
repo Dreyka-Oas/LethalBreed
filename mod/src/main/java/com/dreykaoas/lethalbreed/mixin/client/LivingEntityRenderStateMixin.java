@@ -20,6 +20,9 @@ public class LivingEntityRenderStateMixin implements BellyChargeHolder {
     @Unique
     private boolean lethalbreed$hallucinateZombie;
 
+    @Unique
+    private boolean lethalbreed$sleeping;
+
     @Override
     public float lethalbreed$bellyCharge() {
         return lethalbreed$bellyCharge;
@@ -38,5 +41,15 @@ public class LivingEntityRenderStateMixin implements BellyChargeHolder {
     @Override
     public void lethalbreed$hallucinateZombie(boolean on) {
         this.lethalbreed$hallucinateZombie = on;
+    }
+
+    @Override
+    public boolean lethalbreed$sleeping() {
+        return lethalbreed$sleeping;
+    }
+
+    @Override
+    public void lethalbreed$sleeping(boolean sleeping) {
+        this.lethalbreed$sleeping = sleeping;
     }
 }
