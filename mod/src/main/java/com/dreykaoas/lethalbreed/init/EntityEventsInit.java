@@ -62,6 +62,11 @@ public final class EntityEventsInit {
                 if (WorldSpawnConfig.stripZombieEquipment) {
                     SpawnControl.stripEquipment(zombie);
                 }
+                // Vanilla despawns non-persistent MONSTER-category mobs once every player is far enough away
+                // (random roll past 32 blocks, unconditional past 128) — that would silently undo the whole
+                // LOD/FROZEN system (TickScheduler/SpatialGrid), which exists specifically to keep the zombie
+                // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
+                zombie.setPersistenceRequired();
                 AiConflictDetector.scanZombie(zombie); // once: detect foreign zombie-AI mods
                 registry.add(zombie, world.dimension());
             }
