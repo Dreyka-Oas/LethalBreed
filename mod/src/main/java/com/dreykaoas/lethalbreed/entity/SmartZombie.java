@@ -73,6 +73,9 @@ public final class SmartZombie {
             // Record the authoritative behaviour state so server-side systems can react to it (e.g. a dozing
             // zombie stays silent via ZombieSleepSilenceMixin). Only on change (no spam).
             entity.setAttached(ZombieStateAttachment.STATE, state.ordinal());
+            // Mirror the sleeping bit into the SYNCED attachment so the client renderer can pose the zombie
+            // as asleep (arms down, eyes closed). Kept in lockstep with STATE, on change only.
+            entity.setAttached(ZombieStateAttachment.SLEEPING, state == ZombieState.SLEEPING);
         }
     }
     public LODLevel lod() { return lod; }
