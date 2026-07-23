@@ -3,6 +3,7 @@
   "package": "com.dreykaoas.lethalbreed.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "EffectClearCuresPlagueMixin",
     "LivingEntityCanBeAffectedMixin",
     "MilkKeepsPlagueMixin",
     "MobGoalsAccessor",
