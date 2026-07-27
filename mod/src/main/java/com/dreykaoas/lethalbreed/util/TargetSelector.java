@@ -82,14 +82,16 @@ public final class TargetSelector {
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
         boolean prof = StageProfiler.enabled();
         long t0 = prof ? System.nanoTime() : 0L;
-        // Broad phase. The vertical extent is configurable because the sweep costs by VOLUME, not by hit
-        // count, and a 40-block radius otherwise sweeps an 80-block-tall column of mostly sky (see
-        // TargetingConfig.targetDetectVerticalRadius). Every candidate is still distance-filtered against the
-        // true spherical radius below, so narrowing the box only ever REMOVES far-off-vertical candidates.
-        double vert = TargetingConfig.targetDetectVerticalRadius;
-        AABB box = vert > 0.0 && vert < radius
-                ? self.getBoundingBox().inflate(radius, vert, radius)
-                : self.getBoundingBox().inflate(radius);
+        // Broad phase. MEASURED (StageProfiler, ~100 zombies): this sweep is ~50% of the whole reclassify
+        // stage, which is itself ~40% of the mod's tick time — the single most expensive thing here.
+        //
+        // Shrinking the box does NOT help, and that was tested rather than assumed: narrowing the vertical
+        // extent from the full radius to 24 blocks left the sweep at 23.8us/call against 22.1 without it.
+        // The cost is not the volume, it is visiting every entity inside it and running isValid on each —
+        // and isValid rejects Zombie, which is nearly all of them. Making this genuinely cheaper means not
+        // handing the horde to the scan in the first place (a prey-side spatial index the mod would own,
+        // like the one it already keeps for zombies), which is an architectural change, not a tweak.
+        AABB box = self.getBoundingBox().inflate(radius);
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
         if (prof) {
             StageProfiler.sub(StageProfiler.Stage.SCAN, System.nanoTime() - t0);

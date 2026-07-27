@@ -73,7 +73,6 @@ final class ConfigBoundsTable {
 
         // ---- TargetingConfig (Targeting / Sound) ----
         b("targetDetectRadius", 0, 128);
-        b("targetDetectVerticalRadius", 0, 256);
         b("targetMemoryTicks", 0, 72_000);
         b("targetSwitchMargin", 1, 8);
         b("soundBaseRadius", 0, 128);
