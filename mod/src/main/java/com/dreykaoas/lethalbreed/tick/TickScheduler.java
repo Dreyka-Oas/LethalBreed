@@ -25,6 +25,7 @@ public final class TickScheduler {
     private final EveryTickPass everyTickPass;
     private final WorldMaintenance world;
     private final PerfRecap perfRecap;
+    private final StageProfiler profiler = new StageProfiler();
 
     private long tickCounter = 0L;
     private final Set<SmartZombie> climbers = new HashSet<>(); // zombies mid jump-pillar, ticked every tick
@@ -32,10 +33,10 @@ public final class TickScheduler {
 
     public TickScheduler(ZombieRegistry registry, DimensionManager dimensions) {
         this.registry = registry;
-        this.bucketPass = new LodBucketPass(registry, dimensions);
+        this.bucketPass = new LodBucketPass(registry, dimensions, profiler);
         this.everyTickPass = new EveryTickPass(dimensions);
         this.world = new WorldMaintenance(dimensions);
-        this.perfRecap = new PerfRecap(registry, dimensions);
+        this.perfRecap = new PerfRecap(registry, dimensions, profiler);
     }
 
     public void onServerTick(MinecraftServer server) {

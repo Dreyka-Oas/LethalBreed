@@ -10,6 +10,22 @@ public final class TargetingConfig {
     // ---- Targeting (any living entity, not just players) ----
     /** Detection radius (blocks) for acquiring a target entity. Larger = sees prey farther, costs more. */
     public static double targetDetectRadius = 40.0;
+    /**
+     * Vertical half-height (blocks) of the broad-phase box the target scan sweeps. The scan is the single
+     * most expensive thing the mod does per zombie activation — measured at ~52% of the reclassify stage,
+     * itself ~40% of total AI time — and its cost scales with the VOLUME swept, not with how many entities
+     * are found. At {@link #targetDetectRadius} = 40 the default box is 80 blocks tall, so most of what it
+     * sweeps is sky and bedrock.
+     *
+     * <p>Lowering this shrinks the swept volume proportionally. It is a REAL behaviour change, which is why
+     * it defaults to off: a target within the detect radius but higher/lower than this is no longer acquired
+     * by sight (a player on a 30-block tower stops being seen from the ground). Sound-based memory is
+     * unaffected. 24 mirrors {@link SchedulerConfig#spatialVerticalLimit}, the same tradeoff the mod already
+     * makes for neighbour and sound queries, and cuts the swept volume ~1.7x.
+     *
+     * <p>0 = off (sweep the full spherical radius vertically — the original behaviour).
+     */
+    public static double targetDetectVerticalRadius = 0.0;
     /** Require line of sight to acquire a target by VISION — opaque blocks block sight, translucent ones
      *  (glass, ice, leaves) don't. A target behind a solid wall is found via sound instead, not sight. */
     public static boolean requireLineOfSight = true;

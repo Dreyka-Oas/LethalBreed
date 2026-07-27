@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.util;
 
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+import com.dreykaoas.lethalbreed.tick.StageProfiler;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -79,11 +80,43 @@ public final class TargetSelector {
     }
 
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
-        AABB box = self.getBoundingBox().inflate(radius);
+        boolean prof = StageProfiler.enabled();
+        long t0 = prof ? System.nanoTime() : 0L;
+        // Broad phase. The vertical extent is configurable because the sweep costs by VOLUME, not by hit
+        // count, and a 40-block radius otherwise sweeps an 80-block-tall column of mostly sky (see
+        // TargetingConfig.targetDetectVerticalRadius). Every candidate is still distance-filtered against the
+        // true spherical radius below, so narrowing the box only ever REMOVES far-off-vertical candidates.
+        double vert = TargetingConfig.targetDetectVerticalRadius;
+        AABB box = vert > 0.0 && vert < radius
+                ? self.getBoundingBox().inflate(radius, vert, radius)
+                : self.getBoundingBox().inflate(radius);
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
+        if (prof) {
+            StageProfiler.sub(StageProfiler.Stage.SCAN, System.nanoTime() - t0);
+        }
+        int n = candidates.size();
+        if (n == 0) {
+            return null; // nothing in range: skip the shuffle, the sort and the radius pass entirely
+        }
+        double radiusSq = radius * radius;
+        if (n == 1) {
+            // Overwhelmingly the common case once zombies are excluded. Ordering is meaningless for one
+            // element, so go straight to the visibility test.
+            LivingEntity only = candidates.get(0);
+            if (self.distanceToSqr(only) > radiusSq) {
+                return null;
+            }
+            long tl = prof ? System.nanoTime() : 0L;
+            boolean seen = !TargetingConfig.requireLineOfSight || canSee(level, self, only);
+            if (prof) {
+                StageProfiler.sub(StageProfiler.Stage.LOS, System.nanoTime() - tl);
+            }
+            return seen ? only : null;
+        }
+        long tOrder = prof ? System.nanoTime() : 0L;
         // Shuffle first so entities that end up EXACTLY tied (same distance band AND same height gap) resolve
-        // at random — List.sort is stable, so it preserves this randomised order for equal keys.
-        for (int i = candidates.size() - 1; i > 0; i--) {
+        // at random — the sort below is stable, so it preserves this randomised order for equal keys.
+        for (int i = n - 1; i > 0; i--) {
             int j = self.getRandom().nextInt(i + 1);
             LivingEntity tmp = candidates.get(i);
             candidates.set(i, candidates.get(j));
@@ -93,28 +126,62 @@ public final class TargetSelector {
         // candidates (e.g. one overhead, one at our level) prefer the one nearest in HEIGHT — a target at the
         // zombie's own level is reachable without a climb, so it wins over one perched above at the same range.
         // Exact ties (same band + same height) keep the random order from the shuffle above.
+        //
+        // Keys are computed ONCE per candidate rather than inside the comparator: a comparator that calls
+        // distanceToSqr twice per comparison performs ~2*n*log(n) distance computations for an n-element list,
+        // and this runs for every zombie on every bucket activation (measured at ~40% of the mod's tick time).
         final double TIE_BAND = 4.0; // 4 = (2 blocks)²: distances differing by <2 blocks count as equal
-        candidates.sort((a, b) -> {
-            long ba = (long) (self.distanceToSqr(a) / TIE_BAND);
-            long bb = (long) (self.distanceToSqr(b) / TIE_BAND);
-            if (ba != bb) {
-                return Long.compare(ba, bb);
+        final double selfY = self.getY();
+        long[] band = new long[n];
+        double[] heightGap = new double[n];
+        double[] distSq = new double[n];
+        for (int i = 0; i < n; i++) {
+            LivingEntity e = candidates.get(i);
+            double d = self.distanceToSqr(e);
+            distSq[i] = d;
+            band[i] = (long) (d / TIE_BAND);
+            heightGap[i] = Math.abs(e.getY() - selfY);
+        }
+        // Insertion sort over the parallel arrays: n is small (zombies are excluded by isValid, so these are
+        // just the nearby prey), it is stable — so exact ties keep the shuffle's random order, as before — and
+        // unlike sorting an Integer[] index array it boxes nothing on a path that runs per zombie per activation.
+        for (int i = 1; i < n; i++) {
+            LivingEntity ce = candidates.get(i);
+            long cb = band[i];
+            double ch = heightGap[i];
+            double cd = distSq[i];
+            int j = i - 1;
+            while (j >= 0 && (band[j] > cb || (band[j] == cb && heightGap[j] > ch))) {
+                candidates.set(j + 1, candidates.get(j));
+                band[j + 1] = band[j];
+                heightGap[j + 1] = heightGap[j];
+                distSq[j + 1] = distSq[j];
+                j--;
             }
-            double dya = Math.abs(a.getY() - self.getY());
-            double dyb = Math.abs(b.getY() - self.getY());
-            return Double.compare(dya, dyb);
-        });
-        double radiusSq = radius * radius;
-        for (LivingEntity e : candidates) {
-            // SIGHT only: within the visual detect radius AND (if required) an unobstructed line of sight.
-            // List is distance-sorted, so the first visible candidate is the nearest visible one.
-            boolean seen = self.distanceToSqr(e) <= radiusSq
-                    && (!TargetingConfig.requireLineOfSight || canSee(level, self, e));
-            if (seen) {
-                return e; // nearest seen — done
+            candidates.set(j + 1, ce);
+            band[j + 1] = cb;
+            heightGap[j + 1] = ch;
+            distSq[j + 1] = cd;
+        }
+        if (prof) {
+            StageProfiler.sub(StageProfiler.Stage.ORDER, System.nanoTime() - tOrder);
+        }
+        long tLos = prof ? System.nanoTime() : 0L;
+        try {
+            for (int i = 0; i < n; i++) {
+                // SIGHT only: within the visual detect radius AND (if required) an unobstructed line of sight.
+                // Iterated in distance order, so the first visible candidate is the nearest visible one.
+                if (distSq[i] <= radiusSq
+                        && (!TargetingConfig.requireLineOfSight || canSee(level, self, candidates.get(i)))) {
+                    return candidates.get(i); // nearest seen — done
+                }
+            }
+            return null;
+        } finally {
+            if (prof) {
+                StageProfiler.sub(StageProfiler.Stage.LOS, System.nanoTime() - tLos);
             }
         }
-        return null;
     }
 
     /** An entity is audible only when it actually emits noise this tick: walking (moved at least

@@ -22,10 +22,12 @@ import java.util.Set;
 final class LodBucketPass {
     private final ZombieRegistry registry;
     private final DimensionManager dimensions;
+    private final StageProfiler profiler;
 
-    LodBucketPass(ZombieRegistry registry, DimensionManager dimensions) {
+    LodBucketPass(ZombieRegistry registry, DimensionManager dimensions, StageProfiler profiler) {
         this.registry = registry;
         this.dimensions = dimensions;
+        this.profiler = profiler;
     }
 
     // Rotated each run() so the frozen-reclassify skip staggers WHICH frozen zombies refresh on a given
@@ -85,20 +87,45 @@ final class LodBucketPass {
                 }
             }
 
+            // Per-stage timing: one branch per activation when disabled (a dev-only static), so a shipped
+            // jar pays nothing. See StageProfiler.
+            boolean prof = StageProfiler.enabled();
+            long t = prof ? System.nanoTime() : 0L;
+
             // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
             // ALL buckets — a global tick%interval would only ever align with bucket 0.
             LODManager.classify(sz, level);
+            if (prof) {
+                long n = System.nanoTime();
+                profiler.add(StageProfiler.Stage.CLASSIFY, n - t);
+                t = n;
+            }
             LODLevel lod = sz.lod();
             WorldAIContext ctx = dimensions.get(sz.dimension());
             // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
             // so neighbour queries still find them: a Hurleur rallying idle zombies, a Soigneur healing them,
             // and sound propagation all target exactly these.
             ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
+            if (prof) {
+                long n = System.nanoTime();
+                profiler.add(StageProfiler.Stage.GRID, n - t);
+                t = n;
+            }
             // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
             sz.applySunBurn(level);
+            if (prof) {
+                long n = System.nanoTime();
+                profiler.add(StageProfiler.Stage.SUNBURN, n - t);
+                t = n;
+            }
             // Mood (celebrate/flee/regen) also runs before the FROZEN skip so a targetless fleeing/celebrating
             // zombie still gets processed; it can un-freeze itself (LOD→HIGH), so re-read the tier afterward.
             sz.updateMood(level, ctx);
+            if (prof) {
+                long n = System.nanoTime();
+                profiler.add(StageProfiler.Stage.MOOD, n - t);
+                t = n;
+            }
             lod = sz.lod();
             if (lod == LODLevel.FROZEN) {
                 continue;
@@ -126,7 +153,11 @@ final class LodBucketPass {
             }
             spent++;
 
+            long tt = prof ? System.nanoTime() : 0L;
             sz.tick(level, ctx);
+            if (prof) {
+                profiler.add(StageProfiler.Stage.TICK, System.nanoTime() - tt);
+            }
             if (sz.isClimbing()) {
                 climbers.add(sz);
             }

@@ -45,4 +45,12 @@ public final class OptionList extends ContainerObjectSelectionList<OptionEntry> 
     public int getRowWidth() {
         return getWidth() - 12;
     }
+
+    /** Commit any debounced edit still held by a row. Called when the screen closes so a value typed and
+     *  immediately followed by Escape is never dropped by {@link NumOptionEntry}'s debounce. */
+    public void flushPendingEdits() {
+        for (OptionEntry e : children()) {
+            e.flushPending();
+        }
+    }
 }

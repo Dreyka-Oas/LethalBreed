@@ -109,6 +109,9 @@ public final class CustomConfigScreen extends Screen {
 
     @Override
     public void onClose() {
+        if (optList != null) {
+            optList.flushPendingEdits(); // don't let a debounced edit die with the screen
+        }
         this.minecraft.setScreen(null);
     }
 }

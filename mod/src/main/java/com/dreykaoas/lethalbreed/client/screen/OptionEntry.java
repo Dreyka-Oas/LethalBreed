@@ -37,6 +37,12 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
 
     protected abstract void doReset();
 
+    /** Push any change this row is still holding back. Rows that send on every keystroke have nothing to do;
+     *  {@link NumOptionEntry} debounces its edit field and overrides this so a pending edit is not lost when
+     *  the screen closes. Called on close and whenever the row loses focus. */
+    public void flushPending() {
+    }
+
     /** Trim a string from the tail (2 chars at a time) until it fits {@code maxW} pixels — the shared label/desc
      *  ellipsis-free truncation. Keeps at least a few characters so a very narrow row still shows something. */
     private String truncateToWidth(String s, int maxW) {
