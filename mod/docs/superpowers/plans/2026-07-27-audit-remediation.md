@@ -483,9 +483,29 @@ anticipée, chemin direct à un candidat, clés de tri calculées une fois au li
 insertion sans boxing) sont **dans le bruit** sur ce scénario : `>order` ne pèse que 18 % de 40 %. Gardées
 parce qu'elles font strictement moins de travail, pas parce qu'elles se mesurent.
 
-**Ce qu'un vrai correctif de #12 demanderait.** Ne pas livrer la horde au scan : un index spatial des
-**proies**, tenu par le mod, comme celui qu'il tient déjà pour ses zombies. C'est un changement
-d'architecture, pas un réglage — laissé à l'arbitrage de l'auteur, avec les chiffres pour le décider.
+**Ce qu'un vrai correctif de #12 demandait — et qui a été fait.** Ne pas livrer la horde au scan : un index
+spatial des **proies**, tenu par le mod, comme celui qu'il tient déjà pour ses zombies
+(`spatial/TargetIndex.java`). Mesuré sur le même harnais, index activé contre index désactivé, tout le
+reste identique — **les intervalles interquartiles sont disjoints sur les quatre lignes**, ce n'est donc
+pas du bruit :
+
+| Sous-étape | Sans index | Avec index | Gain |
+|---|---:|---:|---:|
+| `>scan` | 28,15 µs [23,0–41,3] | **6,30** [6,2–6,6] | **−78 %** |
+| `>order` | 16,55 µs [14,3–19,2] | 8,60 [8,5–8,8] | −48 % |
+| `>los` | 7,55 µs [6,7–8,6] | 5,05 [4,9–5,1] | −33 % |
+| **`classify`** | **61,20 µs** [53,8–76,1] | **27,20** [27,0–27,9] | **−56 %** |
+
+`classify` pesant ~40 % du temps IA, le diviser par deux retire environ **20 % du coût IA total** — et
+c'est un plancher : le gain croît avec la horde, puisque l'ancien scan était O(zombies) là où le nouveau
+est O(proies proches). `>order` et `>los` baissent aussi, l'index rendant la liste de candidats plus
+petite et plus propre.
+
+Trois choix explicites dans l'implémentation : les **joueurs ne sont pas indexés** (lus en direct — aucun
+mode de défaillance acceptable ne doit pouvoir cacher un joueur à la horde) ; `indexable()` teste
+exactement le même `instanceof Zombie` qu'`isValid()`, donc les deux ne peuvent pas diverger ; et la
+collecte filtre sur la distance **horizontale** seule, un sur-ensemble de l'ancienne boîte, le filtre 3D
+exact restant chez l'appelant — aucune cible légale ne peut disparaître.
 
 **#13 (`ShelterFinder.findShade`) — la contre-expertise est confirmée, par l'impossibilité de le mesurer.**
 Un scénario de jour a été monté pour l'exercer. `mood`, l'étape qui contient `handleDaySleep` → `findShade`,
@@ -694,11 +714,16 @@ ne touche pas, a varié du simple au double entre les deux mêmes runs).
 
 **Validation empirique des 24 injections mixin.** Serveur dédié démarré headless (`runServer`) :
 `Done (3.275s)!`, **zéro erreur mixin, zéro exception**, avec `defaultRequire: 1` actif — donc toutes les
-injections s'appliquent réellement, y compris les trois `@Redirect`. Reste un risque *non testable ici* :
-`defaultRequire: 1` transforme tout conflit avec un autre mod (Lithium sur `NaturalSpawner`, un mod de HUD
-sur `renderHeart`/`renderFood`) en crash de chargement plutôt qu'en dégradation. **Décision laissée à
-l'auteur** : passer les mixins purement cosmétiques (HUD, particules, modèles) en `require = 0` les ferait
-échouer silencieusement au lieu de tuer le démarrage. Non fait sans son arbitrage.
+injections s'appliquent réellement, y compris les trois `@Redirect`.
+
+**Politique de `require` — tranchée.** `defaultRequire: 1` transformait tout conflit avec un autre mod
+(Lithium sur `NaturalSpawner`, un mod de HUD sur `renderHeart`/`renderFood`) en **crash de chargement**,
+y compris pour une teinte de HUD. Les **9 injecteurs purement présentationnels** — HUD, particules,
+modèles, render state, culling client — passent en `require = 0` : un mod de HUD qui redirige le même
+appel doit coûter un effet visuel, pas la partie. Tout le reste conserve `require = 1`, parce qu'un mod
+silencieusement privé de sa mécanique est pire qu'un mod qui refuse de démarrer.
+`PlayerItemDropSoundMixin` reste volontairement en `require = 1` malgré son nom : le bruit d'un objet
+lâché **attire les zombies**, c'est du gameplay, pas du son d'ambiance.
 
 **Scan de vulnérabilités (jamais fait à l'audit).** API OSV sur les **108 artefacts** du `runtimeClasspath`
 (témoin positif validé : gson 2.8.5 → CVE-2022-25647 bien détecté).
