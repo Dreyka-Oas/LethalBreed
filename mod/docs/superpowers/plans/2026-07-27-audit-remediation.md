@@ -576,11 +576,82 @@ HIGH/MEDIUM pendant 200 ticks — lesquels paient alors le scan de #12 à chaque
 
 ---
 
-## Phase 7 — Compléter l'audit (les trois lentilles non abouties)
+## Phase 7 — Compléter l'audit — **FAITE (2026-07-27)**
+
+Les trois lentilles ont été menées à terme. Elles ont produit **trois findings, tous corrigés** (commits
+`53358e4`, `d197286`), plus deux suspicions de l'audit **levées** et une validation empirique.
+
+| # | Lentille | Finding | Sév | État |
+|---|---|---|---|---|
+| P7-1 | Cycle de vie | `ENTITY_UNLOAD` retire du registre mais **jamais de la `SpatialGrid`** | 🟠 | **Corrigé** |
+| P7-2 | Algorithmique | Le pass de directions CPU minimise `coût(voisin)`, la relaxation et le kernel GPU minimisent `coût + pas` → **le trajet dépend de la présence d'un GPU** | 🟡 | **Corrigé + test** |
+| P7-3 | Mixins/compat | `fabric-api` en `suggests` alors que c'est une dépendance **dure** | 🟡 | **Corrigé** |
+
+**P7-1 — la fuite que l'audit #2 ne pouvait pas voir.** `spatialGrid().remove()` n'a qu'un seul appelant,
+`LodBucketPass.untrack()`, lui-même joignable uniquement depuis `for (SmartZombie sz : registry.all())`.
+Or `ENTITY_UNLOAD` fait `registry.remove(id)` **en premier** : la cellule n'est donc plus jamais visitée et
+son entrée de grille reste pour toute la session. Chaque mort de zombie et chaque déchargement de chunk en
+abandonne une, épinglant `SmartZombie → Zombie → ServerLevel → MinecraftServer`. Trois conséquences, pas
+une : mémoire qui croît sans borne dans la session, `queryRadius` dont les listes de cellules grossissent
+donc dont le coût croît avec la durée de jeu, et **requêtes de voisinage qui matchent des fantômes** (son,
+ralliement Hurleur, soin Soigneur agissant sur des entités mortes). Relâché seulement au `SERVER_STOPPED`
+via `dimensions.clear()` — ce n'est donc pas une fuite inter-session comme #2, mais une fuite intra-session
+non bornée. Corrigé en retirant de la grille dans `ENTITY_UNLOAD` avant de retirer du registre.
+
+**P7-2 — divergence mesurée, pas supposée.** `FlowFieldDirectionOptimalTest` assert l'identité de
+réalisation (`coût(cible) + pas + extra == coût(cellule)`) et **échouait** avant correction : grille à
+obstacles, cellule (4,24) de coût 356 pointant vers un pas réalisant 358. Le self-test existant
+(`ComputeSelfTest`) ne pouvait pas l'attraper — il n'assertait que « descend », ce que les deux critères
+satisfont. Ampleur mesurée par `RoutingQualityMeasureTest` aux défauts (ortho=10, diag=14) :
+
+| Terrain | Cellules | Divergentes | % | Surcoût |
+|---|---:|---:|---:|---:|
+| 0 % de murs | 102 375 | 0 | 0,0 % | — |
+| 10 % de murs | 92 101 | 918 | 1,0 % | 2 |
+| 20 % de murs | 78 430 | 944 | 1,2 % | 2 |
+| 28 % de murs | 63 885 | 491 | 0,8 % | 2 |
+| 35 % de murs | 31 741 | 102 | 0,3 % | 2 |
+
+Le gain est d'abord un gain de **déterminisme** (même trajet avec ou sans GPU), pas de performance : ~1 %
+des cellules gaspillaient 20 % d'un pas droit. Aucune régression de perf mesurable
+(`FlowFieldPerfBench` : 8,03 → 8,22 ms de solve, écart dans le bruit — le chemin *sample*, que le correctif
+ne touche pas, a varié du simple au double entre les deux mêmes runs).
+
+**Suspicions de l'audit levées (ne pas les re-signaler) :**
+
+| Point suspecté | Verdict | Raison |
+|---|---|---|
+| Overflow `INF + coût` dans Bellman-Ford | **Innocenté** | `flowBreakCost`/`flowBuildCost` bornés à `[0, 100_000]`, `nc < 32767` écarté avant addition, pas ≤ 1000 → `cand` plafonne à ~134 k, très loin d'`Integer.MAX_VALUE`. Vrai des deux côtés (Java et kernel) |
+| `SpecialAttachment` avec un id inconnu (downgrade, save éditée) | **Innocenté** | `SpecialType.fromId` traite `null`, chaîne vide et id inconnu → `NONE` |
+| Conflit `ZombieBellyModelMixin` / `ZombieSleepArmsMixin` en TAIL | **Innocenté** | `ZombieSleepArmsMixin` n'est pas sur cette branche, et les deux écrivent des parts disjointes |
+| Overflow de `worldAge` sur la phase | **Innocenté** | `PhaseManager` utilise `long` de bout en bout (`lastAdvanceGameTime`, `now`). Vérifié sur un monde réel à `worldAge=3 422 606 636`, au-delà d'`Integer.MAX_VALUE` |
+| Bornes de `PlacedBlockTracker` / `BlockOperationQueue` | **Innocenté** | Cappés (`blockOpsQueueCap`, `maxConcurrentBreaks`) et expirés par durée de vie ; clés `long`, pas d'entité retenue |
+
+**Validation empirique des 24 injections mixin.** Serveur dédié démarré headless (`runServer`) :
+`Done (3.275s)!`, **zéro erreur mixin, zéro exception**, avec `defaultRequire: 1` actif — donc toutes les
+injections s'appliquent réellement, y compris les trois `@Redirect`. Reste un risque *non testable ici* :
+`defaultRequire: 1` transforme tout conflit avec un autre mod (Lithium sur `NaturalSpawner`, un mod de HUD
+sur `renderHeart`/`renderFood`) en crash de chargement plutôt qu'en dégradation. **Décision laissée à
+l'auteur** : passer les mixins purement cosmétiques (HUD, particules, modèles) en `require = 0` les ferait
+échouer silencieusement au lieu de tuer le démarrage. Non fait sans son arbitrage.
+
+**Scan de vulnérabilités (jamais fait à l'audit).** API OSV sur les **108 artefacts** du `runtimeClasspath`
+(témoin positif validé : gson 2.8.5 → CVE-2022-25647 bien détecté).
+
+- **Ce que le mod contrôle : zéro vulnérabilité.** `org.jocl:jocl:2.0.5` (bundlé dans le jar via `include`),
+  `com.google.code.gson:gson:2.13.2`, `net.fabricmc:fabric-loader:0.19.3`, Fabric API 0.141.4.
+- **8 artefacts vulnérables, tous appartenant à Minecraft 1.21.11 lui-même** : `netty-codec-http` (16 CVE),
+  `netty-handler` (3), `netty-codec-compression` (2), `netty-transport-*` (3), `log4j-core` (4),
+  `lz4-java` (2). Le mod ne peut pas les relever — c'est Mojang qui les fixe — et il n'ajoute aucune
+  surface : il n'utilise ni les codecs HTTP de Netty, ni les appenders Socket/XML de log4j.
+
+---
+
+### Contexte d'origine (avant exécution)
 
 **Ce n'est pas de la correction, c'est de l'audit.** L'audit note que trois lentilles sur sept n'ont pas
-abouti (deux interrompues par une erreur d'API, une arrêtée manuellement). Les angles suivants n'ont donc
-**jamais été examinés** :
+abouti (deux interrompues par une erreur d'API, une arrêtée manuellement). Les angles suivants n'avaient
+donc **jamais été examinés** :
 
 | Lentille | Ce qui n'a pas été regardé |
 |---|---|
@@ -588,14 +659,12 @@ abouti (deux interrompues par une erreur d'API, une arrêtée manuellement). Les
 | **Cycle de vie & persistance** | Codecs et `SavedData` au rechargement. `SpecialAttachment` avec un id inconnu (downgrade, save éditée). Symétrie registre/grille/maps. Réentrance de `ChildSpawner`. Ordre `ENTITY_LOAD`/`AFTER_DEATH`/`ENTITY_UNLOAD`. Multi-dimension et portails |
 | **Mixins & compatibilité** | Fragilité des 24 injections. **Conflit interne suspecté : `ZombieBellyModelMixin` et `ZombieSleepArmsMixin` injectent tous deux en TAIL sur `AbstractZombieModel.setupAnim`** — directement lié au travail en cours sur cette branche. Conflit `SpawnStateMobcapMixin`/Lithium avec `defaultRequire: 1`. Les trois `@Redirect` |
 
-- [ ] Le conflit `ZombieBellyModelMixin` / `ZombieSleepArmsMixin` est le seul point de cette phase qui
-      touche du code **écrit il y a quatre jours et non encore vérifié en jeu**. À traiter en premier, et
-      de toute façon avant de reprendre la tâche 4 de l'autre plan.
-- [ ] Le solveur GPU a déjà un self-test de parité (`devComputeTest`, cf. skill `gpu-cpu-flowfield-cost-parity`,
-      qui documente trois bugs de divergence déjà trouvés et réconciliés). La lentille algorithmique
-      devrait partir de là plutôt que de repartir de zéro.
-- [ ] Aucun scanner de vulnérabilités n'a pu tourner. Les CVE de `jocl:2.0.5`, Fabric API 0.141.4 et
-      `gson:2.13.2` n'ont **pas** été vérifiées — un `osv-scanner` sur le lockfile coûte cinq minutes.
+- [x] Le conflit `ZombieBellyModelMixin` / `ZombieSleepArmsMixin` — **non-issue** (voir tableau ci-dessus).
+- [x] Le solveur GPU a déjà un self-test de parité (`devComputeTest`). La lentille algorithmique en est
+      bien partie — et a trouvé précisément ce que ce self-test **ne pouvait pas** voir : il compare les
+      coûts (identiques) et n'assert sur les directions que « descend », jamais « réalise ». D'où P7-2.
+- [x] Scan de vulnérabilités : fait via l'API OSV (aucun scanner n'étant installé sur la machine).
+      Résultats ci-dessus.
 
 ---
 
