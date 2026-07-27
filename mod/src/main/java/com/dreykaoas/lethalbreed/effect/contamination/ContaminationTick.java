@@ -34,7 +34,10 @@ public final class ContaminationTick {
         for (int i = 0; i < SNAPSHOT.size(); i++) {
             LivingEntity e = SNAPSHOT.get(i);
             if (e == null || e.isRemoved() || !e.isAlive() || !(e.level() instanceof ServerLevel level)) {
-                ContaminationState.tracked.remove(e);
+                // Fully drop the victim from all six collections, not just `tracked` — an unloaded/dead/
+                // dimension-changed entity left in the timer maps pins the whole world graph (audit #2).
+                // Persistent attachments stay, so a chunk that reloads re-tracks the victim via onLoad.
+                ContaminationLifecycle.forgetAllTransient(e);
                 continue;
             }
             int c = ContaminationState.age(e);

@@ -65,6 +65,12 @@ public final class ContaminationManager {
         ContaminationTick.tick(server);
     }
 
+    /** SERVER_STOPPED: drop every victim from the plague's static in-memory collections so a closed world's
+     *  entity graph isn't pinned into the next session (audit #2). Persistent attachments are untouched. */
+    public static void onServerStopped() {
+        ContaminationLifecycle.onServerStopped();
+    }
+
     /** True once a victim carries the plague (contamination age > 0). Used to let immune mobs still accept
      *  effects once infected. */
     public static boolean isContaminated(LivingEntity e) {

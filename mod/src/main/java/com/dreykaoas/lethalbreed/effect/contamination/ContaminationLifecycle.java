@@ -41,14 +41,34 @@ public final class ContaminationLifecycle {
         }
     }
 
+    /** Drop EVERY in-memory per-victim entry across all six contamination collections at once, without
+     *  touching the persistent attachments (the victim re-tracks via {@link #onLoad} if it reloads).
+     *
+     *  <p>The single place the full six-collection purge lives. Audit #2: the per-tick invalid-entity branch
+     *  used to drop only {@code tracked}, leaking the other five collections (four timer maps here + the
+     *  episodes and hallucination maps in the sibling classes), each pinning a dead {@link LivingEntity} →
+     *  its {@code ServerLevel} → the whole server graph. Routing cure, death AND the tick sweep through one
+     *  method means a newly-added collection can't be forgotten by just one caller. */
+    public static void forgetAllTransient(LivingEntity e) {
+        ContaminationState.forgetTimers(e);
+        ContaminationEpisodes.clearEpisodes(e);
+        ContaminationHallucination.clear(e);
+    }
+
+    /** SERVER_STOPPED: drop ALL victims from every in-memory collection so a stopped world's entity graph is
+     *  not pinned by these {@code static} maps into the next session. Persistent attachments are untouched. */
+    public static void onServerStopped() {
+        ContaminationState.clearAllTransient();
+        ContaminationEpisodes.clearAllVictims();
+        ContaminationHallucination.clearAllVictims();
+    }
+
     /** Death of a contaminated victim: clear the plague state, then reanimate as a zombie if it was a humanoid. */
     public static void onDeath(LivingEntity e, ServerLevel level) {
         if (ContaminationState.age(e) <= 0) {
             return;
         }
-        ContaminationState.forgetTimers(e);
-        ContaminationEpisodes.clearEpisodes(e);
-        ContaminationHallucination.clear(e);
+        forgetAllTransient(e);
         e.removeEffect(LethalBreedEffects.ZOMBIE_VISION);
         e.removeAttached(ContaminationState.CONTAM);
         e.removeAttached(ContaminationState.SYMPTOMATIC);
@@ -123,10 +143,8 @@ public final class ContaminationLifecycle {
         e.removeEffect(LethalBreedEffects.SUPER_CONTAMINATION);
         e.removeEffect(LethalBreedEffects.ZOMBIE_VISION);
         ContaminationSymptoms.removeLatentSlow(e);
-        ContaminationEpisodes.clearEpisodes(e);
-        ContaminationHallucination.clear(e);
         e.removeAttached(ContaminationState.LEVEL);
         e.removeAttached(ContaminationState.INTENSITY);
-        ContaminationState.forgetTimers(e);
+        forgetAllTransient(e);
     }
 }

@@ -33,7 +33,7 @@ public final class LethalBreedMod implements ModInitializer {
         EntityEventsInit.register(REGISTRY, DIMENSIONS);
         TickInit.register(SCHEDULER);
         CommandInit.register();
-        LifecycleInit.register(REGISTRY, DIMENSIONS);
+        LifecycleInit.register(REGISTRY, DIMENSIONS, SCHEDULER);
         installDevHooks();
     }
 
