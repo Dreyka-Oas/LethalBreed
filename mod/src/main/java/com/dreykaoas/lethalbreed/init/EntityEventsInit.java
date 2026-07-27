@@ -8,6 +8,7 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
+import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.SpawnControl;
 import com.dreykaoas.lethalbreed.entity.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
@@ -29,14 +30,14 @@ public final class EntityEventsInit {
     private EntityEventsInit() {}
 
     public static void register(ZombieRegistry registry, DimensionManager dimensions) {
-        registerTracking(registry);
+        registerTracking(registry, dimensions);
         registerSound(dimensions);
         registerDamage(registry);
         registerDeath(registry);
     }
 
     /** Register / unregister vanilla zombies as they load into a server level, applying spawn control. */
-    private static void registerTracking(ZombieRegistry registry) {
+    private static void registerTracking(ZombieRegistry registry, DimensionManager dimensions) {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             // Phase-gated hostile filtering. In phase 0 (classic) NOTHING hostile spawns; in phases 1..15 only
             // plain Zombie is allowed (every other hostile is culled). Applies only to freshly-added entities,
@@ -67,13 +68,21 @@ public final class EntityEventsInit {
                 // LOD/FROZEN system (TickScheduler/SpatialGrid), which exists specifically to keep the zombie
                 // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
                 zombie.setPersistenceRequired();
-                AiConflictDetector.scanZombie(zombie); // once: detect foreign zombie-AI mods
+                AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
                 registry.add(zombie, world.dimension());
             }
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
             if (entity instanceof Zombie) {
-                registry.remove(entity.getId());
+                SmartZombie sz = registry.remove(entity.getId());
+                // Drop it from the spatial grid too, not just the registry. The only other grid-removal
+                // path (LodBucketPass.untrack) is driven by iterating the registry, so a zombie removed
+                // here was never visited again and its cell slot stayed for the rest of the session —
+                // every death and every chunk unload leaked one, pinning entity -> level -> server, and
+                // neighbour queries (sound, Hurleur rally, Soigneur heal) kept matching those ghosts.
+                if (sz != null && sz.pursuit().inGrid()) {
+                    dimensions.get(sz.dimension()).spatialGrid().remove(sz);
+                }
                 VanillaTargetingGoals.drop(entity.getId()); // release any stripped-goal snapshot
             }
         });

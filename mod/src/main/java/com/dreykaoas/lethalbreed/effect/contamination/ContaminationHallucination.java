@@ -54,4 +54,9 @@ public final class ContaminationHallucination {
     public static void clear(LivingEntity e) {
         hallucTimers.remove(e);
     }
+
+    /** Drop all victims' hallucination timers at once (server stop). */
+    public static void clearAllVictims() {
+        hallucTimers.clear();
+    }
 }

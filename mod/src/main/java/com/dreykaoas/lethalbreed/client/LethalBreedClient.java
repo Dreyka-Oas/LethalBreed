@@ -16,9 +16,18 @@ public final class LethalBreedClient implements ClientModInitializer {
         LethalBreedClientConfig.load();
         ContaminationScreenOverlay.register(); // faint green plague overlay while symptomatic
         // /lethalconfig → server sends the snapshot → open the config GUI on the client thread.
+        // Only open over NO screen (or refresh our own): a server that spams OpenConfig otherwise rips away
+        // whatever screen the player is on — pause menu, a container, the chat box (audit #24). The legitimate
+        // path is unaffected: submitting /lethalconfig closes the chat screen before the round-trip, so the
+        // client is on no screen when the packet lands.
         ClientPlayNetworking.registerGlobalReceiver(LethalConfigPayloads.OpenConfig.TYPE, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(
-                        new CustomConfigScreen(payload.data()))));
+                context.client().execute(() -> {
+                    var mc = context.client();
+                    if (mc.screen != null && !(mc.screen instanceof CustomConfigScreen)) {
+                        return;
+                    }
+                    mc.setScreen(new CustomConfigScreen(payload.data()));
+                }));
         LethalBreed.LOGGER.info("[LethalBreed] client init — optimizations active (Sodium-aware).");
     }
 }

@@ -126,4 +126,10 @@ public final class ContaminationEpisodes {
             }
         }
     }
+
+    /** Drop all victims' episode timers at once (server stop). The world is going away, so the transient
+     *  attribute modifiers go with it — this only releases the map's references to dead entities. */
+    public static void clearAllVictims() {
+        episodes.clear();
+    }
 }

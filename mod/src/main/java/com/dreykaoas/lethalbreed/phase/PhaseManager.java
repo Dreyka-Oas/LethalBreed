@@ -38,6 +38,23 @@ public final class PhaseManager {
 
     private PhaseManager() {}
 
+    /**
+     * Hard ceiling on the phase, whatever its provenance. Matches the {@code phaseMax} config bound
+     * ({@code ConfigBoundsTable}: 1..1_000_000) so the two can't drift apart.
+     *
+     * <p>The phase feeds {@link PhaseTable#frequency} which drives a per-chunk, per-tick spawn loop
+     * ({@code SpawnFrequencyMixin}) on the server thread — an unbounded phase is an unbounded loop.
+     * The ceiling is enforced at EVERY write ({@link #clampPhase}), not just in the command, because
+     * {@link #load} restores straight from the save file: a world already holding an absurd phase must
+     * come back sane rather than replay the freeze on every boot.
+     */
+    public static final int MAX_PHASE = 1_000_000;
+
+    /** The one place a phase value becomes authoritative. Every assignment to {@link #phase} goes through it. */
+    private static int clampPhase(int p) {
+        return Math.max(0, Math.min(p, MAX_PHASE));
+    }
+
     /** Current phase, readable from anywhere (e.g. the spawn hook) without plumbing a server reference. */
     public static int current() {
         return INSTANCE.phase;
@@ -48,9 +65,19 @@ public final class PhaseManager {
     public void load(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
-        phase = store.phase;
+        // Clamp on restore, not just on write: a save produced before the ceiling existed (or hand-edited)
+        // would otherwise reinstate an unbounded phase at every boot, which is the persistent half of the
+        // /lethalphase denial of service.
+        phase = clampPhase(store.phase);
         lastAdvanceGameTime = store.lastAdvanceGameTime;
         nextIntervalTicks = store.nextIntervalTicks;
+        if (store.phase != phase) {
+            // Write the repaired value straight back, so the save stops carrying the bad phase even if the
+            // session ends before the next advance.
+            com.dreykaoas.lethalbreed.LethalBreed.LOGGER.warn(
+                    "[LethalBreed] persisted phase {} is out of range — clamped to {}", store.phase, phase);
+            persist();
+        }
         com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
                 "[LethalBreed] phase loaded: {} (worldAge={}, nextIn={})",
                 phase, overworld.getGameTime(), nextIntervalTicks);
@@ -114,7 +141,7 @@ public final class PhaseManager {
             return;
         }
         if (now - lastAdvanceGameTime >= nextIntervalTicks) {
-            phase = applyCeiling(phase + 1);
+            phase = clampPhase(applyCeiling(phase + 1));
             lastAdvanceGameTime = now;
             scheduleNext();
             persist();
@@ -139,10 +166,11 @@ public final class PhaseManager {
         nextIntervalTicks = Math.max(1, ProgressionConfig.phaseIntervalTicks + j);
     }
 
-    /** Force a phase (e.g. /lethalphase) and announce it. Manual override ignores {@code phaseMax} — an
-     *  admin can deliberately force any phase past the auto-advance ceiling. */
+    /** Force a phase (e.g. /lethalphase) and announce it. Manual override ignores the configurable
+     *  {@code phaseMax} — an admin can deliberately force any phase past the auto-advance ceiling — but
+     *  NOT the hard {@link #MAX_PHASE} ceiling, which exists to keep the spawn loop finite. */
     public void setPhase(MinecraftServer server, int p) {
-        phase = Math.max(0, p);
+        phase = clampPhase(p);
         lastAdvanceGameTime = server.overworld().getGameTime();
         scheduleNext();
         persist();

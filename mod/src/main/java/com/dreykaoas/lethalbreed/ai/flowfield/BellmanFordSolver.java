@@ -119,15 +119,22 @@ final class BellmanFordSolver {
             }
         }
 
-        // Direction extraction: each cell points to its cheapest reachable neighbour. Parallel — every cell
-        // writes only its own dirX[i]/dirZ[i], so no races.
+        // Direction extraction: each cell steps to the neighbour minimising `neighbourCost + stepCost` —
+        // the SAME quantity the relaxation above minimises, so the emitted step provably realises the cell's
+        // own converged cost. Minimising the raw neighbour cost instead (what this pass used to do) is a
+        // different criterion whenever diagonals cost more than orthogonals, which they do by default
+        // (ortho=10, diag=14): a diagonal neighbour cheaper by less than diag-ortho wins on raw cost yet
+        // yields a strictly longer route. That also made routing hardware-dependent, since the GPU kernel
+        // records argmin(cost + step) as a by-product of relaxing. Descent is preserved for free: the winner
+        // satisfies cost[target] = cost[i] - step - extra[i] < cost[i].
+        // Parallel — every cell writes only its own dirX[i]/dirZ[i], so no races.
         pool().submit(() -> IntStream.range(0, n).parallel().forEach(i -> {
             if (cost[i] >= FlowField.IMPASSABLE || cost[i] == 0) {
                 return;
             }
             int cx = i / depth;
             int cz = i % depth;
-            int bestCost = cost[i];
+            int bestTotal = Integer.MAX_VALUE;
             int bdx = 0, bdz = 0;
             for (int k = 0; k < 8; k++) {
                 int nx = cx + Neighbors8.DX[k];
@@ -142,8 +149,9 @@ final class BellmanFordSolver {
                 if (Neighbors8.cornerBlocked(passable, cx, cz, nx, nz, depth, k)) {
                     continue;
                 }
-                if (cost[ni] < bestCost) {
-                    bestCost = cost[ni];
+                int total = cost[ni] + (Neighbors8.isDiagonal(k) ? diagCost : orth);
+                if (total < bestTotal) {
+                    bestTotal = total;
                     bdx = Neighbors8.DX[k];
                     bdz = Neighbors8.DZ[k];
                 }

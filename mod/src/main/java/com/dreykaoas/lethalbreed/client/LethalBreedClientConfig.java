@@ -25,7 +25,8 @@ public final class LethalBreedClientConfig {
     /** Distance (blocks) beyond which zombies are culled from rendering. */
     public double zombieRenderDistance = 96.0;
 
-    /** Render at most this many zombies per frame (0 = unlimited). Nearest are prioritized. */
+    /** Render at most this many zombies per frame (0 = unlimited), nearest prioritized — Phase 7, NOT
+     *  enforced yet (like the far-detail/instanced/billboard flags below). Kept as a reserved staging knob. */
     public int maxRenderedZombies = 400;
 
     /** Reduce detail/animation for far zombies (placeholder until billboard LOD lands). */
@@ -75,6 +76,7 @@ public final class LethalBreedClientConfig {
                     LethalBreedClientConfig loaded = gson.fromJson(r, LethalBreedClientConfig.class);
                     if (loaded != null) {
                         instance = loaded;
+                        instance.sanitize(); // Gson writes fields raw — guard the only value used at runtime
                     }
                 }
             } else {
@@ -88,8 +90,21 @@ public final class LethalBreedClientConfig {
             instance = new LethalBreedClientConfig();
         }
 
-        LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, maxRender={}, sodium={}, iris={}",
+        // Deliberately does NOT log maxRenderedZombies: that option is not enforced yet (Phase 7), and
+        // printing it as if it were active told a user who lowered it for FPS that it worked when it did
+        // nothing (audit #25).
+        LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, sodium={}, iris={}",
                 instance.enabled, instance.cullDistantZombies, instance.zombieRenderDistance,
-                instance.maxRenderedZombies, sodiumPresent, irisPresent);
+                sodiumPresent, irisPresent);
+    }
+
+    /** Clamp the deserialized fields that are actually consumed at runtime. Only {@link #zombieRenderDistance}
+     *  feeds {@link #effectiveCullDistanceSq}; a hand-edited {@code NaN}/negative there would break culling
+     *  (NaN disables it, a negative is squared to a positive cull radius). The Phase-7 reserved knobs are not
+     *  read yet, so they need no clamp until they are wired up. */
+    private void sanitize() {
+        if (!Double.isFinite(zombieRenderDistance) || zombieRenderDistance < 0) {
+            zombieRenderDistance = 96.0;
+        }
     }
 }
