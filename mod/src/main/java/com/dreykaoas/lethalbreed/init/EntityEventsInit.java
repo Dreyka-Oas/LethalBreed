@@ -67,7 +67,7 @@ public final class EntityEventsInit {
                 // LOD/FROZEN system (TickScheduler/SpatialGrid), which exists specifically to keep the zombie
                 // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
                 zombie.setPersistenceRequired();
-                AiConflictDetector.scanZombie(zombie); // once: detect foreign zombie-AI mods
+                AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
                 registry.add(zombie, world.dimension());
             }
         });
