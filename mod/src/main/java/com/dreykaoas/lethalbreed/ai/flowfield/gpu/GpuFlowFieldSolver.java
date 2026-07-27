@@ -51,19 +51,24 @@ final class GpuFlowFieldSolver {
         int orthoCost = Math.max(1, FlowConfig.flowOrthoCost);
         int diagCost = Math.max(orthoCost, FlowConfig.flowDiagonalCost);
 
-        cl_mem costMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                (long) Sizeof.cl_short * n, Pointer.to(cost), null);
-        cl_mem btMem = clCreateBuffer(ctx.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                (long) Sizeof.cl_char * n, Pointer.to(blockType), null);
-        cl_mem extraMem = clCreateBuffer(ctx.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                (long) Sizeof.cl_int * n, Pointer.to(extra), null);
-        cl_mem dirXMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                (long) Sizeof.cl_char * n, Pointer.to(dirX), null);
-        cl_mem dirZMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                (long) Sizeof.cl_char * n, Pointer.to(dirZ), null);
-        cl_mem changedMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                Sizeof.cl_int, Pointer.to(changed), null);
+        // Declared null before the try so EVERY buffer — including one whose own clCreateBuffer throws — is
+        // covered by the finally. With setExceptionsEnabled(true), an allocation failure at buffer k used to
+        // leak the k-1 already created, because the creates sat outside the protected block (audit #8).
+        cl_mem costMem = null, btMem = null, extraMem = null, dirXMem = null, dirZMem = null, changedMem = null;
         try {
+            costMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                    (long) Sizeof.cl_short * n, Pointer.to(cost), null);
+            btMem = clCreateBuffer(ctx.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                    (long) Sizeof.cl_char * n, Pointer.to(blockType), null);
+            extraMem = clCreateBuffer(ctx.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                    (long) Sizeof.cl_int * n, Pointer.to(extra), null);
+            dirXMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                    (long) Sizeof.cl_char * n, Pointer.to(dirX), null);
+            dirZMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                    (long) Sizeof.cl_char * n, Pointer.to(dirZ), null);
+            changedMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                    Sizeof.cl_int, Pointer.to(changed), null);
+
             clSetKernelArg(ctx.kernel, 0, Sizeof.cl_mem, Pointer.to(costMem));
             clSetKernelArg(ctx.kernel, 1, Sizeof.cl_mem, Pointer.to(btMem));
             clSetKernelArg(ctx.kernel, 2, Sizeof.cl_mem, Pointer.to(extraMem));
@@ -114,14 +119,27 @@ final class GpuFlowFieldSolver {
             clEnqueueReadBuffer(ctx.queue, dirZMem, true, 0, (long) Sizeof.cl_char * n, Pointer.to(dirZ), 0, null, null);
             clFinish(ctx.queue);
         } finally {
-            clReleaseMemObject(costMem);
-            clReleaseMemObject(btMem);
-            clReleaseMemObject(extraMem);
-            clReleaseMemObject(dirXMem);
-            clReleaseMemObject(dirZMem);
-            clReleaseMemObject(changedMem);
+            // Each release guarded on its own: a bare sequence skipped every buffer after the first that
+            // threw, leaking the rest (audit #8). null-safe so a partial allocation still frees what it got.
+            releaseQuietly(costMem);
+            releaseQuietly(btMem);
+            releaseQuietly(extraMem);
+            releaseQuietly(dirXMem);
+            releaseQuietly(dirZMem);
+            releaseQuietly(changedMem);
         }
 
         return new FlowField(s.originX(), s.originZ(), width, depth, cost, dirX, dirZ);
+    }
+
+    private static void releaseQuietly(cl_mem mem) {
+        if (mem == null) {
+            return;
+        }
+        try {
+            clReleaseMemObject(mem);
+        } catch (Throwable ignored) {
+            // A failed release must not stop the others; the device buffer is unrecoverable either way.
+        }
     }
 }
