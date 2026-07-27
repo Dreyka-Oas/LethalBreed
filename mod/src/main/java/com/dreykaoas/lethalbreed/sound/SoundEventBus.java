@@ -32,6 +32,9 @@ public final class SoundEventBus {
 
     // event = {x, y, z, radius}
     private final List<double[]> events = new ArrayList<>();
+    /** Reused across every event of every tick: process() used to allocate a fresh ArrayList per queued
+     *  sound event. Safe to share because the list is consumed fully before the next queryRadiusInto. */
+    private final List<SmartZombie> nearScratch = new ArrayList<>();
     // playerId -> last {x, y, z}
     private final Map<Integer, double[]> lastPlayerPos = new HashMap<>();
     private int entityScanCounter = 0;
@@ -106,7 +109,7 @@ public final class SoundEventBus {
         }
         boolean useMemory = TargetingConfig.targetMemoryTicks > 0;
         for (double[] e : events) {
-            List<SmartZombie> near = grid.queryRadius(e[0], e[1], e[2], e[3]);
+            List<SmartZombie> near = grid.queryRadiusInto(nearScratch, e[0], e[1], e[2], e[3]);
             for (SmartZombie z : near) {
                 // Every zombie in earshot is ROUSED by the noise: notifyHeardSound (re-)arms its day alert so an
                 // awake one keeps hunting, and a sleeping one starts waking (after a short delay) to investigate

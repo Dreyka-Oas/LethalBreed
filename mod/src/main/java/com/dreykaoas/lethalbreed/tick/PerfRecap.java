@@ -18,12 +18,14 @@ import net.minecraft.server.MinecraftServer;
 final class PerfRecap {
     private final ZombieRegistry registry;
     private final DimensionManager dimensions;
+    private final StageProfiler profiler;
 
     private long aiNanosAccum = 0L; // our AI time accumulated over the perf-recap interval
 
-    PerfRecap(ZombieRegistry registry, DimensionManager dimensions) {
+    PerfRecap(ZombieRegistry registry, DimensionManager dimensions, StageProfiler profiler) {
         this.registry = registry;
         this.dimensions = dimensions;
+        this.profiler = profiler;
     }
 
     /** Add this tick's measured AI time to the running accumulator. */
@@ -67,7 +69,8 @@ final class PerfRecap {
         LethalBreed.LOGGER.info(String.format(
                 "[LethalBreed][PERF] ai=%.2fms/tick | serverMSPT=%.2fms | zombies=%d (HIGH:%d MED:%d LOW:%d FROZEN:%d) highTgt=%d | blockOps=%d placed=%d dims=%d | mem=%d/%dMB",
                 aiMs, serverMs, registry.size(), high, med, low, frozen, highWithTarget,
-                pendingOps, placed, dimensions.contexts().size(), usedMb, maxMb));
+                pendingOps, placed, dimensions.contexts().size(), usedMb, maxMb)
+                + profiler.drain(interval));
         aiNanosAccum = 0L;
     }
 }

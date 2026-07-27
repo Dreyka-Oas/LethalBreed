@@ -3,10 +3,11 @@ package com.dreykaoas.lethalbreed.spatial;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 2D spatial hash over the XZ plane (one per dimension). Cells are {@code cellSize} blocks wide.
@@ -17,7 +18,10 @@ import java.util.Map;
  * reads will go through immutable snapshots instead.
  */
 public final class SpatialGrid {
-    private final Map<Long, List<SmartZombie>> cells = new HashMap<>();
+    // Primitive-keyed: a java.util.HashMap<Long,…> boxes a fresh Long on EVERY probe, and queryRadius probes
+    // ((2*radius/cell)+1)^2 cells whether or not they hold anything — 169 boxed keys for a single loud sound
+    // event at stock settings. fastutil is already on the classpath (SpawnStateMobcapMixin uses it).
+    private final Long2ObjectMap<List<SmartZombie>> cells = new Long2ObjectOpenHashMap<>();
 
     public SpatialGrid() {
     }
@@ -77,7 +81,14 @@ public final class SpatialGrid {
      *  same column counts as "near"; passing a real {@code y} (and a limit > 0) drops those. Pass {@code y = NaN}
      *  or set the limit to 0 to keep the legacy column behaviour. Cheap broad-phase + exact filter. */
     public List<SmartZombie> queryRadius(double x, double y, double z, double radius) {
-        List<SmartZombie> out = new ArrayList<>();
+        return queryRadiusInto(new ArrayList<>(), x, y, z, radius);
+    }
+
+    /** Same query, writing into a caller-owned list that is cleared first. Lets a hot caller (the sound bus,
+     *  which queries once per queued event per tick) reuse one buffer instead of allocating a fresh
+     *  ArrayList per event. Returns {@code out} so it can be used inline. */
+    public List<SmartZombie> queryRadiusInto(List<SmartZombie> out, double x, double y, double z, double radius) {
+        out.clear();
         int cell = cellSize();
         int minCx = Math.floorDiv((int) Math.floor(x - radius), cell);
         int maxCx = Math.floorDiv((int) Math.floor(x + radius), cell);
