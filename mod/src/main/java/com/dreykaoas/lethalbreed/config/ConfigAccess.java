@@ -52,19 +52,30 @@ public final class ConfigAccess {
         return d instanceof double[] arr ? ConfigType.csv(arr) : String.valueOf(d);
     }
 
-    /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}. */
+    /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}
+     *  AND the value actually changed — a GUI edit box fires one packet per keystroke (audit #16), and most
+     *  carry a value equal to the current one (mid-typing, or re-applying the same number), so skipping the
+     *  unchanged writes removes the bulk of the redundant full-file saves without any behaviour change. */
     public static boolean apply(String name, String raw, boolean persist) {
         Field f = ConfigSchema.find(name);
         if (f == null) {
             return false;
         }
+        Object before;
         try {
+            before = f.get(null);
             f.set(null, ConfigBounds.clamp(f.getName(), ConfigType.parse(f.getType(), raw)));
         } catch (RuntimeException | IllegalAccessException ex) {
             return false;
         }
         if (persist) {
-            ConfigIo.save();
+            try {
+                if (!java.util.Objects.deepEquals(before, f.get(null))) { // deepEquals covers double[]
+                    ConfigIo.save();
+                }
+            } catch (IllegalAccessException ex) {
+                ConfigIo.save(); // couldn't compare — fall back to the old always-save behaviour
+            }
         }
         return true;
     }

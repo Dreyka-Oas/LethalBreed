@@ -54,6 +54,10 @@ final class GpuContext {
     final long maxWorkGroupSize;
 
     GpuContext() {
+        // NOTE (audit #28): CL.setExceptionsEnabled is a JVM-global JOCL setting, not per-context. JOCL is
+        // shaded into this mod's jar, so this only affects our own classloader's copy — a second mod with its
+        // own JOCL is unaffected. Accepted as a deliberate constraint; the solver relies on exceptions (vs
+        // return-code checks) throughout, so this stays on for the process.
         setExceptionsEnabled(true);
 
         int[] numPlatforms = new int[1];
