@@ -46,6 +46,12 @@ public final class WorldSpawnConfig {
     // Mob-cap and spawn-frequency multipliers are formula-driven (unbounded, no per-phase table any
     // more) — see PhaseTable.mobcap()/frequency() and the phaseMobcap*/phaseFrequency* knobs in
     // ProgressionConfig.
+    /** SAFETY ceiling on the extra spawn passes {@code SpawnFrequencyMixin} runs per chunk per tick, not a
+     *  balance knob. The frequency formula is unbounded by design, but the passes it drives are a loop on
+     *  the server thread: at phase 1e6 that is ~1e6 passes per chunk per tick, i.e. a tick that never
+     *  returns. At the default 30-minute phase interval the curve reaches this ceiling after ~240 h of play,
+     *  so it never bites in normal progression — raise it if you actually want to go past that. */
+    public static int spawnMaxExtraPasses = 512;
 
     // ---- Spawn control (Phase 1) ----
     /** Discard baby zombies on load. */

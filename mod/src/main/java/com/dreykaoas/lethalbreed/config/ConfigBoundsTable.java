@@ -97,6 +97,7 @@ final class ConfigBoundsTable {
         b("leapEffectPerLevel", 0, 5);
         b("sunBurnDurationTicks", 20, 6000);   // new option (Spawn)
         b("sunImmunePhase", 0, 1_000_000);
+        b("spawnMaxExtraPasses", 1, 100_000);  // safety ceiling on the per-chunk per-tick spawn loop
 
         // ---- CombatMoveConfig (Leap / Water / Climb / Breaking) ----
         b("leapCooldownActivations", 0, 1000);

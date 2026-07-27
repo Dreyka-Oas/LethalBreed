@@ -25,12 +25,18 @@ import java.util.List;
 /**
  * {@code /lethalspecial <type> [count]} — spawn {@code count} zombies forced to a given special type around
  * the player, for testing each ability. The type argument suggests the available ids.
+ *
+ * <p>Operator-gated, for the same reason {@code dev/LethalSpawnCommand} is: it spawns entities that the
+ * mod marks persistent, so they never despawn on their own. The 200 cap is per invocation and there is no
+ * global counter, which makes an ungated version an unbounded entity accumulator — and, in the
+ * {@code bombeur} variant, a PvP weapon.
  */
 public final class LethalSpecialCommand {
     private LethalSpecialCommand() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lethalspecial")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("type", StringArgumentType.word())
                         .suggests((ctx, b) -> SharedSuggestionProvider.suggest(typeIds(), b))
                         .executes(ctx -> run(ctx, 1))
