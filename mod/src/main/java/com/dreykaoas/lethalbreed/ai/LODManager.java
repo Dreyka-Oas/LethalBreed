@@ -21,14 +21,15 @@ import static com.dreykaoas.lethalbreed.util.Scalars.sq;
 public final class LODManager {
     private LODManager() {}
 
-    public static LODLevel classify(SmartZombie sz, ServerLevel level) {
+    public static LODLevel classify(SmartZombie sz, ServerLevel level,
+                                    com.dreykaoas.lethalbreed.spatial.TargetIndex index) {
         // Apply forceNearestTarget live (strip/restore vanilla target goals) before acquiring our own pick.
         sz.reconcileTargetingGoals();
         // Pass the currently-committed target so the pick is sticky: a zombie mid-dig keeps its prey instead of
         // flipping to a marginally-closer other the instant the wall it's breaking blocks line of sight.
         LivingEntity current = sz.pursuit().targetEntity();
         LivingEntity target = TargetSelector.findNearest(level, sz.entity(),
-                TargetingConfig.targetDetectRadius, current);
+                TargetingConfig.targetDetectRadius, current, index);
 
         LODLevel prev = sz.lod();
         LODLevel lod;

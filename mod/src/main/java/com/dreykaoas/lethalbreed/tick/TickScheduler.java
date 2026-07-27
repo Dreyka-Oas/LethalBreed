@@ -55,6 +55,8 @@ public final class TickScheduler {
         world.enforceWorldRules(server);
         com.dreykaoas.lethalbreed.phase.PhaseManager.get().tick(server);
         com.dreykaoas.lethalbreed.effect.ContaminationManager.tick(server);
+        world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
+        world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
         world.processSound(server);
         world.recomputeFlowFields(server, tickCounter);
 

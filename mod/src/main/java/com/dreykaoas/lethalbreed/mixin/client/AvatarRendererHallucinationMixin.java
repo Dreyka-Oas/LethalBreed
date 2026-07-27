@@ -23,7 +23,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(net.minecraft.client.renderer.entity.player.AvatarRenderer.class)
 public abstract class AvatarRendererHallucinationMixin {
 
-    @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
+    // require = 0: purely presentational. lethalbreed.mixins.json sets defaultRequire=1, which turns any
+    // failed injection into a hard crash at load — correct for gameplay mixins, wrong here. A HUD or
+    // render mod that redirects the same call should cost the player a visual effect, not the game.
+    @Inject(require = 0, method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
             at = @At("TAIL"))
     private void lethalbreed$tagHallucination(net.minecraft.world.entity.Avatar entity, AvatarRenderState state,
                                               float partialTick, CallbackInfo ci) {
@@ -37,7 +40,7 @@ public abstract class AvatarRendererHallucinationMixin {
     }
 
     /** Hide the floating username above a hallucinated zombie — a zombie has no name tag. */
-    @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/Avatar;D)Z", at = @At("HEAD"), cancellable = true)
+    @Inject(require = 0, method = "shouldShowName(Lnet/minecraft/world/entity/Avatar;D)Z", at = @At("HEAD"), cancellable = true)
     private void lethalbreed$hideName(net.minecraft.world.entity.Avatar entity, double distanceSq,
                                       CallbackInfoReturnable<Boolean> cir) {
         if (entity instanceof AbstractClientPlayer player && ZombieHallucination.shouldHallucinate(player)) {

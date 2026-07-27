@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.util;
 
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+import com.dreykaoas.lethalbreed.spatial.TargetIndex;
 import com.dreykaoas.lethalbreed.tick.StageProfiler;
 
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -62,8 +64,9 @@ public final class TargetSelector {
      *  (see {@link TargetingConfig#targetSwitchMargin}). While a zombie digs through a wall toward its prey the
      *  wall blocks LOS to that prey, so the plain nearest-visible pick would flip to whatever else is in view
      *  and abandon the block — this keeps it committed until something is genuinely closer. */
-    public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, LivingEntity current) {
-        LivingEntity best = findNearest(level, self, radius);
+    public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, LivingEntity current,
+                                           TargetIndex index) {
+        LivingEntity best = findNearest(level, self, radius, index);
         double margin = TargetingConfig.targetSwitchMargin;
         if (margin <= 1.0 || current == null || current == self || !isValid(self, current)) {
             return best;
@@ -79,20 +82,30 @@ public final class TargetSelector {
         return curSq <= self.distanceToSqr(best) * margin * margin ? current : best;
     }
 
-    public static LivingEntity findNearest(ServerLevel level, Mob self, double radius) {
+    public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, TargetIndex index) {
         boolean prof = StageProfiler.enabled();
         long t0 = prof ? System.nanoTime() : 0L;
-        // Broad phase. MEASURED (StageProfiler, ~100 zombies): this sweep is ~50% of the whole reclassify
-        // stage, which is itself ~40% of the mod's tick time — the single most expensive thing here.
+        // Broad phase. MEASURED (StageProfiler, ~100 zombies): asking the world for every LivingEntity in an
+        // 80-block box was ~50% of the whole reclassify stage, itself ~40% of the mod's tick time — because
+        // it visits the entire horde only to have isValid reject Zombie on each one.
         //
-        // Shrinking the box does NOT help, and that was tested rather than assumed: narrowing the vertical
-        // extent from the full radius to 24 blocks left the sweep at 23.8us/call against 22.1 without it.
-        // The cost is not the volume, it is visiting every entity inside it and running isValid on each —
-        // and isValid rejects Zombie, which is nearly all of them. Making this genuinely cheaper means not
-        // handing the horde to the scan in the first place (a prey-side spatial index the mod would own,
-        // like the one it already keeps for zombies), which is an architectural change, not a tweak.
-        AABB box = self.getBoundingBox().inflate(radius);
-        List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
+        // Shrinking the box does NOT fix that, and that was tested rather than assumed: narrowing the
+        // vertical extent to 24 blocks left the sweep at 23.8us/call against 22.1 without it. The cost is
+        // the entities inside, not the volume. So the horde is simply never offered to the scan: prey lives
+        // in the mod's own TargetIndex, and players — few, and far too important to risk a bookkeeping slip
+        // hiding one — are read live from the level.
+        List<LivingEntity> candidates = new ArrayList<>();
+        if (index != null) {
+            index.collectInto(candidates, self.getX(), self.getZ(), radius);
+            for (Player p : level.players()) {
+                candidates.add(p);
+            }
+            candidates.removeIf(e -> !isValid(self, e));
+        } else {
+            // No index wired (unit tests, or a call path that predates it): fall back to the world scan.
+            AABB box = self.getBoundingBox().inflate(radius);
+            candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
+        }
         if (prof) {
             StageProfiler.sub(StageProfiler.Stage.SCAN, System.nanoTime() - t0);
         }

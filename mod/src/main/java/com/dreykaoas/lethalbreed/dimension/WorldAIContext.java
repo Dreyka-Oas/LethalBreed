@@ -7,6 +7,7 @@ import com.dreykaoas.lethalbreed.block.BreakManager;
 import com.dreykaoas.lethalbreed.block.PlacedBlockTracker;
 import com.dreykaoas.lethalbreed.sound.SoundEventBus;
 import com.dreykaoas.lethalbreed.spatial.SpatialGrid;
+import com.dreykaoas.lethalbreed.spatial.TargetIndex;
 
 /**
  * Per-dimension AI state container: a spatial grid for neighbour/sound queries and a flow-field
@@ -20,6 +21,7 @@ public final class WorldAIContext {
     private final BreakManager breakManager;
     private final BreachCoordinator breachCoordinator;
     private final SoundEventBus soundBus;
+    private final TargetIndex targetIndex;
 
     public WorldAIContext() {
         this.spatialGrid = new SpatialGrid();
@@ -29,6 +31,7 @@ public final class WorldAIContext {
         this.breakManager = new BreakManager();
         this.breachCoordinator = new BreachCoordinator();
         this.soundBus = new SoundEventBus();
+        this.targetIndex = new TargetIndex();
     }
 
     public BreakManager breakManager() {
@@ -41,6 +44,11 @@ public final class WorldAIContext {
 
     public SoundEventBus soundBus() {
         return soundBus;
+    }
+
+    /** Prey index used by target acquisition — see {@link TargetIndex} for why it exists. */
+    public TargetIndex targetIndex() {
+        return targetIndex;
     }
 
     public SpatialGrid spatialGrid() {

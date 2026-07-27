@@ -21,7 +21,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractZombieModel.class)
 public class ZombieBellyModelMixin {
 
-    @Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
+    // require = 0: purely presentational. lethalbreed.mixins.json sets defaultRequire=1, which turns any
+    // failed injection into a hard crash at load — correct for gameplay mixins, wrong here. A HUD or
+    // render mod that redirects the same call should cost the player a visual effect, not the game.
+    @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$swellBelly(ZombieRenderState state, CallbackInfo ci) {
         float charge = ((BellyChargeHolder) state).lethalbreed$bellyCharge();

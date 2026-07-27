@@ -94,7 +94,8 @@ final class LodBucketPass {
 
             // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
             // ALL buckets — a global tick%interval would only ever align with bucket 0.
-            LODManager.classify(sz, level);
+            WorldAIContext classifyCtx = dimensions.get(sz.dimension());
+            LODManager.classify(sz, level, classifyCtx.targetIndex());
             if (prof) {
                 long n = System.nanoTime();
                 profiler.add(StageProfiler.Stage.CLASSIFY, n - t);

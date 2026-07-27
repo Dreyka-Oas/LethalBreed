@@ -21,7 +21,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityRenderer.class)
 public class EntityRendererMixin {
 
-    @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
+    // require = 0: purely presentational. lethalbreed.mixins.json sets defaultRequire=1, which turns any
+    // failed injection into a hard crash at load — correct for gameplay mixins, wrong here. A HUD or
+    // render mod that redirects the same call should cost the player a visual effect, not the game.
+    @Inject(require = 0, method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private void lethalbreed$cullDistantZombies(Entity entity, Frustum frustum,
                                                 double camX, double camY, double camZ,
                                                 CallbackInfoReturnable<Boolean> cir) {

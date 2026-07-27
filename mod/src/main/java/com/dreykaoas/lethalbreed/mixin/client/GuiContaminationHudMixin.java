@@ -26,7 +26,10 @@ public class GuiContaminationHudMixin {
      *  the sprite keeps its colour and only reads faintly sickly (red channel pulled down a touch). */
     private static final int TINT = 0xFF_D8FFD8;
 
-    @Redirect(method = "renderHeart",
+    // require = 0: purely presentational. lethalbreed.mixins.json sets defaultRequire=1, which turns any
+    // failed injection into a hard crash at load — correct for gameplay mixins, wrong here. A HUD or
+    // render mod that redirects the same call should cost the player a visual effect, not the game.
+    @Redirect(require = 0, method = "renderHeart",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"))
     private void lethalbreed$greenHeart(GuiGraphics g, RenderPipeline pipe, Identifier sprite,
@@ -34,7 +37,7 @@ public class GuiContaminationHudMixin {
         lethalbreed$blit(g, pipe, sprite, x, y, w, h);
     }
 
-    @Redirect(method = "renderFood",
+    @Redirect(require = 0, method = "renderFood",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"))
     private void lethalbreed$greenFood(GuiGraphics g, RenderPipeline pipe, Identifier sprite,
