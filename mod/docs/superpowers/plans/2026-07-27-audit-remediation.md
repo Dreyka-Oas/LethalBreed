@@ -40,20 +40,20 @@ ont été remplacés par la version corrigée du vérificateur.
 | #25 | ⚪ | ○→BAS | **Fait** (log honnête + sanitize ; knobs Phase 7 conservés) | `43a687f` |
 | #28 | ⚪ | ○→**réfuté** | **Documenté** | `43a687f` |
 | #29 | ⚪ | ○→**réfuté** | **Fait quand même** (cache `all()`, gain réel, zéro risque) | `43a687f` |
-| #16 | 🟡 | ○→BAS | **Partiel** : serveur (skip-unchanged) fait ; client (debounce) différé | `43a687f` |
-| #7 | 🟠 | ○→**BAS** | **Différé** — fix = changement de sémantique de `queryRadius` partagé | — |
-| #10 | 🟠 | ○→**BAS** | **Différé** — 4 protections déjà ON ; fix en conflit d'archi documentée | — |
-| #11 | 🟠 | ○→**BAS** | **Différé** — scénario impossible aux défauts ; fix en conflit d'archi | — |
-| #22 | 🟡 | ○→MOYEN | **Différé** — fix (K plus proches) en conflit avec 3 décisions d'archi | — |
-| #23 | 🟡 | ○→**BAS** | **Différé** — fix (sauter classify) casse la machine à états de mood | — |
-| #12 | 🟡 (✅) | — | **Différé** — perf chemin IA, exige profilage in-game (tâche 5.0) | — |
-| #13 | 🟡 (✅) | — | **Différé** — idem | — |
+| #16 | 🟡 | ○→BAS | **Fait** : serveur (skip-unchanged) + client (debounce 400 ms + flush à la fermeture) | `43a687f`, `f0b9bdf` |
+| #7 | 🟠 | ○→BAS | **Fait en partie** : boxing supprimé (`Long2ObjectOpenHashMap`) + liste réutilisée. Clamp de rayon non fait — `grid` **mesuré à 3 %** du temps IA, l'enjeu n'y est pas | `f0b9bdf` |
+| #22 | 🟡 | ○→MOYEN | **Fait en partie** : allocations supprimées côté grille/bus. Plafond « K plus proches » non fait — conflit d'archi, et non mesurable dans ce scénario | `f0b9bdf` |
+| #12 | 🟡 (✅) | **mesuré** | **Analysé et chiffré** : `classify` = 40 % du temps IA, dont **50 % de balayage d'entités**. Micro-opts faites (dans le bruit) ; le vrai correctif est architectural | `f0b9bdf` |
+| #13 | 🟡 (✅) | **mesuré** | `mood` = **4 %** du temps IA. Voir le scénario de jour ci-dessous | — |
+| #10 | 🟠 | ○→BAS | **Non retenu** — 4 protections déjà ON ; fix en conflit d'archi documentée | — |
+| #11 | 🟠 | ○→BAS | **Non retenu** — scénario impossible aux défauts ; fix en conflit d'archi | — |
+| #23 | 🟡 | ○→BAS | **Non retenu** — fix (sauter classify) casse la machine à états de mood | — |
 
-**Différés = décision, pas oubli.** Le bloc perf IA (#7, #10, #11, #12, #13, #22, #23) n'est pas écrit
-parce que (a) la tâche 5.0 de ce plan en fait un prérequis bloquant le profilage in-game, impossible
-headless sur cette machine, et (b) la contre-expertise montre que les correctifs de l'audit y changent la
-sémantique ou contredisent des décisions d'architecture délibérées. Les toucher à l'aveugle ferait plus de
-mal que de bien. Le sous-ensemble perf **sûr et vérifiable** (chemin config : #16 serveur, #29) est fait.
+**Le bloc perf n'est plus différé : il est mesuré.** La tâche 5.0 le bloquait au motif qu'un profilage
+in-game était impossible headless — c'était faux (voir Phase 5). Ce qui reste non fait l'est désormais pour
+une raison chiffrée, pas par prudence : `grid` pèse 3 % et `mood` 4 %, donc les correctifs #7/#13 visaient
+des postes marginaux ; et le seul poste qui vaille (#12, le balayage d'entités) demande un index spatial des
+proies, c'est-à-dire une décision d'architecture qui revient à l'auteur.
 
 **Phase 7 — conflit de mixins : NON-ISSUE.** `ZombieSleepArmsMixin` n'est pas sur cette branche (uniquement
 `feat/sleeping-zombie-visuals`). Et même après merge, lui et `ZombieBellyModelMixin` injectent en TAIL sur
@@ -440,7 +440,72 @@ mesurés. » Et les deux seuls findings perf qui ont subi une contre-expertise (
 sévérité tomber de CRITIQUE à MOYEN, avec des chiffrages divisés par un ordre de grandeur — 5-10 ms/tick
 annoncés contre 0,13-0,5 ms recalculés pour #12.
 
-### Tâche 5.0 — Mesurer avant de toucher quoi que ce soit (bloquante)
+> **PHASE 5 : DÉBLOQUÉE ET EXÉCUTÉE (2026-07-27).** La tâche 5.0 était réputée impossible headless. Elle ne
+> l'était pas : un serveur dédié démarre sans display, et il suffit de lui planter des cibles invulnérables
+> pour que la horde quitte l'état FROZEN et paie le chemin coûteux. Résultats mesurés ci-dessous, puis les
+> décisions qu'ils imposent — dont deux correctifs **retirés** parce que la mesure les a démentis.
+
+### Résultats mesurés (tâche 5.0 — livrable : le classement des coûts)
+
+Harnais : serveur dédié headless, monde superplat, ~100 zombies dont ~60 HIGH, 60 villageois invulnérables
+et immobiles comme proies permanentes, minuit (chemin de chasse). `StageProfiler` (dev-only, gardé par
+`debugLogInterval > 0` comme `PerfRecap`) découpe le temps IA par étape. Médianes sur 20+ échantillons en
+régime établi ; `us/appel` est indépendant de la population, donc comparable d'un run à l'autre.
+
+| Étape | µs/appel | Part du temps IA |
+|---|---:|---:|
+| `classify` (reclassement LOD) | 44,3 | **~40 %** |
+| `tick` (IA par zombie) | 42,3 | **~50 %** |
+| `mood` | 2,9 | 4 % |
+| `grid` | 2,3 | 3 % |
+| `sunburn` | 2,1 | 2 % |
+
+En descendant dans `classify` :
+
+| Sous-étape | µs/appel | Part de `classify` |
+|---|---:|---:|
+| `>scan` — balayage `getEntitiesOfClass` | **22,1** | **50 %** |
+| `>order` — tri des candidats | 7,8 | 18 % |
+| `>los` — raycast de visibilité | 5,5 | 12 % |
+| reste (reconcile, setTarget, mémoire) | ~8,9 | 20 % |
+
+**Verdict sur #12.** L'audit d'origine avait raison sur le mécanisme : c'est bien le balayage d'entités qui
+domine, parce qu'il visite toute la horde avant de la rejeter. La contre-expertise, qui avançait que « la
+vraie dépense par scan est probablement le raycast voxel LOS », **se trompait** : le LOS pèse 12 %.
+
+**Ce qui a été tenté et retiré.** Rétrécir la boîte de recherche verticalement (`targetDetectVerticalRadius`)
+partait de l'idée que le balayage coûte par volume. Mesuré : 23,8 µs/appel à 24 blocs contre 22,1 au rayon
+plein — **aucun gain**, parce que le coût est la visite des entités, pas le volume. Le réglage a été retiré
+plutôt que livré : un knob qui change ce que les zombies voient sans rien acheter est une perte nette.
+
+**Ce qui a été gardé sans être vendu comme un gain.** Les micro-optimisations de `findNearest` (sortie
+anticipée, chemin direct à un candidat, clés de tri calculées une fois au lieu de `2·n·log n`, tri par
+insertion sans boxing) sont **dans le bruit** sur ce scénario : `>order` ne pèse que 18 % de 40 %. Gardées
+parce qu'elles font strictement moins de travail, pas parce qu'elles se mesurent.
+
+**Ce qu'un vrai correctif de #12 demanderait.** Ne pas livrer la horde au scan : un index spatial des
+**proies**, tenu par le mod, comme celui qu'il tient déjà pour ses zombies. C'est un changement
+d'architecture, pas un réglage — laissé à l'arbitrage de l'auteur, avec les chiffres pour le décider.
+
+**#13 (`ShelterFinder.findShade`) — la contre-expertise est confirmée, par l'impossibilité de le mesurer.**
+Un scénario de jour a été monté pour l'exercer. `mood`, l'étape qui contient `handleDaySleep` → `findShade`,
+passe de 2,9 à 3,5 µs/appel et `sunburn` de 2,0 à 2,9 — soit **4 à 5 % du temps IA**, pas un poste chaud.
+Mais `findShade` lui-même n'a pas pu être atteint : il n'est appelé que si `phase < sunImmunePhase` (défaut
+**5**), et le monde de test est en phase 19. C'est exactement l'argument de la contre-expertise — au-delà de
+la phase 5, ce code est **mort** — et le vérifier a demandé de constater qu'on ne peut pas le déclencher
+dans un monde qui a dépassé ses deux premières heures.
+
+**Limites du harnais, à connaître avant de refaire tourner ces mesures.** Les commandes `gamerule` envoyées
+par le script sont **rejetées** par la console (`Incorrect argument for command`) — donc `doMobSpawning`,
+`randomTickSpeed`, `doDaylightCycle` et `spawnChunkRadius` n'ont jamais été appliqués. Conséquences :
+la population dérive en cours de run (chunks déchargés, aucun joueur connecté) et les ticks de bloc
+comptent dans le MSPT. C'est pourquoi les conclusions sont tirées de **µs/appel**, qui est par activation de
+zombie et donc insensible à la population, et jamais des ms/tick absolues. La cohérence obtenue entre runs
+indépendants le confirme : `>scan` mesure 22,0 / 22,7 / 27,8 µs sur trois runs séparés, et `mood` 2,9 / 2,9 /
+3,5. À noter aussi que l'instrumentation des sous-étapes s'ajoute à `classify` : ne comparer `classify`
+qu'entre runs portant la même instrumentation (`before`↔`after`, ou `substage`↔`vert24`), jamais en travers.
+
+### Tâche 5.0 — Mesurer avant de toucher quoi que ce soit (bloquante) — FAITE
 
 - [ ] Rien de cette phase ne s'écrit avant d'avoir un profil réel. `FlowFieldPerfBench` existe déjà dans
       `src/test`, et `PerfRecap` instrumente déjà le tick : partir de là plutôt que de créer un harnais.
