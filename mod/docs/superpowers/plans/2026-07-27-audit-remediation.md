@@ -7,6 +7,63 @@
 **Objectif :** traiter les 29 findings de l'audit dans un ordre qui met le risque réel à zéro le plus vite
 possible, en gardant chaque étape vérifiable headless (compile + JUnit) plutôt qu'à l'œil.
 
+---
+
+## Statut d'exécution (2026-07-27, branche `fix/audit-2026-07`)
+
+Contre-expertise adversariale des 20 findings ○ passée avant écriture (workflow, un agent par sous-système,
+consigne = réfuter). Résultat marquant : **#19, #27, #28, #29 réfutés/non-issues**, et **tout le bloc perf
+(#7, #10, #11, #22, #23) descendu en BAS** avec des correctifs d'audit jugés régressifs ou en conflit
+d'archi. Plusieurs correctifs proposés par l'audit étaient **activement dangereux** (détaillés plus bas) et
+ont été remplacés par la version corrigée du vérificateur.
+
+| # | Sév audit | Verdict contre-exp. | État | Commit |
+|---|---|---|---|---|
+| #1 | 🔴 | ✅ confirmé | **Fait** (+ clamp sur `load`, que l'audit ratait) | `02cf0bd` |
+| #3 | 🟠 | ✅ | **Fait** | `02cf0bd` |
+| #4 | 🟠 | ✅ | **Fait** (clamp aux 3 points de convergence) | `02cf0bd` |
+| #2 | 🔴 | ✅ | **Fait** (les 6 collections, pas 5 — fix audit incomplet) | `e6dcbb3` |
+| #5 | 🟠 | ✅ | **Fait** | `2344778` |
+| #6 | 🟠 | ○→confirmé | **Fait** (non-fini refusé + 27 bornes + test de couverture) | `2344778` |
+| #14 | 🟡 | ✅ | **Fait** (write-then-rename atomique) | `2344778` |
+| #15 | 🟡 | ✅ | **Fait** | `2344778` |
+| #26 | ⚪ | ○ | **Fait** (copie défensive `double[]`) | `2344778` |
+| #20 | 🟡 | ○→confirmé | **Fait** (`TickScheduler.reset` au stop) | `e6dcbb3` |
+| #8 | 🟠 | ○→MOYEN | **Fait** (hoist buffers + disjoncteur, PAS latch) | `76d90fe` |
+| #9 | 🟠 | ○→BAS | **Fait** (gpuInfo non bloquant) | `76d90fe` |
+| #18 | 🟡 | ○→BAS | **Fait** (log limité, SANS nuller `active` = régression écartée) | `76d90fe` |
+| #27 | ⚪ | ○→réfuté | **Fait quand même** (justifié par les accesseurs de #9) | `76d90fe` |
+| #17 | 🟡 | ○→BAS | **Documenté** (release au stop = use-after-free natif) | `76d90fe` |
+| #19 | 🟡 | ○→**réfuté** | **Non retenu** (`POOL.submit` ne peut pas lever) | — |
+| #21 | 🟡 | ○→BAS | **Fait** (boot=throw / session=halt(false), jamais halt(true)) | `43a687f` |
+| #24 | ⚪ | ○→BAS | **Fait** (garde d'écran) | `43a687f` |
+| #25 | ⚪ | ○→BAS | **Fait** (log honnête + sanitize ; knobs Phase 7 conservés) | `43a687f` |
+| #28 | ⚪ | ○→**réfuté** | **Documenté** | `43a687f` |
+| #29 | ⚪ | ○→**réfuté** | **Fait quand même** (cache `all()`, gain réel, zéro risque) | `43a687f` |
+| #16 | 🟡 | ○→BAS | **Partiel** : serveur (skip-unchanged) fait ; client (debounce) différé | `43a687f` |
+| #7 | 🟠 | ○→**BAS** | **Différé** — fix = changement de sémantique de `queryRadius` partagé | — |
+| #10 | 🟠 | ○→**BAS** | **Différé** — 4 protections déjà ON ; fix en conflit d'archi documentée | — |
+| #11 | 🟠 | ○→**BAS** | **Différé** — scénario impossible aux défauts ; fix en conflit d'archi | — |
+| #22 | 🟡 | ○→MOYEN | **Différé** — fix (K plus proches) en conflit avec 3 décisions d'archi | — |
+| #23 | 🟡 | ○→**BAS** | **Différé** — fix (sauter classify) casse la machine à états de mood | — |
+| #12 | 🟡 (✅) | — | **Différé** — perf chemin IA, exige profilage in-game (tâche 5.0) | — |
+| #13 | 🟡 (✅) | — | **Différé** — idem | — |
+
+**Différés = décision, pas oubli.** Le bloc perf IA (#7, #10, #11, #12, #13, #22, #23) n'est pas écrit
+parce que (a) la tâche 5.0 de ce plan en fait un prérequis bloquant le profilage in-game, impossible
+headless sur cette machine, et (b) la contre-expertise montre que les correctifs de l'audit y changent la
+sémantique ou contredisent des décisions d'architecture délibérées. Les toucher à l'aveugle ferait plus de
+mal que de bien. Le sous-ensemble perf **sûr et vérifiable** (chemin config : #16 serveur, #29) est fait.
+
+**Phase 7 — conflit de mixins : NON-ISSUE.** `ZombieSleepArmsMixin` n'est pas sur cette branche (uniquement
+`feat/sleeping-zombie-visuals`). Et même après merge, lui et `ZombieBellyModelMixin` injectent en TAIL sur
+`AbstractZombieModel.setupAnim` mais écrivent des parts **disjointes** (`body` scale vs `rightArm`/`leftArm`
+rotation) — deux `@Inject` TAIL coexistent sans interférence. Rien à corriger.
+
+**Environnement de vérification :** JDK Temurin 21.0.12 installé dans `~/.jdks/` (aucun JDK n'existait).
+`compileJava` + suite JUnit (13 tests) vertes après chaque phase. Aucun `runClient` requis (pas de display),
+d'où le report du seul reliquat client (#16-client, qui exige l'API input 1.21.11 refactorée + un œil en jeu).
+
 **Contrainte structurante :** l'audit dit lui-même que **22 findings sur 29 (marqués ○) n'ont subi aucune
 contre-expertise**, et que sur les 7 qui en ont subi une, **4 sévérités ont été révisées à la baisse**. Le
 plan ne traite donc pas les ○ comme des faits acquis : chaque phase qui en contient commence par une étape
