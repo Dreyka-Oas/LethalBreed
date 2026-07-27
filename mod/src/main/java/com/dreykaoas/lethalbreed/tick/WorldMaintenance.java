@@ -42,6 +42,12 @@ final class WorldMaintenance {
         });
     }
 
+    /** Re-bucket moved prey and drop dead prey, once per dimension per tick. Costs O(prey), never
+     *  O(zombies) — that asymmetry is the entire reason the index exists. */
+    void refreshTargetIndex(MinecraftServer server) {
+        forEachLoadedContext(server, (level, ctx) -> ctx.targetIndex().refresh());
+    }
+
     /** Recompute each dimension's shared flow field (throttled + move-gated inside {@code tick}). */
     void recomputeFlowFields(MinecraftServer server, long tickCounter) {
         forEachLoadedContext(server, (level, ctx) -> ctx.flowFieldManager().tick(level, tickCounter));

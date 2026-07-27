@@ -13,6 +13,7 @@ import com.dreykaoas.lethalbreed.entity.SpawnControl;
 import com.dreykaoas.lethalbreed.entity.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.spatial.TargetIndex;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
 import com.dreykaoas.lethalbreed.util.Players;
@@ -57,6 +58,12 @@ public final class EntityEventsInit {
                 return;
             }
             ContaminationManager.onLoad(entity); // re-track contaminated
+            // Index anything huntable that isn't a zombie or a player, so target acquisition never has to
+            // walk the horde to discard it (see TargetIndex). Registered AFTER the discard branches above,
+            // so a culled entity is never indexed in the first place.
+            if (TargetIndex.indexable(entity)) {
+                dimensions.get(world.dimension()).targetIndex().track((net.minecraft.world.entity.LivingEntity) entity);
+            }
             // Track all zombie variants (plain Zombie, Husk, ZombieVillager, ZombifiedPiglin...).
             // Drowned + babies are handled above (discarded when blocked).
             if (entity instanceof Zombie zombie) {
@@ -73,6 +80,11 @@ public final class EntityEventsInit {
             }
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
+            // Prey leaves the index the moment it leaves the level. TargetIndex.refresh() also sweeps dead
+            // entries defensively, but relying on that alone is how the SpatialGrid leak (P7-1) happened.
+            if (TargetIndex.indexable(entity)) {
+                dimensions.get(world.dimension()).targetIndex().forget(entity.getId());
+            }
             if (entity instanceof Zombie) {
                 SmartZombie sz = registry.remove(entity.getId());
                 // Drop it from the spatial grid too, not just the registry. The only other grid-removal
