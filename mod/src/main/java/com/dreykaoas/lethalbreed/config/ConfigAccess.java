@@ -22,11 +22,19 @@ public final class ConfigAccess {
         Map<String, Object> m = new LinkedHashMap<>();
         for (Field f : ConfigSchema.all()) {
             try {
-                m.put(f.getName(), f.get(null));
+                m.put(f.getName(), copyIfArray(f.get(null)));
             } catch (IllegalAccessException ignored) {
             }
         }
         return m;
+    }
+
+    /** Arrays are the only mutable option type. Copying on the way into and out of {@link #DEFAULTS} makes
+     *  the snapshot immutable by construction instead of by convention — otherwise the live field and the
+     *  "factory default" are the SAME array, and the first in-place mutation ever written would silently
+     *  destroy the defaults with no way to notice. */
+    private static Object copyIfArray(Object v) {
+        return v instanceof double[] arr ? arr.clone() : v;
     }
 
     public static String read(Field f) {
@@ -63,7 +71,7 @@ public final class ConfigAccess {
 
     public static void reset(Field f) {
         try {
-            f.set(null, DEFAULTS.get(f.getName()));
+            f.set(null, copyIfArray(DEFAULTS.get(f.getName())));
         } catch (IllegalAccessException ignored) {
         }
     }
