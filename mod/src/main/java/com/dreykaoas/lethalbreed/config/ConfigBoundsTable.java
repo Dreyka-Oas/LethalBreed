@@ -97,6 +97,7 @@ final class ConfigBoundsTable {
         b("leapEffectPerLevel", 0, 5);
         b("sunBurnDurationTicks", 20, 6000);   // new option (Spawn)
         b("sunImmunePhase", 0, 1_000_000);
+        b("spawnMaxExtraPasses", 1, 100_000);  // safety ceiling on the per-chunk per-tick spawn loop
 
         // ---- CombatMoveConfig (Leap / Water / Climb / Breaking) ----
         b("leapCooldownActivations", 0, 1000);
@@ -229,6 +230,38 @@ final class ConfigBoundsTable {
         b("contamReanimateAspect", 0, 100);
         b("contamEpisodeCap", 0, 1);
         b("contamFoodExhaustionMult", 0, 100);
+        // Levels / evolution / episodes — this whole block was added after the table and was unbounded until
+        // audit #6. contamLevelStep and the jitter pair are kept deliberately tight: they multiply plague
+        // damage, so an unbounded value turned a gradual DoT into a one-shot and (via a non-finite value)
+        // poisoned the persistent INTENSITY attachment. The ConfigBounds non-finite guard now covers even
+        // unlisted fields, but these must be listed so the magnitude itself stays sane.
+        b("contamMaxLevel", 1, 100);
+        b("contamEvolveMinDays", 0, 365);
+        b("contamEvolveMaxDays", 0, 365);
+        b("contamEvolveMinPct", 0, 100);
+        b("contamEvolveMaxPct", 0, 100);
+        b("contamLevelStep", 0, 10);
+        b("contamLevelJitterMin", 0, 10);
+        b("contamLevelJitterMax", 0, 10);
+        b("contamSlowAmount", 0, 1);
+        b("contamSlowDurMinSec", 0, 3600);
+        b("contamSlowDurMaxSec", 0, 3600);
+        b("contamSlowGapMinSec", 0, 86_400);
+        b("contamSlowGapMaxSec", 0, 86_400);
+        b("contamNoJumpDurMinSec", 0, 3600);
+        b("contamNoJumpDurMaxSec", 0, 3600);
+        b("contamNoJumpGapMinSec", 0, 86_400);
+        b("contamNoJumpGapMaxSec", 0, 86_400);
+        b("contamWeakAmount", 0, 1);
+        b("contamWeakDurMinSec", 0, 3600);
+        b("contamWeakDurMaxSec", 0, 3600);
+        b("contamWeakGapMinSec", 0, 86_400);
+        b("contamWeakGapMaxSec", 0, 86_400);
+        b("contamHallucDurMinSec", 0, 3600);
+        b("contamHallucDurMaxSec", 0, 3600);
+        b("contamHallucGapMinSec", 0, 86_400);
+        b("contamHallucGapMaxSec", 0, 86_400);
+        b("contamDevTimeScale", 0, 1_000_000);
 
         // ---- ZombieMoodConfig (Mood) ----
         b("fleeHealthFraction", 0, 1);

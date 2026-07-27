@@ -66,4 +66,17 @@ public final class TickScheduler {
         perfRecap.maybeLog(server, tickCounter);
         tickCounter++;
     }
+
+    /**
+     * SERVER_STOPPED: drop the every-tick worklists. {@code climbers}/{@code swimmers} hold {@link SmartZombie}
+     * references from the world that just closed; this scheduler is a JVM-lived {@code static} in
+     * {@code LethalBreedMod}, so without this the old {@code ServerLevel} stays pinned until the NEXT server's
+     * first tick prunes them via {@code EveryTickPass.drive} — i.e. across the whole menu/loading window, at
+     * peak memory (audit #20). {@code tickCounter} resets so a fresh world starts its stagger from 0.
+     */
+    public void reset() {
+        climbers.clear();
+        swimmers.clear();
+        tickCounter = 0L;
+    }
 }

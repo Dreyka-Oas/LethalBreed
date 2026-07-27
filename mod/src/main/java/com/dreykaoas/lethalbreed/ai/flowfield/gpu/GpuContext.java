@@ -30,6 +30,18 @@ import static org.jocl.CL.setExceptionsEnabled;
  * OpenCL (JOCL) device pick + context/queue/kernel build. Prefers an AMD/Radeon GPU, falls back to
  * the first GPU device found, then builds the {@code bellman_ford.cl} kernel. Construction throws on
  * any failure so the caller can degrade to the CPU solver — the GPU is never load-bearing.
+ *
+ * <p><b>Native handle lifetime (audit #17):</b> the four handles below — {@code context}, {@code queue},
+ * {@code program}, {@code kernel} — are deliberately owned for the whole process. {@link GpuComputeManager}
+ * is a JVM singleton that builds exactly one {@code GpuContext} per launch, so this is a bounded, one-time
+ * allocation, reclaimed by the OpenCL driver at process exit. It is intentionally NOT freed on
+ * {@code SERVER_STOPPED}: the flow-field pool threads acquire {@code isAvailable()} and {@code solve()} as
+ * two separate steps, so releasing the context on the server thread while a pool thread sits between them
+ * would hand a freed {@code cl_context} to {@code clCreateBuffer} — a driver SIGSEGV, not a catchable Java
+ * exception. Releasing on stop would also re-pay device enumeration + {@code clBuildProgram} on every world
+ * open (see the warm-up in {@code LifecycleInit}), which is exactly the cost audit #9 is about. If a
+ * device-loss recovery path is ever wanted, it must go through a monitor-guarded {@code shutdown()} plus a
+ * {@code ctx == null} re-check in {@code solve()}, wired to a JVM shutdown hook — never to the server tick.
  */
 final class GpuContext {
     final cl_context context;
@@ -42,6 +54,10 @@ final class GpuContext {
     final long maxWorkGroupSize;
 
     GpuContext() {
+        // NOTE (audit #28): CL.setExceptionsEnabled is a JVM-global JOCL setting, not per-context. JOCL is
+        // shaded into this mod's jar, so this only affects our own classloader's copy — a second mod with its
+        // own JOCL is unaffected. Accepted as a deliberate constraint; the solver relies on exceptions (vs
+        // return-code checks) throughout, so this stays on for the process.
         setExceptionsEnabled(true);
 
         int[] numPlatforms = new int[1];

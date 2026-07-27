@@ -22,11 +22,19 @@ public final class ConfigAccess {
         Map<String, Object> m = new LinkedHashMap<>();
         for (Field f : ConfigSchema.all()) {
             try {
-                m.put(f.getName(), f.get(null));
+                m.put(f.getName(), copyIfArray(f.get(null)));
             } catch (IllegalAccessException ignored) {
             }
         }
         return m;
+    }
+
+    /** Arrays are the only mutable option type. Copying on the way into and out of {@link #DEFAULTS} makes
+     *  the snapshot immutable by construction instead of by convention — otherwise the live field and the
+     *  "factory default" are the SAME array, and the first in-place mutation ever written would silently
+     *  destroy the defaults with no way to notice. */
+    private static Object copyIfArray(Object v) {
+        return v instanceof double[] arr ? arr.clone() : v;
     }
 
     public static String read(Field f) {
@@ -44,26 +52,37 @@ public final class ConfigAccess {
         return d instanceof double[] arr ? ConfigType.csv(arr) : String.valueOf(d);
     }
 
-    /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}. */
+    /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}
+     *  AND the value actually changed — a GUI edit box fires one packet per keystroke (audit #16), and most
+     *  carry a value equal to the current one (mid-typing, or re-applying the same number), so skipping the
+     *  unchanged writes removes the bulk of the redundant full-file saves without any behaviour change. */
     public static boolean apply(String name, String raw, boolean persist) {
         Field f = ConfigSchema.find(name);
         if (f == null) {
             return false;
         }
+        Object before;
         try {
+            before = f.get(null);
             f.set(null, ConfigBounds.clamp(f.getName(), ConfigType.parse(f.getType(), raw)));
         } catch (RuntimeException | IllegalAccessException ex) {
             return false;
         }
         if (persist) {
-            ConfigIo.save();
+            try {
+                if (!java.util.Objects.deepEquals(before, f.get(null))) { // deepEquals covers double[]
+                    ConfigIo.save();
+                }
+            } catch (IllegalAccessException ex) {
+                ConfigIo.save(); // couldn't compare — fall back to the old always-save behaviour
+            }
         }
         return true;
     }
 
     public static void reset(Field f) {
         try {
-            f.set(null, DEFAULTS.get(f.getName()));
+            f.set(null, copyIfArray(DEFAULTS.get(f.getName())));
         } catch (IllegalAccessException ignored) {
         }
     }

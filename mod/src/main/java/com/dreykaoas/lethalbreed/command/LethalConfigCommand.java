@@ -78,10 +78,19 @@ public final class LethalConfigCommand {
         return 1;
     }
 
-    /** Human-readable detected GPU, shown live on the {@code useGpu} row in the GUI. */
+    /** Human-readable detected GPU, shown live on the {@code useGpu} row in the GUI. Runs on the server
+     *  thread, so it MUST NOT call {@code isAvailable()}: that takes the compute monitor (blocking behind an
+     *  in-flight solve) and lazily triggers OpenCL init — a ~second-long clBuildProgram — on a box where the
+     *  admin disabled the GPU precisely to avoid OpenCL. It reads the already-known state instead (audit #9). */
     private static String gpuInfo() {
         var gpu = com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager.get();
-        return gpu.isAvailable()
+        if (!com.dreykaoas.lethalbreed.config.domain.FlowConfig.useGpu) {
+            return "GPU désactivé (useGpu=false) — CPU multithread";
+        }
+        if (!gpu.isInitialized()) {
+            return "GPU non initialisé — CPU multithread";
+        }
+        return gpu.isAvailableNonBlocking()
                 ? gpu.deviceName() + " (OpenCL)"
                 : "Aucun GPU — CPU multithread";
     }

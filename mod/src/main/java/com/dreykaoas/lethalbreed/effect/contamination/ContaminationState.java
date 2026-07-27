@@ -92,13 +92,25 @@ public final class ContaminationState {
     }
 
     /** Forget every transient timer/tracking entry for a victim (on cure/death). Does not touch the persistent
-     *  attachments themselves — callers strip those separately since cure and death clear a different subset. */
+     *  attachments themselves — callers strip those separately since cure and death clear a different subset.
+     *  Covers only THIS class's collections; the two sibling maps (episodes, hallucination) are purged by
+     *  {@link ContaminationLifecycle#forgetAllTransient} — use that, not this, to fully drop a victim. */
     public static void forgetTimers(LivingEntity e) {
         tracked.remove(e);
         nextPulse.remove(e);
         nextSymptomRoll.remove(e);
         latentSlowUntil.remove(e);
         nextEvolveRoll.remove(e);
+    }
+
+    /** Drop every victim from this class's in-memory collections at once (server stop). Persistent
+     *  attachments are untouched — they live in entity NBT and re-track via {@link ContaminationLifecycle#onLoad}. */
+    public static void clearAllTransient() {
+        tracked.clear();
+        nextPulse.clear();
+        nextSymptomRoll.clear();
+        latentSlowUntil.clear();
+        nextEvolveRoll.clear();
     }
 
     /** Positive plague time-compression factor (dev command sets it; clamped to ≥ 1e-3 to avoid div-by-zero). */

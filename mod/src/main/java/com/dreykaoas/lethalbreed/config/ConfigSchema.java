@@ -13,6 +13,7 @@ import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,8 +42,13 @@ public final class ConfigSchema {
             ExpertConfig.class,
     };
 
-    /** Editable fields in source-declaration order, across all holders. */
-    public static List<Field> all() {
+    /** Editable fields in source-declaration order, across all holders. Computed once — the holder classes
+     *  and their fields are fixed at compile time, so re-running reflection on every call (config load, every
+     *  GUI keystroke via {@code ConfigAccess}, every {@code find()}) only rebuilt an identical list. Returned
+     *  as an unmodifiable view since every caller only iterates it (audit #29). */
+    private static final List<Field> ALL = Collections.unmodifiableList(scan());
+
+    private static List<Field> scan() {
         List<Field> out = new ArrayList<>();
         for (Class<?> holder : HOLDERS) {
             for (Field f : holder.getDeclaredFields()) {
@@ -54,6 +60,10 @@ public final class ConfigSchema {
             }
         }
         return out;
+    }
+
+    public static List<Field> all() {
+        return ALL;
     }
 
     public static Field find(String name) {
