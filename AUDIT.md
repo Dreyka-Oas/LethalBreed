@@ -4,6 +4,12 @@
 > Analyse en lecture seule. **Aucun fichier source n'a été modifié.** Ce document est le seul fichier créé.
 > Méthode : recon déterministe → cartographie → 7 lentilles en parallèle → vérification adversariale.
 
+> **⚠️ Ce document décrit l'état à l'audit, pas l'état actuel.** La remédiation est faite sur la branche
+> `fix/audit-2026-07`, et les **trois lentilles laissées inachevées** (voir « Couverture et angles morts »)
+> ont depuis été menées à terme — elles ont produit trois findings supplémentaires, tous corrigés.
+> État d'exécution à jour, avant/après et findings Phase 7 :
+> [`mod/docs/superpowers/plans/2026-07-27-audit-remediation.md`](mod/docs/superpowers/plans/2026-07-27-audit-remediation.md).
+
 ## Résumé
 
 Le mod est bien architecturé sur le plan de la performance — le flow-field partagé, le LOD à 4 tiers,
