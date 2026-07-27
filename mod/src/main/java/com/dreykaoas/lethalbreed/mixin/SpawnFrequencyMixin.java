@@ -19,9 +19,15 @@ import java.util.List;
  * Scales MONSTER spawn FREQUENCY by the phase. Vanilla runs one spawn pass per chunk per tick; we add
  * {@code ceil(PhaseTable.frequency(phase)) - 1} extra passes for MONSTER (each pass still honours the
  * mob-cap, so this raises how FAST the population fills up, not the ceiling — that's the mob-cap mixin's
- * job). Unbounded — no per-phase ceiling.
+ * job). No per-phase ceiling: the curve keeps climbing with the phase.
  *
  * <p>Phase 0 → factor 0 → no extra passes (and the mob-cap is 0 anyway, so nothing spawns).
+ *
+ * <p>The pass count IS however capped at {@link WorldSpawnConfig#spawnMaxExtraPasses}, because this is a
+ * loop on the server thread whose trip count comes from an unbounded formula: without the cap a large
+ * phase — forced by command, or simply reached by a very long-lived world — turns one chunk-tick into
+ * minutes of {@code spawnCategoryForChunk}, and the tick never returns. The cap is deliberately far above
+ * anything normal progression reaches, so it is a safety net rather than a balance change.
  */
 @Mixin(NaturalSpawner.class)
 public abstract class SpawnFrequencyMixin {
@@ -32,7 +38,8 @@ public abstract class SpawnFrequencyMixin {
         if (!WorldSpawnConfig.nightSpawnEnabled || !categories.contains(MobCategory.MONSTER)) {
             return;
         }
-        int extra = (int) Math.ceil(PhaseTable.frequency(PhaseManager.current())) - 1;
+        int extra = Math.min((int) Math.ceil(PhaseTable.frequency(PhaseManager.current())) - 1,
+                Math.max(1, WorldSpawnConfig.spawnMaxExtraPasses));
         SpawnStateInvoker inv = (SpawnStateInvoker) state;
         if (extra <= 0 || !inv.lethalbreed$canSpawnLocal(MobCategory.MONSTER, chunk.getPos())) {
             return;

@@ -117,16 +117,26 @@ conséquences. J'ai relu le code : l'audit est exact ligne pour ligne.
       partie légitime atteint, pas un chiffre rond arbitraire. **À déterminer pendant la tâche**, pas
       maintenant.
 
-### Tâche 1.4 — `setPersistenceRequired` sur les entités de commande
+### Tâche 1.4 — `setPersistenceRequired` sur les entités de commande — **REFUSÉE**
 
-- [ ] `init/EntityEventsInit.java:69` appelle `setPersistenceRequired()` sur `ENTITY_LOAD`. L'audit
-      recommande de ne pas le faire pour `EntitySpawnReason.COMMAND`, pour qu'un abus de `/lethalspecial`
-      reste réversible par despawn naturel.
-- [ ] **Vérifier avant d'écrire** que la persistance n'est pas volontaire pour les zombies de commande :
-      le mod empêche le despawn *par conception* (c'est le socle du système LOD, cf. commit `b3bdd46`
-      « mark tracked zombies persistent so vanilla despawn can't undo the LOD system »). Ce correctif
-      peut donc entrer en conflit direct avec une décision d'architecture existante. Si c'est le cas,
-      **ne pas l'appliquer** et le documenter ici comme refusé, avec la raison.
+L'audit recommande de ne pas appeler `setPersistenceRequired()` pour `EntitySpawnReason.COMMAND`, en
+défense en profondeur, pour qu'un abus de `/lethalspecial` reste réversible par despawn naturel.
+
+**Refusé, pour deux raisons dont la seconde est rédhibitoire :**
+
+1. **Conflit d'architecture.** La persistance est délibérée et load-bearing : commit `b3bdd46`, « mark
+   tracked zombies persistent so vanilla despawn can't undo the LOD system ». Le commentaire de
+   `EntityEventsInit.java:64-68` l'explique déjà sur place — vanilla despawn les MONSTER non persistants
+   dès 32 blocs, bien avant que le système FROZEN/LOD ait la moindre utilité, et ce système throttle le
+   tick, il ne retire jamais d'entité.
+2. **Inapplicable à cet endroit.** L'appel est dans `ServerEntityEvents.ENTITY_LOAD`, un callback qui **ne
+   porte aucune notion de `EntitySpawnReason`** et qui refire à **chaque chargement de chunk**, où la
+   raison du spawn d'origine n'existe plus depuis longtemps. Implémenter la recommandation exigerait
+   d'enregistrer la raison dans un attachment persistant au spawn — soit ajouter de l'état persistant par
+   entité pour affaiblir une protection délibérée.
+
+Le gate de la tâche 1.1 supprime déjà le vecteur non privilégié. Le résidu — « un opérateur peut spammer
+des entités » — est inhérent à toute commande de spawn, `/summon` vanilla comprise.
 
 **Commit :** `fix(security): gate /lethalphase and /lethalspecial, bound phase and spawn passes`
 
