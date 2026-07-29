@@ -541,7 +541,12 @@ Append to `ContaminationRoll.java` (inside the class), and add `import java.util
      */
     public static double uniform(Random rng, double min, double max) {
         min = Math.max(0.0, min);
-        max = Math.max(min, max);
+        max = Math.max(0.0, max);
+        if (min > max) {
+            double tmp = min;
+            min = max;
+            max = tmp;
+        }
         return min + rng.nextDouble() * (max - min);
     }
 
