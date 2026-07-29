@@ -27,6 +27,7 @@ public final class StageProfiler {
         SUNBURN("sunburn"),        // daylight burn check
         MOOD("mood"),              // celebrate / flee / day-sleep / shade search
         TICK("tick"),              // the throttled per-zombie AI tick itself
+        FLOWSNAP("flowsnap"),      // server-thread world read that builds the flow-field snapshot
         SCAN(">scan"),             // sub-stage: the getEntitiesOfClass AABB sweep
         ORDER(">order"),           // sub-stage: candidate ordering
         LOS(">los");               // sub-stage: line-of-sight voxel raycasts
