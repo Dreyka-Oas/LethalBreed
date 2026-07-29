@@ -1385,9 +1385,10 @@ In `PlacedBlockTracker.java`, replace the loop body's world read (lines 44-46) s
             // CellClassifier:31 already uses. An unloaded placement is simply re-checked when its chunk
             // comes back; if it never does, the expiry branch below drops it on age alone.
             if (!level.isLoaded(p)) {
-                long unloadedAge = now - s.placedAt;
-                if (unloadedAge >= lifetime) {
-                    it.remove(); // outlived its lifetime while unloaded — forget it, no world write needed
+                // Chunk gone: decide nothing here. We can neither read the block state nor destroy it,
+                // so we hold the entry and handle it when the chunk returns — even hours later.
+                if (now - s.placedAt >= lifetime * ABANDON_FACTOR) {
+                    it.remove(); // unloaded this long straight: give up rather than grow without bound
                 }
                 continue;
             }
