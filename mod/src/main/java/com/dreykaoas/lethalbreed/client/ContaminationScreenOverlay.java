@@ -92,9 +92,18 @@ public final class ContaminationScreenOverlay {
         }
     }
 
-    /** Release every pooled render target outright. Called on world unload: entries allocated for a previous
-     *  window size are never re-acquired by a later frame (the RenderTargetDescriptor differs), so endFrame()
-     *  alone never reaches them — vanilla neutralises the same vector with clear() inside resize(). */
+    /** Release every pooled render target outright. Called on world unload, and this is the ONLY vector it
+     *  addresses: our render() is HUD-attached, so it stops being called the moment {@code level == null}, and
+     *  with it endFrame() — leaving the pool's ~33 MB parked until the process exits. Vanilla needs no
+     *  equivalent because GameRenderer's own endFrame() keeps sweeping at the main menu.
+     *
+     *  <p>NOT what fixes the stale-window-size vector, despite the obvious guess: endFrame() sweeps EVERY
+     *  entry in the pool unconditionally and decrements its framesToLive — it is not gated on the entry being
+     *  re-acquired that frame ({@code canUsePhysicalResource} is only consulted inside acquire()). So an entry
+     *  orphaned by a resize closes on its own within framesToKeepResource+1 frames, purely from the per-frame
+     *  endFrame() in render()'s finally. Vanilla's clear() inside resize() is a transient-VRAM-spike
+     *  optimisation, not a correctness requirement. Do not remove that finally on the theory that this method
+     *  covers for it — a disconnect never fires from a resize. */
     private static void releasePool() {
         RESOURCE_POOL.close();
     }
