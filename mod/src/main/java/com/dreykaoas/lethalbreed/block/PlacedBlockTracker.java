@@ -25,6 +25,15 @@ public final class PlacedBlockTracker {
     private final HashMap<Long, State> placed = new HashMap<>();
     private int breakerSeq = 200_000; // synthetic breaker ids, distinct from BreakManager's range
 
+    /** How many lifetimes a placement may sit in an unloaded chunk before the tracker gives up on it.
+     *  Never drop an expired-but-unloaded placement immediately: we can neither read its state nor
+     *  destroy it while the chunk is gone, so dropping it there leaves the block in the world forever —
+     *  a zombie's dirt bridge over a ravine would become permanent terrain, which is exactly what this
+     *  class exists to prevent. Holding the entry lets us destroy the block the moment the chunk comes
+     *  back, however much later that is. The multiplier only bounds the map against areas a player
+     *  explores once and never revisits. */
+    private static final long ABANDON_FACTOR = 10L;
+
     public void record(BlockPos pos, long tick) {
         State s = new State();
         s.placedAt = tick;
@@ -47,12 +56,15 @@ public final class PlacedBlockTracker {
             // getChunk(x, z, FULL, /* requireChunk */ true), which on a ServerLevel cache miss does
             // addTicket + managedBlock + join — a synchronous stall of the server thread, once per tracked
             // position per tick, with up to 12000 of them per dimension (audit #3). Same guard
-            // CellClassifier:31 already uses. An unloaded placement is simply re-checked when its chunk
-            // comes back; if it never does, the expiry branch below drops it on age alone.
+            // CellClassifier:31 already uses. An unloaded placement is held, not dropped: we can neither
+            // read nor destroy the block while its chunk is gone, so an over-age entry is resolved by the
+            // loaded path below the moment the chunk comes back, however much later that is. Only a very
+            // long continuous unload (ABANDON_FACTOR lifetimes) makes the tracker give up on it.
             if (!level.isLoaded(p)) {
-                long unloadedAge = now - s.placedAt;
-                if (unloadedAge >= lifetime) {
-                    it.remove(); // outlived its lifetime while unloaded — forget it, no world write needed
+                // Chunk gone: decide nothing here. We can neither read the block state nor destroy it,
+                // so we hold the entry and handle it when the chunk returns — even hours later.
+                if (now - s.placedAt >= lifetime * ABANDON_FACTOR) {
+                    it.remove(); // unloaded this long straight: give up rather than grow without bound
                 }
                 continue;
             }
