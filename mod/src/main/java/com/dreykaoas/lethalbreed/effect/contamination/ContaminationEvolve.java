@@ -18,10 +18,8 @@ public final class ContaminationEvolve {
             return;
         }
         if (t >= roll) {
-            double pct = ContaminationConfig.contamEvolveMinPct
-                    + ContaminationState.RNG.nextDouble()
-                    * (ContaminationConfig.contamEvolveMaxPct - ContaminationConfig.contamEvolveMinPct);
-            if (ContaminationState.RNG.nextDouble() * 100.0 < pct) {
+            if (ContaminationRoll.percent(ContaminationState.RNG,
+                    ContaminationConfig.contamEvolveMinPct, ContaminationConfig.contamEvolveMaxPct)) {
                 ContaminationState.setLevel(e, ContaminationState.level(e) + 1);
             }
             ContaminationState.nextEvolveRoll.put(e, t + rollEvolveIntervalTicks());
