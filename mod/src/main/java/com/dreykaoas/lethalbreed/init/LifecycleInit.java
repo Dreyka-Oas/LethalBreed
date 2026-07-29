@@ -6,6 +6,7 @@ import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
+import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
@@ -38,6 +39,11 @@ public final class LifecycleInit {
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            // Hand vanilla AI back to every zombie we are currently freezing, BEFORE dropping the registry
+            // that holds the only record of which ones those are. NoAI persists to NBT; our flag does not.
+            for (SmartZombie sz : registry.all()) {
+                sz.mood().releaseAiHold();
+            }
             registry.clear();
             dimensions.clear();
             // Release the rest of the process-wide state that references entities/levels, so the closed
