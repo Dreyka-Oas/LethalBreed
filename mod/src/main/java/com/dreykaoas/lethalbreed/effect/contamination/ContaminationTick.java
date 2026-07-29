@@ -83,8 +83,10 @@ public final class ContaminationTick {
                 continue;
             }
 
-            // Milk / "/effect clear" removes the skull effect → this now CURES the plague outright (no lingering
-            // latent stage): the contamination age is wiped so symptoms can't resurface later.
+            // The skull icon is the symptomatic stage's only marker, so losing it means the plague is gone:
+            // /effect clear wipes the attachments outright (EffectClearCuresPlagueMixin), and milk puts the
+            // icon straight back (MilkKeepsPlagueMixin), so reaching here with no icon means something else
+            // removed it — treat that as a cure rather than leaving a symptomatic victim with no marker.
             int lvl = ContaminationState.level(e);
             int wantAmp = Math.max(0, lvl - 1);
             MobEffectInstance cur = e.getEffect(LethalBreedEffects.SUPER_CONTAMINATION);

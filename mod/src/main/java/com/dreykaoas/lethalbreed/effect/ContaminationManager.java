@@ -19,8 +19,9 @@ import net.minecraft.world.entity.LivingEntity;
  *       particles, no plague damage. The victim never knows. The only effect is a brief, particleless slow
  *       applied once at the moment of infection (a short movement-speed attribute modifier). Every 5–10
  *       in-game days a roll (2–10% chance) may surface the symptoms.</li>
- *   <li><b>Symptomatic</b> (age &gt; 0, symptomatic): the effect icon is re-applied every tick (so milk only
- *       hides the skull for one tick), the HUD hearts/food read green client-side, the victim takes the
+ *   <li><b>Symptomatic</b> (age &gt; 0, symptomatic): the effect icon is re-applied whenever its amplifier goes
+ *       stale (so a lapse — e.g. milk's redirect, which restores it within the same call — is corrected), the
+ *       HUD hearts/food read green client-side, the victim takes the
  *       ramping plague pulse (health + player food), and three independent random episodes flare on their own
  *       timers: a movement slow, a no-jump lock, and a weak-strike (all particleless attribute modifiers).</li>
  * </ul>
