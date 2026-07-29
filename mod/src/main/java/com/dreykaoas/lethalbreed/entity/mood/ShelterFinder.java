@@ -11,6 +11,19 @@ public final class ShelterFinder {
      *  zombie ducks under the CLOSEST roof at (or near) its own level rather than climbing far for cover. */
     private static final int V_WEIGHT = 3;
 
+    /**
+     * Finite ceiling for the nearness score: one unit past the furthest candidate the search can legally
+     * return. Seeding {@code bestScore} with this instead of {@code Double.MAX_VALUE} makes both prune
+     * branches bite from the very first column rather than staying inert until a first hit — and the
+     * no-hit case, where they stayed inert for all 8112 positions, is precisely the case that repeats
+     * (audit #6).
+     */
+    public static double maxScore(int radius) {
+        int r = Math.max(0, radius);
+        int vBand = Math.max(4, r / 2);
+        return 2.0 * r * r + (double) V_WEIGHT * vBand * vBand + 1.0;
+    }
+
     /** Search a 3D neighbourhood around {@code origin} for the nearest standable block whose column is NOT under
      *  open sky (a roofed refuge). Unlike a flat same-Y scan — which misses almost all real cover — this sweeps a
      *  vertical band too, so overhangs, doorways, sloped terrain and building interiors one step up/down all
@@ -19,7 +32,7 @@ public final class ShelterFinder {
     public static BlockPos findShade(ServerLevel level, BlockPos origin, int radius) {
         int vBand = Math.max(4, radius / 2);
         BlockPos best = null;
-        double bestScore = Double.MAX_VALUE;
+        double bestScore = maxScore(radius);
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {

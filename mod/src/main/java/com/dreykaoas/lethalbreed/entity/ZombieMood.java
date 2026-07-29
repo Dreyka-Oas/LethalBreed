@@ -49,6 +49,13 @@ public final class ZombieMood {
     // dozes; once immune it dozes in place. sleepSeekingShade marks that the current memory target IS that shade
     // (vs a heard-noise investigation), so arriving under cover flips it to a doze. A dozing zombie is held FROZEN.
     private boolean sleepSeekingShade = false;
+    // Server tick before which a fresh shade search is pointless, plus where we were when it last failed.
+    // findShade sweeps 8112 positions and the failing case is the one that repeats — with no memory of the
+    // failure a stationary zombie rescanned the identical volume at 1 Hz forever. Normally self-limiting
+    // (an exposed zombie burns and dies in ~20s), except in water: `exposed` does not test water while
+    // sun-burn is blocked by isInWaterOrRain, so that zombie loops unbounded (audit #6).
+    private long shadeRetryAt = Long.MIN_VALUE;
+    private BlockPos shadeFailedAt = null;
     // True while WE hold the zombie's vanilla AI off (setNoAi) so a dozing zombie stays perfectly still instead
     // of being walked around by vanilla RandomStrollGoal. Tracked so we only ever clear the NoAi WE set.
     private boolean noAiFrozen = false;
@@ -269,11 +276,22 @@ public final class ZombieMood {
         if (TargetingConfig.targetMemoryTicks <= 0) {
             return; // memory routing disabled → can't drive a shade-seek; keep roaming (it will burn)
         }
-        BlockPos shade = ShelterFinder.findShade(level, entity.blockPosition(), ZombieMoodConfig.shelterSearchRadius);
+        BlockPos here = entity.blockPosition();
+        // Skip the sweep while the last failure is still fresh AND we have not meaningfully moved. Moving
+        // more than 4 blocks exposes genuinely new volume, so that always re-arms the search immediately.
+        boolean moved = shadeFailedAt == null || shadeFailedAt.distSqr(here) > 16.0;
+        if (!moved && now < shadeRetryAt) {
+            return;
+        }
+        BlockPos shade = ShelterFinder.findShade(level, here, ZombieMoodConfig.shelterSearchRadius);
         if (shade == null) {
             sleepSeekingShade = false;
+            shadeFailedAt = here;
+            shadeRetryAt = now + ZombieMoodConfig.shelterRetryTicks;
             return; // no shade in range → keep roaming (can't help the burn)
         }
+        shadeFailedAt = null;
+        shadeRetryAt = Long.MIN_VALUE;
         // Remember the shade as a target so classify + the brain path AND break toward it, then doze on arrival.
         owner.pursuit().rememberTarget(shade.getX() + 0.5, shade.getY(), shade.getZ() + 0.5,
                 now + TargetingConfig.targetMemoryTicks);
