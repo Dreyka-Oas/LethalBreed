@@ -85,8 +85,8 @@ final class CellClassifier {
     // TODO(task-11): temporary parity oracle — the pre-refactor, ServerLevel-only implementation of
     // classify(), kept verbatim as the reference for ComputeSelfTest's classification-parity check
     // (nothing else in the test suite ever reaches CellClassifier). Remove once that check has run
-    // clean in a full manual pass (breaking/bridging/climbing) and the controller signs off — see
-    // task-11-brief.md step 8.
+    // clean in a full manual pass (breaking/bridging/climbing) and the author signs off. Until then this
+    // is the ONLY guard on the refactor: no unit test in the suite ever reaches CellClassifier.
     static byte classifyViaLevel(ServerLevel level, BlockPos.MutableBlockPos m,
                          int wx, int wz, int focusY, int vtol) {
         // Standable anywhere in the window?
