@@ -277,6 +277,7 @@ final class ConfigBoundsTable {
         b("fleeFastThreatGiveUp", 1, 1024);
         b("shelterSearchRadius", 1, 64);
         b("shelterSpeed", 0, 10);
+        b("shelterRetryTicks", 0, 12000);
         b("distressDistance", 0, 128);
         b("distressRallyRadius", 0, 128);
         b("celebrateRadius", 0, 128);
