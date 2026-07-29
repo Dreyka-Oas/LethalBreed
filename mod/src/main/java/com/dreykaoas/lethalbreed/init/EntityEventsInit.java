@@ -77,15 +77,17 @@ public final class EntityEventsInit {
                 zombie.setPersistenceRequired();
                 AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
                 registry.add(zombie, world.dimension());
-                // Defence in depth + repair for worlds saved before audit #2 was fixed: a zombie that
-                // arrives already frozen cannot have been frozen by THIS session (the mood object holding
-                // that freeze is created empty, just above). Vanilla never sets NoAI on a naturally-spawned
-                // zombie, so any zombie loading with it set is either one of our old statues or was placed
-                // deliberately by a command/spawn egg. We lift it: a permanently inert, non-despawning
-                // zombie is strictly worse than overriding a rare deliberate freeze.
-                if (zombie.isNoAi()) {
-                    zombie.setNoAi(false);
-                }
+                // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
+                // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
+                // setNoAi(true) applied by the caller a line before addFreshEntity — which is exactly how
+                // this project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
+                // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
+                // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
+                // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,
+                // so the repair cannot be made safe. Audit #2 is prevented at the source instead: the freeze
+                // is released on ENTITY_UNLOAD and on SERVER_STOPPING (before saveAllChunks), so no new
+                // statue is ever written. A world already carrying one can be repaired by hand with
+                //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
             }
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
