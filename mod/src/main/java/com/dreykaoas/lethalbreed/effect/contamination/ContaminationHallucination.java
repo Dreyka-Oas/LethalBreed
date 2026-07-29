@@ -19,7 +19,9 @@ public final class ContaminationHallucination {
     private static final java.util.Map<LivingEntity, EpisodeTimers> hallucTimers = new java.util.HashMap<>();
 
     /** Drive the zombie-vision hallucination flare for one victim: OFF between flares, ON (ZOMBIE_VISION applied)
-     *  for a random duration, then a random gap. Duration scales up / gap scales down with intensity, like episodes. */
+     *  for a random duration, then a random gap. Duration scales up / gap scales down with intensity, exactly
+     *  like episodes — both gaps go through {@link ContaminationRoll#intensityFactor}, so the
+     *  {@code expertContamIntensityFloor} option governs all four flare types (audit #5). */
     public static void tickHallucination(LivingEntity e, long t, double mult) {
         EpisodeTimers st = hallucTimers.computeIfAbsent(e, k -> {
             EpisodeTimers s = new EpisodeTimers();
@@ -46,7 +48,7 @@ public final class ContaminationHallucination {
 
     private static long rollHallucGap(double mult) {
         return ContaminationState.rollWindow(ContaminationConfig.contamHallucGapMinSec,
-                ContaminationConfig.contamHallucGapMaxSec, 1.0 / Math.max(1.0e-3, mult));
+                ContaminationConfig.contamHallucGapMaxSec, ContaminationRoll.intensityFactor(mult));
     }
 
     /** Forget a victim's hallucination timer (on cure/death). Does NOT remove the effect itself — callers already
