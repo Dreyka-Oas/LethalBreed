@@ -24,13 +24,26 @@ public final class ContaminationTick {
     // Server-thread only, non-reentrant (nothing in the loop calls tick() again), so a static scratch is safe.
     private static final ArrayList<LivingEntity> SNAPSHOT = new ArrayList<>();
 
+    /** Was the plague enabled on the previous tick? Drives the one-shot purge below. */
+    private static boolean wasEnabled = true;
+
     public static void tick(MinecraftServer server) {
         // Cleared BEFORE the guard, not after: the two ordinary ways out of here — `tracked` going empty
         // (last victim cured or died) and the plague being switched off — both take the early return, and
         // a scratch buffer that only self-clears on the hot path holds its last batch forever. One retained
         // LivingEntity pins level -> ServerLevel -> chunks -> MinecraftServer (audit #8).
         SNAPSHOT.clear();
-        if (!ContaminationConfig.contaminationEnabled || ContaminationState.tracked.isEmpty()) {
+
+        boolean enabled = ContaminationConfig.contaminationEnabled;
+        if (wasEnabled && !enabled) {
+            // Enabled -> disabled: purge once, here, rather than leaving the in-memory state to be cleaned
+            // by a sweep that this very flag switches off. Persistent attachments are untouched, so
+            // re-enabling the plague re-tracks every victim through onLoad on its next chunk load (audit #9).
+            ContaminationLifecycle.onServerStopped();
+        }
+        wasEnabled = enabled;
+
+        if (!enabled || ContaminationState.tracked.isEmpty()) {
             return;
         }
         long t = server.getTickCount();
@@ -126,11 +139,11 @@ public final class ContaminationTick {
         }
     }
 
-    /** SERVER_STOPPED: drop the scratch buffer's references to the closing world's entities. The per-tick
-     *  clear above already covers every in-session path; this covers the case where the server stops
-     *  between two ticks, with a batch still resident. */
+    /** SERVER_STOPPED: drop the scratch buffer's references to the closing world's entities, and re-arm the
+     *  enabled/disabled transition detector so the next server starts from a known state. */
     static void clearSnapshot() {
         SNAPSHOT.clear();
+        wasEnabled = true;
     }
 
     /** Roll the next pulse delay in ticks, uniform in [contamIntervalMinSec, contamIntervalMaxSec] × 20. */
