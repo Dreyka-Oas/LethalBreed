@@ -47,14 +47,11 @@ public final class ContaminationTick {
             }
 
             // Cure: only by staying crouched; tiny random chance per check.
-            if (e.isCrouching() && t % Math.max(1, ContaminationConfig.contamCureCheckTicks) == 0) {
-                double pct = ContaminationConfig.contamCureMinPct
-                        + ContaminationState.RNG.nextDouble()
-                        * (ContaminationConfig.contamCureMaxPct - ContaminationConfig.contamCureMinPct);
-                if (ContaminationState.RNG.nextDouble() * 100.0 < pct) {
-                    ContaminationLifecycle.cure(e);
-                    continue;
-                }
+            if (e.isCrouching() && t % Math.max(1, ContaminationConfig.contamCureCheckTicks) == 0
+                    && ContaminationRoll.percent(ContaminationState.RNG,
+                            ContaminationConfig.contamCureMinPct, ContaminationConfig.contamCureMaxPct)) {
+                ContaminationLifecycle.cure(e);
+                continue;
             }
 
             c++;
@@ -101,10 +98,8 @@ public final class ContaminationTick {
             if (due == null) {
                 ContaminationState.nextPulse.put(e, t + rollIntervalTicks());
             } else if (t >= due) {
-                float dmg = (float) ((ContaminationConfig.contamDamageMin
-                        + ContaminationState.RNG.nextDouble()
-                        * (ContaminationConfig.contamDamageMax - ContaminationConfig.contamDamageMin))
-                        * mult);
+                float dmg = (float) (ContaminationRoll.uniform(ContaminationState.RNG,
+                        ContaminationConfig.contamDamageMin, ContaminationConfig.contamDamageMax) * mult);
                 float next = e.getHealth() - dmg;
                 if (next > 0.0f) {
                     e.setHealth(next);

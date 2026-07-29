@@ -40,10 +40,8 @@ public final class ContaminationSymptoms {
             return;
         }
         if (t >= roll) {
-            double pct = ContaminationConfig.contamSymptomMinPct
-                    + ContaminationState.RNG.nextDouble()
-                    * (ContaminationConfig.contamSymptomMaxPct - ContaminationConfig.contamSymptomMinPct);
-            if (ContaminationState.RNG.nextDouble() * 100.0 < pct) {
+            if (ContaminationRoll.percent(ContaminationState.RNG,
+                    ContaminationConfig.contamSymptomMinPct, ContaminationConfig.contamSymptomMaxPct)) {
                 e.setAttached(ContaminationState.SYMPTOMATIC, true);
                 ContaminationState.setLevel(e, 1); // enter symptomatic at level 1 (applies icon + seeds intensity)
                 ContaminationState.nextSymptomRoll.remove(e);
