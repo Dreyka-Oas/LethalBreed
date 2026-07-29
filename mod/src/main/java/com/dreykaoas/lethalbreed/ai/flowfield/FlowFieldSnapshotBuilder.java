@@ -60,13 +60,27 @@ final class FlowFieldSnapshotBuilder {
         int breakCost = FlowConfig.flowBreakCost;
         int buildCost = FlowConfig.flowBuildCost;
 
+        long t0 = System.nanoTime();
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int cx = 0; cx < width; cx++) {
             int wx = minX + cx;
+            int lastChunkZ = Integer.MIN_VALUE;
+            net.minecraft.world.level.chunk.ChunkAccess chunk = null;
             for (int cz = 0; cz < depth; cz++) {
                 int wz = minZ + cz;
+                int chunkZ = wz >> 4;
+                if (chunkZ != lastChunkZ) {
+                    // 16 consecutive columns share one chunk; resolving it per column repeated the lookup
+                    // 16x over. getChunk(x, z, FULL, false) — never force a load: an absent chunk is
+                    // IMPASSABLE, which is what CellClassifier's isLoaded guard already concluded.
+                    chunk = level.getChunk(wx >> 4, chunkZ,
+                            net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false);
+                    lastChunkZ = chunkZ;
+                }
                 int i = cx * depth + cz;
-                byte type = CellClassifier.classify(level, m, wx, wz, focusY, vtol);
+                byte type = (chunk == null)
+                        ? CellClassifier.IMPASSABLE
+                        : CellClassifier.classify(level, chunk, m, wx, wz, focusY, vtol);
                 switch (type) {
                     case CellClassifier.PASSABLE -> { passable[i] = true; }
                     case CellClassifier.BREAKABLE -> { passable[i] = true; extraCost[i] = breakCost; flags[i] = FlowField.FLAG_BREAK; }
@@ -75,6 +89,8 @@ final class FlowFieldSnapshotBuilder {
                 }
             }
         }
+        com.dreykaoas.lethalbreed.tick.StageProfiler.sub(
+                com.dreykaoas.lethalbreed.tick.StageProfiler.Stage.FLOWSNAP, System.nanoTime() - t0);
 
         List<Integer> seeds = new ArrayList<>(players.size());
         for (ServerPlayer p : players) {
