@@ -56,11 +56,16 @@ public final class ContaminationLifecycle {
     }
 
     /** SERVER_STOPPED: drop ALL victims from every in-memory collection so a stopped world's entity graph is
-     *  not pinned by these {@code static} maps into the next session. Persistent attachments are untouched. */
+     *  not pinned by these {@code static} maps into the next session. Persistent attachments are untouched.
+     *
+     *  <p>Every static collection in this package must be purged here. The tick sweep's scratch buffer was
+     *  the one this list originally missed (audit #8) — it lives in a sibling class, so a purge written by
+     *  reading only THIS file could not see it. When you add a static that holds an entity, add it here. */
     public static void onServerStopped() {
         ContaminationState.clearAllTransient();
         ContaminationEpisodes.clearAllVictims();
         ContaminationHallucination.clearAllVictims();
+        ContaminationTick.clearSnapshot();
     }
 
     /** Death of a contaminated victim: clear the plague state, then reanimate as a zombie if it was a humanoid. */

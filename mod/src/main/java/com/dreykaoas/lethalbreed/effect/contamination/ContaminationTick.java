@@ -25,11 +25,15 @@ public final class ContaminationTick {
     private static final ArrayList<LivingEntity> SNAPSHOT = new ArrayList<>();
 
     public static void tick(MinecraftServer server) {
+        // Cleared BEFORE the guard, not after: the two ordinary ways out of here — `tracked` going empty
+        // (last victim cured or died) and the plague being switched off — both take the early return, and
+        // a scratch buffer that only self-clears on the hot path holds its last batch forever. One retained
+        // LivingEntity pins level -> ServerLevel -> chunks -> MinecraftServer (audit #8).
+        SNAPSHOT.clear();
         if (!ContaminationConfig.contaminationEnabled || ContaminationState.tracked.isEmpty()) {
             return;
         }
         long t = server.getTickCount();
-        SNAPSHOT.clear();
         SNAPSHOT.addAll(ContaminationState.tracked);
         for (int i = 0; i < SNAPSHOT.size(); i++) {
             LivingEntity e = SNAPSHOT.get(i);
@@ -120,6 +124,13 @@ public final class ContaminationTick {
             // ZOMBIE_VISION effect; the victim's client reads it to draw other players as zombies.
             ContaminationHallucination.tickHallucination(e, t, mult);
         }
+    }
+
+    /** SERVER_STOPPED: drop the scratch buffer's references to the closing world's entities. The per-tick
+     *  clear above already covers every in-session path; this covers the case where the server stops
+     *  between two ticks, with a batch still resident. */
+    static void clearSnapshot() {
+        SNAPSHOT.clear();
     }
 
     /** Roll the next pulse delay in ticks, uniform in [contamIntervalMinSec, contamIntervalMaxSec] × 20. */
