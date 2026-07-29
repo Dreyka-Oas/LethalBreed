@@ -1,7 +1,6 @@
 package com.dreykaoas.lethalbreed.effect.contamination;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
-import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
@@ -92,7 +91,7 @@ public final class ContaminationEpisodes {
     /** Gap-between-flares in ticks, scaled DOWN by intensity (more frequent at higher levels). */
     private static long rollGap(Episode ep, double mult) {
         return ContaminationState.rollWindow(ep.gapMin.getAsDouble(), ep.gapMax.getAsDouble(),
-                1.0 / Math.max(ExpertConfig.expertContamIntensityFloor, mult));
+                ContaminationRoll.intensityFactor(mult));
     }
 
     /** Turn an episode ON: add its transient attribute modifier. Fraction removed is scaled by intensity, capped
