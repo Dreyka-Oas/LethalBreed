@@ -185,8 +185,8 @@ public final class ComputeSelfTest {
                 checked + " cells checked, " + mismatches + " mismatched");
         LethalBreed.LOGGER.info(
                 "[ComputeTest] classify-parity timing: viaLevel(oracle)={}ms viaChunk(new)={}ms over {} cells ({}x{})",
-                String.format("%.2f", oracleNanos / 1_000_000.0),
-                String.format("%.2f", chunkNanos / 1_000_000.0), n, span, span);
+                String.format(java.util.Locale.ROOT, "%.2f", oracleNanos / 1_000_000.0),
+                String.format(java.util.Locale.ROOT, "%.2f", chunkNanos / 1_000_000.0), n, span, span);
     }
 
     private static String backend(int cells, int minCells) {
