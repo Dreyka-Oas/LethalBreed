@@ -342,6 +342,18 @@ public final class ZombieMood {
         }
     }
 
+    /** Hand vanilla AI back if WE are holding it, without touching any other sleep state. Called when this
+     *  mood object is about to be discarded — chunk unload or server stop — because {@code NoAI} is persisted
+     *  to entity NBT by vanilla while {@code noAiFrozen} is not: a frozen zombie whose mood dies is reloaded
+     *  with NoAI still true and nothing left that knows to lift it, leaving a gravity-less, navigation-less
+     *  statue that setPersistenceRequired also stops from despawning (audit #2). Idempotent. */
+    public void releaseAiHold() {
+        if (noAiFrozen) {
+            entity.setNoAi(false);
+            noAiFrozen = false;
+        }
+    }
+
     /** Called by the sound bus for every zombie within earshot of a noise. It (re-)arms the ROUSED alert timer so
      *  the zombie stays awake and hunts by sight+sound — for an already-awake zombie that's all it does. For a
      *  SLEEPING one it also stashes the source and, after {@code daySleepWakeDelayTicks}, wakes it to investigate

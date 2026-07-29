@@ -77,6 +77,15 @@ public final class EntityEventsInit {
                 zombie.setPersistenceRequired();
                 AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
                 registry.add(zombie, world.dimension());
+                // Defence in depth + repair for worlds saved before audit #2 was fixed: a zombie that
+                // arrives already frozen cannot have been frozen by THIS session (the mood object holding
+                // that freeze is created empty, just above). Vanilla never sets NoAI on a naturally-spawned
+                // zombie, so any zombie loading with it set is either one of our old statues or was placed
+                // deliberately by a command/spawn egg. We lift it: a permanently inert, non-despawning
+                // zombie is strictly worse than overriding a rare deliberate freeze.
+                if (zombie.isNoAi()) {
+                    zombie.setNoAi(false);
+                }
             }
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
@@ -92,8 +101,14 @@ public final class EntityEventsInit {
                 // here was never visited again and its cell slot stayed for the rest of the session —
                 // every death and every chunk unload leaked one, pinning entity -> level -> server, and
                 // neighbour queries (sound, Hurleur rally, Soigneur heal) kept matching those ghosts.
-                if (sz != null && sz.pursuit().inGrid()) {
-                    dimensions.get(sz.dimension()).spatialGrid().remove(sz);
+                if (sz != null) {
+                    // Hand vanilla AI back BEFORE the mood object goes away. NoAI is persisted to NBT,
+                    // the "we froze it" flag is not — so a dozing zombie unloaded while frozen would be
+                    // saved as NoAI=true with nothing left to lift it (audit #2).
+                    sz.mood().releaseAiHold();
+                    if (sz.pursuit().inGrid()) {
+                        dimensions.get(sz.dimension()).spatialGrid().remove(sz);
+                    }
                 }
                 VanillaTargetingGoals.drop(entity.getId()); // release any stripped-goal snapshot
             }
