@@ -43,6 +43,19 @@ public final class PlacedBlockTracker {
             Map.Entry<Long, State> e = it.next();
             State s = e.getValue();
             BlockPos p = BlockPos.of(e.getKey());
+            // Never force a chunk load from here. Level.getBlockState() resolves through
+            // getChunk(x, z, FULL, /* requireChunk */ true), which on a ServerLevel cache miss does
+            // addTicket + managedBlock + join — a synchronous stall of the server thread, once per tracked
+            // position per tick, with up to 12000 of them per dimension (audit #3). Same guard
+            // CellClassifier:31 already uses. An unloaded placement is simply re-checked when its chunk
+            // comes back; if it never does, the expiry branch below drops it on age alone.
+            if (!level.isLoaded(p)) {
+                long unloadedAge = now - s.placedAt;
+                if (unloadedAge >= lifetime) {
+                    it.remove(); // outlived its lifetime while unloaded — forget it, no world write needed
+                }
+                continue;
+            }
             BlockState bs = level.getBlockState(p);
             if (bs.getBlock() != Blocks.DIRT) {
                 // Block already gone/replaced → clear any cracks and stop tracking it.
