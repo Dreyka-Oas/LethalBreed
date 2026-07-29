@@ -31,8 +31,16 @@ public final class ContaminationLifecycle {
     }
 
     /** Re-track a contaminated entity after chunk reload (its attachment persists, the in-memory set doesn't).
-     *  Only re-show the icon if it had already turned symptomatic. */
+     *  Only re-show the icon if it had already turned symptomatic.
+     *
+     *  <p>Gated on {@code contaminationEnabled}: the CONTAM attachment is persistent, so it outlives the
+     *  option being switched off, while the tick sweep that would remove entries is itself gated on the same
+     *  flag. Ungated, every chunk reload of a victim added a fresh HashSet entry — Entity.hashCode() is the
+     *  monotonic entity id, so a reloaded victim is never equal to its previous incarnation (audit #9). */
     public static void onLoad(Entity e) {
+        if (!ContaminationConfig.contaminationEnabled) {
+            return;
+        }
         if (e instanceof LivingEntity le && ContaminationState.age(le) > 0) {
             ContaminationState.tracked.add(le);
             if (ContaminationState.symptomatic(le)) {
