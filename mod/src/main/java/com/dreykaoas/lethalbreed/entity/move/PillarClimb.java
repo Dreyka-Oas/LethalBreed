@@ -11,20 +11,52 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
- * Jump-and-place vertical ascent. When a target is perched above with no flush wall to scale, the zombie
- * builds a dirt column straight up beneath itself — a real jump cycle (velocity impulse + {@code
- * hurtMarked}), never a setPos levitation, so it stands on what it builds. Owns the pillar mutable state
- * and the post-give-up climb cooldown. See the {@code entity-velocity-not-applying} skill.
+ * The vertical-ascent state machine: jump-and-place. When a target is perched above with no flush wall to
+ * scale, the zombie builds a dirt column straight up beneath itself — a real jump cycle (velocity impulse +
+ * {@code hurtMarked}), never a setPos levitation, so it stands on what it builds. Owns the whole ascent:
+ * the active flag, the post-give-up cooldown, the height/stall watchdog and the column bookkeeping.
+ * See the {@code entity-velocity-not-applying} skill.
  */
-public final class PillarClimb extends Ascent {
+public final class PillarClimb {
+    private final SmartZombie owner;
+    private final Zombie entity;
+
+    private boolean running = false;
+    private int age = 0;
+    private double startY = 0.0;
+    private int topY = 0;     // highest block-Y reached this ascent (for the stall watchdog)
+    private int rungAge = 0;  // activations since the last full-block height gain
+    private int climbCd = 0;  // post-give-up cooldown before another ascent may start
+
+    // Per-tick heading scratch, refilled by computeHeading() at the top of each step (few climbing zombies, so
+    // reusing fields over a throwaway struct keeps the ascent allocation-free without hurting readability).
+    private double dyToTarget = -1.0; // target height above the feet, or -1 when there is no target
+    private double hx = 0.0;          // horizontal delta to the target (x, z) and its length
+    private double hz = 0.0;
+    private double h = 0.0;
+
     private int pillarColX = 0;
     private int pillarColZ = 0;
     private int pillarStandY = 0; // block-Y the zombie last jumped from (support is laid here)
 
     public PillarClimb(SmartZombie owner) {
-        super(owner);
+        this.owner = owner;
+        this.entity = owner.entity();
+    }
+
+    public boolean active() { return running; }
+
+    /** Force the ascent off (used when the zombie enters water and must not climb/build). */
+    public void cancel() { running = false; }
+
+    /** Decrement the give-up cooldown each activation (called from the bucketed tick). */
+    public void tickCooldown() {
+        if (climbCd > 0) {
+            climbCd--;
+        }
     }
 
     /**
@@ -37,7 +69,11 @@ public final class PillarClimb extends Ascent {
             return;
         }
         running = true;
-        beginAscent();
+        // Reset the per-ascent watchdog bookkeeping the moment the ascent starts.
+        age = 0;
+        startY = entity.getY();
+        topY = entity.blockPosition().getY();
+        rungAge = 0;
         // Lock the column to where we start so the whole pillar rises straight up one fixed XZ cell.
         pillarColX = entity.blockPosition().getX();
         pillarColZ = entity.blockPosition().getZ();
@@ -118,5 +154,60 @@ public final class PillarClimb extends Ascent {
                 ctx.blockOps().enqueuePlace(new BlockPos(pillarColX, pillarStandY, pillarColZ));
             }
         }
+    }
+
+    /** {@code step} preamble: bail while inactive, drop out (and clear {@code running}) if the owner is
+     *  no longer valid, otherwise age the ascent one tick. Returns true when {@link #step} should continue. */
+    private boolean beginStep() {
+        if (!running) {
+            return false;
+        }
+        if (!owner.isValid()) {
+            running = false;
+            return false;
+        }
+        age++;
+        return true;
+    }
+
+    /** Refill the heading scratch ({@link #dyToTarget}, {@link #hx}, {@link #hz}, {@link #h}) toward the current
+     *  target — or a downward {@code dyToTarget} when there is none. */
+    private void computeHeading() {
+        dyToTarget = owner.hasTarget() ? (owner.tgtY() - entity.getY()) : -1.0;
+        hx = owner.tgtX() - entity.getX();
+        hz = owner.tgtZ() - entity.getZ();
+        h = Math.sqrt(hx * hx + hz * hz);
+    }
+
+    /** Advance the stall watchdog from the current block-Y: a new rung resets it, otherwise it ages. Returns
+     *  true once the current rung has made no height gain for longer than {@code climbJumpMaxAge} activations
+     *  (support can't land / lip overhang / ceiling) — the caller then aborts so it doesn't climb in place. */
+    private boolean updateStallWatchdog() {
+        int curY = entity.blockPosition().getY();
+        if (curY > topY) {
+            topY = curY;
+            rungAge = 0;
+        } else {
+            rungAge++;
+        }
+        return rungAge > CombatMoveConfig.climbJumpMaxAge;
+    }
+
+    /** Height risen since this ascent began. */
+    private double risen() {
+        return entity.getY() - startY;
+    }
+
+    /** End the ascent normally (topped out / reached height): drop the jump intent and clear {@code running}. */
+    private void finish() {
+        entity.setJumping(false);
+        running = false;
+    }
+
+    /** Abort the ascent (height cap / stall / ceiling) and arm the give-up cooldown so the dispatcher does not
+     *  immediately retry it and instead falls back to ordinary ground movement. */
+    private void giveUp() {
+        finish();
+        climbCd = FlowConfig.climbGiveUpCooldown;
     }
 }

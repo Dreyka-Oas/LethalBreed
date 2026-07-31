@@ -141,8 +141,15 @@ public final class ContaminationTick {
         }
     }
 
-    /** SERVER_STOPPED: drop the scratch buffer's references to the closing world's entities, and re-arm the
-     *  enabled/disabled transition detector so the next server starts from a known state. */
+    /** Reset BOTH pieces of this class's static state — despite the name, not just the snapshot: it drops the
+     *  scratch buffer's references to the closing world's entities AND re-arms the {@link #wasEnabled}
+     *  enabled/disabled transition detector so the next server starts from a known state.
+     *
+     *  <p>Called from {@link ContaminationLifecycle#onServerStopped()}, which is itself reached both on
+     *  SERVER_STOPPED and on the mid-tick enabled→disabled purge. On the mid-tick path the re-arm is
+     *  immediately overwritten by {@code wasEnabled = enabled} at the end of the transition check, so that
+     *  purge still fires exactly once; the re-arm is there for the SERVER_STOPPED path, where nothing else
+     *  runs afterwards and the next server must not inherit a stale {@code false}. */
     static void clearSnapshot() {
         SNAPSHOT.clear();
         wasEnabled = true;

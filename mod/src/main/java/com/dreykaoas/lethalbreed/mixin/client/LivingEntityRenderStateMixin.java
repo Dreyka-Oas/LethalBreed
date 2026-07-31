@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
-import com.dreykaoas.lethalbreed.client.BellyChargeHolder;
+import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -8,11 +8,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * Adds the BOMBEUR belly-charge field to every living render state. See {@link BellyChargeHolder}.
+ * Adds the BOMBEUR belly-charge field to every living render state. See {@link ZombieRenderFlags}.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(LivingEntityRenderState.class)
-public class LivingEntityRenderStateMixin implements BellyChargeHolder {
+public class LivingEntityRenderStateMixin implements ZombieRenderFlags {
 
     @Unique
     private float lethalbreed$bellyCharge;

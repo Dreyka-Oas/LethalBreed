@@ -13,9 +13,10 @@ abstract class CrackingBlock {
     int breakerId;
     int lastStage = -1;
 
-    /** Clamp an already-scaled tenths value (progress×10 / age×10÷lifetime) to a 0..9 crack stage. */
+    /** Clamp an already-scaled tenths value (progress×10 / age×10÷lifetime) to a 0..9 crack stage.
+     *  The arithmetic lives in {@link PlacedBlockPolicy} so it is unit-testable without Minecraft. */
     static int stage(double tenths) {
-        return (int) Math.max(0, Math.min(9, tenths));
+        return PlacedBlockPolicy.stage(tenths);
     }
 
     /** Push the crack overlay only when the stage actually changed (avoids per-tick packet spam). */

@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
-import com.dreykaoas.lethalbreed.client.BellyChargeHolder;
+import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.HumanoidModel;
@@ -28,7 +28,7 @@ public abstract class PlayerModelZombieArmsMixin extends HumanoidModel<AvatarRen
     // render mod that redirects the same call should cost the player a visual effect, not the game.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
     private void lethalbreed$zombieArms(AvatarRenderState state, CallbackInfo ci) {
-        if (!((BellyChargeHolder) state).lethalbreed$hallucinateZombie()) {
+        if (!((ZombieRenderFlags) state).lethalbreed$hallucinateZombie()) {
             return;
         }
         // Classic zombie stance: both arms straight out (~90° forward), no swing, slight inward tilt.

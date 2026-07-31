@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
-import com.dreykaoas.lethalbreed.client.BellyChargeHolder;
+import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.HumanoidModel;
@@ -27,7 +27,7 @@ public class ZombieBellyModelMixin {
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$swellBelly(ZombieRenderState state, CallbackInfo ci) {
-        float charge = ((BellyChargeHolder) state).lethalbreed$bellyCharge();
+        float charge = ((ZombieRenderFlags) state).lethalbreed$bellyCharge();
         ModelPart body = ((HumanoidModel<?>) (Object) this).body;
         float girth = 1.0f + charge * 1.3f;
         body.xScale = girth;
