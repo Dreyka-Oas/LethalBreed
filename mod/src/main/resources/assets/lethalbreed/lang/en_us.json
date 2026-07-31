@@ -405,5 +405,7 @@
   "lethalbreed.option.expertAttributeFloor": "Attribute Safety Floor",
   "lethalbreed.option.expertMobcapChunkDivisor": "Mob-Cap Chunk Divisor",
   "lethalbreed.option.expertContamIntensityFloor": "Contam Intensity Floor",
-  "lethalbreed.option.expertContamTimeScaleFloor": "Contam Time-Scale Floor"
+  "lethalbreed.option.expertContamTimeScaleFloor": "Contam Time-Scale Floor",
+  "lethalbreed.option.shelterRetryTicks": "Shade Search Retry Delay",
+  "lethalbreed.option.shelterRetryTicks.desc": "Ticks before a failed shade search is retried, unless the zombie moved more than 4 blocks. 0 disables the cooldown entirely, restoring a full rescan every activation (including the unbounded case for a zombie stuck in water)."
 }

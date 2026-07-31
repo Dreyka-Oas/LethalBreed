@@ -6,6 +6,7 @@ import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
+import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
@@ -35,6 +36,21 @@ public final class LifecycleInit {
                 }
             }
             PhaseManager.get().load(server); // restore the persisted phase (survives close/reopen)
+        });
+
+        // NoAI-release MUST happen here, on STOPPING, not on STOPPED: Fabric fires SERVER_STOPPING at HEAD of
+        // MinecraftServer.stopServer() and SERVER_STOPPED at TAIL, but stopServer() calls saveAllChunks(...)
+        // (flushing every loaded zombie's NoAI to disk) and then serverLevel.close() BEFORE it returns — i.e.
+        // strictly between STOPPING and STOPPED. By the time STOPPED fires, the save already happened and the
+        // level is closed, so releasing the hold there is a no-op that can't reach the NBT that was just
+        // written. Do NOT "tidy" this back into the SERVER_STOPPED handler below — that silently reintroduces
+        // the frozen-statue bug this exists to fix (audit #2).
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            // Hand vanilla AI back to every zombie we are currently freezing, BEFORE saveAllChunks flushes
+            // NoAI to NBT. NoAI persists to NBT; our flag does not.
+            for (SmartZombie sz : registry.all()) {
+                sz.mood().releaseAiHold();
+            }
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {

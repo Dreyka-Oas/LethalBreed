@@ -405,5 +405,7 @@
   "lethalbreed.option.expertAttributeFloor": "Plancher de sécurité d'attribut",
   "lethalbreed.option.expertMobcapChunkDivisor": "Diviseur de mob-cap par chunk",
   "lethalbreed.option.expertContamIntensityFloor": "Plancher d'intensité (contamination)",
-  "lethalbreed.option.expertContamTimeScaleFloor": "Plancher de compression temporelle (contamination)"
+  "lethalbreed.option.expertContamTimeScaleFloor": "Plancher de compression temporelle (contamination)",
+  "lethalbreed.option.shelterRetryTicks": "Délai avant nouvelle recherche d'ombre",
+  "lethalbreed.option.shelterRetryTicks.desc": "Ticks avant de relancer une recherche d'ombre infructueuse, sauf si le zombie s'est déplacé de plus de 4 blocs. 0 désactive entièrement le délai et restaure un balayage complet à chaque activation (y compris le cas non borné d'un zombie bloqué dans l'eau)."
 }

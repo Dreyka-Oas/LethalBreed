@@ -57,6 +57,11 @@ public final class ZombieMoodConfig {
     public static int shelterSearchRadius = 12;
     /** Navigation speed multiplier while dashing to shade (matches the flee sprint). */
     public static double shelterSpeed = 1.3;
+    /** Server ticks to wait before re-running a shade search that just failed, unless the zombie moved
+     *  more than 4 blocks in the meantime. 100 = 5 seconds. 0 DISABLES the cooldown entirely, restoring
+     *  the pre-fix behaviour of a full rescan every activation — including the unbounded case of a
+     *  stationary zombie stuck in water (audit #6). Not recommended; kept only as an operator escape hatch. */
+    public static int shelterRetryTicks = 100;
 
     // ---- Distress scream (rallies idle zombies to the fleer) ----
     /** Once the fleer is at least this far from its threat, it screams for help (once per flee episode). */

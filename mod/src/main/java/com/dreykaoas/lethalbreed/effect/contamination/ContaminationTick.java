@@ -24,12 +24,29 @@ public final class ContaminationTick {
     // Server-thread only, non-reentrant (nothing in the loop calls tick() again), so a static scratch is safe.
     private static final ArrayList<LivingEntity> SNAPSHOT = new ArrayList<>();
 
+    /** Was the plague enabled on the previous tick? Drives the one-shot purge below. */
+    private static boolean wasEnabled = true;
+
     public static void tick(MinecraftServer server) {
-        if (!ContaminationConfig.contaminationEnabled || ContaminationState.tracked.isEmpty()) {
+        // Cleared BEFORE the guard, not after: the two ordinary ways out of here — `tracked` going empty
+        // (last victim cured or died) and the plague being switched off — both take the early return, and
+        // a scratch buffer that only self-clears on the hot path holds its last batch forever. One retained
+        // LivingEntity pins level -> ServerLevel -> chunks -> MinecraftServer (audit #8).
+        SNAPSHOT.clear();
+
+        boolean enabled = ContaminationConfig.contaminationEnabled;
+        if (wasEnabled && !enabled) {
+            // Enabled -> disabled: purge once, here, rather than leaving the in-memory state to be cleaned
+            // by a sweep that this very flag switches off. Persistent attachments are untouched, so
+            // re-enabling the plague re-tracks every victim through onLoad on its next chunk load (audit #9).
+            ContaminationLifecycle.onServerStopped();
+        }
+        wasEnabled = enabled;
+
+        if (!enabled || ContaminationState.tracked.isEmpty()) {
             return;
         }
         long t = server.getTickCount();
-        SNAPSHOT.clear();
         SNAPSHOT.addAll(ContaminationState.tracked);
         for (int i = 0; i < SNAPSHOT.size(); i++) {
             LivingEntity e = SNAPSHOT.get(i);
@@ -47,14 +64,11 @@ public final class ContaminationTick {
             }
 
             // Cure: only by staying crouched; tiny random chance per check.
-            if (e.isCrouching() && t % Math.max(1, ContaminationConfig.contamCureCheckTicks) == 0) {
-                double pct = ContaminationConfig.contamCureMinPct
-                        + ContaminationState.RNG.nextDouble()
-                        * (ContaminationConfig.contamCureMaxPct - ContaminationConfig.contamCureMinPct);
-                if (ContaminationState.RNG.nextDouble() * 100.0 < pct) {
-                    ContaminationLifecycle.cure(e);
-                    continue;
-                }
+            if (e.isCrouching() && t % Math.max(1, ContaminationConfig.contamCureCheckTicks) == 0
+                    && ContaminationRoll.percent(ContaminationState.RNG,
+                            ContaminationConfig.contamCureMinPct, ContaminationConfig.contamCureMaxPct)) {
+                ContaminationLifecycle.cure(e);
+                continue;
             }
 
             c++;
@@ -69,8 +83,10 @@ public final class ContaminationTick {
                 continue;
             }
 
-            // Milk / "/effect clear" removes the skull effect → this now CURES the plague outright (no lingering
-            // latent stage): the contamination age is wiped so symptoms can't resurface later.
+            // The skull icon is the symptomatic stage's only marker, so losing it means the plague is gone:
+            // /effect clear wipes the attachments outright (EffectClearCuresPlagueMixin), and milk puts the
+            // icon straight back (MilkKeepsPlagueMixin), so reaching here with no icon means something else
+            // removed it — treat that as a cure rather than leaving a symptomatic victim with no marker.
             int lvl = ContaminationState.level(e);
             int wantAmp = Math.max(0, lvl - 1);
             MobEffectInstance cur = e.getEffect(LethalBreedEffects.SUPER_CONTAMINATION);
@@ -101,10 +117,8 @@ public final class ContaminationTick {
             if (due == null) {
                 ContaminationState.nextPulse.put(e, t + rollIntervalTicks());
             } else if (t >= due) {
-                float dmg = (float) ((ContaminationConfig.contamDamageMin
-                        + ContaminationState.RNG.nextDouble()
-                        * (ContaminationConfig.contamDamageMax - ContaminationConfig.contamDamageMin))
-                        * mult);
+                float dmg = (float) (ContaminationRoll.uniform(ContaminationState.RNG,
+                        ContaminationConfig.contamDamageMin, ContaminationConfig.contamDamageMax) * mult);
                 float next = e.getHealth() - dmg;
                 if (next > 0.0f) {
                     e.setHealth(next);
@@ -125,6 +139,13 @@ public final class ContaminationTick {
             // ZOMBIE_VISION effect; the victim's client reads it to draw other players as zombies.
             ContaminationHallucination.tickHallucination(e, t, mult);
         }
+    }
+
+    /** SERVER_STOPPED: drop the scratch buffer's references to the closing world's entities, and re-arm the
+     *  enabled/disabled transition detector so the next server starts from a known state. */
+    static void clearSnapshot() {
+        SNAPSHOT.clear();
+        wasEnabled = true;
     }
 
     /** Roll the next pulse delay in ticks, uniform in [contamIntervalMinSec, contamIntervalMaxSec] × 20. */
