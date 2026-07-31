@@ -16,10 +16,22 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
  * Registers server start/stop lifecycle hooks. Dev-only start hooks (headless climb / compute self-test)
  * live in the {@code dev} source set and are wired by {@code DevBootstrap}, not here.
  *
- * <p>The {@code SERVER_STOPPED} handler below is the mod's single teardown point: any process-wide
- * ({@code static}, JVM-lived) state that references entities or a {@code ServerLevel} MUST be released here,
- * or a stopped world stays pinned in memory until the next one loads (or forever, for a static collection).
- * When you add such state, purge it here — do not rely on the next server tick to do it.
+ * <p>Teardown happens at <b>two</b> points, and which one you need depends on whether your state has to
+ * reach the save file:
+ *
+ * <ul>
+ *   <li>{@code SERVER_STOPPING} (HEAD of {@code MinecraftServer.stopServer()}) — for anything that must be
+ *       written back onto entities before the world is saved. {@code stopServer()} calls
+ *       {@code saveAllChunks(...)} and then {@code serverLevel.close()} strictly between the two events, so
+ *       this is the last moment an entity mutation still lands in NBT. The {@code NoAI} release lives here;
+ *       see the comment on that handler before moving anything into or out of it.</li>
+ *   <li>{@code SERVER_STOPPED} (TAIL) — for process-wide ({@code static}, JVM-lived) state that references
+ *       entities or a {@code ServerLevel} and only needs dropping, not persisting. Unreleased, a stopped
+ *       world stays pinned in memory until the next one loads (or forever, for a static collection).</li>
+ * </ul>
+ *
+ * <p>When you add such state, purge it at the matching point — do not rely on the next server tick to do it,
+ * and do not consolidate the two handlers into one.
  */
 public final class LifecycleInit {
     private LifecycleInit() {}
