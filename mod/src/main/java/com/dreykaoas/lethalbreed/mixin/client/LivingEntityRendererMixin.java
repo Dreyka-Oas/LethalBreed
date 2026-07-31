@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
 import com.dreykaoas.lethalbreed.client.BellyChargeHolder;
+import com.dreykaoas.lethalbreed.entity.ZombieStateAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -33,5 +34,9 @@ public class LivingEntityRendererMixin {
                 ? entity.getAttachedOrElse(SpecialAttachment.BOMBEUR_CHARGE, 0.0f)
                 : 0.0f;
         ((BellyChargeHolder) state).lethalbreed$bellyCharge(charge);
+
+        boolean sleeping = entity instanceof Zombie
+                && entity.getAttachedOrElse(ZombieStateAttachment.SLEEPING, false);
+        ((BellyChargeHolder) state).lethalbreed$sleeping(sleeping);
     }
 }
