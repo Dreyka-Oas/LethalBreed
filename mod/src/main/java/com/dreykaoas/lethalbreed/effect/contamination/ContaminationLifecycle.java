@@ -63,8 +63,14 @@ public final class ContaminationLifecycle {
         ContaminationHallucination.clear(e);
     }
 
-    /** SERVER_STOPPED: drop ALL victims from every in-memory collection so a stopped world's entity graph is
-     *  not pinned by these {@code static} maps into the next session. Persistent attachments are untouched.
+    /** The full in-memory purge: drop ALL victims from every in-memory collection so no entity graph is
+     *  pinned by these {@code static} maps. Persistent attachments are untouched.
+     *
+     *  <p>TWO callers, despite the name: SERVER_STOPPED, so a stopped world is not held into the next
+     *  session; AND {@link ContaminationTick}'s mid-tick enabled→disabled transition, where the same purge
+     *  runs because the sweep that would otherwise clean these collections is itself gated on the flag
+     *  being turned off (audit #9). A victim re-tracks through {@link #onLoad} on its next chunk load,
+     *  so the mid-tick call is recoverable, not destructive.
      *
      *  <p>Every static collection in this package must be purged here. The tick sweep's scratch buffer was
      *  the one this list originally missed (audit #8) — it lives in a sibling class, so a purge written by

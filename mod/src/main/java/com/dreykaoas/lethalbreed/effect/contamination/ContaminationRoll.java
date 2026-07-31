@@ -27,10 +27,14 @@ public final class ContaminationRoll {
 
     /**
      * The one uniform draw in {@code [min, max]} behind every plague timer and every plague magnitude.
-     * Clamps {@code min} to 0 and REORDERS an inverted pair before lerping — {@code ConfigBoundsTable}
-     * bounds each option independently and never the relation between two, so an operator can put
-     * min above max with both values perfectly in range. Without the reorder that yields a draw below
-     * the minimum, or negative: a healing plague, or a cure threshold that never fires (audit #12).
+     * Floors BOTH ends at 0 independently, then REORDERS an inverted pair before lerping —
+     * {@code ConfigBoundsTable} bounds each option independently and never the relation between two, so an
+     * operator can put min above max with both values perfectly in range. Without the reorder that yields a
+     * draw below the minimum, or negative: a healing plague, or a cure threshold that never fires (audit #12).
+     *
+     * <p>Because {@code max} is floored on its own, a pair with BOTH ends negative does not merely clip —
+     * it collapses to the constant 0 (a zero-width range), so the caller's draw is 0 rather than negative.
+     * That is deliberate: 0 damage / 0 percent / 0 ticks is the safe reading of a nonsensical range.
      */
     public static double uniform(Random rng, double min, double max) {
         min = Math.max(0.0, min);

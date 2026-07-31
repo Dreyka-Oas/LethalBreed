@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
-import com.dreykaoas.lethalbreed.client.BellyChargeHolder;
+import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import com.dreykaoas.lethalbreed.client.ZombieHallucination;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -32,7 +32,7 @@ public abstract class AvatarRendererHallucinationMixin {
                                               float partialTick, CallbackInfo ci) {
         boolean on = entity instanceof AbstractClientPlayer player
                 && ZombieHallucination.shouldHallucinate(player);
-        ((BellyChargeHolder) state).lethalbreed$hallucinateZombie(on);
+        ((ZombieRenderFlags) state).lethalbreed$hallucinateZombie(on);
         if (on) {
             // 1.21.9+ resolves player texture from state.skin (a PlayerSkin record), not getTextureLocation.
             state.skin = ZombieHallucination.zombieSkin(state.skin);

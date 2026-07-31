@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
-import com.dreykaoas.lethalbreed.client.BellyChargeHolder;
+import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.HumanoidModel;
@@ -29,7 +29,7 @@ public class ZombieSleepArmsMixin {
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$sleepArms(ZombieRenderState state, CallbackInfo ci) {
-        if (!((BellyChargeHolder) state).lethalbreed$sleeping()) {
+        if (!((ZombieRenderFlags) state).lethalbreed$sleeping()) {
             return;
         }
         HumanoidModel<?> model = (HumanoidModel<?>) (Object) this;
