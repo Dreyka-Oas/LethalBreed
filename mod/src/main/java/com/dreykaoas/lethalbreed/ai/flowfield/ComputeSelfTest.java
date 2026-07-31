@@ -3,7 +3,11 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 
 /**
  * Dev-only, headless verification of the Compute backend (the GPU/CPU flow-field solvers). Gated by
@@ -62,6 +66,8 @@ public final class ComputeSelfTest {
             boolean poolOk = dynamicPoolCheck(s, cpu);
             log("dynamic-cpu-pool", poolOk, "rebuild on flowCpuThreads change, identical field");
 
+            classificationParity(server.overworld());
+
             int small = 16 * 16, large = SIZE * SIZE, min = Math.max(0, FlowConfig.gpuMinCells);
             LethalBreed.LOGGER.info("[ComputeTest] gpuMinCells-routing: min={} | 16x16({}) -> {} | {}x{}({}) -> {}",
                     min, small, backend(small, min), SIZE, SIZE, large, backend(large, min));
@@ -98,6 +104,108 @@ public final class ComputeSelfTest {
         } finally {
             FlowConfig.flowCpuThreads = saved;
         }
+    }
+
+    /** Classification parity: the chunk-cached snapshot path must produce byte-identical cell types to the
+     *  direct ServerLevel path it replaced. Nothing else covers this — the flow-field unit tests all build a
+     *  Snapshot by hand and never reach CellClassifier, so a classification regression (a wall that stops
+     *  reading as BREAKABLE, a gap that stops reading as BUILDABLE) would silently pass the whole suite and
+     *  show up only as zombies that no longer break or bridge.
+     *
+     *  <p>Also the only place either path's cost is actually measured (task-11: a headless server has no
+     *  players, so {@code FlowFieldManager.tick}'s own {@code flowsnap} profiler stage never fires here).
+     *  Each path gets one full, uninterrupted sweep of the region before the other starts, so JIT warmup
+     *  lands on both runs the same way a standalone run would see it — this is a single measurement, not a
+     *  rigorous benchmark, but it is a real one on identical input. */
+    private static void classificationParity(ServerLevel level) {
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        int span = 64;
+        BlockPos spawn = level.getRespawnData().pos();
+        int originX = spawn.getX() - span / 2;
+        int originZ = spawn.getZ() - span / 2;
+        int vtol = FlowConfig.flowVerticalTolerance;
+        // Sweep SEVERAL focus planes, not one. A single sea-level plane sits underground almost everywhere on
+        // a noise overworld, so it only ever produces PASSABLE/BREAKABLE/IMPASSABLE — and BUILDABLE (the
+        // bridge-a-gap branch) is precisely the classification with no other coverage anywhere in the suite.
+        // Scanning open air well above the terrain is what makes "clear feet+head, nothing to stand on" occur.
+        int[] focusPlanes = { level.getSeaLevel(), level.getSeaLevel() + 24, level.getSeaLevel() + 48 };
+
+        // Force every chunk the scan touches to be resident BEFORE either pass. A parity check that finds
+        // 0 loaded cells proves nothing (task-11 deviation gate) — getChunk(..., FULL, true) synchronously
+        // loads/generates each chunk once, then setChunkForced keeps it from unloading mid-test. This is a
+        // one-shot dev self-test at server start, not the runtime hot path FlowFieldSnapshotBuilder's
+        // "never force a load" comment is protecting.
+        int minCx = originX >> 4, maxCx = (originX + span - 1) >> 4;
+        int minCz = originZ >> 4, maxCz = (originZ + span - 1) >> 4;
+        for (int cx = minCx; cx <= maxCx; cx++) {
+            for (int cz = minCz; cz <= maxCz; cz++) {
+                level.getChunk(cx, cz, ChunkStatus.FULL, true);
+                level.setChunkForced(cx, cz, true);
+            }
+        }
+
+        int n = span * span;
+        byte[] viaLevel = new byte[n];
+        long oracleNanos = 0L, chunkNanos = 0L;
+        int checked = 0, mismatches = 0;
+        // How many cells of each class the oracle produced, so the log PROVES which branches were exercised
+        // instead of implying full coverage with a bare "PASS".
+        int[] seen = new int[4];
+
+        for (int focusY : focusPlanes) {
+            // Pass 1: the pre-refactor oracle (classifyViaLevel), one full sweep, timed alone.
+            long t0 = System.nanoTime();
+            int idx = 0;
+            for (int wx = originX; wx < originX + span; wx++) {
+                for (int wz = originZ; wz < originZ + span; wz++, idx++) {
+                    viaLevel[idx] = CellClassifier.classifyViaLevel(level, m, wx, wz, focusY, vtol);
+                }
+            }
+            oracleNanos += System.nanoTime() - t0;
+
+            // Pass 2: the new chunk-cached path, same region and order, timed alone.
+            long t1 = System.nanoTime();
+            idx = 0;
+            for (int wx = originX; wx < originX + span; wx++) {
+                int chunkX = wx >> 4;
+                for (int wz = originZ; wz < originZ + span; wz++, idx++) {
+                    ChunkAccess chunk = level.getChunk(chunkX, wz >> 4, ChunkStatus.FULL, false);
+                    byte got = (chunk == null)
+                            ? CellClassifier.IMPASSABLE
+                            : CellClassifier.classify(level, chunk, m, wx, wz, focusY, vtol);
+                    if (chunk != null) {
+                        checked++;
+                        seen[viaLevel[idx]]++;
+                        if (got != viaLevel[idx]) {
+                            mismatches++;
+                        }
+                    }
+                }
+            }
+            chunkNanos += System.nanoTime() - t1;
+        }
+
+        for (int cx = minCx; cx <= maxCx; cx++) {
+            for (int cz = minCz; cz <= maxCz; cz++) {
+                level.setChunkForced(cx, cz, false);
+            }
+        }
+
+        // Every branch must actually have been hit. A parity sweep that never produced a BUILDABLE cell says
+        // nothing about the bridge path, and nothing else in the suite covers it — so an unexercised class is
+        // a FAILED gate, exactly like a 0-cell sweep.
+        boolean allBranches = seen[CellClassifier.PASSABLE] > 0 && seen[CellClassifier.BREAKABLE] > 0
+                && seen[CellClassifier.BUILDABLE] > 0 && seen[CellClassifier.IMPASSABLE] > 0;
+        log("classify-parity", mismatches == 0 && checked > 0 && allBranches,
+                checked + " cells checked, " + mismatches + " mismatched, classes"
+                        + " passable=" + seen[CellClassifier.PASSABLE]
+                        + " breakable=" + seen[CellClassifier.BREAKABLE]
+                        + " buildable=" + seen[CellClassifier.BUILDABLE]
+                        + " impassable=" + seen[CellClassifier.IMPASSABLE]);
+        LethalBreed.LOGGER.info(
+                "[ComputeTest] classify-parity timing: viaLevel(oracle)={}ms viaChunk(new)={}ms over {} cells ({}x{} x{} planes)",
+                String.format(java.util.Locale.ROOT, "%.2f", oracleNanos / 1_000_000.0),
+                String.format(java.util.Locale.ROOT, "%.2f", chunkNanos / 1_000_000.0), n * focusPlanes.length, span, span, focusPlanes.length);
     }
 
     private static String backend(int cells, int minCells) {

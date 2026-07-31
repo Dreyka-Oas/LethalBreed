@@ -31,8 +31,16 @@ public final class ContaminationLifecycle {
     }
 
     /** Re-track a contaminated entity after chunk reload (its attachment persists, the in-memory set doesn't).
-     *  Only re-show the icon if it had already turned symptomatic. */
+     *  Only re-show the icon if it had already turned symptomatic.
+     *
+     *  <p>Gated on {@code contaminationEnabled}: the CONTAM attachment is persistent, so it outlives the
+     *  option being switched off, while the tick sweep that would remove entries is itself gated on the same
+     *  flag. Ungated, every chunk reload of a victim added a fresh HashSet entry — Entity.hashCode() is the
+     *  monotonic entity id, so a reloaded victim is never equal to its previous incarnation (audit #9). */
     public static void onLoad(Entity e) {
+        if (!ContaminationConfig.contaminationEnabled) {
+            return;
+        }
         if (e instanceof LivingEntity le && ContaminationState.age(le) > 0) {
             ContaminationState.tracked.add(le);
             if (ContaminationState.symptomatic(le)) {
@@ -56,11 +64,16 @@ public final class ContaminationLifecycle {
     }
 
     /** SERVER_STOPPED: drop ALL victims from every in-memory collection so a stopped world's entity graph is
-     *  not pinned by these {@code static} maps into the next session. Persistent attachments are untouched. */
+     *  not pinned by these {@code static} maps into the next session. Persistent attachments are untouched.
+     *
+     *  <p>Every static collection in this package must be purged here. The tick sweep's scratch buffer was
+     *  the one this list originally missed (audit #8) — it lives in a sibling class, so a purge written by
+     *  reading only THIS file could not see it. When you add a static that holds an entity, add it here. */
     public static void onServerStopped() {
         ContaminationState.clearAllTransient();
         ContaminationEpisodes.clearAllVictims();
         ContaminationHallucination.clearAllVictims();
+        ContaminationTick.clearSnapshot();
     }
 
     /** Death of a contaminated victim: clear the plague state, then reanimate as a zombie if it was a humanoid. */

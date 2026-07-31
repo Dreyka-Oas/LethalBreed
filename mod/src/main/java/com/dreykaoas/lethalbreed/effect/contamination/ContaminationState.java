@@ -76,9 +76,9 @@ public final class ContaminationState {
 
     /** Roll a fresh per-victim intensity for a level: 1 + (level-1) × step × jitter, jitter random per victim. */
     public static void recomputeIntensity(LivingEntity e, int lvl) {
-        double jitter = ContaminationConfig.contamLevelJitterMin
-                + RNG.nextDouble() * (ContaminationConfig.contamLevelJitterMax - ContaminationConfig.contamLevelJitterMin);
-        double mult = 1.0 + (lvl - 1) * ContaminationConfig.contamLevelStep * Math.max(0.0, jitter);
+        double jitter = ContaminationRoll.uniform(RNG,
+                ContaminationConfig.contamLevelJitterMin, ContaminationConfig.contamLevelJitterMax);
+        double mult = 1.0 + (lvl - 1) * ContaminationConfig.contamLevelStep * jitter;
         e.setAttached(INTENSITY, Math.max(1.0, mult));
     }
 
@@ -123,12 +123,11 @@ public final class ContaminationState {
         return rollScaled(min, max, factor, 20.0); // seconds → 20 ticks
     }
 
-    /** The single [min,max]×factor uniform roll behind every plague timer: clamp the range, sample it, and
-     *  convert to ticks via {@code unitTicks} (20 = per-second, 24000 = per-in-game-day) under dev compression. */
+    /** The single [min,max]×factor uniform roll behind every plague timer: draw the range via
+     *  {@link ContaminationRoll#uniform}, scale it, and convert to ticks via {@code unitTicks}
+     *  (20 = per-second, 24000 = per-in-game-day) under dev compression. */
     public static long rollScaled(double min, double max, double factor, double unitTicks) {
-        min = Math.max(0.0, min);
-        max = Math.max(min, max);
-        double v = (min + RNG.nextDouble() * (max - min)) * factor;
+        double v = ContaminationRoll.uniform(RNG, min, max) * factor;
         return Math.max(1L, Math.round(v * unitTicks / devTimeScale()));
     }
 }

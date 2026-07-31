@@ -57,27 +57,55 @@ public final class ContaminationScreenOverlay {
     public static void register() {
         HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, ID,
                 (GuiGraphics g, net.minecraft.client.DeltaTracker tick) -> render());
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT
+                .register((handler, client) -> releasePool());
     }
 
     private static void render() {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer p = mc.player;
-        // The plague icon stays in Creative/Spectator, but its symptoms (including this vision blur) are suspended
-        // there — matches the server, which freezes all active effects while the player can't take normal damage.
-        if (p != null && (p.isCreative() || p.isSpectator())) {
-            return;
-        }
-        int level = plagueLevel(p);
-        if (level <= 0) {
-            return;
-        }
+        try {
+            // The plague icon stays in Creative/Spectator, but its symptoms (including this vision blur) are
+            // suspended there — matches the server, which freezes all active effects while the player can't
+            // take normal damage.
+            if (p != null && (p.isCreative() || p.isSpectator())) {
+                return;
+            }
+            int level = plagueLevel(p);
+            if (level <= 0) {
+                return;
+            }
 
-        // Pick the chain for this level (clamped): higher level = smaller clear centre, stronger edge blur.
-        Identifier chainId = CHAIN_IDS[Math.min(level, MAX_LEVEL) - 1];
-        PostChain chain = mc.getShaderManager().getPostChain(chainId, LevelTargetBundle.MAIN_TARGETS);
-        if (chain != null) {
-            chain.process(mc.getMainRenderTarget(), RESOURCE_POOL);
+            // Pick the chain for this level (clamped): higher level = smaller clear centre, stronger edge blur.
+            Identifier chainId = CHAIN_IDS[Math.min(level, MAX_LEVEL) - 1];
+            PostChain chain = mc.getShaderManager().getPostChain(chainId, LevelTargetBundle.MAIN_TARGETS);
+            if (chain != null) {
+                chain.process(mc.getMainRenderTarget(), RESOURCE_POOL);
+            }
+        } finally {
+            // In a finally, and therefore on the early-exit paths too. CrossFrameResourcePool.release() only
+            // pushes an entry back onto the free list; endFrame() is the ONLY thing that decrements
+            // framesToLive, closes the target and drops it, and there is no autonomous expiry. Skipping it on
+            // the not-sick path is what kept ~33 MB of VRAM (1080p, colour + depth, x2) alive until the
+            // process exited — including after returning to the menu (audit #10).
+            RESOURCE_POOL.endFrame();
         }
+    }
+
+    /** Release every pooled render target outright. Called on world unload, and this is the ONLY vector it
+     *  addresses: our render() is HUD-attached, so it stops being called the moment {@code level == null}, and
+     *  with it endFrame() — leaving the pool's ~33 MB parked until the process exits. Vanilla needs no
+     *  equivalent because GameRenderer's own endFrame() keeps sweeping at the main menu.
+     *
+     *  <p>NOT what fixes the stale-window-size vector, despite the obvious guess: endFrame() sweeps EVERY
+     *  entry in the pool unconditionally and decrements its framesToLive — it is not gated on the entry being
+     *  re-acquired that frame ({@code canUsePhysicalResource} is only consulted inside acquire()). So an entry
+     *  orphaned by a resize closes on its own within framesToKeepResource+1 frames, purely from the per-frame
+     *  endFrame() in render()'s finally. Vanilla's clear() inside resize() is a transient-VRAM-spike
+     *  optimisation, not a correctness requirement. Do not remove that finally on the theory that this method
+     *  covers for it — a disconnect never fires from a resize. */
+    private static void releasePool() {
+        RESOURCE_POOL.close();
     }
 
     /** Plague level from the synced skull effect (amplifier+1), or 0 if the player isn't symptomatic. */

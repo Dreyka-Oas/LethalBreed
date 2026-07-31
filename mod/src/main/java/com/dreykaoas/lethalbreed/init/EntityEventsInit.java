@@ -77,6 +77,17 @@ public final class EntityEventsInit {
                 zombie.setPersistenceRequired();
                 AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
                 registry.add(zombie, world.dimension());
+                // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
+                // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
+                // setNoAi(true) applied by the caller a line before addFreshEntity — which is exactly how
+                // this project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
+                // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
+                // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
+                // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,
+                // so the repair cannot be made safe. Audit #2 is prevented at the source instead: the freeze
+                // is released on ENTITY_UNLOAD and on SERVER_STOPPING (before saveAllChunks), so no new
+                // statue is ever written. A world already carrying one can be repaired by hand with
+                //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
             }
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
@@ -92,8 +103,14 @@ public final class EntityEventsInit {
                 // here was never visited again and its cell slot stayed for the rest of the session —
                 // every death and every chunk unload leaked one, pinning entity -> level -> server, and
                 // neighbour queries (sound, Hurleur rally, Soigneur heal) kept matching those ghosts.
-                if (sz != null && sz.pursuit().inGrid()) {
-                    dimensions.get(sz.dimension()).spatialGrid().remove(sz);
+                if (sz != null) {
+                    // Hand vanilla AI back BEFORE the mood object goes away. NoAI is persisted to NBT,
+                    // the "we froze it" flag is not — so a dozing zombie unloaded while frozen would be
+                    // saved as NoAI=true with nothing left to lift it (audit #2).
+                    sz.mood().releaseAiHold();
+                    if (sz.pursuit().inGrid()) {
+                        dimensions.get(sz.dimension()).spatialGrid().remove(sz);
+                    }
                 }
                 VanillaTargetingGoals.drop(entity.getId()); // release any stripped-goal snapshot
             }
