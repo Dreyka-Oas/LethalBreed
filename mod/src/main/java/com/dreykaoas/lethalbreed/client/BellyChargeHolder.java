@@ -19,4 +19,10 @@ public interface BellyChargeHolder {
     boolean lethalbreed$hallucinateZombie();
 
     void lethalbreed$hallucinateZombie(boolean on);
+
+    /** True when the zombie this render state belongs to is day-sleeping — pose it asleep (arms down, eyes
+     *  closed). Set in {@code LivingEntityRendererMixin.extractRenderState}, read in the zombie arms/eyes hooks. */
+    boolean lethalbreed$sleeping();
+
+    void lethalbreed$sleeping(boolean sleeping);
 }

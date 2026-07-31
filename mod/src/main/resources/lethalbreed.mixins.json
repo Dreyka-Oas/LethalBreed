@@ -27,7 +27,8 @@
     "client.GuiContaminationHudMixin",
     "client.LivingEntityRenderStateMixin",
     "client.LivingEntityRendererMixin",
-    "client.ZombieBellyModelMixin"
+    "client.ZombieBellyModelMixin",
+    "client.ZombieSleepArmsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
