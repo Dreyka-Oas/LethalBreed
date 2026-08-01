@@ -4,15 +4,15 @@ import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 
 /**
  * Pure correctness predicates over a solved {@link FlowField} / its {@link Snapshot}, shared by
- * {@link ComputeSelfTest} (and any future bench). No logging, no MC types — each method just inspects the
- * field and returns a verdict, so it is trivially unit-testable. Lives in the {@code flowfield} package for
- * package-private access to {@link Snapshot}.
+ * the dev-source-set {@code ComputeSelfTest} (and any future bench). No logging, no MC types — each method
+ * just inspects the field and returns a verdict, so it is trivially unit-testable. Lives in {@code flowfield} for
+ * package-private access to {@link Snapshot}'s internals; public so the dev source set can call it.
  */
-final class FlowFieldChecks {
+public final class FlowFieldChecks {
     private FlowFieldChecks() {}
 
     /** Seed corner (0,0) must be 0; the far corner (w-1,d-1) must be reachable and positive. */
-    static boolean cpuSanity(FlowField f, int w, int d) {
+    public static boolean cpuSanity(FlowField f, int w, int d) {
         return f.costAt(0, 0) == 0
                 && f.costAt(w - 1, d - 1) > 0
                 && f.costAt(w - 1, d - 1) < FlowField.IMPASSABLE;
@@ -20,7 +20,7 @@ final class FlowFieldChecks {
 
     /** Every reachable non-seed cell must sample a direction that steps to a STRICTLY cheaper neighbour —
      *  a valid descending gradient toward a goal. Tie-break-independent, so it holds for both backends. */
-    static boolean directionsDescend(FlowField f, int w, int d) {
+    public static boolean directionsDescend(FlowField f, int w, int d) {
         int[] dir = new int[2];
         for (int cx = 0; cx < w; cx++) {
             for (int cz = 0; cz < d; cz++) {
@@ -43,7 +43,7 @@ final class FlowFieldChecks {
      *  cell equals the cheapest {@code neighbourCost + step + enterCost} over its valid (non-corner-cut)
      *  neighbours. If any cell could still be relaxed, the field is suboptimal. Uses the same step costs and
      *  corner rule as the solvers, read from {@link FlowConfig}. */
-    static boolean costFieldOptimal(Snapshot s, FlowField f) {
+    public static boolean costFieldOptimal(Snapshot s, FlowField f) {
         int w = s.width(), d = s.depth();
         boolean[] pass = s.passable();
         int[] extra = s.extraCost();
@@ -82,7 +82,7 @@ final class FlowFieldChecks {
     }
 
     /** Returns {mismatchCount, firstIndex, aCost, bCost} comparing two cost fields cell-by-cell. */
-    static int[] compareCost(Snapshot s, FlowField a, FlowField b) {
+    public static int[] compareCost(Snapshot s, FlowField a, FlowField b) {
         int mism = 0, firstIdx = -1, aV = 0, bV = 0;
         for (int cx = 0; cx < s.width(); cx++) {
             for (int cz = 0; cz < s.depth(); cz++) {
