@@ -46,6 +46,17 @@ public final class DevBootstrap {
         ServerTickEvents.END_SERVER_TICK.register(PlagueDamageHarness::onTick);
         ServerTickEvents.END_SERVER_TICK.register(LeakProbeHarness::onTick);
         ServerTickEvents.END_SERVER_TICK.register(PlagueDisableHarness::onTick);
+        // Statue / placed-block / shade / breach rigs, and the climb arena (which is a tick harness now, not a
+        // one-shot SERVER_STARTED scenario — see ClimbTest). Each self-gates on its own ProgressionConfig flag.
+        ServerTickEvents.END_SERVER_TICK.register(StatueHarness::onTick);
+        // The statue rig's whole verdict is "what did the entity carry when it was deserialised", and that
+        // value is overwritten by the mod's own next mood tick. ENTITY_LOAD is the only place it can be read.
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD
+                .register(StatueHarness::onEntityLoad);
+        ServerTickEvents.END_SERVER_TICK.register(PlacedBlockHarness::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(ShadeHarness::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(BreachHarness::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(ClimbTest::onTick);
         // Load-test spawn queue, drained each server tick (no-op unless /lethalspawn queued work).
         ServerTickEvents.END_SERVER_TICK.register(DevSpawnScheduler::tick);
 
@@ -71,8 +82,6 @@ public final class DevBootstrap {
             }
         });
 
-        // Headless climb arena (no-op unless devClimbTest).
-        ServerLifecycleEvents.SERVER_STARTED.register(ClimbTest::run);
         // Compute-backend self-test (CPU/GPU parity), in-memory only (no-op unless devComputeTest).
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             if (ProgressionConfig.devComputeTest) {
