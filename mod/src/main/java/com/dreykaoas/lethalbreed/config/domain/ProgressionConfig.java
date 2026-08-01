@@ -167,6 +167,25 @@ public final class ProgressionConfig {
     /** Dev: headless Compute-backend self-test on server start — solves a synthetic field on CPU and GPU and
      *  logs CPU sanity + GPU/CPU parity + dynamic-pool + routing checks. No world mutation. Off for shipping. */
     public static boolean devComputeTest = false;
+    /** Dev: headless Super Contamination arena (infect → symptom → ramping DoT → death). Off for shipping. */
+    public static boolean devPlagueTest = false;
+    /** Dev: headless statue/freeze arena (a frozen zombie holds its pose and thaws on wake). Off for shipping. */
+    public static boolean devStatueTest = false;
+    /** Dev: headless cure/clear arena (the contamination clear-guard drops the infection). Off for shipping. */
+    public static boolean devClearTest = false;
+    /** Dev: headless placed-block arena (zombie-placed blocks are tracked, decayed and never farmed). Off for shipping. */
+    public static boolean devPlacedTest = false;
+    /** Dev: headless sun-shelter arena (a burning zombie detours to shade, or burns when disabled). Off for shipping. */
+    public static boolean devShadeTest = false;
+    /** Dev: headless breach arena (the breach coordinator picks and opens one shared wall route). Off for shipping. */
+    public static boolean devBreachTest = false;
+    /** Dev: headless synthetic-player proof — spawns a fake player + zombies and asserts the player lands in
+     *  {@code level.players()}, a flow field gets built, and the zombies then acquire and close on it. This is
+     *  the precondition every other arena harness depends on. Off for shipping. */
+    public static boolean devPresenceTest = false;
+    /** Dev: halt the server as soon as a harness prints its {@code [LB-Verify] ALL DONE} verdict, so a scripted
+     *  {@code runServer} exits on its own instead of hanging until the driver's timeout. Off for shipping. */
+    public static boolean devAutoHalt = false;
 
     // ---- Dev climb test (headless) ----
     /** Build a wall + villager-on-top + zombies arena on server start, for autonomous climb testing. */
