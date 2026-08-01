@@ -269,6 +269,14 @@ public final class ZombieMood {
             return;
         }
 
+        // Master toggle (ZombieMoodConfig.sunShelterEnabled): with sun-shelter off, NO shade detour exists
+        // anywhere — the exposed sleeper keeps roaming in the open and simply burns. This is the second of the
+        // two ShelterFinder.findShade call sites; the other is SunShelterOverride.eligible.
+        if (!ZombieMoodConfig.sunShelterEnabled) {
+            sleepSeekingShade = false;
+            return;
+        }
+
         // Exposed and still burning → reach shade first (TOP priority, before dozing).
         if (owner.hasTarget()) {
             return; // already pathing to the shade memory — the brain breaks/pillars its way there

@@ -47,7 +47,13 @@ public final class FlowFieldManager {
     /** SERVER THREAD: throttled. Snapshots the world here, solves off-thread. */
     public void tick(ServerLevel level, long serverTick) {
         int interval = Math.max(1, FlowConfig.flowRecomputeInterval);
-        if (serverTick - lastComputeTick < interval) {
+        // The `never computed yet` sentinel must be tested explicitly, NOT arithmetically: with
+        // lastComputeTick = Long.MIN_VALUE the subtraction `serverTick - lastComputeTick` overflows to a large
+        // NEGATIVE value for every realistic serverTick (0 - Long.MIN_VALUE wraps back to Long.MIN_VALUE), so
+        // the throttle read as "not due yet" on the first tick — and, since the early return also skips the
+        // `lastComputeTick = serverTick` update, on every tick after it too. The field was therefore never
+        // solved on any server, and `active()` stayed null for the whole run. Caught by the presence harness.
+        if (lastComputeTick != Long.MIN_VALUE && serverTick - lastComputeTick < interval) {
             return;
         }
         if (computing.get()) {

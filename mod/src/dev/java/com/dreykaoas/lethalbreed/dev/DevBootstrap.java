@@ -27,24 +27,40 @@ public final class DevBootstrap {
      * dev classes.
      */
     public static void install() {
+        // FIRST, before anything reads a dev flag: let LB_DEV_TEST / -Dlethalbreed.devTest force exactly one
+        // suite on and every other one off. Every gate below (and every SERVER_STARTED listener registered
+        // here) therefore sees the selected configuration, not whatever the config file was left holding.
+        DevTestSelector.apply();
+
         // Headless verification arenas, driven per server tick. Each harness self-gates on its own
         // ProgressionConfig flag (devSpecialTest / devMechTest) AND the dev-env check, so registering the
         // tick listener here is harmless when the flags are off.
         ServerTickEvents.END_SERVER_TICK.register(SpecialTestHarness::onTick);
         ServerTickEvents.END_SERVER_TICK.register(MechanicsTestHarness::onTick);
+        // Foundation self-test: proves the synthetic player is present and the flow field / pathing follow.
+        ServerTickEvents.END_SERVER_TICK.register(PresenceHarness::onTick);
         // Load-test spawn queue, drained each server tick (no-op unless /lethalspawn queued work).
         ServerTickEvents.END_SERVER_TICK.register(DevSpawnScheduler::tick);
 
-        // Dev arenas build blocks at overlapping coordinates (special + mechanics share Y=101 with
-        // overlapping X), so enabling more than one at once corrupts each other's arena. Warn once at boot.
+        // Dev arenas build blocks at overlapping coordinates (special + mechanics share Y=101 with overlapping
+        // X), so enabling more than one at once corrupts each other's arena. This used to be a warn-and-hope
+        // message at SERVER_STARTED — it detected the corruption and then produced corrupted results anyway.
+        // DevTestSelector.apply() above now FORCES the invariant instead (exactly one flag on). All that is
+        // left is to report a config file that still has several on with no selection in force, since in that
+        // case the operator's own values are (deliberately) still being honoured.
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            if (DevTestSelector.selected() != null) {
+                return; // selection in force — exactly one flag is on by construction
+            }
             int devTests = (ProgressionConfig.devSpecialTest ? 1 : 0)
                     + (ProgressionConfig.devMechTest ? 1 : 0)
-                    + (ProgressionConfig.devClimbTest ? 1 : 0);
+                    + (ProgressionConfig.devClimbTest ? 1 : 0)
+                    + (ProgressionConfig.devPresenceTest ? 1 : 0);
             if (devTests > 1) {
-                LethalBreed.LOGGER.warn("[LethalBreed] {} dev test arenas enabled at once "
-                        + "(devSpecialTest/devMechTest/devClimbTest) — they build overlapping arenas; "
-                        + "enable only one per run for clean results.", devTests);
+                LethalBreed.LOGGER.warn("[LethalBreed] {} dev test arenas enabled at once in the config file — "
+                        + "they build overlapping arenas. Set {}=<suite> (one of: {}) to force exactly one.",
+                        devTests, DevTestSelector.ENV_VAR, "special, mech, climb, compute, plague, statue, "
+                                + "clear, placed, shade, breach, presence");
             }
         });
 
