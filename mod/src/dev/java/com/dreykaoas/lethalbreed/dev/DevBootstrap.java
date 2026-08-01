@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.ai.flowfield.ComputeSelfTest;
+import com.dreykaoas.lethalbreed.dev.compute.ComputeSelfTest;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -82,7 +82,8 @@ public final class DevBootstrap {
             }
         });
 
-        // Compute-backend self-test (CPU/GPU parity), in-memory only (no-op unless devComputeTest).
+        // Compute-backend self-test (CPU/GPU parity + cell-classification coverage); no-op unless
+        // devComputeTest. Reports through DevVerdict under the "compute" suite like every other harness.
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             if (ProgressionConfig.devComputeTest) {
                 ComputeSelfTest.run(server);
