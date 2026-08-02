@@ -17,8 +17,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -38,6 +40,10 @@ public final class ConfigIo {
     private ConfigIo() {}
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    /** Structure check from the last load. Volatile because load() runs on the main thread at boot but
+     *  the join notice and /lethalconfig verify read it from the server thread. */
+    private static volatile ConfigStructure.Report LAST_REPORT;
 
     /** {@code config/oas/lethalbreed.json}. The "oas" folder is the author's namespace. */
     private static Path file() {
@@ -77,6 +83,30 @@ public final class ConfigIo {
                     }
                 }
             }
+
+            // Check the file's SHAPE before applying anything, so we can tell the user what is wrong
+            // instead of silently dropping it. The loop below is field-driven, not file-driven — it
+            // never looks at a key the schema does not have — so without this a misspelled option is
+            // invisible: the edit does nothing, the summary line still reports success, and save()
+            // deletes the line. The user watches their edit vanish with no explanation.
+            Set<String> knownNames = new HashSet<>();
+            for (Field f : ConfigFields.all()) {
+                knownNames.add(f.getName());
+            }
+            ConfigStructure.Report report = ConfigStructure.check(json, knownNames);
+            LAST_REPORT = report;
+
+            if (report.unusable()) {
+                // Content present but not one key of it recognisable. Anything less than this and
+                // rewriting would throw away the settings that ARE still readable, so this is the only
+                // structural condition that justifies starting over.
+                if (quarantine(path, report.keysInFile() + " keys, none of them a known option")) {
+                    save();
+                }
+                return;
+            }
+            reportStructure(report, path);
+
             int applied = 0;
             int ignored = 0;
             for (Field f : ConfigFields.all()) {
@@ -121,7 +151,7 @@ public final class ConfigIo {
             // state is the code defaults, and writing it would destroy the user's settings at the exact
             // moment we failed to read them. Move the file aside so its content survives, and only then
             // write a fresh default file.
-            if (quarantine(path, e)) {
+            if (quarantine(path, e.toString())) {
                 save();
             }
             return;
@@ -130,24 +160,79 @@ public final class ConfigIo {
         save();
     }
 
-    /** Move an unparseable config aside so the user keeps its content. Returns true when the original is
-     *  safely out of the way and it is therefore sound to write a fresh default file in its place. */
-    private static boolean quarantine(Path path, Exception cause) {
-        Path aside = path.resolveSibling(path.getFileName() + ".corrupt-"
-                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS")));
+    /** Move an unusable config aside so the user keeps its content, then trim the archive to
+     *  {@link ConfigBackup#KEEP}. Returns true when the original is safely out of the way and it is
+     *  therefore sound to write a fresh default file in its place.
+     *
+     *  <p>Called for a file that cannot be parsed at all, and for one that parses but contains no
+     *  recognisable option. The suffix is {@code .old-} as of the structure-check release; archives
+     *  written by older versions carry {@code .corrupt-} and are deliberately never pruned. */
+    private static boolean quarantine(Path path, String cause) {
+        String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS"));
         try {
-            Files.move(path, aside);
+            Path aside = ConfigBackup.archive(path, stamp);
             LethalBreed.LOGGER.error(
-                    "[LethalBreed] config unreadable ({}) — moved to {} and rewritten with defaults. "
+                    "[LethalBreed] config unusable ({}) — moved to {} and rewritten with defaults. "
                             + "Fix that file and rename it back to keep your settings.",
-                    cause.toString(), aside);
+                    cause, aside);
+            try {
+                for (Path pruned : ConfigBackup.prune(path.getParent(), path.getFileName().toString(),
+                        ConfigBackup.KEEP)) {
+                    LethalBreed.LOGGER.info("[LethalBreed] removed old config backup {}", pruned);
+                }
+            } catch (IOException pruneFailed) {
+                // Pruning is housekeeping. Failing it must not undo the archive we just made, which is
+                // the part that actually protects the user's settings.
+                LethalBreed.LOGGER.warn("[LethalBreed] could not trim old config backups: {}",
+                        pruneFailed.toString());
+            }
             return true;
         } catch (IOException moveFailed) {
             LethalBreed.LOGGER.error(
-                    "[LethalBreed] config unreadable ({}) AND could not be moved aside ({}) — running on "
+                    "[LethalBreed] config unusable ({}) AND could not be moved aside ({}) — running on "
                             + "defaults, leaving {} untouched.",
-                    cause.toString(), moveFailed.toString(), path);
+                    cause, moveFailed.toString(), path);
             return false;
+        }
+    }
+
+    /** The structure check from the most recent {@link #load()}, or null if the config has not been
+     *  read yet. Read by {@code /lethalconfig verify} and the operator join notice — a log line alone
+     *  is close to worthless to a solo player, who never opens latest.log. */
+    public static ConfigStructure.Report lastReport() {
+        return LAST_REPORT;
+    }
+
+    /** Say what is wrong with the file's shape, once per problem, naming the offending key. */
+    private static void reportStructure(ConfigStructure.Report report, Path path) {
+        for (ConfigStructure.Unknown u : report.unknown()) {
+            if (u.suggestion() != null) {
+                LethalBreed.LOGGER.warn(
+                        "[LethalBreed] unknown option '{}' in {} — did you mean '{}'? It does nothing and "
+                                + "will be dropped when the file is rewritten.",
+                        u.name(), path.getFileName(), u.suggestion());
+            } else {
+                LethalBreed.LOGGER.warn(
+                        "[LethalBreed] unknown option '{}' in {} — it does nothing and will be dropped "
+                                + "when the file is rewritten.",
+                        u.name(), path.getFileName());
+            }
+        }
+        for (String d : report.duplicated()) {
+            LethalBreed.LOGGER.warn(
+                    "[LethalBreed] option '{}' appears under more than one category — only one copy is "
+                            + "read, and which one wins is not something you should rely on.", d);
+        }
+        for (String c : report.bogusCategory()) {
+            LethalBreed.LOGGER.warn(
+                    "[LethalBreed] '{}' is not a config category — its options are still read by name, "
+                            + "but they will be moved to their real category on the next write.", c);
+        }
+        if (!report.misplaced().isEmpty()) {
+            // Expected during the flat -> nested migration and corrected automatically, so this is
+            // information, not a problem the user has to act on.
+            LethalBreed.LOGGER.info("[LethalBreed] {} option(s) filed under the wrong category — "
+                    + "moving them on the next write.", report.misplaced().size());
         }
     }
 
