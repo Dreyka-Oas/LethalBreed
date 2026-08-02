@@ -17,6 +17,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * JSON persistence for {@link LethalBreedConfig}, at {@code <gamedir>/config/oas/lethalbreed.json}.
@@ -51,10 +54,33 @@ public final class ConfigIo {
         try {
             String text = Files.readString(path);
             JsonObject json = JsonParser.parseString(text).getAsJsonObject();
+            // Accept both the current nested layout (each category is a JsonObject holding its options) and
+            // the old flat pre-migration layout (every option directly on the root). The file on disk has
+            // been flat until this change, so a flat file is what every existing user has; if we only
+            // understood the nested shape, the first launch after the migration would read nothing, silently
+            // fall back to the 305 code defaults, and the save() below would immediately overwrite the file
+            // with those defaults — destroying every setting the user changed, with no error and no warning.
+            // Flatten one level deep into a name→value map so both shapes (and any half-migrated mix) resolve
+            // through the same per-field loop below. When a name appears both at the root and inside a
+            // category, the nested value wins: nested is the current format.
+            Map<String, JsonElement> values = new LinkedHashMap<>();
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                if (entry.getValue().isJsonObject()) {
+                    continue;
+                }
+                values.put(entry.getKey(), entry.getValue());
+            }
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                if (entry.getValue().isJsonObject()) {
+                    for (Map.Entry<String, JsonElement> inner : entry.getValue().getAsJsonObject().entrySet()) {
+                        values.put(inner.getKey(), inner.getValue());
+                    }
+                }
+            }
             int applied = 0;
             int ignored = 0;
             for (Field f : ConfigFields.all()) {
-                if (!json.has(f.getName())) {
+                if (!values.containsKey(f.getName())) {
                     continue;
                 }
                 // One bad field must not cost the user every field after it: getAsString() throws on a
@@ -62,7 +88,7 @@ public final class ConfigIo {
                 // used to escape the loop entirely, leaving the rest at code defaults — which save() then
                 // persisted. Guard per field, and account for what was dropped instead of staying silent.
                 try {
-                    JsonElement el = json.get(f.getName());
+                    JsonElement el = values.get(f.getName());
                     String raw;
                     if (el.isJsonArray()) {
                         // Arrays are stored as a JSON array; primitives as a scalar. Feed apply() the CSV /
@@ -127,8 +153,19 @@ public final class ConfigIo {
 
     public static synchronized void save() {
         Path path = file();
-        JsonObject json = new JsonObject();
+        // Group options under their GUI category. Categories are sorted alphabetically so the output is
+        // deterministic: the file is rewritten on every launch, and a HashMap's iteration order would
+        // produce a spurious diff on every run. Within a category, options keep the schema order that
+        // ConfigFields.all() returns — that order is meaningful (grouped by domain class), so it is
+        // preserved rather than re-sorted.
+        TreeMap<String, JsonObject> byCategory = new TreeMap<>();
         for (Field f : ConfigFields.all()) {
+            String category = ConfigCategory.of(f.getName());
+            JsonObject json = byCategory.get(category);
+            if (json == null) {
+                json = new JsonObject();
+                byCategory.put(category, json);
+            }
             Class<?> t = f.getType();
             try {
                 if (t == boolean.class) {
@@ -150,6 +187,10 @@ public final class ConfigIo {
                 }
             } catch (IllegalAccessException ignored) {
             }
+        }
+        JsonObject json = new JsonObject();
+        for (Map.Entry<String, JsonObject> entry : byCategory.entrySet()) {
+            json.add(entry.getKey(), entry.getValue());
         }
         // Write-then-rename rather than writeString(path, …), whose implicit TRUNCATE_EXISTING empties the
         // real file BEFORE the new content is written. That window is short, but ENOSPC turns it into a
