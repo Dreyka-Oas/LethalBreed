@@ -38,7 +38,7 @@ public final class DevBootstrap {
         ServerTickEvents.END_SERVER_TICK.register(SpecialTestHarness::onTick);
         ServerTickEvents.END_SERVER_TICK.register(MechanicsTestHarness::onTick);
         // Foundation self-test: proves the synthetic player is present and the flow field / pathing follow.
-        ServerTickEvents.END_SERVER_TICK.register(PresenceHarness::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(PresenceHarness.INSTANCE::onTick);
         // Contamination rigs. "clear" is standalone; the three "plague" rigs share one run and are serialised
         // by the start offsets in ContamRig (they mutate process-global plague config), with the disable rig
         // last because it owns the suite summary.
