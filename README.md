@@ -28,7 +28,16 @@ The full showcase and wiki — every mechanic with its exact parameters — live
 | Directory | What it is |
 |-----------|-----------|
 | **[`mod/`](mod/)** | the Fabric mod — Java 21, Minecraft 1.21.11 ([`mod/README`](mod/README.md)) |
-| **[`web/`](web/)** | the showcase + wiki site (static, no build step) — deployed to Cloudflare Pages |
+| `web/` | the showcase + wiki site — **a separate repository**, see below |
+
+**`web/` is not part of this repository.** The site lives in its own repo,
+[LethalBreed-web](https://github.com/Dreyka-Oas/LethalBreed-web), checked out at `web/` for convenience and
+deliberately excluded here (`/web/` in [`.gitignore`](.gitignore)). It is static with no build step and
+deploys to Cloudflare Pages on its own. Clone it separately if you want it:
+
+```bash
+git clone https://github.com/Dreyka-Oas/LethalBreed-web.git web
+```
 
 **GitHub:** <https://github.com/Dreyka-Oas/LethalBreed>
 
