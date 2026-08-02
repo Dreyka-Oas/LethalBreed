@@ -83,6 +83,12 @@ public final class DevVerdict {
         }
     }
 
+    /** Two-decimal, locale-independent number for a check's evidence string. Locale.ROOT so a French dev box
+     *  does not emit "14,07" where a scripted reader expects "14.07". */
+    public static String fmt(double v) {
+        return String.format(java.util.Locale.ROOT, "%.2f", v);
+    }
+
     /** Failures recorded so far for {@code suite} (0 if it never reported). Exposed for harness self-checks. */
     public static int failures(String suite) {
         return TALLIES.getOrDefault(suite, new int[2])[1];

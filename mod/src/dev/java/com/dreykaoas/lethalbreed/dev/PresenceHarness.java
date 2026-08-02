@@ -13,7 +13,6 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.gamerules.GameRules;
 
 import java.util.ArrayList;
@@ -77,17 +76,7 @@ public final class PresenceHarness extends TickPhasedHarness {
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
 
-        ArenaBuilder.forceChunks(ow, CX, CZ);
-        // Flat roofed corridor: floor at Y-1, clear air Y..Y+3, glowstone lid at Y+4.
-        for (int x = CX - START_OFFSET - 4; x <= CX + 4; x++) {
-            for (int dz = -4; dz <= 4; dz++) {
-                ow.setBlock(new BlockPos(x, Y - 1, CZ + dz), Blocks.STONE.defaultBlockState(), 3);
-                for (int dy = 0; dy <= 3; dy++) {
-                    ow.setBlock(new BlockPos(x, Y + dy, CZ + dz), Blocks.AIR.defaultBlockState(), 3);
-                }
-                ow.setBlock(new BlockPos(x, Y + 4, CZ + dz), Blocks.GLOWSTONE.defaultBlockState(), 3);
-            }
-        }
+        ArenaBuilder.roofedCorridor(ow, CX, CZ, Y, 4, START_OFFSET + 4, 4);
 
         player = DevFakePlayer.spawn(ow, CX + 0.5, Y, CZ + 0.5);
 
@@ -104,7 +93,7 @@ public final class PresenceHarness extends TickPhasedHarness {
         }
         LethalBreed.LOGGER.info("[Presence] arena @({}, {}, {}) built: player={} zombies={} startDistAvg={}",
                 CX, Y, CZ, player != null, zombies.size(),
-                fmt(zombies.isEmpty() ? 0.0 : startDistSum / zombies.size()));
+                DevVerdict.fmt(zombies.isEmpty() ? 0.0 : startDistSum / zombies.size()));
     }
 
     @Override
@@ -149,13 +138,9 @@ public final class PresenceHarness extends TickPhasedHarness {
         check("zombies-target", maxTargeting > 0,
                 maxTargeting + "/" + n + " zombies held a target at peak");
         check("zombies-approach", n > 0 && bestAvg < startAvg - 2.0,
-                "avg distance " + fmt(startAvg) + " -> " + fmt(bestAvg) + " blocks over " + n + " zombies");
+                "avg distance " + DevVerdict.fmt(startAvg) + " -> " + DevVerdict.fmt(bestAvg) + " blocks over " + n + " zombies");
 
         DevFakePlayer.despawn(ow, player);
         ArenaBuilder.releaseChunks(ow, CX, CZ);
-    }
-
-    private static String fmt(double v) {
-        return String.format(java.util.Locale.ROOT, "%.2f", v);
     }
 }

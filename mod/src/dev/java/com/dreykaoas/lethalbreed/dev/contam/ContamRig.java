@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.dev.contam;
 
 import com.dreykaoas.lethalbreed.dev.ArenaBuilder;
+import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -100,7 +101,8 @@ public final class ContamRig {
         ArenaBuilder.releaseChunks(ow, cx, cz);
     }
 
+    /** Two-decimal evidence number. Delegates so the rule lives in exactly one place. */
     public static String fmt(double v) {
-        return String.format(java.util.Locale.ROOT, "%.2f", v);
+        return DevVerdict.fmt(v);
     }
 }
