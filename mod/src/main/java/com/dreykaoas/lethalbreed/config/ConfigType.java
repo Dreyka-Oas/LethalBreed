@@ -29,6 +29,14 @@ public final class ConfigType {
         return sb.toString();
     }
 
+    /** Arrays are the only mutable option type. Anything that snapshots a config value must clone it, or the
+     *  snapshot and the live field are the SAME array and the first in-place mutation destroys the snapshot
+     *  with nothing left to notice it. One home for that rule — {@link ConfigAccess} (its factory-default
+     *  snapshot) and {@code ConfigOverride} (its scoped restore point) both route through here. */
+    public static Object copyIfArray(Object v) {
+        return v instanceof double[] arr ? arr.clone() : v;
+    }
+
     /** Whether {@code raw} parses for a numeric/list {@code kind} ("int"/"long"/"double"/"list") — the same
      *  acceptance {@link #parse} enforces, exposed for live edit-field validation that only has the kind label. */
     public static boolean isValidNumber(String kind, String raw) {

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,5 +53,20 @@ class ConfigTypeTest {
         assertTrue(ConfigType.isValidNumber("double", "3.14"));
         assertTrue(ConfigType.isValidNumber("list", "1, 2, 3"));
         assertFalse(ConfigType.isValidNumber("list", "1, 2, x"));
+    }
+
+    @Test
+    void copyIfArrayClonesDoubleArrays() {
+        double[] original = { 1.0, 2.0 };
+        Object copy = ConfigType.copyIfArray(original);
+        assertNotSame(original, copy);
+        assertArrayEquals(original, (double[]) copy);
+    }
+
+    @Test
+    void copyIfArrayReturnsScalarsUnchanged() {
+        Integer boxed = 7;
+        assertSame(boxed, ConfigType.copyIfArray(boxed));
+        assertSame(Boolean.TRUE, ConfigType.copyIfArray(Boolean.TRUE));
     }
 }
