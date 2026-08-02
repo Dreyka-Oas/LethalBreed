@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -52,7 +52,7 @@ public final class LethalSpawnCommand {
         int count = IntegerArgumentType.getInteger(ctx, "count");
 
         long dueTick = level.getServer().getTickCount() + (long) delaySeconds * 20L;
-        DevSpawnScheduler.schedule(dueTick, level, player.blockPosition(), type, count, ProgressionConfig.devSpawnRadius);
+        DevSpawnScheduler.schedule(dueTick, level, player.blockPosition(), type, count, DevTestConfig.devSpawnRadius);
 
         // The dev perf recap is driven solely by SchedulerConfig.debugLogInterval (and only logs in a dev
         // env). The command does NOT mutate config — ConfigIo serialises every static field on the next save,
@@ -67,7 +67,7 @@ public final class LethalSpawnCommand {
         final int d = delaySeconds;
         src.sendSuccess(() -> Component.literal(
                 "[LethalBreed] queued " + n + " x " + e + (d > 0 ? (" in " + d + "s") : " now")
-                        + " (radius " + ProgressionConfig.devSpawnRadius + "). " + recap + "."), true);
+                        + " (radius " + DevTestConfig.devSpawnRadius + "). " + recap + "."), true);
         return count;
     }
 }

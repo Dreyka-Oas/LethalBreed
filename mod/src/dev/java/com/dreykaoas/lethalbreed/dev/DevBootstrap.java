@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.compute.ComputeSelfTest;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -70,10 +70,10 @@ public final class DevBootstrap {
             if (DevTestSelector.selected() != null) {
                 return; // selection in force — exactly one flag is on by construction
             }
-            int devTests = (ProgressionConfig.devSpecialTest ? 1 : 0)
-                    + (ProgressionConfig.devMechTest ? 1 : 0)
-                    + (ProgressionConfig.devClimbTest ? 1 : 0)
-                    + (ProgressionConfig.devPresenceTest ? 1 : 0);
+            int devTests = (DevTestConfig.devSpecialTest ? 1 : 0)
+                    + (DevTestConfig.devMechTest ? 1 : 0)
+                    + (DevTestConfig.devClimbTest ? 1 : 0)
+                    + (DevTestConfig.devPresenceTest ? 1 : 0);
             if (devTests > 1) {
                 LethalBreed.LOGGER.warn("[LethalBreed] {} dev test arenas enabled at once in the config file — "
                         + "they build overlapping arenas. Set {}=<suite> (one of: {}) to force exactly one.",
@@ -85,7 +85,7 @@ public final class DevBootstrap {
         // Compute-backend self-test (CPU/GPU parity + cell-classification coverage); no-op unless
         // devComputeTest. Reports through DevVerdict under the "compute" suite like every other harness.
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            if (ProgressionConfig.devComputeTest) {
+            if (DevTestConfig.devComputeTest) {
                 ComputeSelfTest.run(server);
             }
         });

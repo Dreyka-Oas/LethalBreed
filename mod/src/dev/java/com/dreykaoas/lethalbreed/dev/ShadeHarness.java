@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
@@ -103,7 +103,7 @@ public final class ShadeHarness {
     private static boolean bShelteredLatched = false;
 
     public static void onTick(MinecraftServer server) {
-        if (!ProgressionConfig.devShadeTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
+        if (!DevTestConfig.devShadeTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
             return;
         }
         tick++;

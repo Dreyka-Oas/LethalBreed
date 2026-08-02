@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
@@ -123,7 +123,7 @@ public final class StatueHarness {
      * {@code EntityType.spawn}, so the entity carries no name yet when this fires for it.
      */
     public static void onEntityLoad(net.minecraft.world.entity.Entity entity, ServerLevel level) {
-        if (!ProgressionConfig.devStatueTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        if (!DevTestConfig.devStatueTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
             return;
         }
         if (!(entity instanceof Zombie z)) {
@@ -141,7 +141,7 @@ public final class StatueHarness {
     }
 
     public static void onTick(MinecraftServer server) {
-        if (!ProgressionConfig.devStatueTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
+        if (!DevTestConfig.devStatueTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
             return;
         }
         tick++;

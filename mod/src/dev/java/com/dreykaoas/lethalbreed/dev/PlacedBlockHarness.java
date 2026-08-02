@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.block.PlacedBlockPolicy;
 import com.dreykaoas.lethalbreed.block.PlacedBlockTracker;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
@@ -121,7 +121,7 @@ public final class PlacedBlockHarness {
     private static int placedAt = 0;
 
     public static void onTick(MinecraftServer server) {
-        if (!ProgressionConfig.devPlacedTest || !FabricLoader.getInstance().isDevelopmentEnvironment()
+        if (!DevTestConfig.devPlacedTest || !FabricLoader.getInstance().isDevelopmentEnvironment()
                 || step == Step.DONE) {
             return;
         }

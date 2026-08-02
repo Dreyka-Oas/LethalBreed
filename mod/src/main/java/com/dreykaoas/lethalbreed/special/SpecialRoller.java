@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.special;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
@@ -25,11 +25,11 @@ public final class SpecialRoller {
     private SpecialRoller() {}
 
     public static void roll(Zombie z, Random r, int phase) {
-        if (!ProgressionConfig.specialEnabled) {
+        if (!SpecialVariantConfig.specialEnabled) {
             return;
         }
-        double chance = Math.min(ProgressionConfig.specialMaxChance,
-                ProgressionConfig.specialBaseChance + phase * ProgressionConfig.specialPhaseScale);
+        double chance = Math.min(SpecialVariantConfig.specialMaxChance,
+                SpecialVariantConfig.specialBaseChance + phase * SpecialVariantConfig.specialPhaseScale);
         if (r.nextDouble() >= chance) {
             return;
         }
@@ -47,7 +47,7 @@ public final class SpecialRoller {
         if (type == SpecialType.NONE) {
             return;
         }
-        if (ProgressionConfig.specialShowName) {
+        if (SpecialVariantConfig.specialShowName) {
             z.setCustomName(Component.literal(type.frName()));
             z.setCustomNameVisible(true);
         }
@@ -72,16 +72,16 @@ public final class SpecialRoller {
     private static void applyPassive(Zombie z, SpecialType type) {
         switch (type) {
             case SPRINTEUR -> {
-                infinite(z, MobEffects.SPEED, ProgressionConfig.specialSprinteurSpeedAmp);
-                mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", ProgressionConfig.specialSprinteurSpeedMul);
+                infinite(z, MobEffects.SPEED, SpecialVariantConfig.specialSprinteurSpeedAmp);
+                mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", SpecialVariantConfig.specialSprinteurSpeedMul);
             }
-            case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, ProgressionConfig.specialBondisseurLeapAmp);
+            case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialBondisseurLeapAmp);
             case JUGGERNAUT -> {
                 // Bulky tank via size/HP/resistance only — no armor (zombies never wear gear).
-                mul(z, Attributes.SCALE, "spc_scale", ProgressionConfig.specialJuggernautScale);
-                mul(z, Attributes.MAX_HEALTH, "spc_hp", ProgressionConfig.specialJuggernautHealthMul);
+                mul(z, Attributes.SCALE, "spc_scale", SpecialVariantConfig.specialJuggernautScale);
+                mul(z, Attributes.MAX_HEALTH, "spc_hp", SpecialVariantConfig.specialJuggernautHealthMul);
                 z.setHealth(z.getMaxHealth());
-                infinite(z, MobEffects.RESISTANCE, ProgressionConfig.specialJuggernautResistanceAmp);
+                infinite(z, MobEffects.RESISTANCE, SpecialVariantConfig.specialJuggernautResistanceAmp);
             }
             default -> { /* ACTIVE / DEATH: handled at runtime */ }
         }

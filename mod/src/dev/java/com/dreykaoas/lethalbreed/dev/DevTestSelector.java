@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -37,18 +37,18 @@ public final class DevTestSelector {
     private static final Map<String, Consumer<Boolean>> SUITES = new LinkedHashMap<>();
 
     static {
-        SUITES.put("special", v -> ProgressionConfig.devSpecialTest = v);
-        SUITES.put("mech", v -> ProgressionConfig.devMechTest = v);
-        SUITES.put("climb", v -> ProgressionConfig.devClimbTest = v);
-        SUITES.put("compute", v -> ProgressionConfig.devComputeTest = v);
-        SUITES.put("plague", v -> ProgressionConfig.devPlagueTest = v);
-        SUITES.put("statue", v -> ProgressionConfig.devStatueTest = v);
-        SUITES.put("clear", v -> ProgressionConfig.devClearTest = v);
-        SUITES.put("placed", v -> ProgressionConfig.devPlacedTest = v);
-        SUITES.put("shade", v -> ProgressionConfig.devShadeTest = v);
-        SUITES.put("breach", v -> ProgressionConfig.devBreachTest = v);
+        SUITES.put("special", v -> DevTestConfig.devSpecialTest = v);
+        SUITES.put("mech", v -> DevTestConfig.devMechTest = v);
+        SUITES.put("climb", v -> DevTestConfig.devClimbTest = v);
+        SUITES.put("compute", v -> DevTestConfig.devComputeTest = v);
+        SUITES.put("plague", v -> DevTestConfig.devPlagueTest = v);
+        SUITES.put("statue", v -> DevTestConfig.devStatueTest = v);
+        SUITES.put("clear", v -> DevTestConfig.devClearTest = v);
+        SUITES.put("placed", v -> DevTestConfig.devPlacedTest = v);
+        SUITES.put("shade", v -> DevTestConfig.devShadeTest = v);
+        SUITES.put("breach", v -> DevTestConfig.devBreachTest = v);
         // Foundation self-test: proves the synthetic-player presence every arena suite above relies on.
-        SUITES.put("presence", v -> ProgressionConfig.devPresenceTest = v);
+        SUITES.put("presence", v -> DevTestConfig.devPresenceTest = v);
     }
 
     /** The suite selected on this run, or null when the config file's own values are in force. */

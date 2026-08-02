@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.dev.contam.ContamRig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 
@@ -53,7 +53,7 @@ public final class PlagueDamageHarness extends TickPhasedHarness {
 
     @Override
     protected boolean enabled() {
-        return ProgressionConfig.devPlagueTest;
+        return DevTestConfig.devPlagueTest;
     }
 
     @Override

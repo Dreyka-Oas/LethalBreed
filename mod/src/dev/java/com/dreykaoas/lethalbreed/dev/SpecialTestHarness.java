@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.special.SpecialTestArena;
@@ -29,7 +29,7 @@ public final class SpecialTestHarness {
         // Dev-env gate: this builds a block arena and force-spawns mobs near spawn. Even if a user toggles
         // devSpecialTest in the GUI, it must NEVER run on a shipped jar / real world — only under gradle
         // runServer (a development environment), where headless verification is intended.
-        if (!ProgressionConfig.devSpecialTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        if (!DevTestConfig.devSpecialTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
             return;
         }
         tick++;

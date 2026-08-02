@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.special;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,14 +47,14 @@ public enum SpecialType {
     /** Phase from which this type can appear — configurable via {@link ProgressionConfig}. */
     public int unlockPhase() {
         return switch (this) {
-            case SPRINTEUR -> ProgressionConfig.specialSprinteurPhase;
-            case BONDISSEUR -> ProgressionConfig.specialBondisseurPhase;
-            case BOMBEUR -> ProgressionConfig.specialBombeurPhase;
-            case HURLEUR -> ProgressionConfig.specialHurleurPhase;
-            case SOIGNEUR -> ProgressionConfig.specialSoigneurPhase;
-            case JUGGERNAUT -> ProgressionConfig.specialJuggernautPhase;
-            case NECROMANCIEN -> ProgressionConfig.specialNecromancienPhase;
-            case SPLITTER -> ProgressionConfig.specialSplitterPhase;
+            case SPRINTEUR -> SpecialVariantConfig.specialSprinteurPhase;
+            case BONDISSEUR -> SpecialVariantConfig.specialBondisseurPhase;
+            case BOMBEUR -> SpecialVariantConfig.specialBombeurPhase;
+            case HURLEUR -> SpecialVariantConfig.specialHurleurPhase;
+            case SOIGNEUR -> SpecialVariantConfig.specialSoigneurPhase;
+            case JUGGERNAUT -> SpecialVariantConfig.specialJuggernautPhase;
+            case NECROMANCIEN -> SpecialVariantConfig.specialNecromancienPhase;
+            case SPLITTER -> SpecialVariantConfig.specialSplitterPhase;
             case NONE -> 0;
         };
     }
@@ -62,14 +62,14 @@ public enum SpecialType {
     /** Relative selection weight (higher = more frequent; 0 = never picked) — configurable via {@link ProgressionConfig}. */
     public int weight() {
         return switch (this) {
-            case SPRINTEUR -> ProgressionConfig.specialSprinteurWeight;
-            case BONDISSEUR -> ProgressionConfig.specialBondisseurWeight;
-            case BOMBEUR -> ProgressionConfig.specialBombeurWeight;
-            case HURLEUR -> ProgressionConfig.specialHurleurWeight;
-            case SOIGNEUR -> ProgressionConfig.specialSoigneurWeight;
-            case JUGGERNAUT -> ProgressionConfig.specialJuggernautWeight;
-            case NECROMANCIEN -> ProgressionConfig.specialNecromancienWeight;
-            case SPLITTER -> ProgressionConfig.specialSplitterWeight;
+            case SPRINTEUR -> SpecialVariantConfig.specialSprinteurWeight;
+            case BONDISSEUR -> SpecialVariantConfig.specialBondisseurWeight;
+            case BOMBEUR -> SpecialVariantConfig.specialBombeurWeight;
+            case HURLEUR -> SpecialVariantConfig.specialHurleurWeight;
+            case SOIGNEUR -> SpecialVariantConfig.specialSoigneurWeight;
+            case JUGGERNAUT -> SpecialVariantConfig.specialJuggernautWeight;
+            case NECROMANCIEN -> SpecialVariantConfig.specialNecromancienWeight;
+            case SPLITTER -> SpecialVariantConfig.specialSplitterWeight;
             case NONE -> 0;
         };
     }

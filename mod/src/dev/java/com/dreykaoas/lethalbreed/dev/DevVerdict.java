@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.LinkedHashMap;
@@ -32,7 +32,7 @@ import java.util.Map;
  * grows to genuinely concurrent suites, this is the one place that has to change: gate the
  * {@code ALL DONE} emission on a completed-suite count instead of emitting it unconditionally.
  *
- * <p>{@link #summary} also honours {@link ProgressionConfig#devAutoHalt}: when set, the server halts
+ * <p>{@link #summary} also honours {@link DevTestConfig#devAutoHalt}: when set, the server halts
  * itself right after the verdict, so a scripted {@code gradlew runServer} exits on its own instead of
  * hanging until the harness driver's timeout.
  */
@@ -61,7 +61,7 @@ public final class DevVerdict {
 
     /**
      * Emit the terminal tally for {@code suite}, then the load-bearing {@code ALL DONE} marker, then halt
-     * the server if {@link ProgressionConfig#devAutoHalt} is on. Call exactly once, on the server thread,
+     * the server if {@link DevTestConfig#devAutoHalt} is on. Call exactly once, on the server thread,
      * after the suite's last {@link #check}.
      *
      * @param server the running server; may be null when a suite has no handle to one (nothing is halted).
@@ -77,7 +77,7 @@ public final class DevVerdict {
         // this point IS "every registered suite has reported". Nothing after it may be silent-on-success.
         LethalBreed.LOGGER.info("{} ALL DONE", PREFIX);
 
-        if (ProgressionConfig.devAutoHalt && server != null) {
+        if (DevTestConfig.devAutoHalt && server != null) {
             LethalBreed.LOGGER.info("{} devAutoHalt — stopping the server.", PREFIX);
             server.halt(false);
         }

@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.dev.contam.ClearGuardRig;
 import com.dreykaoas.lethalbreed.dev.contam.ContamRig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
@@ -50,7 +50,7 @@ public final class ClearGuardHarness extends TickPhasedHarness {
 
     @Override
     protected boolean enabled() {
-        return ProgressionConfig.devClearTest;
+        return DevTestConfig.devClearTest;
     }
 
     @Override

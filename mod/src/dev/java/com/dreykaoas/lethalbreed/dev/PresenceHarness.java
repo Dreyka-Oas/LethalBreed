@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev;
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.core.BlockPos;
@@ -63,7 +63,7 @@ public final class PresenceHarness extends TickPhasedHarness {
 
     @Override
     protected boolean enabled() {
-        return ProgressionConfig.devPresenceTest;
+        return DevTestConfig.devPresenceTest;
     }
 
     @Override

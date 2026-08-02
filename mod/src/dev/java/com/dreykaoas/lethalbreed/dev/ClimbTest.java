@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
@@ -71,9 +71,9 @@ public final class ClimbTest {
 
     public static void onTick(MinecraftServer server) {
         // Dev-env gate: this force-loads chunks, builds a wall, spawns mobs AND flips
-        // WorldSpawnConfig.forceDayTime + ProgressionConfig.debugClimb at runtime. Far too destructive for a
+        // WorldSpawnConfig.forceDayTime + DevTestConfig.debugClimb at runtime. Far too destructive for a
         // real world, so it runs ONLY under gradle runServer even if the GUI toggle is left on.
-        if (!ProgressionConfig.devClimbTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
+        if (!DevTestConfig.devClimbTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
             return;
         }
         tick++;
@@ -171,7 +171,7 @@ public final class ClimbTest {
             minDist[i] = Double.MAX_VALUE;
         }
 
-        ProgressionConfig.debugClimb = true;
+        DevTestConfig.debugClimb = true;
         LethalBreed.LOGGER.info(
                 "[ClimbTest] flat arena: floor y={}, wall x={} ({} tall, y {}..{}), villager @({},{},{}), {} zombies "
                         + "west, fakePlayer={}. Climbing {} blocks reaches the villager. Watch [ClimbDbg].",

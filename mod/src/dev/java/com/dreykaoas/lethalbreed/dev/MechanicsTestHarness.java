@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.mechanics.MechTestArena;
@@ -25,7 +25,7 @@ public final class MechanicsTestHarness {
     public static void onTick(MinecraftServer server) {
         // Dev-env gate: builds an arena + force-spawns mobs. Never run on a shipped jar / real world even if
         // the GUI toggle is on — only under gradle runServer (a development environment).
-        if (!ProgressionConfig.devMechTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        if (!DevTestConfig.devMechTest || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
             return;
         }
         tick++;
