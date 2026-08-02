@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
+
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,7 +25,12 @@ public final class ConfigAccess {
         for (Field f : ConfigSchema.all()) {
             try {
                 m.put(f.getName(), ConfigType.copyIfArray(f.get(null)));
-            } catch (IllegalAccessException ignored) {
+            } catch (IllegalAccessException e) {
+                // An option the schema lists but cannot read is a broken build, not a runtime condition to
+                // tolerate: skipping it silently leaves that option with NO factory default, so a later
+                // reset restores nothing and reports success anyway.
+                throw new IllegalStateException(
+                        "config option " + f.getName() + " is listed by the schema but not readable", e);
             }
         }
         return m;
@@ -72,19 +79,35 @@ public final class ConfigAccess {
         return true;
     }
 
-    public static void reset(Field f) {
+    /** Restore one option to its captured default. Returns true when the field was actually written. */
+    public static boolean reset(Field f) {
         try {
             f.set(null, ConfigType.copyIfArray(DEFAULTS.get(f.getName())));
-        } catch (IllegalAccessException ignored) {
+            return true;
+        } catch (IllegalAccessException e) {
+            // Counting a reset that did not happen makes /lethalconfig resetall report a config state the
+            // operator does not have. Say so, and let the caller count only what landed.
+            LethalBreed.LOGGER.error("[LethalBreed] could not reset config option {}", f.getName(), e);
+            return false;
         }
     }
 
-    public static int resetAll() {
+    /** Restore every option to its default WITHOUT persisting. Returns the number actually restored.
+     *  Split out of {@link #resetAll()} so the reset path is reachable from a headless test — {@code save()}
+     *  reaches {@code FabricLoader}, which does not exist in the test source set. */
+    public static int resetAllInMemory() {
         int n = 0;
         for (Field f : ConfigSchema.all()) {
-            reset(f);
-            n++;
+            if (reset(f)) {
+                n++;
+            }
         }
+        return n;
+    }
+
+    /** Restore every option to its default and persist. Returns the number actually restored. */
+    public static int resetAll() {
+        int n = resetAllInMemory();
         ConfigIo.save();
         return n;
     }

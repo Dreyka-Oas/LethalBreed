@@ -270,7 +270,12 @@ public final class ConfigIo {
                     }
                     json.add(f.getName(), arr);
                 }
-            } catch (IllegalAccessException ignored) {
+            } catch (IllegalAccessException e) {
+                // Not writing an option here makes it vanish from the file on this save and come back as a
+                // default on the next load — the user watches a setting disappear with no explanation. Say
+                // so; the rest of the file still gets written.
+                LethalBreed.LOGGER.error("[LethalBreed] config option {} could not be written to disk",
+                        f.getName(), e);
             }
         }
         JsonObject json = new JsonObject();
