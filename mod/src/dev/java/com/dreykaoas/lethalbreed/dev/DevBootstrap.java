@@ -42,10 +42,10 @@ public final class DevBootstrap {
         // Contamination rigs. "clear" is standalone; the three "plague" rigs share one run and are serialised
         // by the start offsets in ContamRig (they mutate process-global plague config), with the disable rig
         // last because it owns the suite summary.
-        ServerTickEvents.END_SERVER_TICK.register(ClearGuardHarness::onTick);
-        ServerTickEvents.END_SERVER_TICK.register(PlagueDamageHarness::onTick);
-        ServerTickEvents.END_SERVER_TICK.register(LeakProbeHarness::onTick);
-        ServerTickEvents.END_SERVER_TICK.register(PlagueDisableHarness::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(ClearGuardHarness.INSTANCE::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(PlagueDamageHarness.INSTANCE::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(LeakProbeHarness.INSTANCE::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(PlagueDisableHarness.INSTANCE::onTick);
         // Statue / placed-block / shade / breach rigs, and the climb arena (which is a tick harness now, not a
         // one-shot SERVER_STARTED scenario — see ClimbTest). Each self-gates on its own ProgressionConfig flag.
         ServerTickEvents.END_SERVER_TICK.register(StatueHarness::onTick);

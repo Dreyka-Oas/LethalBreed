@@ -38,6 +38,7 @@ public abstract class TickPhasedHarness {
     }
 
     private final String suite;
+    private final boolean reportsSummary;
     private final Stage[] stages;
 
     private int tick = -1;
@@ -46,6 +47,17 @@ public abstract class TickPhasedHarness {
     private ConfigOverride overrides;
 
     protected TickPhasedHarness(String suite, Stage... stages) {
+        this(suite, true, stages);
+    }
+
+    /**
+     * @param reportsSummary false for a harness that SHARES its suite with others and is not the last to run.
+     *        {@code DevVerdict.summary} emits the load-bearing {@code ALL DONE} marker, so exactly one harness
+     *        per suite may call it — the three plague rigs share the "plague" suite and only the disable rig,
+     *        which runs last, reports.
+     */
+    protected TickPhasedHarness(String suite, boolean reportsSummary, Stage... stages) {
+        this.reportsSummary = reportsSummary;
         if (stages.length == 0) {
             throw new IllegalArgumentException("harness " + suite + " declares no stage");
         }
@@ -63,6 +75,15 @@ public abstract class TickPhasedHarness {
     /** The harness's own {@code devXxxTest} flag. Read every tick, so toggling it off mid-run stops it. */
     protected abstract boolean enabled();
 
+    /**
+     * Server tick before which this harness does not start counting at all. Rigs that share process-global
+     * state — the three plague rigs mutate {@code contaminationEnabled} — cannot run at once and are
+     * serialised in time by staggered start offsets. Default 0: start immediately.
+     */
+    protected int startAfterServerTick() {
+        return 0;
+    }
+
     /** Build stage {@code stage}'s arena. Put every config change on {@code cfg} — a holder field written
      *  directly will not be restored. */
     protected abstract void build(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg);
@@ -78,6 +99,9 @@ public abstract class TickPhasedHarness {
     public final void onTick(MinecraftServer server) {
         // Dev-env gate: these build blocks and force-spawn mobs. Never on a shipped jar even if a flag is on.
         if (done || !enabled() || !FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            return;
+        }
+        if (server.getTickCount() < startAfterServerTick()) {
             return;
         }
         tick++;
@@ -101,7 +125,9 @@ public abstract class TickPhasedHarness {
                 current++;
                 if (current >= stages.length) {
                     done = true;
-                    DevVerdict.summary(suite, server);
+                    if (reportsSummary) {
+                        DevVerdict.summary(suite, server);
+                    }
                 }
             }
         }
