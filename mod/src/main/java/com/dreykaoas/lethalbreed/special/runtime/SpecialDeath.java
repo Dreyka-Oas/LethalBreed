@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
@@ -18,9 +18,9 @@ public final class SpecialDeath {
         if (SpecialType.fromId(z.getAttached(SpecialAttachment.SPECIAL)) != SpecialType.SPLITTER) {
             return;
         }
-        int count = ProgressionConfig.specialSplitterChildren;
-        int spread = ProgressionConfig.specialSplitterSpread;
-        double scale = ProgressionConfig.specialSplitterChildScale;
+        int count = SpecialVariantConfig.specialSplitterChildren;
+        int spread = SpecialVariantConfig.specialSplitterSpread;
+        double scale = SpecialVariantConfig.specialSplitterChildScale;
         for (int i = 0; i < count; i++) {
             Zombie child = ChildSpawner.spawnNear(level, z, spread);
             if (child != null) {

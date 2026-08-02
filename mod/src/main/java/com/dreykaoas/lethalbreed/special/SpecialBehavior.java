@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.special;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialAbilities;
@@ -37,10 +37,10 @@ public final class SpecialBehavior {
                 // charge ramps (synced to clients for the render-side inflation) and it explodes at full.
                 float charge = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_CHARGE, 0.0f);
                 boolean armed = charge > 0.0f;
-                double armRange = ProgressionConfig.specialBombeurArmRange;
+                double armRange = SpecialVariantConfig.specialBombeurArmRange;
                 boolean inRange = tgt != null && z.distanceToSqr(tgt) <= armRange * armRange;
                 if (armed || inRange) {
-                    charge += (float) ProgressionConfig.specialBombeurFusePerTick;
+                    charge += (float) SpecialVariantConfig.specialBombeurFusePerTick;
                     if (charge >= 1.0f) {
                         SpecialAbilities.bomb(level, z);
                     } else {

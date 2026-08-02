@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
@@ -93,7 +93,7 @@ public final class PillarClimb {
         }
         computeHeading();
 
-        if (ProgressionConfig.debugClimb && (age % 3 == 1)) {
+        if (DevTestConfig.debugClimb && (age % 3 == 1)) {
             LethalBreed.LOGGER.info("[ClimbDbg] z{} PILLAR y={} dyTgt={} horiz={} age={} risen={} ground={}",
                     entity.getId(), MoveMath.f1(entity.getY()), MoveMath.f1(dyToTarget), MoveMath.f1(h), age,
                     MoveMath.f1(risen()), entity.onGround());

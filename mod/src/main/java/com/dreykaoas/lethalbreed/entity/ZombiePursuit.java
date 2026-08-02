@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.entity;
 
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import net.minecraft.world.entity.LivingEntity;
@@ -113,7 +113,7 @@ public final class ZombiePursuit {
     // --- special variant ---
     public SpecialType special() { return special; }
     public boolean specialReady() { return specialCd <= 0; }
-    public void resetSpecialCd() { specialCd = Math.max(1, ProgressionConfig.specialActionInterval); }
+    public void resetSpecialCd() { specialCd = Math.max(1, SpecialVariantConfig.specialActionInterval); }
     public boolean isSpecialActive() { return special.kind() == SpecialType.Kind.ACTIVE; }
 
     /** Re-read the special type from the attachment (used after the test command forces a type). */

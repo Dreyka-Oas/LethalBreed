@@ -2,10 +2,12 @@ package com.dreykaoas.lethalbreed.config;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
@@ -36,7 +38,11 @@ public final class ConfigSchema {
             TargetingConfig.class,
             WorldSpawnConfig.class,
             CombatMoveConfig.class,
+            // These three were one holder (ProgressionConfig). They MUST stay adjacent and in this order:
+            // ConfigSchema.all() order is the on-disk write order within a category (ConfigSchemaOrderTest).
             ProgressionConfig.class,
+            SpecialVariantConfig.class,
+            DevTestConfig.class,
             ContaminationConfig.class,
             ZombieMoodConfig.class,
             ExpertConfig.class,

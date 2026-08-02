@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import net.minecraft.world.entity.LivingEntity;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;
@@ -155,7 +155,7 @@ public final class ZombieBrain {
     }
 
     private void debugClimb(ZombiePursuit p, double horizSq, double dy, boolean stuck) {
-        if (!ProgressionConfig.debugClimb || (dbgN++ % 4 != 0)) return;
+        if (!DevTestConfig.debugClimb || (dbgN++ % 4 != 0)) return;
         LethalBreed.LOGGER.info("[ClimbDbg] z{} y={} tgtY={} horiz={} dy={} stuck={}({}) climb={} ground={}",
                 entity.getId(), MoveMath.f1(entity.getY()), MoveMath.f1(p.tgtY()),
                 MoveMath.f1(Math.sqrt(horizSq)), MoveMath.f1(dy), stuck, stuckTicks, pillar.active(),
