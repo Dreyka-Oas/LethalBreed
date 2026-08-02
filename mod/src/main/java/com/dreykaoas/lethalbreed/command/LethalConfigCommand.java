@@ -1,6 +1,8 @@
 package com.dreykaoas.lethalbreed.command;
 
 import com.dreykaoas.lethalbreed.config.ConfigFields;
+import com.dreykaoas.lethalbreed.config.ConfigIo;
+import com.dreykaoas.lethalbreed.config.ConfigStructure;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -23,6 +25,7 @@ import java.util.Locale;
  * <ul>
  *   <li>{@code /lethalconfig}                  — open the in-game GUI menu (player only)</li>
  *   <li>{@code /lethalconfig list}             — print every option + value to chat</li>
+ *   <li>{@code /lethalconfig verify}           — report the config file's structural health</li>
  *   <li>{@code /lethalconfig get <field>}      — show one option</li>
  *   <li>{@code /lethalconfig set <field> <v>}  — change one option (persists to JSON)</li>
  *   <li>{@code /lethalconfig reset <field>}    — restore one option to default</li>
@@ -51,6 +54,7 @@ public final class LethalConfigCommand {
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(LethalConfigCommand::openMenu)
                 .then(Commands.literal("list").executes(LethalConfigCommand::list))
+                .then(Commands.literal("verify").executes(LethalConfigCommand::verify))
                 .then(Commands.literal("get")
                         .then(Commands.argument("field", StringArgumentType.word())
                                 .suggests(FIELD_SUGGEST)
@@ -103,6 +107,55 @@ public final class LethalConfigCommand {
             ctx.getSource().sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GRAY), false);
         }
         return ConfigFields.all().size();
+    }
+
+    /** Report what the last config read made of the file's SHAPE — misspelled option names, options
+     *  filed under two categories, categories that do not exist. Not values: those are the user's to
+     *  choose, and an out-of-range one is clamped on the way in by design.
+     *
+     *  <p>This exists because a log line is close to worthless to a solo player, who never opens
+     *  latest.log. The startup WARN is for dedicated-server admins; this is for everyone else. */
+    private static int verify(CommandContext<CommandSourceStack> ctx) {
+        ConfigStructure.Report report = ConfigIo.lastReport();
+        if (report == null) {
+            CommandFeedback.failure(ctx.getSource(),
+                    "Config jamais lue depuis ce démarrage — rien à vérifier.");
+            return 0;
+        }
+        if (report.clean()) {
+            CommandFeedback.success(ctx.getSource(),
+                    "Structure OK — " + report.recognised() + "/" + report.keysInFile()
+                            + " options reconnues.", ChatFormatting.GREEN, false);
+            return 1;
+        }
+
+        CommandFeedback.success(ctx.getSource(),
+                report.problemCount() + " problème(s) de structure — " + report.recognised() + "/"
+                        + report.keysInFile() + " options reconnues.", ChatFormatting.GOLD, false);
+        for (ConfigStructure.Unknown u : report.unknown()) {
+            String line = u.suggestion() != null
+                    ? "  option inconnue '" + u.name() + "' — vouliez-vous '" + u.suggestion() + "' ?"
+                    : "  option inconnue '" + u.name() + "'";
+            ctx.getSource().sendSuccess(
+                    () -> Component.literal(line).withStyle(ChatFormatting.RED), false);
+        }
+        for (String d : report.duplicated()) {
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "  '" + d + "' apparaît dans deux catégories — une seule copie est lue")
+                    .withStyle(ChatFormatting.RED), false);
+        }
+        for (String c : report.bogusCategory()) {
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "  '" + c + "' n'est pas une catégorie — ses options seront déplacées")
+                    .withStyle(ChatFormatting.RED), false);
+        }
+        if (!report.misplaced().isEmpty()) {
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "  " + report.misplaced().size() + " option(s) mal rangée(s) — corrigé "
+                            + "automatiquement à la prochaine écriture")
+                    .withStyle(ChatFormatting.GRAY), false);
+        }
+        return report.problemCount();
     }
 
     private static int get(CommandContext<CommandSourceStack> ctx) {
