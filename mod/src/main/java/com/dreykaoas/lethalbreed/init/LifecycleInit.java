@@ -9,8 +9,14 @@ import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.config.ConfigIo;
+import com.dreykaoas.lethalbreed.config.ConfigStructure;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
 
 /**
  * Registers server start/stop lifecycle hooks. Dev-only start hooks (headless climb / compute self-test)
@@ -48,6 +54,25 @@ public final class LifecycleInit {
                 }
             }
             PhaseManager.get().load(server); // restore the persisted phase (survives close/reopen)
+        });
+
+        // Tell an operator, once on join, that the config file has a structural problem. The startup
+        // WARN covers dedicated-server admins who read logs; this covers everyone else, because a
+        // solo player never opens latest.log and would otherwise just watch their hand-edited line
+        // stop working with no explanation anywhere they look.
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ConfigStructure.Report report = ConfigIo.lastReport();
+            if (report == null || report.clean()) {
+                return;
+            }
+            // Same gate the SetConfig packet and /lethalconfig use — only the people who can act on it.
+            if (!handler.getPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+                return;
+            }
+            handler.getPlayer().sendSystemMessage(Component.literal(
+                            "[LethalBreed] " + report.problemCount()
+                                    + " problème(s) dans la structure de la config — /lethalconfig verify")
+                    .withStyle(ChatFormatting.GOLD));
         });
 
         // NoAI-release MUST happen here, on STOPPING, not on STOPPED: Fabric fires SERVER_STOPPING at HEAD of
