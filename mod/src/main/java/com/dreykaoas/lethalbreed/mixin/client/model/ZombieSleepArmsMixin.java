@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.mixin.client;
+package com.dreykaoas.lethalbreed.mixin.client.model;
 
 import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;

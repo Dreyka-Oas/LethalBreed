@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.mixin;
+package com.dreykaoas.lethalbreed.mixin.zombie;
 
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import com.dreykaoas.lethalbreed.entity.ZombieStateAttachment;

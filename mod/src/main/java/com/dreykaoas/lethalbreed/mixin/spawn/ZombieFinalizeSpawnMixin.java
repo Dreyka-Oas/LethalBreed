@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.mixin;
+package com.dreykaoas.lethalbreed.mixin.spawn;
 
 import com.dreykaoas.lethalbreed.entity.ZombieVariation;
 import net.minecraft.world.entity.SpawnGroupData;

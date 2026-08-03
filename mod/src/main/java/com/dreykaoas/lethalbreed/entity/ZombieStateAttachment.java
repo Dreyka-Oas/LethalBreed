@@ -9,7 +9,7 @@ import net.minecraft.resources.Identifier;
 /**
  * The zombie's live {@link ZombieState} ordinal, written by the server AI ({@link SmartZombie#setState}) and
  * read server-side by systems that must react to what a zombie is doing — e.g.
- * {@link com.dreykaoas.lethalbreed.mixin.ZombieSleepSilenceMixin} keeps a dozing ({@link ZombieState#SLEEPING})
+ * {@link com.dreykaoas.lethalbreed.mixin.zombie.ZombieSleepSilenceMixin} keeps a dozing ({@link ZombieState#SLEEPING})
  * zombie's ambient groan silent. Transient — a fresh zombie starts IDLE.
  */
 public final class ZombieStateAttachment {
