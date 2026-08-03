@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.mixin;
+package com.dreykaoas.lethalbreed.mixin.plague;
 
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
