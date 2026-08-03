@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.dev.arena;
+package com.dreykaoas.lethalbreed.dev.arena.statue;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;

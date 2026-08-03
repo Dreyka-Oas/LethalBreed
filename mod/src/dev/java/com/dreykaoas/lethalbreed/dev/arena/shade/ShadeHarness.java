@@ -1,4 +1,6 @@
-package com.dreykaoas.lethalbreed.dev.arena;
+package com.dreykaoas.lethalbreed.dev.arena.shade;
+
+import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 import com.dreykaoas.lethalbreed.dev.harness.TickWait;

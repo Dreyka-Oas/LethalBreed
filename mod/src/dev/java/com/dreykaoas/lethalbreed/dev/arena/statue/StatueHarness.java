@@ -1,4 +1,6 @@
-package com.dreykaoas.lethalbreed.dev.arena;
+package com.dreykaoas.lethalbreed.dev.arena.statue;
+
+import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 
 import com.dreykaoas.lethalbreed.dev.DevBootstrap;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
