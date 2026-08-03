@@ -70,15 +70,13 @@ public final class DevBootstrap {
             if (DevTestSelector.selected() != null) {
                 return; // selection in force — exactly one flag is on by construction
             }
-            int devTests = (DevTestConfig.devSpecialTest ? 1 : 0)
-                    + (DevTestConfig.devMechTest ? 1 : 0)
-                    + (DevTestConfig.devClimbTest ? 1 : 0)
-                    + (DevTestConfig.devPresenceTest ? 1 : 0);
-            if (devTests > 1) {
-                LethalBreed.LOGGER.warn("[LethalBreed] {} dev test arenas enabled at once in the config file — "
-                        + "they build overlapping arenas. Set {}=<suite> (one of: {}) to force exactly one.",
-                        devTests, DevTestSelector.ENV_VAR, "special, mech, climb, compute, plague, statue, "
-                                + "clear, placed, shade, breach, presence");
+            java.util.List<String> on = DevTestSelector.enabled();
+            if (on.size() > 1) {
+                LethalBreed.LOGGER.warn("[LethalBreed] {} dev test arenas enabled at once in the config file "
+                        + "({}) — they build overlapping arenas and force-load overlapping chunks. "
+                        + "Set {}=<suite> (one of: {}) to force exactly one.",
+                        on.size(), String.join(", ", on), DevTestSelector.ENV_VAR,
+                        String.join(", ", DevTestSelector.names()));
             }
         });
 

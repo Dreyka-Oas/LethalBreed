@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.dev;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -17,9 +18,14 @@ import net.minecraft.server.level.ServerLevel;
  * Ticks that fall between one stage's evaluation and the next stage's build are idle by construction.
  *
  * <p><b>Config restore is no longer per-harness bookkeeping.</b> Each stage gets a {@link ConfigOverride}
- * opened at its build tick and closed in a {@code finally} after its evaluation. A harness that throws
- * mid-run therefore no longer leaves the process holding its test values — which is exactly what the
- * hand-written {@code savedX} fields did whenever an exception skipped the restore.
+ * opened at its build tick and released once its evaluation is over — which is exactly what the hand-written
+ * {@code savedX} fields failed to do whenever an exception skipped the restore.
+ *
+ * <p><b>Every phase runs under a supervisor.</b> The scope's lifetime spans three callbacks across hundreds
+ * of ticks, so a {@code finally} around one of them is not enough: a throw from {@code build} or
+ * {@code observe} would strand the overrides for the whole process AND leave the harness running against a
+ * half-built arena, still printing a verdict on it. {@link #onTick} therefore catches everything, releases
+ * the scope, records a {@code harness-error} FAIL so the run cannot look green, and stops.
  *
  * <p><b>Idempotent once done.</b> The old harnesses were a mix: some carried a {@code done} flag, some did not
  * and simply relied on their tick counter never coming back round. The base makes it uniform — after the last
@@ -105,6 +111,20 @@ public abstract class TickPhasedHarness {
             return;
         }
         tick++;
+        // Supervisor. The ConfigOverride's lifetime spans build -> observe* -> evaluate, i.e. three callbacks
+        // across hundreds of ticks, so guarding only evaluate() left two of them able to strand the scope:
+        // the process kept the harness's values, and every measurement taken afterwards — by this rig or the
+        // next one in the suite — was quietly made under someone else's config. Worse, the harness stayed
+        // "alive": done was never set, so the following ticks kept running against a half-built arena and
+        // still printed a verdict on it.
+        try {
+            dispatch(server);
+        } catch (RuntimeException | Error e) {
+            abort(server, e);
+        }
+    }
+
+    private void dispatch(MinecraftServer server) {
         ServerLevel ow = server.overworld();
         Stage s = stages[current];
 
@@ -118,10 +138,7 @@ public abstract class TickPhasedHarness {
             try {
                 evaluate(current, ow, server);
             } finally {
-                if (overrides != null) {
-                    overrides.close();
-                    overrides = null;
-                }
+                releaseScope();
                 current++;
                 if (current >= stages.length) {
                     done = true;
@@ -130,6 +147,40 @@ public abstract class TickPhasedHarness {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * A phase threw. Stop the harness, hand the config back, and RECORD A FAILURE — silence here would be
+     * indistinguishable from a clean run to anything reading the log, which is the exact confusion
+     * {@code ALL DONE} exists to prevent.
+     */
+    private void abort(MinecraftServer server, Throwable cause) {
+        done = true;
+        String stage = stages[Math.min(current, stages.length - 1)].name();
+        releaseScope();
+        LethalBreed.LOGGER.error("[LethalBreed] harness {} aborted in stage {} at tick {}",
+                suite, stage, tick, cause);
+        DevVerdict.check(suite, "harness-error", false,
+                "stage " + stage + " threw at tick " + tick + ": " + cause);
+        if (reportsSummary) {
+            DevVerdict.summary(suite, server);
+        }
+    }
+
+    /** Restore every option this stage overrode. A failure to restore is logged, never thrown: it must not
+     *  mask the original cause when this runs from {@link #abort}. */
+    private void releaseScope() {
+        if (overrides == null) {
+            return;
+        }
+        try {
+            overrides.close();
+        } catch (RuntimeException e) {
+            LethalBreed.LOGGER.error("[LethalBreed] harness {} could not restore its config overrides",
+                    suite, e);
+        } finally {
+            overrides = null;
         }
     }
 

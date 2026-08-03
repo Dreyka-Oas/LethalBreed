@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import org.junit.jupiter.api.Test;
@@ -111,5 +112,73 @@ class ConfigOverrideTest {
         cfg.close();                                 // must NOT stomp that
         assertEquals(before + 99, SchedulerConfig.tickBuckets);
         SchedulerConfig.tickBuckets = before;
+    }
+
+    // ---- Type agreement between the caller's box and the field ----------------------------------
+    // ConfigAccess.apply never hits a type mismatch because it derives the value from f.getType() via
+    // ConfigType.parse. set() took the caller's box and wrote it raw, so a Double into one of the seven
+    // float options threw a raw IllegalArgumentException out of Field.set — past the IllegalAccessException
+    // catch, and past the caller's own scope handling.
+
+    @Test
+    void coercesADoubleIntoAFloatOption() {
+        float before = ZombieMoodConfig.screamVolume;
+        try (ConfigOverride cfg = ConfigOverride.open()) {
+            cfg.set("screamVolume", 2.5);          // Double literal, float field
+            assertEquals(2.5f, ZombieMoodConfig.screamVolume);
+        }
+        assertEquals(before, ZombieMoodConfig.screamVolume);
+    }
+
+    @Test
+    void coercesAnIntegerIntoALongOption() {
+        long before = CombatMoveConfig.breakGraceTicks;
+        try (ConfigOverride cfg = ConfigOverride.open()) {
+            cfg.set("breakGraceTicks", 5);         // Integer literal, long field
+            assertEquals(5L, CombatMoveConfig.breakGraceTicks);
+        }
+        assertEquals(before, CombatMoveConfig.breakGraceTicks);
+    }
+
+    @Test
+    void coercesAnIntegerIntoADoubleOption() {
+        double before = ZombieMoodConfig.fleeSpeed;
+        try (ConfigOverride cfg = ConfigOverride.open()) {
+            cfg.set("fleeSpeed", 2);
+            assertEquals(2.0, ZombieMoodConfig.fleeSpeed);
+        }
+        assertEquals(before, ZombieMoodConfig.fleeSpeed);
+    }
+
+    @Test
+    void rejectsAValueThatCannotBecomeTheFieldType() {
+        int before = SchedulerConfig.tickBuckets;
+        try (ConfigOverride cfg = ConfigOverride.open()) {
+            IllegalArgumentException boom = assertThrows(IllegalArgumentException.class,
+                    () -> cfg.set("tickBuckets", "not a number"));
+            assertTrue(boom.getMessage().contains("tickBuckets"), boom.getMessage());
+        }
+        assertEquals(before, SchedulerConfig.tickBuckets);
+    }
+
+    @Test
+    void rejectsABooleanForANumericOption() {
+        try (ConfigOverride cfg = ConfigOverride.open()) {
+            assertThrows(IllegalArgumentException.class, () -> cfg.set("tickBuckets", true));
+        }
+    }
+
+    /** The invariant a supervisor depends on: a set() that throws must leave every EARLIER option in this
+     *  scope restorable, so the caller can still close() on the way out. */
+    @Test
+    void aFailedSetLeavesEveryEarlierOptionRestorable() {
+        int buckets = SchedulerConfig.tickBuckets;
+        float volume = ZombieMoodConfig.screamVolume;
+        ConfigOverride cfg = ConfigOverride.open();
+        cfg.set("tickBuckets", buckets + 5);
+        assertThrows(IllegalArgumentException.class, () -> cfg.set("screamVolume", "nope"));
+        cfg.close();
+        assertEquals(buckets, SchedulerConfig.tickBuckets);
+        assertEquals(volume, ZombieMoodConfig.screamVolume);
     }
 }

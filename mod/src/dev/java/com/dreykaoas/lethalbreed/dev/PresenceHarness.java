@@ -55,7 +55,12 @@ public final class PresenceHarness extends TickPhasedHarness {
     private boolean sawPlayerPresent = false;
     private boolean sawFlowField = false;
     private int maxTargeting = 0;
-    private double bestClosedSum = 0.0;
+    // MAX_VALUE, not 0.0: with 0.0 as "unset" a sample where every zombie had been removed summed to 0.0,
+    // beat the sentinel, and made zombies-approach report PASS at "0.00 blocks" — a dead arena scoring
+    // better than a working one. Only a sample in which EVERY spawned zombie is still alive may win, so the
+    // distance is always over the same population it started with.
+    private double bestClosedSum = Double.MAX_VALUE;
+    private int liveAtBest = 0;
 
     private PresenceHarness() {
         super("presence", new Stage("corridor", BUILD_TICK, EVAL_TICK));
@@ -105,11 +110,13 @@ public final class PresenceHarness extends TickPhasedHarness {
             sawFlowField = true;
         }
         int targeting = 0;
+        int live = 0;
         double closed = 0.0;
         for (Zombie z : zombies) {
             if (z.isRemoved()) {
                 continue;
             }
+            live++;
             SmartZombie sz = GameState.REGISTRY.get(z.getId());
             if (z.getTarget() != null || (sz != null && sz.hasTarget())) {
                 targeting++;
@@ -119,16 +126,18 @@ public final class PresenceHarness extends TickPhasedHarness {
             }
         }
         maxTargeting = Math.max(maxTargeting, targeting);
-        if (bestClosedSum == 0.0 || closed < bestClosedSum) {
+        if (live == zombies.size() && closed < bestClosedSum) {
             bestClosedSum = closed;
+            liveAtBest = live;
         }
     }
 
     @Override
     protected void evaluate(int stage, ServerLevel ow, MinecraftServer server) {
         int n = zombies.size();
+        boolean measured = liveAtBest == n && n > 0;
         double startAvg = n == 0 ? 0.0 : startDistSum / n;
-        double bestAvg = n == 0 ? 0.0 : bestClosedSum / n;
+        double bestAvg = measured ? bestClosedSum / n : Double.NaN;
 
         check("player-in-level", sawPlayerPresent,
                 "level.players()=" + ow.players().size() + " containsFake=" + (player != null && ow.players().contains(player)));
@@ -137,8 +146,11 @@ public final class PresenceHarness extends TickPhasedHarness {
                         : "active() stayed null for " + EVAL_TICK + " ticks — no player was targetable");
         check("zombies-target", maxTargeting > 0,
                 maxTargeting + "/" + n + " zombies held a target at peak");
-        check("zombies-approach", n > 0 && bestAvg < startAvg - 2.0,
-                "avg distance " + DevVerdict.fmt(startAvg) + " -> " + DevVerdict.fmt(bestAvg) + " blocks over " + n + " zombies");
+        check("zombies-approach", measured && bestAvg < startAvg - 2.0,
+                measured
+                        ? "avg distance " + DevVerdict.fmt(startAvg) + " -> " + DevVerdict.fmt(bestAvg)
+                                + " blocks over all " + n + " zombies"
+                        : "never sampled a tick with all " + n + " zombies alive — no distance to report");
 
         DevFakePlayer.despawn(ow, player);
         ArenaBuilder.releaseChunks(ow, CX, CZ);
