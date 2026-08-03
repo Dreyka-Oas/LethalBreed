@@ -23,6 +23,16 @@ val devSourceSet: SourceSet = sourceSets.create("dev") {
     runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
 }
 
+// The dev source set holds the headless harnesses, and until now nothing could unit-test them: every rule in
+// them (how long to wait for a chunk, when a measurement is vacuous) was only ever exercised by starting a
+// real dedicated server, which takes minutes and cannot force the interesting timings. Putting dev's output on
+// the test classpath makes its PURE logic — the classes that take no Minecraft type — reachable from plain
+// JUnit. It changes nothing about packaging: the shipped jar is still built from `main` alone.
+sourceSets.test {
+    compileClasspath += devSourceSet.output
+    runtimeClasspath += devSourceSet.output
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.fabricmc.net/") { name = "Fabric" }
@@ -159,8 +169,8 @@ loom {
             runDir("run/server") // dedicated server gets its own run dir under run/ — no lock war with the clients
             source(devSourceSet) // dev harnesses on the dedicated-server run classpath (start.bat / runServer)
             vmArgs(
-                "-Xms2G",
-                "-Xmx6G",
+                "-Xms2048m",
+                "-Xmx2048m",
                 "-XX:+UnlockExperimentalVMOptions",
                 "-XX:+UseG1GC",
                 "-XX:MaxGCPauseMillis=50",

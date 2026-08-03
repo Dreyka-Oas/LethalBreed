@@ -101,6 +101,21 @@ public abstract class TickPhasedHarness {
      *  once, after the last stage. */
     protected abstract void evaluate(int stage, ServerLevel ow, MinecraftServer server);
 
+    /**
+     * Whether this stage has everything it needs and should be judged NOW, before its {@code evalTick}.
+     *
+     * <p>Exists for rigs that advance on observed state rather than on a schedule. Such a rig has to budget for
+     * the worst case it might meet — a chunk drop measured at up to 1200 ticks here — and without this hook that
+     * worst case is also its BEST case: every run pays the full budget idling, even the ones that finished in
+     * twenty ticks. With it, {@code evalTick} stops being the plan and becomes what it should always have been,
+     * the deadline.
+     *
+     * <p>Default false: a fixed-schedule rig keeps its exact previous behaviour.
+     */
+    protected boolean readyToEvaluate(int stage, int tick) {
+        return false;
+    }
+
     /** Register this with {@code ServerTickEvents.END_SERVER_TICK}. */
     public final void onTick(MinecraftServer server) {
         // Dev-env gate: these build blocks and force-spawn mobs. Never on a shipped jar even if a flag is on.
@@ -133,18 +148,26 @@ public abstract class TickPhasedHarness {
             build(current, ow, server, overrides);
         } else if (tick > s.buildTick() && tick < s.evalTick()) {
             observe(current, ow, tick);
+            if (readyToEvaluate(current, tick)) {
+                judge(ow, server);
+            }
         } else if (tick == s.evalTick()) {
             observe(current, ow, tick);
-            try {
-                evaluate(current, ow, server);
-            } finally {
-                releaseScope();
-                current++;
-                if (current >= stages.length) {
-                    done = true;
-                    if (reportsSummary) {
-                        DevVerdict.summary(suite, server);
-                    }
+            judge(ow, server);
+        }
+    }
+
+    /** Close the current stage: judge it, hand its config back, and advance (or finish the suite). */
+    private void judge(ServerLevel ow, MinecraftServer server) {
+        try {
+            evaluate(current, ow, server);
+        } finally {
+            releaseScope();
+            current++;
+            if (current >= stages.length) {
+                done = true;
+                if (reportsSummary) {
+                    DevVerdict.summary(suite, server);
                 }
             }
         }

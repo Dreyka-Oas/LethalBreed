@@ -21,10 +21,16 @@ import java.util.UUID;
  *
  * <p><b>Why reload-accumulation is the interesting case.</b> {@code ContaminationState.tracked} is a
  * {@code HashSet<LivingEntity>} and {@code Entity.hashCode()} is the monotonic entity id, so a victim that
- * unloads and re-deserialises is NEVER equal to its previous incarnation. With {@code onLoad} ungated, each of
- * the five reload cycles below added a fresh entry to a set the (disabled) sweep could no longer clean —
- * five distinct dead entities pinned forever, one per reload (audit #9). The fix gates {@code onLoad} on the
- * same flag, so the expected count here is 0, not 5.
+ * unloads and re-deserialises is NEVER equal to its previous incarnation. With {@code onLoad} ungated, each
+ * reload below added a fresh entry to a set the (disabled) sweep could no longer clean — one dead entity pinned
+ * forever per reload (audit #9). The fix gates {@code onLoad} on the same flag, so the expected count is 0.
+ *
+ * <p><b>The reloads are observed, not scheduled.</b> This rig used to unforce the arena, wait a fixed 20 ticks
+ * and re-force, counting a reload each time. The sibling statue rig had already measured that same drop at 2,
+ * ~35 and 272 ticks across runs, and once not at all inside 1200 — so on a slow run not one of those "reloads"
+ * happened, the victim never left memory, and {@code no-accumulation} passed having exercised nothing. It is
+ * now driven by {@link ChunkChurn}, which advances only on the witness actually leaving memory and coming back,
+ * and the verdict FAILS when zero real round trips were obtained rather than passing on an empty set.
  *
  * <p><b>Never hold the entity across a reload.</b> The object is discarded and rebuilt by deserialisation, so
  * a cached reference would be a dead object whose attachments are frozen at unload time — it would report
@@ -43,22 +49,28 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
     private static final int SETUP_TICK = 5;
     private static final int DISABLE_TICK = 40;
     private static final int PURGE_CHECK_TICK = 42;
-    private static final int CYCLE_FIRST_TICK = 60;
-    private static final int CYCLE_PERIOD = 40;
-    private static final int CYCLES = 5;
-    /** Half a period after each unforce: long enough for the chunk to actually drop before we pull it back. */
-    private static final int CYCLE_RELOAD_OFFSET = 20;
-    private static final int NO_ACCUM_TICK = 280;
-    private static final int REENABLE_TICK = 290;
-    private static final int FINAL_RELOAD_TICK = 310;
-    private static final int EVAL_TICK = 360;
+    private static final int CHURN_FIRST_TICK = 60;
+    /** Round trips attempted with the plague off. Three honest ones prove per-reload accumulation as well as
+     *  five guessed ones, and cost a third of the worst-case budget. */
+    private static final int ROUNDS = 3;
+    /** Per-half budget. Sized from the SLOWEST drop measured on this hardware (272 ticks, plus headroom for the
+     *  synchronous external-disk writes that produced the 1200-tick outlier), never from the typical one. */
+    private static final int HALF_BUDGET = 600;
+    /** Hard deadline only. Every phase below advances on observed state, so a healthy run evaluates within a
+     *  few hundred ticks; this is what stops a wedged one from hanging the suite forever. */
+    private static final int EVAL_DEADLINE = 5200;
+
+    /** Reactive progression: churn → judge accumulation and re-enable → final round trip → evaluate. */
+    private enum Step { CHURNING, REENABLED, DONE }
 
     private UUID victimId;
-    private int reloadsSeen;
     private ConfigOverride cfg;
+    private Step step = Step.CHURNING;
+    private ChunkChurn churn;
+    private ChunkChurn finalTrip;
 
     private PlagueDisableHarness() {
-        super("plague", true, new Stage("switch", SETUP_TICK, EVAL_TICK));
+        super("plague", true, new Stage("switch", SETUP_TICK, EVAL_DEADLINE));
     }
 
     @Override
@@ -84,6 +96,7 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
         victimId = c.getUUID();
         ContaminationManager.contaminate(c);
         ContaminationManager.forceSymptomatic(c);
+        churn = new ChunkChurn("plague-disabled reloads", CX, CZ, ROUNDS, HALF_BUDGET);
         check("tracked-on-infect", ContaminationState.tracked.size() == 1,
                 "tracked.size()=" + ContaminationState.tracked.size() + " after one contaminate() — "
                         + "the baseline the purge/accumulation checks below are measured against");
@@ -97,37 +110,55 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
                     ContaminationState.tracked.isEmpty(),
                     "tracked.size()=" + ContaminationState.tracked.size() + " two ticks after "
                             + "contaminationEnabled=false");
-            case NO_ACCUM_TICK -> check("no-accumulation",
-                    ContaminationState.tracked.isEmpty(),
-                    "tracked.size()=" + ContaminationState.tracked.size() + " after " + reloadsSeen
-                            + " unforce/re-force cycles with the plague disabled (pre-fix this was one entry "
-                            + "per reload, since Entity.hashCode() is the entity id)");
-            case REENABLE_TICK -> {
-                cfg.set("contaminationEnabled", true);
-                ArenaBuilder.releaseChunks(ow, CX, CZ);
-            }
-            case FINAL_RELOAD_TICK -> ArenaBuilder.forceChunks(ow, CX, CZ);
-            default -> cycle(ow, tick);
+            default -> churnStep(ow, tick);
         }
     }
 
-    /** Five unforce → (20 ticks) → re-force cycles, so the victim is genuinely re-deserialised each time. */
-    private void cycle(ServerLevel ow, int tick) {
-        int since = tick - CYCLE_FIRST_TICK;
-        if (since < 0 || since >= CYCLES * CYCLE_PERIOD) {
+    private void churnStep(ServerLevel ow, int tick) {
+        if (tick < CHURN_FIRST_TICK || churn == null) {
             return;
         }
-        int phase = since % CYCLE_PERIOD;
-        if (phase == 0) {
-            ArenaBuilder.releaseChunks(ow, CX, CZ);
-        } else if (phase == CYCLE_RELOAD_OFFSET) {
-            ArenaBuilder.forceChunks(ow, CX, CZ);
-            reloadsSeen++;
+        if (step == Step.CHURNING) {
+            churn.drive(ow, tick, victimId);
+            if (churn.finished()) {
+                judgeAccumulation();
+                cfg.set("contaminationEnabled", true);
+                // One more genuine round trip, now with the plague back on: resumption has to come off the
+                // PERSISTENT attachment of a freshly deserialised victim, not off the entry we never dropped.
+                finalTrip = new ChunkChurn("plague-reenabled reload", CX, CZ, 1, HALF_BUDGET);
+                step = Step.REENABLED;
+            }
+            return;
         }
+        if (step == Step.REENABLED) {
+            finalTrip.drive(ow, tick, victimId);
+            if (finalTrip.finished()) {
+                step = Step.DONE;
+            }
+        }
+    }
+
+    /** Zero real round trips means the set was never given a chance to grow: that is a harness failure, not a
+     *  clean bill of health, and it must read as one. */
+    private void judgeAccumulation() {
+        check("no-accumulation",
+                ContaminationState.tracked.isEmpty() && churn.completed() > 0,
+                "tracked.size()=" + ContaminationState.tracked.size() + " after " + churn.diagnosis()
+                        + " with the plague disabled (pre-fix this was one entry per reload, since "
+                        + "Entity.hashCode() is the entity id)");
+    }
+
+    @Override
+    protected boolean readyToEvaluate(int stage, int tick) {
+        return step == Step.DONE;
     }
 
     @Override
     protected void evaluate(int stage, ServerLevel ow, MinecraftServer server) {
+        if (step != Step.DONE) {
+            check("switch-completed", false, "the rig hit its " + EVAL_DEADLINE + "-tick deadline still in step "
+                    + step + " — " + (churn == null ? "the arena was never built" : churn.diagnosis()));
+        }
         // Re-find, never re-use: the pre-reload object is dead and its attachments are frozen at unload time.
         Entity found = victimId == null ? null : ow.getEntity(victimId);
         LivingEntity le = found instanceof LivingEntity l ? l : null;
@@ -137,7 +168,9 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
         check("resumes-after-reenable", contaminated && inSet && symptomatic,
                 "re-found by UUID=" + (le != null) + " contaminated=" + contaminated + " tracked.contains="
                         + inSet + " symptomatic=" + symptomatic + " (tracked.size()="
-                        + ContaminationState.tracked.size() + ")");
+                        + ContaminationState.tracked.size() + ", "
+                        + (finalTrip == null ? "no post-re-enable reload was attempted" : finalTrip.diagnosis())
+                        + ")");
 
         if (le != null) {
             le.discard();
