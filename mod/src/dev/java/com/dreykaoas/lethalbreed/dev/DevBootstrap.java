@@ -1,5 +1,19 @@
 package com.dreykaoas.lethalbreed.dev;
 
+import com.dreykaoas.lethalbreed.dev.arena.BreachHarness;
+import com.dreykaoas.lethalbreed.dev.contam.ClearGuardHarness;
+import com.dreykaoas.lethalbreed.dev.arena.ClimbTest;
+import com.dreykaoas.lethalbreed.dev.command.DevSpawnScheduler;
+import com.dreykaoas.lethalbreed.dev.contam.LeakProbeHarness;
+import com.dreykaoas.lethalbreed.dev.command.LethalDevCommand;
+import com.dreykaoas.lethalbreed.dev.command.LethalSpawnCommand;
+import com.dreykaoas.lethalbreed.dev.arena.PlacedBlockHarness;
+import com.dreykaoas.lethalbreed.dev.contam.PlagueDamageHarness;
+import com.dreykaoas.lethalbreed.dev.contam.PlagueDisableHarness;
+import com.dreykaoas.lethalbreed.dev.arena.PresenceHarness;
+import com.dreykaoas.lethalbreed.dev.arena.ShadeHarness;
+import com.dreykaoas.lethalbreed.dev.arena.StatueHarness;
+
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.compute.ComputeSelfTest;
 import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;

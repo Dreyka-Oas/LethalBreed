@@ -1,4 +1,8 @@
-package com.dreykaoas.lethalbreed.dev;
+package com.dreykaoas.lethalbreed.dev.arena;
+
+import com.dreykaoas.lethalbreed.dev.DevFakePlayer;
+import com.dreykaoas.lethalbreed.dev.DevVerdict;
+import com.dreykaoas.lethalbreed.dev.harness.TickPhasedHarness;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;

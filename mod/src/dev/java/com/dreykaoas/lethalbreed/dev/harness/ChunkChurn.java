@@ -1,4 +1,6 @@
-package com.dreykaoas.lethalbreed.dev;
+package com.dreykaoas.lethalbreed.dev.harness;
+
+import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 

@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.dev.contam;
 
+import com.dreykaoas.lethalbreed.dev.command.LethalDevCommand;
+
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 
 import net.minecraft.server.level.ServerLevel;

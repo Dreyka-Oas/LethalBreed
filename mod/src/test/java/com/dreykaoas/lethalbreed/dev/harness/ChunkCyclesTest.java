@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.dev;
+package com.dreykaoas.lethalbreed.dev.harness;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.dev;
+package com.dreykaoas.lethalbreed.dev.command;
 
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 

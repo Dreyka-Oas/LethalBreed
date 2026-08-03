@@ -1,8 +1,9 @@
 package com.dreykaoas.lethalbreed.dev.mechanics;
 
+import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
+
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
-import com.dreykaoas.lethalbreed.dev.ArenaBuilder;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.ZombieMood;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;

@@ -1,10 +1,11 @@
 package com.dreykaoas.lethalbreed.dev.special;
 
+import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
+
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.dev.ArenaBuilder;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import net.minecraft.core.BlockPos;

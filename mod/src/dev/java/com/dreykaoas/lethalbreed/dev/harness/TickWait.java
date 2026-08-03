@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.dev;
+package com.dreykaoas.lethalbreed.dev.harness;
 
 /**
  * Wait for a condition to hold, polled once per server tick, with a budget after which the harness gives up
