@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.entity;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
@@ -10,6 +11,7 @@ import com.dreykaoas.lethalbreed.entity.mood.MoodMovement;
 import com.dreykaoas.lethalbreed.entity.mood.MoodRegen;
 import com.dreykaoas.lethalbreed.entity.mood.MoodStateDispatch;
 import com.dreykaoas.lethalbreed.entity.mood.MoodStateDispatch.State;
+import com.dreykaoas.lethalbreed.entity.mood.ShadeStall;
 import com.dreykaoas.lethalbreed.entity.mood.ShelterFinder;
 import com.dreykaoas.lethalbreed.entity.mood.SunShelterOverride;
 import com.dreykaoas.lethalbreed.entity.mood.ZombieMoodSounds;
@@ -56,6 +58,15 @@ public final class ZombieMood {
     // sun-burn is blocked by isInWaterOrRain, so that zombie loops unbounded (audit #6).
     private long shadeRetryAt = Long.MIN_VALUE;
     private BlockPos shadeFailedAt = null;
+    /** Breaks the one-block-short deadlock: a shade-seek that stops closing on its target is abandoned so the
+     *  search can re-plan. 60 ticks — three seconds of no progress at all, comfortably longer than a re-path
+     *  or a block break, and far shorter than the burn that kills an exposed zombie. */
+    private final ShadeStall shadeStall = new ShadeStall(60);
+    /** Dev instrumentation: findShade calls made by THIS zombie. {@code ShelterFinder.SCAN_COUNT} is
+     *  process-wide, and in a populated world it counts hundreds of strangers — the shade rig measured 243
+     *  sweeps with 421 foreign zombies resident, and 66 with 90, while its own probe sat in a 1x1 pen. A
+     *  per-entity count is the only one a rig can assert on. Read-only, exactly like DISTRESS_COUNT. */
+    private int shadeScans;
     // True while WE hold the zombie's vanilla AI off (setNoAi) so a dozing zombie stays perfectly still instead
     // of being walked around by vanilla RandomStrollGoal. Tracked so we only ever clear the NoAi WE set.
     private boolean noAiFrozen = false;
@@ -279,7 +290,16 @@ public final class ZombieMood {
 
         // Exposed and still burning → reach shade first (TOP priority, before dozing).
         if (owner.hasTarget()) {
-            return; // already pathing to the shade memory — the brain breaks/pillars its way there
+            // While a target is held the brain owns the walk and this method deliberately stands back — but
+            // nothing used to check the walk was still going anywhere. Measured in the headless shade rig: a
+            // zombie stopped ONE BLOCK short of the roof and stood there with hasTarget and isSeekingShade both
+            // true from t+40 to t+320. It never arrived, so it never dozed; it never lost the memory, so it
+            // never re-planned. Outside the rig's rain it burns to death beside the shade it had found.
+            if (sleepSeekingShade && shadeStall.stalled(now, owner.pursuit().distanceToTargetSq())) {
+                LethalBreed.LOGGER.debug("[LethalBreed] zombie {} abandoned a stalled shade-seek", entity.getId());
+                abandonShadeSeek(now, entity.blockPosition());
+            }
+            return;
         }
         if (TargetingConfig.targetMemoryTicks <= 0) {
             return; // memory routing disabled → can't drive a shade-seek; keep roaming (it will burn)
@@ -291,19 +311,36 @@ public final class ZombieMood {
         if (!moved && now < shadeRetryAt) {
             return;
         }
+        shadeScans++;
         BlockPos shade = ShelterFinder.findShade(level, here, ZombieMoodConfig.shelterSearchRadius);
         if (shade == null) {
-            sleepSeekingShade = false;
-            shadeFailedAt = here;
-            shadeRetryAt = now + ZombieMoodConfig.shelterRetryTicks;
+            abandonShadeSeek(now, here);
             return; // no shade in range → keep roaming (can't help the burn)
         }
         shadeFailedAt = null;
         shadeRetryAt = Long.MIN_VALUE;
+        shadeStall.reset(); // a fresh target gets its full patience
         // Remember the shade as a target so classify + the brain path AND break toward it, then doze on arrival.
         owner.pursuit().rememberTarget(shade.getX() + 0.5, shade.getY(), shade.getZ() + 0.5,
                 now + TargetingConfig.targetMemoryTicks);
         sleepSeekingShade = true;
+    }
+
+    /** Give up the current shade-seek: drop the memory so the brain stops walking to it, and arm the retry
+     *  cooldown from HERE so the next sweep is throttled like any other failure. Used both when no shade was
+     *  found and when a found one turned out to be unreachable — from the zombie's point of view those are the
+     *  same outcome, and treating them differently is what let a stalled seek re-search every activation. */
+    private void abandonShadeSeek(long now, BlockPos here) {
+        sleepSeekingShade = false;
+        shadeStall.reset();
+        owner.pursuit().clearMemory();
+        shadeFailedAt = here;
+        shadeRetryAt = now + ZombieMoodConfig.shelterRetryTicks;
+    }
+
+    /** findShade calls made by this zombie. Dev instrumentation; nothing in main reads it. */
+    public int shadeScans() {
+        return shadeScans;
     }
 
     /** Hold the dozing pose: drop any hunt the classify pass seeded, stop moving, sync the sleep animation, and

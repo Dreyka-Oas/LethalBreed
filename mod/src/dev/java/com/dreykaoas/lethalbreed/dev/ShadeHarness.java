@@ -6,6 +6,7 @@ import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
+import com.dreykaoas.lethalbreed.entity.mood.DaySleep;
 import com.dreykaoas.lethalbreed.entity.mood.ShelterFinder;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
@@ -54,6 +55,15 @@ import net.minecraft.world.level.gamerules.GameRules;
  * must throttle a FAILING search only; a search that succeeds must still put the zombie under cover on the
  * first attempt.
  *
+ * <p>Area B's zombie starts behind a bedrock GATE that opens only once {@code isSeekingShade()} is observed.
+ * Without it the check was flaky in a way that looked like a pass: the shelter is six blocks off on an open
+ * plate, so vanilla {@code RandomStrollGoal} can walk the zombie under the roof before the mood ever runs its
+ * search — and once under cover it is no longer exposed, so it dozes and the seek never happens. The rig then
+ * finds a zombie asleep under the shelter having exercised nothing. Two consecutive runs of identical code
+ * disagreed on exactly this, one reporting FAIL with the zombie already under cover. The gate makes the walk
+ * the thing being measured rather than the thing being hoped for, and it opens on the observed condition
+ * rather than on a tick count, so a slow first activation delays the walk instead of invalidating it.
+ *
  * <p><b>Why the two areas run in series, not together.</b> {@code SCAN_COUNT} is one process-wide counter.
  * Area B's zombie also calls {@code findShade} (it succeeds, then stops), so building both at once would fold
  * B's scans into A's measurement and blur exactly the number the rig exists to state. Same pattern as
@@ -96,10 +106,19 @@ public final class ShadeHarness {
     private static Zombie aZombie;
     private static Zombie bZombie;
     private static long scanBase;
+    /** Highest count of zombies OTHER than the probe seen during area A's window. Non-zero voids the
+     *  measurement: ShelterFinder.SCAN_COUNT is process-wide, not per-entity. */
+    private static int foreignZombies;
+    /** Last sweep count already traced, so traceScans logs once per sweep and not once per tick. */
+    private static long lastTracedScans = -1;
     /** Latched over the window: the victim was, at least once, genuinely exposed AND rain-protected — the
      *  precondition without which a low scan count means nothing at all. */
     private static boolean aExposedAndWet = false;
     private static boolean seekLatched = false;
+    /** Area B's starting gate: shut until the shade-seek engages, so the walk cannot be an accident. */
+    private static boolean gateOpen = false;
+    private static final TickWait SEEK_ENGAGED =
+            new TickWait("the area-B zombie to start seeking shade", 200);
     private static boolean bShelteredLatched = false;
 
     public static void onTick(MinecraftServer server) {
@@ -184,7 +203,8 @@ public final class ShadeHarness {
             aZombie.setPersistenceRequired();
             aZombie.setPos(AX + 0.5, Y, AZ + 0.5);
         }
-        scanBase = ShelterFinder.SCAN_COUNT.get();
+        foreignZombies = clearForeignZombies(ow);
+        scanBase = ShelterFinder.SCAN_COUNT.get();   // kept only to show the global/per-entity gap in the log
         LethalBreed.LOGGER.info("[Shade] area A built @({}, {}, {}): open {}×{} plate + 1×1 pen, raining={}, "
                         + "no cover within shelterSearchRadius={}; zombie={} scanBase={}",
                 AX, Y, AZ, A_HALF * 2, A_HALF * 2, ow.isRaining(),
@@ -208,15 +228,91 @@ public final class ShadeHarness {
                     at, sky, wet, aZombie.isOnFire(), aZombie.getHealth(), ow.isRaining(),
                     ShelterFinder.SCAN_COUNT.get() - scanBase);
         }
+        traceScans(at);
+        foreignZombies = Math.max(foreignZombies, countForeignZombies(ow));
+    }
+
+    /**
+     * Remove every zombie in the world except the probe, and report how many there were.
+     *
+     * <p>{@code ShelterFinder.SCAN_COUNT} is ONE process-wide counter. This rig already serialises its own two
+     * areas for that reason, but it billed the probe for the whole world: the dev arenas share a persistent
+     * save and every rig marks its zombies {@code setPersistenceRequired}, so leftovers from earlier runs load
+     * with the arena chunks and — being exposed, by day, with no cover — each start sweeping too.
+     *
+     * <p>That is what made this check meaningless rather than merely noisy. Three runs of identical code
+     * measured 2, 23 and 188 sweeps against a budget of 6, and the trace shows why: between ticks 6 and 8 the
+     * global counter jumped by 42, then 38, then 33, while the probe sat in a 1×1 pen. The number was never
+     * about the throttle; it was about how many strangers happened to be resident.
+     *
+     * <p>Safe because this world is a scratch arena: the dev harnesses build and demolish it every run, and
+     * {@code SPAWN_MOBS} is off for the duration, so nothing repopulates behind us.
+     */
+    private static int clearForeignZombies(ServerLevel ow) {
+        int removed = 0;
+        for (Entity e : ow.getAllEntities()) {
+            if (e instanceof Zombie z && z != aZombie) {
+                z.discard();
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            LethalBreed.LOGGER.info("[Shade] removed {} leftover zombie(s) so SCAN_COUNT measures the probe "
+                    + "alone.", removed);
+        }
+        return 0; // the purge succeeded; any NEW arrival is what the window must catch
+    }
+
+    /** Zombies other than the probe, sampled during the window: a newcomer voids the measurement. */
+    private static int countForeignZombies(ServerLevel ow) {
+        int n = 0;
+        for (Entity e : ow.getAllEntities()) {
+            if (e instanceof Zombie z && z != aZombie) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * Print WHICH shade target each sweep produced, and how far apart the sweeps are.
+     *
+     * <p>{@code scan-throttled} only reports a total, and a total cannot separate the two ways the throttle can
+     * fail. It arms on a search that FINDS NOTHING; a search that finds a target the zombie then never reaches
+     * clears the cooldown instead of arming it, and re-runs the full 8112-position sweep on every activation
+     * once the memory expires. Those look identical in the count and need opposite fixes, so the target — in
+     * particular whether its Y is BELOW the plate, i.e. unreachable cover under our own floor — is the
+     * discriminating evidence.
+     */
+    private static void traceScans(BlockPos at) {
+        long scans = ShelterFinder.SCAN_COUNT.get() - scanBase;
+        if (scans == lastTracedScans) {
+            return;
+        }
+        lastTracedScans = scans;
+        SmartZombie sz = GameState.REGISTRY.get(aZombie.getId());
+        LethalBreed.LOGGER.info("[Shade] sweep #{} at t={} pos={} | seeking={} hasTarget={} target=({},{},{})",
+                scans, tick, at,
+                sz != null && sz.mood().isSeekingShade(), sz != null && sz.hasTarget(),
+                sz == null ? "n/a" : String.format("%.1f", sz.tgtX()),
+                sz == null ? "n/a" : String.format("%.1f", sz.tgtY()),
+                sz == null ? "n/a" : String.format("%.1f", sz.tgtZ()));
     }
 
     private static void evaluateAreaA(ServerLevel ow) {
-        long delta = ShelterFinder.SCAN_COUNT.get() - scanBase;
+        // THE PROBE'S OWN sweeps. ShelterFinder.SCAN_COUNT is process-wide and this world is a populated city:
+        // measured 243 global sweeps with 421 foreign zombies resident, and 66 with 90, while the probe sat in
+        // a 1x1 pen the whole time. The global number was never about the throttle.
+        SmartZombie sz = aZombie == null ? null : GameState.REGISTRY.get(aZombie.getId());
+        long delta = sz == null ? -1 : sz.mood().shadeScans();
+        long global = ShelterFinder.SCAN_COUNT.get() - scanBase;
         long budget = WINDOW / Math.max(1, ZombieMoodConfig.shelterRetryTicks) + 2;
-        DevVerdict.check(SUITE, "scan-throttled", delta <= budget,
-                "findShade ran " + delta + " times in " + WINDOW + " ticks (budget " + budget + " = window/"
-                        + ZombieMoodConfig.shelterRetryTicks + "+2). Each call sweeps "
-                        + sweepSize(ZombieMoodConfig.shelterSearchRadius) + " positions.");
+        DevVerdict.check(SUITE, "scan-throttled", sz != null && delta <= budget,
+                "the probe ran findShade " + delta + " times in " + WINDOW + " ticks (budget " + budget
+                        + " = window/" + ZombieMoodConfig.shelterRetryTicks + "+2). The process-wide counter "
+                        + "moved " + global + " over the same window, with " + foreignZombies + " other "
+                        + "zombie(s) resident — which is why the per-entity count is the one asserted on. "
+                        + "Each call sweeps " + sweepSize(ZombieMoodConfig.shelterSearchRadius) + " positions.");
 
         boolean alive = aZombie != null && aZombie.isAlive() && !aZombie.isRemoved();
         boolean wetNow = alive && aZombie.isInWaterOrRain();
@@ -252,10 +348,29 @@ public final class ShadeHarness {
                 }
             }
         }
+        // A 1×1 bedrock pen, open to the sky, exactly like area A's — but here it is a STARTING GATE, opened the
+        // moment the shade-seek engages (see openGate). Without it this check was flaky in a way that read as a
+        // pass: the shelter is 6 blocks off on an open plate, so vanilla RandomStrollGoal can walk the zombie
+        // under the roof before the mood ever runs its search. Once under cover it is no longer `exposed`, it
+        // dozes, and the seek never happens — the rig then sees a zombie asleep under the shelter having never
+        // exercised the mechanic. Two consecutive runs of identical code disagreed on precisely this.
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                for (int dy = 0; dy <= 2; dy++) {
+                    ow.setBlock(new BlockPos(BX + dx, Y + dy, BZ + dz), Blocks.BEDROCK.defaultBlockState(), 3);
+                }
+            }
+        }
         bZombie = EntityType.ZOMBIE.spawn(ow, new BlockPos(BX, Y, BZ), EntitySpawnReason.COMMAND);
         if (bZombie != null) {
             bZombie.setPersistenceRequired();
+            bZombie.setPos(BX + 0.5, Y, BZ + 0.5);
         }
+        gateOpen = false;
+        SEEK_ENGAGED.start(0);
         LethalBreed.LOGGER.info("[Shade] area B built @({}, {}, {}): roofed 5×5 shelter at x={} ({} blocks "
                 + "east); zombie={}", BX, Y, BZ, sx, B_SHELTER_DX, bZombie != null);
     }
@@ -271,9 +386,69 @@ public final class ShadeHarness {
         if (sz.mood().isSeekingShade()) {
             seekLatched = true;
         }
+        openGate(ow, sz);
         if (!ow.canSeeSky(bZombie.blockPosition()) || sz.mood().isSleeping()) {
             bShelteredLatched = true;
         }
+        if ((tick - B_BUILD) % 40 == 0) {
+            logSeekInputs(ow, sz);
+        }
+    }
+
+    /**
+     * Hold the zombie at the spawn until it has decided to go for the shelter, then let it go.
+     *
+     * <p>This is what makes {@code reaches-shelter} measure the mechanic instead of luck. The gate opens on the
+     * observed condition — {@code isSeekingShade()} — never on a tick count, so a slow first activation delays
+     * the walk rather than invalidating it. If the seek never engages, the gate stays shut and the rig says so
+     * with the budget it spent, which is a far more useful failure than a zombie found asleep somewhere.
+     */
+    private static void openGate(ServerLevel ow, SmartZombie sz) {
+        if (gateOpen) {
+            return;
+        }
+        int t = tick - B_BUILD;
+        switch (SEEK_ENGAGED.poll(t, sz.mood().isSeekingShade())) {
+            case PENDING -> { }
+            case MET -> {
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        for (int dy = 0; dy <= 2; dy++) {
+                            ow.setBlock(new BlockPos(BX + dx, Y + dy, BZ + dz),
+                                    Blocks.AIR.defaultBlockState(), 3);
+                        }
+                    }
+                }
+                gateOpen = true;
+                LethalBreed.LOGGER.info("[Shade] B gate opened at t+{}: the seek engaged, the walk is now the "
+                        + "thing being measured.", t);
+            }
+            case TIMED_OUT -> {
+                DevVerdict.check(SUITE, "seek-engages", false, SEEK_ENGAGED.describe()
+                        + " — the zombie never asked for shade, so nothing downstream measures the search.");
+                gateOpen = true; // stop re-reporting; reaches-shelter will fail on its own terms below
+            }
+        }
+    }
+
+    /**
+     * Every gate {@code handleDaySleep} passes through before it can even ASK for shade.
+     *
+     * <p>Needed because the failure this rig hit is invisible in its own verdict: the zombie ended UNDER the
+     * shelter with {@code bShelteredLatched} true, yet {@code seekLatched} was false — it arrived by wandering,
+     * never by seeking, and a check that only looked at where it ended up would have called that a pass. The
+     * first gate is {@code level.isBrightOutside()}, which folds in the WEATHER: this rig deliberately makes it
+     * rain for area A, and rain plus thunder pushes the ambient darkness past the daylight threshold. So the
+     * sky conditions are printed as numbers rather than assumed.
+     */
+    private static void logSeekInputs(ServerLevel ow, SmartZombie sz) {
+        BlockPos at = bZombie.blockPosition();
+        int phase = PhaseManager.current();
+        LethalBreed.LOGGER.info("[Shade] B t+{}: pos={} state={} | bright={} rain={} thunder={} skyDarken={} | "
+                        + "canSeeSky={} burnsInSun={} onFire={} hasTarget={} seeking={} health={}",
+                tick - B_BUILD, at, sz.state(), ow.isBrightOutside(), ow.isRaining(), ow.isThundering(),
+                ow.getSkyDarken(), ow.canSeeSky(at), DaySleep.burnsInSun(phase), bZombie.isOnFire(),
+                sz.hasTarget(), sz.mood().isSeekingShade(), bZombie.getHealth());
     }
 
     private static void evaluateAreaB(ServerLevel ow, MinecraftServer server) {
