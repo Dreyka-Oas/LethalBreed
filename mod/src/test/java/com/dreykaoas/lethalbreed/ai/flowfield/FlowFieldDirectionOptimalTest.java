@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.Random;

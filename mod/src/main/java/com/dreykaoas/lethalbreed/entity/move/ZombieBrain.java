@@ -1,9 +1,10 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
+
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import net.minecraft.world.entity.LivingEntity;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;

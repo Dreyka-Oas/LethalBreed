@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.config.domain;
+package com.dreykaoas.lethalbreed.config.domain.engine;
 
 /**
  * Tick scheduler, spatial hashing and LOD/throttle tuning. Distant zombies cost less; beyond the frozen

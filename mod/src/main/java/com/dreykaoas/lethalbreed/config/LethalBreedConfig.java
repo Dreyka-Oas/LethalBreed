@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+
 /**
  * Lightweight runtime config entry point. The option schema lives in the domain holder classes under
  * {@code config.domain} (enumerated by {@link ConfigSchema#all()}); this class just exposes the

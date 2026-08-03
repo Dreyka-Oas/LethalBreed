@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,7 +67,7 @@ class FlowFieldChecksTest {
         // With default ortho cost on an open grid, the cell next to the seed is exactly one step out.
         Snapshot s = openGrid(8, 8, 0, 0);
         FlowField f = CpuFlowField.compute(s);
-        int orth = Math.max(1, com.dreykaoas.lethalbreed.config.domain.FlowConfig.flowOrthoCost);
+        int orth = Math.max(1, com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig.flowOrthoCost);
         assertEquals(orth, f.costAt(1, 0), "one orthogonal step from the seed");
         assertEquals(orth, f.costAt(0, 1), "one orthogonal step from the seed");
     }

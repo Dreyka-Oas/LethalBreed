@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.effect.contamination;
 
-import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

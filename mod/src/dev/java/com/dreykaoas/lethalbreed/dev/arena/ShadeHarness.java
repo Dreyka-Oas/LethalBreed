@@ -5,12 +5,12 @@ import com.dreykaoas.lethalbreed.dev.harness.TickWait;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.entity.mood.DaySleep;
-import com.dreykaoas.lethalbreed.entity.mood.ShelterFinder;
+import com.dreykaoas.lethalbreed.entity.mood.sleep.DaySleep;
+import com.dreykaoas.lethalbreed.entity.mood.sleep.ShelterFinder;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import net.fabricmc.loader.api.FabricLoader;

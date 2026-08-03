@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.config.io;
 
-import com.dreykaoas.lethalbreed.config.ConfigSchema;
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;

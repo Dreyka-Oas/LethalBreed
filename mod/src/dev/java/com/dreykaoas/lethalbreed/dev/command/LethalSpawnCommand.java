@@ -2,8 +2,8 @@ package com.dreykaoas.lethalbreed.dev.command;
 
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;

@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.config.io;
 
-import com.dreykaoas.lethalbreed.config.ConfigCategory;
-import com.dreykaoas.lethalbreed.config.ConfigFields;
+import com.dreykaoas.lethalbreed.config.schema.ConfigCategory;
+import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.google.gson.Gson;

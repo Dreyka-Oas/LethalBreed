@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

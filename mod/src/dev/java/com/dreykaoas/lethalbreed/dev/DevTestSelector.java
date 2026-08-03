@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Locale;

@@ -1,7 +1,10 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+import com.dreykaoas.lethalbreed.config.schema.ConfigType;
+
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import org.junit.jupiter.api.Test;
 

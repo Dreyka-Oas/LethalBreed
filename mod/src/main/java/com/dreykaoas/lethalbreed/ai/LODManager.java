@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.ai;
 
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 
 import com.dreykaoas.lethalbreed.entity.LODLevel;

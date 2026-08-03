@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

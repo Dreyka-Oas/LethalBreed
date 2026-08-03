@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.config.domain;
+package com.dreykaoas.lethalbreed.config.domain.engine;
 
 /**
  * EXPERT / low-level constants — the numeric tolerances, safety clamps and vanilla-derived magic numbers that

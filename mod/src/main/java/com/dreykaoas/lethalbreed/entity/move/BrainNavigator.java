@@ -1,8 +1,8 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

@@ -1,5 +1,8 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+import com.dreykaoas.lethalbreed.config.schema.ConfigType;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
+
 /**
  * The 8-neighbour offsets and the no-corner-cutting rule, shared by the CPU {@link BellmanFordSolver} (both its
  * relaxation and its direction-extraction pass) and the {@link FlowFieldChecks} optimality checker so they all

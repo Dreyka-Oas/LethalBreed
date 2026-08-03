@@ -1,9 +1,10 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 /**
  * Headless API perf bench for the LethalBreed flow-field AI core. NO Minecraft, NO game server.

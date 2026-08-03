@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import com.dreykaoas.lethalbreed.block.BlockOperationQueue;
 import com.dreykaoas.lethalbreed.block.BreachCoordinator;

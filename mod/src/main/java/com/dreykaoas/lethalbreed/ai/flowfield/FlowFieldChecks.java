@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 /**
  * Pure correctness predicates over a solved {@link FlowField} / its {@link Snapshot}, shared by

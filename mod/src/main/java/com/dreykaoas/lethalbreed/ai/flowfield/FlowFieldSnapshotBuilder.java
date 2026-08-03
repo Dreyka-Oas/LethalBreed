@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

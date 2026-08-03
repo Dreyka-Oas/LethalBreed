@@ -67,6 +67,35 @@ public final class ArenaBuilder {
                 ow.setBlock(new BlockPos(x, y + 4, cz + dz), Blocks.GLOWSTONE.defaultBlockState(), 3);
             }
         }
+        rim(ow, cx, cz, y, halfZ, west, east);
+    }
+
+    /**
+     * A bedrock kerb around the corridor, three blocks tall, so nothing can leave it.
+     *
+     * <p>The verification world is superflat: an arena carved at {@code VERIFY_Y} is a platform floating ~96
+     * blocks above the ground, and anything that steps off the edge falls to its death. That is not a
+     * hypothetical — the presence rig went from 4/4 to "never sampled a tick with all 5 zombies alive" on the
+     * move to a flat world, having spawned five and kept three. In the old populated world there was terrain to
+     * land on and the same wandering cost nothing.
+     *
+     * <p>Bedrock rather than stone for the same reason {@link BreachHarness} uses it for its own rim: the mod's
+     * material rules refuse a negative destroy speed outright, so the kerb can never become the experiment —
+     * a rig measuring block-breaking cannot accidentally measure itself breaking out of the arena.
+     */
+    private static void rim(ServerLevel ow, int cx, int cz, int y, int halfZ, int west, int east) {
+        for (int x = cx - west - 1; x <= cx + east + 1; x++) {
+            for (int dz = -halfZ - 1; dz <= halfZ + 1; dz++) {
+                boolean edge = x == cx - west - 1 || x == cx + east + 1 || dz == -halfZ - 1 || dz == halfZ + 1;
+                if (!edge) {
+                    continue;
+                }
+                ow.setBlock(new BlockPos(x, y - 1, cz + dz), Blocks.BEDROCK.defaultBlockState(), 3);
+                for (int dy = 0; dy <= 2; dy++) {
+                    ow.setBlock(new BlockPos(x, y + dy, cz + dz), Blocks.BEDROCK.defaultBlockState(), 3);
+                }
+            }
+        }
     }
 
     /** Base Z of the verification band the new harnesses build in — disjoint from the legacy z≈0 arenas. */

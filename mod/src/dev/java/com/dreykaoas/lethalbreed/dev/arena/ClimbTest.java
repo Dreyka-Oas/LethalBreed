@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev.arena;
 import com.dreykaoas.lethalbreed.dev.DevFakePlayer;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 

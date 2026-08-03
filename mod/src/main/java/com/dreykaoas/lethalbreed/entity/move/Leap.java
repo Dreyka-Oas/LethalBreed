@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
+
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

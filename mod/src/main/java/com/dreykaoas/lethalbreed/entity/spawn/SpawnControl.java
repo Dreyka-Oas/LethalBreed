@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity;
+package com.dreykaoas.lethalbreed.entity.spawn;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;

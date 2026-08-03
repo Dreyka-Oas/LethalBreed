@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.util;
 
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import net.minecraft.world.entity.player.Player;
 

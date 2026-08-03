@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.net;
 
-import com.dreykaoas.lethalbreed.config.ConfigFields;
+import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;

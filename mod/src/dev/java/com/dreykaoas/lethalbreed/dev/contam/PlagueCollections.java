@@ -39,9 +39,9 @@ public final class PlagueCollections {
     }
 
     private static final String EPISODES_CLASS =
-            "com.dreykaoas.lethalbreed.effect.contamination.ContaminationEpisodes";
+            "com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationEpisodes";
     private static final String HALLUC_CLASS =
-            "com.dreykaoas.lethalbreed.effect.contamination.ContaminationHallucination";
+            "com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationHallucination";
 
     public static Sizes sizes() {
         return new Sizes(

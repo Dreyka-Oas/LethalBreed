@@ -10,7 +10,7 @@ import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
 import com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldChecks;
 import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;

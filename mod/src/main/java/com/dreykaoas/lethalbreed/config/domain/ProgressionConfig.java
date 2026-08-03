@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config.domain;
 
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+
 /**
  * The infinite difficulty-phase escalation: the advance timer, the stat-scaling curves, the beneficial-effect
  * curves, the mobcap/frequency curves, the colour tiers and the optional ceiling/loop.

@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity.mood;
+package com.dreykaoas.lethalbreed.entity.mood.sleep;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

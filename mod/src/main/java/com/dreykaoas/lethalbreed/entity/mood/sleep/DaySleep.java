@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity.mood;
+package com.dreykaoas.lethalbreed.entity.mood.sleep;
 
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;

@@ -1,5 +1,10 @@
 package com.dreykaoas.lethalbreed.effect.contamination;
 
+import com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationEpisodes;
+import com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationEvolve;
+import com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationHallucination;
+import com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationSymptoms;
+
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 
