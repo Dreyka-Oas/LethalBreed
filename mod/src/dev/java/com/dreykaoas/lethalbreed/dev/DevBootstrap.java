@@ -36,7 +36,7 @@ public final class DevBootstrap {
         // ProgressionConfig flag (devSpecialTest / devMechTest) AND the dev-env check, so registering the
         // tick listener here is harmless when the flags are off.
         ServerTickEvents.END_SERVER_TICK.register(SpecialTestHarness::onTick);
-        ServerTickEvents.END_SERVER_TICK.register(MechanicsTestHarness::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(MechanicsTestHarness.INSTANCE::onTick);
         // Foundation self-test: proves the synthetic player is present and the flow field / pathing follow.
         ServerTickEvents.END_SERVER_TICK.register(PresenceHarness.INSTANCE::onTick);
         // Contamination rigs. "clear" is standalone; the three "plague" rigs share one run and are serialised
