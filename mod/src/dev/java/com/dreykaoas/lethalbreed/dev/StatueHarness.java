@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
+import com.dreykaoas.lethalbreed.entity.mood.DaySleep;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -80,26 +81,48 @@ public final class StatueHarness {
     // ---- Schedule (server ticks since the first END_SERVER_TICK) -------------------------------------
     /** Force-load + world rules. The probe scan cannot run here: setChunkForced only queues a ticket. */
     private static final int FORCE_TICK = 1;
-    /** Phase detection: by now the arena chunks are resident, so "no probe" really means "no probe". */
-    private static final int DETECT_TICK = 30;
-    /** Phase A: the probe must be frozen by here (~13 s of dozing opportunity). */
-    private static final int DOZE_TICK = 300;
-    private static final int UNFORCE_TICK = 310;
+    /** Budget for the arena to become resident before the rig gives up LOUDLY. */
+    private static final int RESIDENT_TIMEOUT = 600;
+    /**
+     * Extra ticks granted after the blocks are resident, for the entity storage to finish deserialising.
+     *
+     * <p>This is the one deliberate fixed wait in the file, and it is only reached AFTER the real condition
+     * ({@code isLoaded}) has been met. Entity sections load separately from the block chunk, so residency alone
+     * does not prove the probe would have been seen. It is also belt-and-braces rather than the primary signal:
+     * {@code ENTITY_LOAD} fires during deserialisation and is checked every tick of this window, so a probe
+     * that arrives at all is caught the tick it arrives — this bound only decides how long we insist there is
+     * none.
+     */
+    private static final int ENTITY_SETTLE = 60;
+    /** Phase A: the probe must be frozen within this many ticks of the phase starting (~13 s). */
+    private static final int DOZE_WINDOW = 300;
+    private static final int UNFORCE_DELAY = 10;
     /** Ticks a reactive chunk wait may take before the rig FAILs rather than asserting on a stale object. */
     private static final int WAIT_TIMEOUT = 900;
     /** Ticks of dozing opportunity granted after the reload before {@code re-freezes-after-reload} is read. */
     private static final int REDOZE_WINDOW = 120;
 
-    /** Phase A's chunk round-trip is reactive, not scheduled — see the comment at the WAIT_UNLOAD branch. */
-    private enum Step { RUNNING, WAIT_UNLOAD, WAIT_RELOAD, REDOZE }
+    /** Every wait here is reactive — see the comment at the WAIT_UNLOAD branch for why a schedule cannot work. */
+    private enum Step { WAIT_RESIDENT, SETTLE, RUNNING, WAIT_UNLOAD, WAIT_RELOAD, REDOZE }
 
     private static int tick = -1;
     private static boolean phaseB = false;
     private static boolean done = false;
 
-    private static Step step = Step.RUNNING;
-    private static int waitStart = 0;
+    private static Step step = Step.WAIT_RESIDENT;
+    private static final TickWait RESIDENT =
+            new TickWait("the arena chunks to become resident after the force-load", RESIDENT_TIMEOUT);
+    private static final TickWait UNLOADED =
+            new TickWait("the probe's chunk to leave memory after the unforce", WAIT_TIMEOUT);
+    private static final TickWait RELOADED =
+            new TickWait("the probe to be deserialised again after the re-force", WAIT_TIMEOUT);
+    /** Tick at which phase A started, so the doze window is measured from the phase and not from boot. */
+    private static int phaseStart = 0;
+    private static int settleUntil = 0;
     private static int redozeUntil = 0;
+    /** UUID of the probe THIS run spawned, so a probe arriving off disk afterwards is recognisable as one we
+     *  wrongly concluded did not exist. */
+    private static UUID spawnedId;
 
     private static UUID probeId;
     private static boolean dozed = false;      // latched: was it ever (SLEEPING && NoAI) before DOZE_TICK
@@ -135,6 +158,16 @@ public final class StatueHarness {
         }
         lastLoadTick = tick;
         lastLoadNoAi = z.isNoAi();
+        // A probe off disk that arrives AFTER we already concluded there was none means the detection window
+        // closed too early: phase A has just built a second arena on top of the save file the whole two-run
+        // protocol exists to read. Silently double-probing would still print ALL DONE, so say it out loud.
+        if (spawnedId != null && !z.getUUID().equals(spawnedId)) {
+            DevVerdict.check(SUITE, "phase-detection", false,
+                    "a stored probe (" + z.getUUID() + ") loaded at t=" + tick + ", after this run had already "
+                            + "concluded there was none and spawned its own (" + spawnedId + "). The residency "
+                            + "wait plus " + ENTITY_SETTLE + " settle ticks was not enough — phase B was "
+                            + "skipped and the save file was never read back.");
+        }
         probeId = z.getUUID();
         LethalBreed.LOGGER.info("[Statue] ENTITY_LOAD probe {} at t={} with noAi={} (straight from NBT).",
                 probeId, tick, lastLoadNoAi);
@@ -149,19 +182,62 @@ public final class StatueHarness {
         if (tick == FORCE_TICK) {
             worldRules(ow, server);
             ArenaBuilder.forceChunks(ow, CX, CZ);
+            RESIDENT.start(tick);
             return;
         }
-        if (tick < DETECT_TICK) {
+        if (tick <= FORCE_TICK) {
             return;
         }
-        if (tick == DETECT_TICK) {
-            detect(ow, server);
+        if (step == Step.WAIT_RESIDENT || step == Step.SETTLE) {
+            awaitDetection(ow, server);
             return;
         }
         if (phaseB) {
             return; // phase B finished inside detect()
         }
         phaseATick(ow, server);
+    }
+
+    /**
+     * Decide which phase this run is, once the arena can actually answer the question.
+     *
+     * <p>The old rule was "detect at tick 30, by then the chunks are resident". That is a guess, and the file's
+     * own {@code WAIT_UNLOAD} comment rejects exactly this kind of guess for the same operation — the sibling
+     * rig measured chunk timings at 2, 35 and 272 ticks across runs. Concluding "no probe" while the arena is
+     * still loading makes phase A build a second arena over the save file that the two-run protocol exists to
+     * read, and the run still prints ALL DONE. So: wait for residency, then keep watching for the probe through
+     * a bounded settle window, and FAIL loudly if the arena never loads at all.
+     */
+    private static void awaitDetection(ServerLevel ow, MinecraftServer server) {
+        if (step == Step.WAIT_RESIDENT) {
+            switch (RESIDENT.poll(tick, ow.isLoaded(new BlockPos(CX, Y, CZ)))) {
+                case PENDING -> { return; }
+                case TIMED_OUT -> {
+                    DevVerdict.check(SUITE, "phase-detection", false, RESIDENT.describe()
+                            + " — the arena never loaded, so 'no probe' would have meant nothing");
+                    finish(ow, null, server);
+                    return;
+                }
+                case MET -> {
+                    LethalBreed.LOGGER.info("[Statue] arena resident after {} ticks; watching {} more for a "
+                            + "stored probe.", RESIDENT.elapsed(), ENTITY_SETTLE);
+                    step = Step.SETTLE;
+                    settleUntil = tick + ENTITY_SETTLE;
+                }
+            }
+        }
+        // Watched every tick, not just at the end: a probe that is there at all is found the tick it appears.
+        Zombie existing = findProbe(ow);
+        if (existing != null) {
+            phaseB = true;
+            evaluatePhaseB(ow, server, existing);
+            return;
+        }
+        if (tick >= settleUntil) {
+            step = Step.RUNNING;
+            phaseStart = tick;
+            buildPhaseA(ow);
+        }
     }
 
     /** Roofed, lit, permanent DAY at a phase below {@code sunImmunePhase} — the exact conditions in which an
@@ -191,16 +267,6 @@ public final class StatueHarness {
             }
         }
         return null;
-    }
-
-    private static void detect(ServerLevel ow, MinecraftServer server) {
-        Zombie existing = findProbe(ow);
-        if (existing != null) {
-            phaseB = true;
-            evaluatePhaseB(ow, server, existing);
-            return;
-        }
-        buildPhaseA(ow);
     }
 
     // ---------------------------------------------------------------------------------------------------
@@ -234,8 +300,9 @@ public final class StatueHarness {
         z.setCustomNameVisible(true);
         z.setPersistenceRequired();
         probeId = z.getUUID();
-        LethalBreed.LOGGER.info("[Statue] PHASE A: roofed arena @({}, {}, {}) built, probe {} spawned.",
-                CX, Y, CZ, probeId);
+        spawnedId = probeId;
+        LethalBreed.LOGGER.info("[Statue] PHASE A: roofed arena @({}, {}, {}) built at t={}, probe {} spawned.",
+                CX, Y, CZ, tick, probeId);
     }
 
     private static void phaseATick(ServerLevel ow, MinecraftServer server) {
@@ -243,14 +310,18 @@ public final class StatueHarness {
             return;
         }
         Zombie probe = probe(ow);
-        if (tick < DOZE_TICK) {
+        int sincePhase = tick - phaseStart;
+        if (sincePhase < DOZE_WINDOW) {
             latchDoze(probe, false);
+            if (sincePhase % 60 == 0) {
+                logDozeInputs(ow, probe, sincePhase);
+            }
             return;
         }
-        if (tick == DOZE_TICK) {
+        if (sincePhase == DOZE_WINDOW) {
             latchDoze(probe, false);
             DevVerdict.check(SUITE, "dozes", dozed,
-                    "probe reached (mood.isSleeping() && isNoAi()) within " + DOZE_TICK + " ticks: " + dozed
+                    "probe reached (mood.isSleeping() && isNoAi()) within " + DOZE_WINDOW + " ticks: " + dozed
                             + "; now noAi=" + (probe != null && probe.isNoAi())
                             + " sleeping=" + sleeping(probe));
             if (!dozed) {
@@ -263,12 +334,12 @@ public final class StatueHarness {
             }
             return;
         }
-        if (tick == UNFORCE_TICK) {
+        if (sincePhase == DOZE_WINDOW + UNFORCE_DELAY) {
             ArenaBuilder.releaseChunks(ow, CX, CZ);
             LethalBreed.LOGGER.info("[Statue] chunks released; probe was noAi={} at release.",
                     probe != null && probe.isNoAi());
             step = Step.WAIT_UNLOAD;
-            waitStart = tick;
+            UNLOADED.start(tick);
             return;
         }
         // ---- Reactive chunk round-trip -----------------------------------------------------------------
@@ -278,26 +349,29 @@ public final class StatueHarness {
         // writes chunks synchronously to an external disk). A fixed re-force tick therefore risks asserting
         // on the ORIGINAL, still-resident entity, which trivially still holds the NoAi it set itself.
         if (step == Step.WAIT_UNLOAD) {
-            if (probe == null) {
-                LethalBreed.LOGGER.info("[Statue] probe left memory {} ticks after the unforce; re-forcing.",
-                        tick - waitStart);
-                reforcedAt = tick;
-                ArenaBuilder.forceChunks(ow, CX, CZ);
-                step = Step.WAIT_RELOAD;
-                waitStart = tick;
-            } else if (tick - waitStart >= WAIT_TIMEOUT) {
-                DevVerdict.check(SUITE, "lifted-after-chunk-reload", false,
-                        "the probe's chunk never unloaded within " + WAIT_TIMEOUT + " ticks, so ENTITY_UNLOAD "
-                                + "never fired and there is nothing to assert on — harness failure, not a "
-                                + "silent pass.");
-                finish(ow, probe, server);
+            switch (UNLOADED.poll(tick, probe == null)) {
+                case PENDING -> { }
+                case MET -> {
+                    LethalBreed.LOGGER.info("[Statue] probe left memory {} ticks after the unforce; re-forcing.",
+                            UNLOADED.elapsed());
+                    reforcedAt = tick;
+                    ArenaBuilder.forceChunks(ow, CX, CZ);
+                    step = Step.WAIT_RELOAD;
+                    RELOADED.start(tick);
+                }
+                case TIMED_OUT -> {
+                    DevVerdict.check(SUITE, "lifted-after-chunk-reload", false, UNLOADED.describe()
+                            + " — ENTITY_UNLOAD never fired, so there is nothing to assert on. Harness "
+                            + "failure, not a silent pass.");
+                    finish(ow, probe, server);
+                }
             }
             return;
         }
         if (step == Step.WAIT_RELOAD) {
             // Re-found BY UUID: the reload deserialised a brand new object and the old reference is a husk.
             Zombie back = probe(ow);
-            if (back != null) {
+            if (RELOADED.poll(tick, back != null) == TickWait.Result.MET) {
                 // Sampled on the FIRST tick the entity exists again — this is what came off disk. Waiting even
                 // a few ticks would read a value the mood step had already re-applied: a working release is
                 // followed by a fresh doze within tens of ticks, so a late sample cannot tell "never lifted"
@@ -306,14 +380,13 @@ public final class StatueHarness {
                 // no load event was seen for this round trip.
                 noAiAtFirstSight = lastLoadTick > reforcedAt ? lastLoadNoAi : back.isNoAi();
                 LethalBreed.LOGGER.info("[Statue] probe back after {} ticks; noAi from {} = {}",
-                        tick - waitStart, lastLoadTick > reforcedAt ? "ENTITY_LOAD" : "first sight",
+                        RELOADED.elapsed(), lastLoadTick > reforcedAt ? "ENTITY_LOAD" : "first sight",
                         noAiAtFirstSight);
                 step = Step.REDOZE;
                 redozeUntil = tick + REDOZE_WINDOW;
-            } else if (tick - waitStart >= WAIT_TIMEOUT) {
-                DevVerdict.check(SUITE, "lifted-after-chunk-reload", false,
-                        "the probe never came back within " + WAIT_TIMEOUT + " ticks of the re-force — "
-                                + "harness failure, not a silent pass.");
+            } else if (RELOADED.poll(tick, false) == TickWait.Result.TIMED_OUT) {
+                DevVerdict.check(SUITE, "lifted-after-chunk-reload", false, RELOADED.describe()
+                        + " after the re-force — harness failure, not a silent pass.");
                 finish(ow, probe, server);
             }
             return;
@@ -345,6 +418,31 @@ public final class StatueHarness {
             LethalBreed.LOGGER.info("[Statue] halting with the probe FROZEN — this is the SERVER_STOPPING case.");
             server.halt(false);
         }
+    }
+
+    /**
+     * Every input {@code ZombieMood.handleDaySleep} branches on, printed as data.
+     *
+     * <p>When {@code dozes} fails, the verdict alone says only "it never froze" — which of the eight gates
+     * refused is left to guesswork, and guessing is how the last two attempts at this rig went wrong. In
+     * particular {@code isBrightOutside()} folds in the WEATHER (rain and thunder raise the ambient darkness),
+     * and this rig pins the time of day but not the sky, so a stormy save file alone would keep the probe awake.
+     */
+    private static void logDozeInputs(ServerLevel ow, Zombie probe, int sincePhase) {
+        if (probe == null) {
+            LethalBreed.LOGGER.info("[Statue] t+{}: no probe in the arena", sincePhase);
+            return;
+        }
+        SmartZombie sz = GameState.REGISTRY.get(probe.getId());
+        int phase = PhaseManager.current();
+        LethalBreed.LOGGER.info("[Statue] t+{}: registered={} state={} noAi={} onGround={} pos={} | "
+                        + "bright={} rain={} thunder={} skyDarken={} | phase={} staysAwake={} sunImmune={} "
+                        + "canSeeSky={} onFire={} hurtTime={} hasTarget={}",
+                sincePhase, sz != null, sz == null ? "n/a" : sz.state(), probe.isNoAi(), probe.onGround(),
+                probe.blockPosition(), ow.isBrightOutside(), ow.isRaining(), ow.isThundering(),
+                ow.getSkyDarken(), phase, DaySleep.staysAwake(probe, phase), !DaySleep.burnsInSun(phase),
+                ow.canSeeSky(probe.blockPosition()), probe.isOnFire(), probe.hurtTime,
+                sz != null && sz.hasTarget());
     }
 
     private static void latchDoze(Zombie probe, boolean afterReload) {
