@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.config;
+package com.dreykaoas.lethalbreed.config.io;
 
 import java.util.List;
 import java.util.Set;

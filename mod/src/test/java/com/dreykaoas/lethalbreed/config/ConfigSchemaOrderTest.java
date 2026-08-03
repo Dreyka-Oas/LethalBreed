@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigWriter;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;

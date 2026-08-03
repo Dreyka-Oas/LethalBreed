@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigIo;
+
 import java.lang.reflect.Field;
 import java.util.List;
 

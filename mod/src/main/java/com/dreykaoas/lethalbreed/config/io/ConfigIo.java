@@ -1,4 +1,7 @@
-package com.dreykaoas.lethalbreed.config;
+package com.dreykaoas.lethalbreed.config.io;
+
+import com.dreykaoas.lethalbreed.config.ConfigFields;
+import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
 
 import net.fabricmc.loader.api.FabricLoader;
 

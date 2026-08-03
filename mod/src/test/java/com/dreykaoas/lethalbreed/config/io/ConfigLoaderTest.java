@@ -1,4 +1,7 @@
-package com.dreykaoas.lethalbreed.config;
+package com.dreykaoas.lethalbreed.config.io;
+
+import com.dreykaoas.lethalbreed.config.ConfigAccess;
+import com.dreykaoas.lethalbreed.config.ConfigSchema;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

@@ -1,8 +1,9 @@
 package com.dreykaoas.lethalbreed.command;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigIo;
+import com.dreykaoas.lethalbreed.config.io.ConfigStructure;
+
 import com.dreykaoas.lethalbreed.config.ConfigFields;
-import com.dreykaoas.lethalbreed.config.ConfigIo;
-import com.dreykaoas.lethalbreed.config.ConfigStructure;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;

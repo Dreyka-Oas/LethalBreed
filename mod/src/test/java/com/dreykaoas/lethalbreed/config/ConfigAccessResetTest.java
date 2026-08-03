@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigIo;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
