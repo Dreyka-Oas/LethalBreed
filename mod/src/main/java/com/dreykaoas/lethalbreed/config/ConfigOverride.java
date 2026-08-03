@@ -59,11 +59,28 @@ public final class ConfigOverride implements AutoCloseable {
             if (!saved.containsKey(f)) {
                 saved.put(f, ConfigType.copyIfArray(f.get(null)));
             }
-            f.set(null, value);
+            f.set(null, coerce(f.getType(), value));
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("config option not writable: " + name, e);
         }
         return this;
+    }
+
+    /**
+     * Reflection WIDENS a boxed number on its own — an {@code Integer} lands in a {@code long} or
+     * {@code double} option without help — but it never NARROWS. Seven options are {@code float}, and a plain
+     * decimal literal boxes to {@code Double}, so {@code set("screamVolume", 2.5)} was rejected outright.
+     *
+     * <p>Only that one conversion is performed. Every other mismatch (a {@code String} or a {@code boolean}
+     * into a numeric option, a {@code Double} into an {@code int}) still reaches {@code Field.set} and throws
+     * — its own message already names the field and both types, and silently truncating {@code 2.7} to
+     * {@code 2} would be far worse than refusing it.
+     */
+    private static Object coerce(Class<?> type, Object value) {
+        if (type == float.class && value instanceof Number n && !(value instanceof Float)) {
+            return n.floatValue();
+        }
+        return value;
     }
 
     /** Restore every option this scope touched, most-recently-touched first. Idempotent. */
