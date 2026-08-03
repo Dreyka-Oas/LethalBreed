@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigIo;
+
 import com.dreykaoas.lethalbreed.LethalBreed;
 
 import java.lang.reflect.Field;

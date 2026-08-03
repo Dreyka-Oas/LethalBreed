@@ -1,5 +1,8 @@
 package com.dreykaoas.lethalbreed.init;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigIo;
+import com.dreykaoas.lethalbreed.config.io.ConfigStructure;
+
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 
 import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;
@@ -9,8 +12,6 @@ import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
-import com.dreykaoas.lethalbreed.config.ConfigIo;
-import com.dreykaoas.lethalbreed.config.ConfigStructure;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
