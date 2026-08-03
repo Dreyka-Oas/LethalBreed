@@ -169,8 +169,8 @@ loom {
             runDir("run/server") // dedicated server gets its own run dir under run/ — no lock war with the clients
             source(devSourceSet) // dev harnesses on the dedicated-server run classpath (start.bat / runServer)
             vmArgs(
-                "-Xms2048m",
-                "-Xmx2048m",
+                "-Xms2G",
+                "-Xmx6G",
                 "-XX:+UnlockExperimentalVMOptions",
                 "-XX:+UseG1GC",
                 "-XX:MaxGCPauseMillis=50",
