@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.client.screen;
 
-import com.dreykaoas.lethalbreed.config.ConfigType;
+import com.dreykaoas.lethalbreed.config.schema.ConfigType;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;

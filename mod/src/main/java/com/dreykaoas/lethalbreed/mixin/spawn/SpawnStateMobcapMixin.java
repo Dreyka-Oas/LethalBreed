@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.spawn;
 
-import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.phase.PhaseTable;

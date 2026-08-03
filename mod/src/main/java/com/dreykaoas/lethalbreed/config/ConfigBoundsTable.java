@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+
 import java.util.HashMap;
 import com.dreykaoas.lethalbreed.config.bounds.CombatMoveBounds;
 import com.dreykaoas.lethalbreed.config.bounds.ContaminationBounds;

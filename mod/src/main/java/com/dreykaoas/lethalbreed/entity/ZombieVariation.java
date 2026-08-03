@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.entity;
 
-import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 

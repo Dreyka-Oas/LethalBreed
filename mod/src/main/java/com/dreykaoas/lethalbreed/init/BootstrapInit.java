@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.init;
 
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 
 import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;

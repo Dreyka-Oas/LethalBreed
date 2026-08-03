@@ -1,5 +1,8 @@
 package com.dreykaoas.lethalbreed.config;
 
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+import com.dreykaoas.lethalbreed.config.schema.ConfigType;
+
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 
 import com.dreykaoas.lethalbreed.LethalBreed;

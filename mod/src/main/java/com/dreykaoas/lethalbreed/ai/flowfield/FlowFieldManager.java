@@ -1,7 +1,8 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
+
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import com.dreykaoas.lethalbreed.util.Players;
 import net.minecraft.server.level.ServerLevel;

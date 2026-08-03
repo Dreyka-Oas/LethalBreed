@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.ai.flowfield.gpu;
 
 import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
 import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import org.jocl.Pointer;
 import org.jocl.Sizeof;

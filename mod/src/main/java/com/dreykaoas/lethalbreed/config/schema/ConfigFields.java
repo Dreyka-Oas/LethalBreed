@@ -1,4 +1,6 @@
-package com.dreykaoas.lethalbreed.config;
+package com.dreykaoas.lethalbreed.config.schema;
+
+import com.dreykaoas.lethalbreed.config.ConfigAccess;
 
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 

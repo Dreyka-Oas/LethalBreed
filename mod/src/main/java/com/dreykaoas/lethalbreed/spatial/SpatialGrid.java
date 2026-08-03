@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.spatial;
 
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;

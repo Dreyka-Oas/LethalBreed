@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.command;
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 import com.dreykaoas.lethalbreed.config.io.ConfigStructure;
 
-import com.dreykaoas.lethalbreed.config.ConfigFields;
+import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -89,7 +89,7 @@ public final class LethalConfigCommand {
      *  admin disabled the GPU precisely to avoid OpenCL. It reads the already-known state instead (audit #9). */
     private static String gpuInfo() {
         var gpu = com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager.get();
-        if (!com.dreykaoas.lethalbreed.config.domain.FlowConfig.useGpu) {
+        if (!com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig.useGpu) {
             return "GPU désactivé (useGpu=false) — CPU multithread";
         }
         if (!gpu.isInitialized()) {

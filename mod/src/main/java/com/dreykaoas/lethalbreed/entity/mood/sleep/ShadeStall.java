@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity.mood;
+package com.dreykaoas.lethalbreed.entity.mood.sleep;
 
 /**
  * Watchdog for a shade-seek that has stopped making progress.

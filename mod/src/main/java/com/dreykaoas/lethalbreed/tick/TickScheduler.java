@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.tick;
 
-import com.dreykaoas.lethalbreed.config.domain.SchedulerConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

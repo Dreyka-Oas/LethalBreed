@@ -1,7 +1,9 @@
 package com.dreykaoas.lethalbreed.effect.contamination;
 
+import com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationSymptoms;
+
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
-import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;

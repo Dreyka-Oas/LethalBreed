@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
+
 /**
  * Immutable world snapshot for one flow-field solve. Produced on the server thread by
  * {@link FlowFieldSnapshotBuilder} (classifying cells into cost arrays) and consumed off-thread by

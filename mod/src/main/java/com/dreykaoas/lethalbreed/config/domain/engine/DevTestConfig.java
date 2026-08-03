@@ -1,4 +1,6 @@
-package com.dreykaoas.lethalbreed.config.domain;
+package com.dreykaoas.lethalbreed.config.domain.engine;
+
+import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 /**
  * Development-only toggles: the headless verification arenas, the climb debug stream and the

@@ -1,9 +1,10 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
+
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.ExpertConfig;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;

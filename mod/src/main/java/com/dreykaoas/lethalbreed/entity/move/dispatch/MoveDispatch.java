@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.entity.move.dispatch;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.LODLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

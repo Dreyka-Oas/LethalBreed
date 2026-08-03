@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.client.screen;
 
-import com.dreykaoas.lethalbreed.config.ConfigFields;
+import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 
 import java.util.ArrayList;
 import java.util.List;
