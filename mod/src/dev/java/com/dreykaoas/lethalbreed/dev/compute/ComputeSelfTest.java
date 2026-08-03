@@ -11,6 +11,7 @@ import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.config.domain.FlowConfig;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -176,6 +177,21 @@ public final class ComputeSelfTest {
             }
         }
 
+        // An unbreakable column per focus plane, planted rather than hoped for. Whether the ambient terrain
+        // happens to contain one is not this rig's business: swept against a superflat world it found
+        // passable=4088, breakable=8, buildable=8192, impassable=0 and failed a COVERAGE gate for want of a
+        // fixture. BreachHarness already lays a bedrock rim for the same reason.
+        //
+        // The column must fill the WHOLE vertical window, not just feet and head. A two-block plug was tried
+        // first and produced PASSABLE: classify looks for a standable spot anywhere within vtol of the focus
+        // plane, and a short plug is something to stand ON. From one below the window to one above it, there is
+        // no standable spot and no gap — which is the definition of IMPASSABLE. Removed again below.
+        for (int focusY : focusPlanes) {
+            for (int y = focusY - vtol - 1; y <= focusY + vtol + 2; y++) {
+                level.setBlock(new BlockPos(originX, y, originZ), Blocks.BEDROCK.defaultBlockState(), 3);
+            }
+        }
+
         long nanos = 0L;
         int checked = 0;
         // How many cells of each class occurred, so the log PROVES which branches were exercised instead of
@@ -198,6 +214,11 @@ public final class ComputeSelfTest {
             nanos += System.nanoTime() - t0;
         }
 
+        for (int focusY : focusPlanes) {
+            for (int y = focusY - vtol - 1; y <= focusY + vtol + 2; y++) {
+                level.setBlock(new BlockPos(originX, y, originZ), Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
         for (int cx = minCx; cx <= maxCx; cx++) {
             for (int cz = minCz; cz <= maxCz; cz++) {
                 level.setChunkForced(cx, cz, false);

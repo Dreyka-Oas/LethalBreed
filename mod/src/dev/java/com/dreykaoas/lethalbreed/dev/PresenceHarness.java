@@ -4,6 +4,7 @@ import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.config.domain.DevTestConfig;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.core.BlockPos;
@@ -80,6 +81,13 @@ public final class PresenceHarness extends TickPhasedHarness {
         ow.setDayTime(18000L);
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+        // Phase 1, stated rather than inherited. In phase 0 — which is what a FRESH world starts at —
+        // SpawnFilter discards every hostile at ENTITY_LOAD, so all five zombies below vanish the tick they
+        // are placed and the rig measures an empty corridor. This suite passed for months only because the
+        // shared dev world happened to carry a higher phase in its save data; run against a new world it
+        // reported "0/5 zombies held a target" with zombies=0 in the perf line. A rig must build its own
+        // preconditions, exactly as StatueHarness and the mechanics arenas already do.
+        PhaseManager.get().setPhase(server, 1);
 
         ArenaBuilder.roofedCorridor(ow, CX, CZ, Y, 4, START_OFFSET + 4, 4);
 

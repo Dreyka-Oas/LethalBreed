@@ -40,7 +40,9 @@ public final class SpecialTestHarness {
             SpecialTestEvaluator.killSplitters(ow, CASES);
         } else if (tick == 200) {
             SpecialTestEvaluator.evaluate(ow, CASES);
-            LethalBreed.LOGGER.info("[SpecialTest] DONE");
+            // DevVerdict.summary is what emits the load-bearing ALL DONE marker the gate reads. The old
+            // "[SpecialTest] DONE" looked like the same thing and was invisible to every tool.
+            DevVerdict.summary(SpecialTestEvaluator.SUITE, server);
         }
     }
 }

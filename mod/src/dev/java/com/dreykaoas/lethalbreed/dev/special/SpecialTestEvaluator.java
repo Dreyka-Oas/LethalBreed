@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.dev.special;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
+import com.dreykaoas.lethalbreed.dev.DevVerdict;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.special.SpecialType;
@@ -14,6 +15,9 @@ import java.util.List;
 
 /** Logs PASS/FAIL per ability and kills splitters mid-run so their DEATH special fires. */
 public final class SpecialTestEvaluator {
+
+    /** Suite name, shared with the harness that emits the summary. */
+    public static final String SUITE = "special";
     private SpecialTestEvaluator() {}
 
     public static void killSplitters(ServerLevel ow, List<SpecialTestCase> cases) {
@@ -55,7 +59,10 @@ public final class SpecialTestEvaluator {
                 }
                 default -> { pass = false; detail = "n/a"; }
             }
-            LethalBreed.LOGGER.info("[SpecialTest] {} : {} ({})", c.type().id(), pass ? "PASS" : "FAIL", detail);
+            // Through DevVerdict, not a bare log line. This suite spoke its own [SpecialTest] dialect and
+            // never emitted ALL DONE, so — exactly like the mechanics suite — LB_DEV_TEST=special was a listed
+            // suite the gate could never pass, with six checks running and nobody counting them.
+            DevVerdict.check(SUITE, c.type().id(), pass, detail);
         }
     }
 }
