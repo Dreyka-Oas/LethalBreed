@@ -88,14 +88,22 @@ public final class MechSunArena {
      * being culled, and a removed prop makes the burn question unanswerable rather than answered "no".
      */
     public static void evaluate(ServerLevel ow, MechTestState s, Check check) {
-        boolean huskAlive = s.husk != null && !s.husk.isRemoved();
-        boolean zAlive = s.sunZombie != null && !s.sunZombie.isRemoved();
-        check.record("sun-props-survive", huskAlive && zAlive,
-                "husk present=" + huskAlive + " zombie present=" + zAlive
-                        + " — a culled prop cannot answer the burn question either way");
-
         boolean huskBurn = s.husk != null && (s.huskWasOnFire || s.husk.getRemainingFireTicks() > 0);
         boolean zBurn = s.sunZombie != null && (s.sunZombieWasOnFire || s.sunZombie.getRemainingFireTicks() > 0);
+
+        // A prop that is GONE is only a problem if it never caught fire. Burning to death is the successful
+        // outcome of a burn test, and the first version of this check called that a failure — the zombie
+        // ignited, died of it, and was reported as culled. What must never happen is a prop vanishing without
+        // ever igniting: that is the SpawnFilter cull, and it makes the burn question unanswerable rather than
+        // answered "no".
+        boolean huskOk = s.husk != null && (huskBurn || !s.husk.isRemoved());
+        boolean zOk = s.sunZombie != null && (zBurn || !s.sunZombie.isRemoved());
+        check.record("sun-props-not-culled", huskOk && zOk,
+                "husk ignited=" + huskBurn + " present=" + (s.husk != null && !s.husk.isRemoved())
+                        + " | zombie ignited=" + zBurn + " present="
+                        + (s.sunZombie != null && !s.sunZombie.isRemoved())
+                        + " — a prop that disappeared having never caught fire was culled at ENTITY_LOAD");
+
         boolean sky = s.husk != null && ow.canSeeSky(s.husk.blockPosition());
         check.record("sunburn", huskBurn && zBurn,
                 "husk=" + huskBurn + " zombie=" + zBurn + " | bright=" + ow.isBrightOutside()
