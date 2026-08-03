@@ -74,13 +74,13 @@ import java.util.UUID;
 public final class StatueHarness {
     private StatueHarness() {}
 
-    private static final String SUITE = "statue";
-    private static final String PROBE_NAME = "LB_STATUE_PROBE";
+    static final String SUITE = "statue";
+    static final String PROBE_NAME = "LB_STATUE_PROBE";
 
-    private static final int CX = 150;
-    private static final int CZ = ArenaBuilder.VERIFY_BAND_Z + 40; // z=440
-    private static final int Y = ArenaBuilder.VERIFY_Y;            // 101
-    private static final int HALF = 6;
+    static final int CX = 150;
+    static final int CZ = ArenaBuilder.VERIFY_BAND_Z + 40; // z=440
+    static final int Y = ArenaBuilder.VERIFY_Y;            // 101
+    static final int HALF = 6;
 
     // ---- Schedule (server ticks since the first END_SERVER_TICK) -------------------------------------
     /** Force-load + world rules. The probe scan cannot run here: setChunkForced only queues a ticket. */
@@ -128,7 +128,7 @@ public final class StatueHarness {
      *  wrongly concluded did not exist. */
     private static UUID spawnedId;
 
-    private static UUID probeId;
+    static UUID probeId;
     private static boolean dozed = false;      // latched: was it ever (SLEEPING && NoAI) before DOZE_TICK
     private static boolean redozed = false;    // latched: did it freeze again after the chunk round-trip
     /** {@code isNoAi()} of the freshly deserialised entity, sampled on the FIRST tick it exists again. */
@@ -184,7 +184,7 @@ public final class StatueHarness {
         tick++;
         ServerLevel ow = server.overworld();
         if (tick == FORCE_TICK) {
-            worldRules(ow, server);
+            StatueArena.worldRules(ow, server);
             ArenaBuilder.forceChunks(ow, CX, CZ);
             RESIDENT.start(tick);
             return;
@@ -231,7 +231,7 @@ public final class StatueHarness {
             }
         }
         // Watched every tick, not just at the end: a probe that is there at all is found the tick it appears.
-        Zombie existing = findProbe(ow);
+        Zombie existing = StatueArena.findProbe(ow);
         if (existing != null) {
             phaseB = true;
             evaluatePhaseB(ow, server, existing);
@@ -244,34 +244,8 @@ public final class StatueHarness {
         }
     }
 
-    /** Roofed, lit, permanent DAY at a phase below {@code sunImmunePhase} — the exact conditions in which an
-     *  idle zombie takes the shade-less {@code dozeInPlace} branch instead of a shade hunt. */
-    private static void worldRules(ServerLevel ow, MinecraftServer server) {
-        // peaceful (the dev server.properties default) removes every monster on the next tick.
-        server.setDifficulty(Difficulty.HARD, true);
-        WorldSpawnConfig.forceDayTime = false;
-        ow.setDayTime(1000L);                                        // morning: isBrightOutside() == true
-        ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server); // doDaylightCycle off — day stays day
-        ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);   // the only zombie here is our probe
-        // Phase 1: hostile spawns are allowed at all (phase 0 culls EVERY monster at ENTITY_LOAD), it is below
-        // sunImmunePhase (5) so the day-sleep path is the pre-immunity one, and below dayAwakePhaseStart (10)
-        // so the probe cannot roll into the awake minority and simply never doze.
-        PhaseManager.get().setPhase(server, 1);
-    }
 
-    private static AABB arenaBox() {
-        return new AABB(CX - HALF - 2, Y - 6, CZ - HALF - 2, CX + HALF + 2, Y + 12, CZ + HALF + 2);
-    }
 
-    private static Zombie findProbe(ServerLevel ow) {
-        for (Zombie z : ow.getEntitiesOfClass(Zombie.class, arenaBox())) {
-            Component name = z.getCustomName();
-            if (name != null && PROBE_NAME.equals(name.getString())) {
-                return z;
-            }
-        }
-        return null;
-    }
 
     // ---------------------------------------------------------------------------------------------------
     // PHASE A — first run
@@ -313,12 +287,12 @@ public final class StatueHarness {
         if (probeId == null) {
             return;
         }
-        Zombie probe = probe(ow);
+        Zombie probe = StatueArena.probe(ow);
         int sincePhase = tick - phaseStart;
         if (sincePhase < DOZE_WINDOW) {
             latchDoze(probe, false);
             if (sincePhase % 60 == 0) {
-                logDozeInputs(ow, probe, sincePhase);
+                StatueArena.logDozeInputs(ow, probe, sincePhase);
             }
             return;
         }
@@ -327,7 +301,7 @@ public final class StatueHarness {
             DevVerdict.check(SUITE, "dozes", dozed,
                     "probe reached (mood.isSleeping() && isNoAi()) within " + DOZE_WINDOW + " ticks: " + dozed
                             + "; now noAi=" + (probe != null && probe.isNoAi())
-                            + " sleeping=" + sleeping(probe));
+                            + " sleeping=" + StatueArena.sleeping(probe));
             if (!dozed) {
                 // MANDATORY precondition. Every later assertion is about RELEASING a hold that was never
                 // taken, so each of them would pass vacuously. Abort instead — and remove the probe, so the
@@ -374,7 +348,7 @@ public final class StatueHarness {
         }
         if (step == Step.WAIT_RELOAD) {
             // Re-found BY UUID: the reload deserialised a brand new object and the old reference is a husk.
-            Zombie back = probe(ow);
+            Zombie back = StatueArena.probe(ow);
             if (RELOADED.poll(tick, back != null) == TickWait.Result.MET) {
                 // Sampled on the FIRST tick the entity exists again — this is what came off disk. Waiting even
                 // a few ticks would read a value the mood step had already re-applied: a working release is
@@ -404,7 +378,7 @@ public final class StatueHarness {
         }
         if (step == Step.REDOZE) {
             latchDoze(probe, true);
-            boolean frozenNow = probe != null && probe.isNoAi() && sleeping(probe);
+            boolean frozenNow = probe != null && probe.isNoAi() && StatueArena.sleeping(probe);
             DevVerdict.check(SUITE, "lifted-after-chunk-reload", !noAiAtFirstSight,
                     "the reloaded probe's noAi on the first tick it existed again = " + noAiAtFirstSight
                             + " (seen un-frozen during the settle window: " + liftedAfterReload + ") — "
@@ -424,36 +398,12 @@ public final class StatueHarness {
         }
     }
 
-    /**
-     * Every input {@code ZombieMood.handleDaySleep} branches on, printed as data.
-     *
-     * <p>When {@code dozes} fails, the verdict alone says only "it never froze" — which of the eight gates
-     * refused is left to guesswork, and guessing is how the last two attempts at this rig went wrong. In
-     * particular {@code isBrightOutside()} folds in the WEATHER (rain and thunder raise the ambient darkness),
-     * and this rig pins the time of day but not the sky, so a stormy save file alone would keep the probe awake.
-     */
-    private static void logDozeInputs(ServerLevel ow, Zombie probe, int sincePhase) {
-        if (probe == null) {
-            LethalBreed.LOGGER.info("[Statue] t+{}: no probe in the arena", sincePhase);
-            return;
-        }
-        SmartZombie sz = GameState.REGISTRY.get(probe.getId());
-        int phase = PhaseManager.current();
-        LethalBreed.LOGGER.info("[Statue] t+{}: registered={} state={} noAi={} onGround={} pos={} | "
-                        + "bright={} rain={} thunder={} skyDarken={} | phase={} staysAwake={} sunImmune={} "
-                        + "canSeeSky={} onFire={} hurtTime={} hasTarget={}",
-                sincePhase, sz != null, sz == null ? "n/a" : sz.state(), probe.isNoAi(), probe.onGround(),
-                probe.blockPosition(), ow.isBrightOutside(), ow.isRaining(), ow.isThundering(),
-                ow.getSkyDarken(), phase, DaySleep.staysAwake(probe, phase), !DaySleep.burnsInSun(phase),
-                ow.canSeeSky(probe.blockPosition()), probe.isOnFire(), probe.hurtTime,
-                sz != null && sz.hasTarget());
-    }
 
     private static void latchDoze(Zombie probe, boolean afterReload) {
         if (probe == null) {
             return;
         }
-        if (sleeping(probe) && probe.isNoAi()) {
+        if (StatueArena.sleeping(probe) && probe.isNoAi()) {
             if (afterReload) {
                 redozed = true;
             } else {
@@ -490,19 +440,5 @@ public final class StatueHarness {
         DevVerdict.summary(SUITE, server);
     }
 
-    private static Zombie probe(ServerLevel ow) {
-        if (probeId == null) {
-            return null;
-        }
-        Entity e = ow.getEntity(probeId);
-        return e instanceof Zombie z && !z.isRemoved() ? z : null;
-    }
 
-    private static boolean sleeping(Zombie z) {
-        if (z == null) {
-            return false;
-        }
-        SmartZombie sz = GameState.REGISTRY.get(z.getId());
-        return sz != null && sz.mood().isSleeping();
-    }
 }
