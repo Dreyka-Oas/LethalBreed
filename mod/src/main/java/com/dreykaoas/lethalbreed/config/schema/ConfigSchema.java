@@ -7,6 +7,7 @@ import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
+import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
@@ -48,6 +49,9 @@ public final class ConfigSchema {
             ContaminationConfig.class,
             ZombieMoodConfig.class,
             ExpertConfig.class,
+            // Appended last on purpose: inserting a holder mid-list would shift the on-disk write order of
+            // every option after it, rewriting every existing user's config file for nothing.
+            PackConfig.class,
     };
 
     /** Editable fields in source-declaration order, across all holders. Computed once — the holder classes

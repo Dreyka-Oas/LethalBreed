@@ -15,6 +15,10 @@ public final class ConfigCategory {
         if (n.startsWith("dev") || n.startsWith("debug")) return "Dev";
         // Expert / low-level constants (tolerances, safety clamps, vanilla magic numbers) get their own tab.
         if (n.startsWith("expert")) return "Expert";
+        // Pack MUST come before nearly everything else: packBreakRadius would be captured by "break" →
+        // Breaking, packStuckActivations by "stuck" → Climb, packDwellTicks by "day"-adjacent rules. It sits
+        // AFTER the dev/debug rule so debugPacks still lands in the Dev tab with its siblings.
+        if (n.startsWith("pack")) return "Meute";
         if (n.contains("contam")) return "Contamination";
         if (n.contains("flee") || n.contains("regen") || n.contains("regain") || n.contains("distress")
                 || n.contains("celebrat") || n.contains("mood") || n.contains("scream")

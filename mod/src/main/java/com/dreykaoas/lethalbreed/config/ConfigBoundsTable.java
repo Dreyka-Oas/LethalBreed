@@ -6,6 +6,7 @@ import java.util.HashMap;
 import com.dreykaoas.lethalbreed.config.bounds.CombatMoveBounds;
 import com.dreykaoas.lethalbreed.config.bounds.ContaminationBounds;
 import com.dreykaoas.lethalbreed.config.bounds.engine.FlowBounds;
+import com.dreykaoas.lethalbreed.config.bounds.PackBounds;
 import com.dreykaoas.lethalbreed.config.bounds.ProgressionBounds;
 import com.dreykaoas.lethalbreed.config.bounds.engine.PerfBounds;
 import com.dreykaoas.lethalbreed.config.bounds.TargetingBounds;
@@ -47,5 +48,6 @@ final class ConfigBoundsTable {
         ProgressionBounds.register(ConfigBoundsTable::b);
         ContaminationBounds.register(ConfigBoundsTable::b);
         ZombieMoodBounds.register(ConfigBoundsTable::b);
+        PackBounds.register(ConfigBoundsTable::b);
     }
 }
