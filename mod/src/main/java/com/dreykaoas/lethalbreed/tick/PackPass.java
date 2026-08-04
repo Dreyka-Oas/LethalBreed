@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.tick;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
@@ -59,6 +60,13 @@ public final class PackPass {
 
         if (mine != null) {
             tether.setStrayCount(PackJoinRule.nextStrayCount(distToCentroidSq, tether.strayCount()));
+        }
+        if (PackConfig.debugPacks) {
+            // The three numbers that separate the ways "no pack formed" can happen: the rule was never
+            // offered a neighbour (n), it was offered some and declined (kind=NONE), or it acted. Without
+            // them the verdict says only that nothing happened, which is the least useful thing to know.
+            LethalBreed.LOGGER.info("[PackDbg] id={} at ({}, {}) n={} pack={} -> {}",
+                    sz.id(), Math.round(sz.x()), Math.round(sz.z()), n, tether.packId(), d.kind());
         }
         switch (d.kind()) {
             case FORM -> manager.form(sz);
