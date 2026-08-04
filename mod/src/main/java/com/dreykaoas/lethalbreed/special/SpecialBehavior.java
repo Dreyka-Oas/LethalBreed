@@ -62,7 +62,7 @@ public final class SpecialBehavior {
             }
             case NECROMANCIEN -> {
                 if (tgt != null && sz.pursuit().specialReady()) {
-                    SpecialAbilities.summon(level, z, ctx);
+                    SpecialAbilities.summon(sz, level, z, ctx);
                     sz.pursuit().resetSpecialCd();
                 }
             }

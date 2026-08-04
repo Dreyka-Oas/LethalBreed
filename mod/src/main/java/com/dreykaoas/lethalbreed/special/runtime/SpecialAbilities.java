@@ -1,6 +1,8 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
+import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
@@ -51,10 +53,18 @@ public final class SpecialAbilities {
     }
 
     /** NECROMANCIEN: summon child zombies, capped against an already-dense local pack. */
-    public static void summon(ServerLevel level, Zombie z, WorldAIContext ctx) {
+    public static void summon(SmartZombie sz, ServerLevel level, Zombie z, WorldAIContext ctx) {
         if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialNecromancienDensityRadius).size()
                 > SpecialVariantConfig.specialNecromancienDensityCap) {
+            return;
+        }
+        // A summoner inside a pack is also capped by that pack's size. The density cap alone counts a radius,
+        // not a roster: a Necromancer marching with its pack keeps summoning until 40 zombies stand within 12
+        // blocks, and since this mod never despawns anything, the pack grows without bound for the rest of the
+        // world's life.
+        PackState pack = ctx.packManager().get(sz.pursuit().pack().packId());
+        if (pack != null && pack.totalMembers() >= PackConfig.packMaxSize) {
             return;
         }
         int min = SpecialVariantConfig.specialNecromancienMinChildren;
