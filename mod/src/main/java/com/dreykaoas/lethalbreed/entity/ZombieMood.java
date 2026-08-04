@@ -257,7 +257,11 @@ public final class ZombieMood {
         // awake minority. A merely-SEEN silent player does NOT keep it up — that's the stealth, and gating on a
         // stable alert TIMER (not a per-tick audibility test) is what stops the chase<->doze stutter.
         boolean alert = now < alertUntil;
-        boolean investigatingNoise = owner.hasTarget() && owner.targetEntity() == null && !sleepSeekingShade;
+        // A pack march has the exact signature of a noise investigation — a target point with no entity
+        // behind it — so without excluding it a migrating pack would never doze again, and would burn under
+        // the open sky for every phase below sunImmunePhase. Day-sleep wins over migration by design.
+        boolean investigatingNoise = owner.hasTarget() && owner.targetEntity() == null && !sleepSeekingShade
+                && !owner.pursuit().pack().hasWaypoint();
         if (!day || disturbed || alert || investigatingNoise || DaySleep.staysAwake(entity, phase)) {
             sleepSeekingShade = false; // busy hunting/investigating — abandon any shade-seek
             return;

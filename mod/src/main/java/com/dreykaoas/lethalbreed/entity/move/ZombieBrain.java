@@ -1,12 +1,11 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 
-import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import net.minecraft.world.entity.LivingEntity;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.entity.move.dispatch.ClimbDebug;
 import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;
 import com.dreykaoas.lethalbreed.entity.LODLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
@@ -30,7 +29,7 @@ public final class ZombieBrain {
     private int activations;
     private double lastHorizDistSq = -1.0;
     private int stuckTicks = 0;
-    private int dbgN = 0;
+    private final ClimbDebug climbDebug = new ClimbDebug();
     private boolean swimming = false;
     private boolean breaking = false; // latched last tick: hold position on the block instead of re-pathing
 
@@ -103,6 +102,11 @@ public final class ZombieBrain {
         // combat approach — leaping toward shade reads as a jerky pounce. Plain navigation only; it still digs
         // if genuinely walled in (stuck-detection below), just no speculative hops.
         boolean shadeSeek = te == null && owner.mood().isSeekingShade();
+        // A pack MARCHING to its rendezvous navigates and nothing else: no leap, no pillar, no breaching.
+        // A migration must not tear through a base its route happens to cross — destruction is reserved for
+        // an actual aggro. Vanilla pathing walks around whatever it can; when there is no way round at all
+        // the pack stalls, and PackMarch gives up on that destination after packStuckActivations.
+        boolean packMarch = te == null && p.pack().hasWaypoint();
         double dx = p.tgtX() - entity.getX();
         double dz = p.tgtZ() - entity.getZ();
         double dy = p.tgtY() - entity.getY();
@@ -130,7 +134,7 @@ public final class ZombieBrain {
         // Occasional leap; a successful leap carries the arc this tick. Suppressed while stuck (breaking) and
         // while calmly walking to shade for a day-doze (no pouncing at a shady spot).
         leap.tickCooldown();
-        if (!stuck && !shadeSeek && leap.tryLeap(level, dx, dz, dy, horizSq)) {
+        if (!stuck && !shadeSeek && !packMarch && leap.tryLeap(level, dx, dz, dy, horizSq)) {
             owner.setState(ZombieState.PURSUING_PLAYER);
             return;
         }
@@ -147,20 +151,19 @@ public final class ZombieBrain {
             nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
         }
         owner.setState(ZombieState.PURSUING_PLAYER);
-        debugClimb(p, horizSq, dy, stuck);
+        climbDebug.log(entity, p, horizSq, dy, stuck, stuckTicks, pillar.active());
+        if (packMarch) {
+            // Dispatch is the only path to block breaking, pillaring and forced descent — skipping it is
+            // what makes a migration non-destructive. Clear the latch too, so a member that aggroes mid-wall
+            // and then loses its target does not resume a break it is no longer entitled to.
+            breaking = false;
+            return;
+        }
         // Pass the current breaking-latch (was I breaking last tick?) so a committed zombie stays anchored on
         // its block instead of being re-steered to another breach mid-break.
         MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz, breaking);
         // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
         breaking = owner.state() == ZombieState.BREAKING;
-    }
-
-    private void debugClimb(ZombiePursuit p, double horizSq, double dy, boolean stuck) {
-        if (!DevTestConfig.debugClimb || (dbgN++ % 4 != 0)) return;
-        LethalBreed.LOGGER.info("[ClimbDbg] z{} y={} tgtY={} horiz={} dy={} stuck={}({}) climb={} ground={}",
-                entity.getId(), MoveMath.f1(entity.getY()), MoveMath.f1(p.tgtY()),
-                MoveMath.f1(Math.sqrt(horizSq)), MoveMath.f1(dy), stuck, stuckTicks, pillar.active(),
-                entity.onGround());
     }
 
     /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the jump-and-place
