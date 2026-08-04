@@ -24,6 +24,7 @@ public final class StageProfiler {
     public enum Stage {
         CLASSIFY("classify"),      // LOD reclassify — includes the target scan and its LOS raycasts
         GRID("grid"),              // spatial-hash re-bucketing
+        PACK("pack"),              // pack form/join/leave decision
         SUNBURN("sunburn"),        // daylight burn check
         MOOD("mood"),              // celebrate / flee / day-sleep / shade search
         TICK("tick"),              // the throttled per-zombie AI tick itself

@@ -57,6 +57,9 @@ public final class TickScheduler {
         com.dreykaoas.lethalbreed.effect.ContaminationManager.tick(server);
         world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
         world.processSound(server);
+        // Before the bucket pass, for the same reason processSound is: the waypoint it plants is read by
+        // LODManager.classify in that very pass.
+        world.tickPacks(server, server.overworld().getGameTime());
         world.recomputeFlowFields(server, tickCounter);
 
         bucketPass.run(server, buckets, currentBucket, climbers, swimmers);
