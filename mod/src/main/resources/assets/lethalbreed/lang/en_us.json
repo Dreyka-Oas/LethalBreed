@@ -476,5 +476,7 @@
   "lethalbreed.option.packMigrateAtDay": "Migrate By Day",
   "lethalbreed.option.packMigrateAtDay.desc": "Let packs keep migrating in daylight. Off by default: day-sleep wins, so packs travel by night and do not burn under the sun below the immunity phase.",
   "lethalbreed.option.debugPacks": "Log Pack Activity",
-  "lethalbreed.option.debugPacks.desc": "Log pack formation, merges and destination changes. Noisy; dev only."
+  "lethalbreed.option.debugPacks.desc": "Log pack formation, merges and destination changes. Noisy; dev only.",
+  "lethalbreed.option.devPackTest": "Pack Arena Test",
+  "lethalbreed.option.devPackTest.desc": "Headless arena that verifies pack formation, isolation, migration and the no-breaking rule. Dev only."
 }

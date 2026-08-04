@@ -476,5 +476,7 @@
   "lethalbreed.option.packMigrateAtDay": "Migrer de jour",
   "lethalbreed.option.packMigrateAtDay.desc": "Laisse les meutes migrer en plein jour. Désactivé par défaut : le sommeil diurne l'emporte, les meutes voyagent de nuit et ne brûlent pas au soleil sous la phase d'immunité.",
   "lethalbreed.option.debugPacks": "Journaliser l'activité des meutes",
-  "lethalbreed.option.debugPacks.desc": "Journalise la formation des meutes, les fusions et les changements de destination. Verbeux ; développement uniquement."
+  "lethalbreed.option.debugPacks.desc": "Journalise la formation des meutes, les fusions et les changements de destination. Verbeux ; développement uniquement.",
+  "lethalbreed.option.devPackTest": "Test d'arène des meutes",
+  "lethalbreed.option.devPackTest.desc": "Arène headless qui vérifie la formation des meutes, l'isolement, la migration et la règle de non-destruction. Développement uniquement."
 }
