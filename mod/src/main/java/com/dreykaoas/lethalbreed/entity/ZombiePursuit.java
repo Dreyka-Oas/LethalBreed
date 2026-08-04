@@ -1,15 +1,16 @@
 package com.dreykaoas.lethalbreed.entity;
 
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.pack.PackTether;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
- * Per-zombie pursuit data: the current hunt target, short-term memory of a lost target, a heard-sound
- * point, spatial-grid membership, and the special-variant attachment + its action cooldown. Pure state +
- * accessors — no per-tick behaviour (that lives in {@link com.dreykaoas.lethalbreed.entity.move.ZombieBrain}).
+ * Per-zombie pursuit data: the current hunt target, short-term memory of a lost target, a heard-sound point,
+ * pack membership, spatial-grid membership, and the special-variant attachment + its action cooldown. Pure
+ * state + accessors — no per-tick behaviour (that lives in {@code entity.move.ZombieBrain}).
  */
 public final class ZombiePursuit {
     private final Zombie entity;
@@ -27,6 +28,9 @@ public final class ZombiePursuit {
     // Sound investigation point.
     private double soundX, soundY, soundZ;
     private boolean hasSound = false;
+
+    // Pack membership + march waypoint. PackTether says why that waypoint is not in the memory slot above.
+    private final PackTether pack = new PackTether();
 
     // Spatial-grid bookkeeping.
     private long cellKey = 0L;
@@ -50,7 +54,6 @@ public final class ZombiePursuit {
         this.tgtZ = z;
         this.hasTarget = true;
     }
-
     public void clearTarget() {
         this.targetEntity = null;
         this.hasTarget = false;
@@ -101,10 +104,23 @@ public final class ZombiePursuit {
     public double soundY() { return soundY; }
     public double soundZ() { return soundZ; }
 
+    // --- pack ---
+    public PackTether pack() { return pack; }
+
+    /** Walk to the pack's rendezvous — no live entity, so no melee, like {@link #setMemoryTarget()}. The
+     *  waypoint is short-range by construction (packMarchLead), which is what keeps the member out of
+     *  FROZEN: LODManager grades on the distance to whatever is being walked to. */
+    public void setPackTarget() {
+        this.targetEntity = null;
+        this.tgtX = pack.wpX();
+        this.tgtY = pack.wpY();
+        this.tgtZ = pack.wpZ();
+        this.hasTarget = true;
+    }
+
     // --- spatial grid ---
     public long cellKey() { return cellKey; }
     public boolean inGrid() { return inGrid; }
-
     public void setCell(long key, boolean inGrid) {
         this.cellKey = key;
         this.inGrid = inGrid;
