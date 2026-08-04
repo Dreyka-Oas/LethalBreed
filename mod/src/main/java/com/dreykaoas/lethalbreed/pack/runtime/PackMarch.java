@@ -28,6 +28,11 @@ import net.minecraft.world.level.border.WorldBorder;
 public final class PackMarch {
     private PackMarch() {}
 
+    /** How often the headway test is allowed to fire. Long enough that a walking pack visibly closes on
+     *  its destination between two checks, short enough that a pack pinned against a wall gives up within
+     *  packStuckActivations x this, i.e. a few seconds rather than a night. */
+    private static final int HEADWAY_CHECK_TICKS = 40;
+
     public static void tick(ServerLevel level, PackManager manager, PackState pack, long gameTime) {
         if (!PackConfig.packMigrationEnabled) {
             return;
@@ -43,7 +48,7 @@ public final class PackMarch {
         if (arrivedOrStuck(pack, gameTime)) {
             chooseDestination(level, pack, gameTime);
         }
-        plantWaypoint(level, pack);
+        plantWaypoint(pack, gameTime);
     }
 
     /** True when this pack needs a new destination — either it got there, or it cannot get there at all. */
@@ -79,6 +84,10 @@ public final class PackMarch {
         pack.headingX = heading[0];
         pack.headingZ = heading[1];
         pack.dwellUntil = gameTime + dwell(pack);
+        // A fresh destination is further away than the old one by construction, so carrying the previous
+        // distance over would score the very first check as "no headway" and start the stuck counter at 1.
+        pack.lastDistToDest = Double.MAX_VALUE;
+        pack.lastAdvanceTick = gameTime;
     }
 
     private static long dwell(PackState pack) {
@@ -87,8 +96,8 @@ public final class PackMarch {
         return Math.max(0, PackConfig.packDwellTicks + spread);
     }
 
-    /** Plant the shared waypoint and note whether the pack made any headway since the last visit. */
-    private static void plantWaypoint(ServerLevel level, PackState pack) {
+    /** Plant the shared waypoint and note whether the pack made any headway since the last CHECK. */
+    private static void plantWaypoint(PackState pack, long gameTime) {
         double dx = pack.destX - pack.x;
         double dz = pack.destZ - pack.z;
         double d = Math.sqrt(dx * dx + dz * dz);
@@ -96,12 +105,21 @@ public final class PackMarch {
         double wx = d <= 1.0e-6 ? pack.x : pack.x + dx / d * lead;
         double wz = d <= 1.0e-6 ? pack.z : pack.z + dz / d * lead;
 
-        if (d >= pack.lastDistToDest - PackAdvance.HEADWAY_EPSILON) {
-            pack.stuckActivations++;
-        } else {
-            pack.stuckActivations = 0;
+        // Headway is judged on a fixed interval, NOT once per visit. A pack is visited up to once a tick,
+        // and a walking centroid closes on the order of 0.02 blocks in a tick — an order of magnitude under
+        // HEADWAY_EPSILON. Testing per visit therefore scored a perfectly healthy march as "no headway"
+        // almost every tick, tripped packStuckActivations within a second, and made the pack re-roll its
+        // destination over and over: measured at 11 blocks covered in 780 ticks where the walk alone should
+        // manage several times that. The interval is what makes the epsilon mean something.
+        if (gameTime - pack.lastAdvanceTick >= HEADWAY_CHECK_TICKS) {
+            if (d >= pack.lastDistToDest - PackAdvance.HEADWAY_EPSILON) {
+                pack.stuckActivations++;
+            } else {
+                pack.stuckActivations = 0;
+            }
+            pack.lastDistToDest = d;
+            pack.lastAdvanceTick = gameTime;
         }
-        pack.lastDistToDest = d;
 
         for (int i = 0; i < pack.liveIds.size(); i++) {
             SmartZombie m = GameState.REGISTRY.get(pack.liveIds.getInt(i));
