@@ -84,6 +84,21 @@ public final class LODManager {
             } else {
                 lod = lodFromDistSq(d, prev);
             }
+        } else if (sz.pursuit().pack().hasWaypoint()) {
+            // Lowest priority: nothing seen, nothing remembered, but the zombie's pack wants it somewhere.
+            // Deliberately NOT the memory slot — see PackTether — so a pack march cannot be clobbered by a
+            // passing cow or hijacked by a distress rally, and a marching member is not mistaken for one
+            // investigating a noise (which would keep it awake through the day, burning in the sun).
+            sz.pursuit().setPackTarget();
+            sz.entity().setTarget(null);
+            // No canSeeSpot here, unlike the memory branch: that is a level.clip raycast, and paying one per
+            // marching member per activation would make the march the dominant cost of the whole system.
+            // Arrival is PackMarch's business — it replants the waypoint every visit regardless.
+            //
+            // The waypoint is short-range by construction (packMarchLead, capped under lodLow), which is the
+            // whole reason this classifies to HIGH/MEDIUM instead of FROZEN. Aiming a member at the pack's
+            // actual destination hundreds of blocks away would freeze it, not move it.
+            lod = lodFromDistSq(sz.pursuit().distanceToTargetSq(), prev);
         } else {
             sz.pursuit().clearTarget();
             sz.pursuit().clearMemory();
