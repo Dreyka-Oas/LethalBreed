@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.config.bounds;
+package com.dreykaoas.lethalbreed.config.bounds.engine;
 
 import com.dreykaoas.lethalbreed.config.BoundsRegistrar;
 
