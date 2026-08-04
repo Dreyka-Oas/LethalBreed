@@ -1,19 +1,14 @@
 package com.dreykaoas.lethalbreed.dev.arena.pack;
 
-import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 import com.dreykaoas.lethalbreed.dev.harness.TickPhasedHarness;
-import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.pack.PackState;
-import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.level.gamerules.GameRules;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -49,13 +44,13 @@ public final class PackHarness extends TickPhasedHarness {
     private final Set<Long> packIds = new HashSet<>();
 
     // Latched observations. Sentinels chosen so "never measured" can never beat a real reading.
+    private int formMinRegistered = Integer.MAX_VALUE;
     private int formMaxPacked;
     private int formMinDistinct = Integer.MAX_VALUE;
     private int loneMaxPacked;
-    private double marchStartDist = -1.0;
-    private double marchBestDist = Double.MAX_VALUE;
-    private double marchMaxSpread;
-    private boolean marchSampled;
+    private final PackMarchProbe march = new PackMarchProbe();
+    /** Members the registry held at build. The march is judged against these, not against how many were asked for. */
+    private int marchExpected;
     private int wallPlaced;
     private int wallMinStanding = Integer.MAX_VALUE;
 
@@ -74,34 +69,29 @@ public final class PackHarness extends TickPhasedHarness {
 
     @Override
     protected void build(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
-        // Phase 0 culls every hostile at ENTITY_LOAD, so an arena built there measures an empty corridor.
-        PhaseManager.get().setPhase(server, 1);
-        ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);
-        ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
-        cfg.set("forceDayTime", false);
-        ow.setDayTime(18000L);            // night: no day-sleep, so migration is free to run
-        cfg.set("packEnabled", true);
-        cfg.set("packMigrationEnabled", true);
-        cfg.set("packDecisionDivisor", 1);  // decide every activation: converge inside a 300-tick window
-        cfg.set("packsPerTick", 8);
-        cfg.set("packFormMinSize", 3);
+        PackSetup.prepare(stage, ow, server, cfg);
         PackArena.build(ow);
 
         switch (stage) {
             case 0 -> spawned.addAll(PackArena.spawnRow(ow, PackArena.CX - 12, 2, 12));
             case 1 -> spawned.addAll(PackArena.spawnRow(ow, PackArena.CX, 1, 1));
-            case 2 -> spawned.addAll(PackArena.spawnRow(ow, PackArena.CX - 8, 2, 8));
+            case 2 -> {
+                spawned.addAll(PackArena.spawnRow(ow, PackArena.CX - 8, 2, 8));
+                marchExpected = PackArena.registered(spawned);
+            }
             default -> {
                 wallPlaced = PackArena.buildWall(ow, WALL_X);
                 spawned.addAll(PackArena.spawnRow(ow, PackArena.CX, 2, 8));
             }
         }
+        PackSetup.report(stage, spawned);
     }
 
     @Override
     protected void observe(int stage, ServerLevel ow, int tick) {
         switch (stage) {
             case 0 -> {
+                formMinRegistered = Math.min(formMinRegistered, PackArena.registered(spawned));
                 formMaxPacked = Math.max(formMaxPacked, PackArena.packed(spawned));
                 int distinct = PackArena.distinctPacks(spawned, packIds);
                 if (distinct > 0) {
@@ -109,49 +99,9 @@ public final class PackHarness extends TickPhasedHarness {
                 }
             }
             case 1 -> loneMaxPacked = Math.max(loneMaxPacked, PackArena.packed(spawned));
-            case 2 -> observeMarch(ow);
+            case 2 -> march.observe(ow, spawned, marchExpected);
             default -> wallMinStanding = Math.min(wallMinStanding, PackArena.wallStanding(ow, WALL_X));
         }
-    }
-
-    /** Force the pack east down the corridor, then watch it close on that point and hold together. */
-    private void observeMarch(ServerLevel ow) {
-        PackState pack = firstPack(ow);
-        if (pack == null) {
-            return;
-        }
-        pack.destX = PackArena.CX + 120;
-        pack.destZ = PackArena.CZ;
-        pack.dwellUntil = 0L;
-
-        double d = Math.hypot(pack.destX - pack.x, pack.destZ - pack.z);
-        if (marchStartDist < 0.0) {
-            marchStartDist = d;
-        }
-        int live = 0;
-        double spread = 0.0;
-        for (Zombie z : spawned) {
-            SmartZombie sz = GameState.REGISTRY.get(z.getId());
-            if (sz == null || !sz.isValid()) {
-                continue;
-            }
-            live++;
-            spread = Math.max(spread, Math.hypot(sz.x() - pack.x, sz.z() - pack.z));
-        }
-        // Only a sample where EVERY member is still alive may set the record. A depopulated arena otherwise
-        // scores a tiny spread and a closing distance, and reads better than one that works.
-        if (live == spawned.size() && !spawned.isEmpty()) {
-            marchSampled = true;
-            marchBestDist = Math.min(marchBestDist, d);
-            marchMaxSpread = Math.max(marchMaxSpread, spread);
-        }
-    }
-
-    private PackState firstPack(ServerLevel ow) {
-        for (PackState p : GameState.DIMENSIONS.get(ow.dimension()).packManager().all()) {
-            return p;
-        }
-        return null;
     }
 
     @Override
@@ -159,7 +109,8 @@ public final class PackHarness extends TickPhasedHarness {
         switch (stage) {
             case 0 -> {
                 check("formation-adhesion", formMaxPacked >= 3,
-                        formMaxPacked + "/12 zombies ont porté un id de meute au pic");
+                        formMaxPacked + "/12 zombies ont porté un id de meute au pic ; au creux, le mod n'en connaissait plus que "
+                                + (formMinRegistered == Integer.MAX_VALUE ? "?" : formMinRegistered) + "/12");
                 check("formation-une-seule-grappe", formMinDistinct >= 1 && formMinDistinct <= 2,
                         "au mieux " + (formMinDistinct == Integer.MAX_VALUE ? "aucune" : formMinDistinct)
                                 + " meute(s) distincte(s) pour une grappe de 12");
@@ -173,19 +124,21 @@ public final class PackHarness extends TickPhasedHarness {
         }
         PackArena.clear(spawned);
         if (stage == 3) {
+            PackArena.forceCorridor(ow, false);
             ArenaBuilder.releaseChunks(ow, PackArena.CX, PackArena.CZ);
         }
     }
 
     private void evaluateMarch() {
-        check("marche-echantillonnee", marchSampled,
-                marchSampled ? "au moins un tick avec les 8 membres vivants"
-                        : "jamais échantillonné un tick avec les 8 membres vivants");
-        double closed = marchSampled ? marchStartDist - marchBestDist : 0.0;
-        check("marche-rapprochement", marchSampled && closed >= 20.0,
-                "centre rapproché de " + DevVerdict.fmt(closed) + " blocs (>= 20 attendu, départ "
-                        + DevVerdict.fmt(marchStartDist) + ")");
-        check("marche-cohesion", marchSampled && marchMaxSpread <= 40.0,
-                "écart max au centre " + DevVerdict.fmt(marchMaxSpread) + " blocs (<= packBreakRadius 40)");
+        check("marche-echantillonnee", march.sampled(),
+                (march.sampled() ? "au moins un tick" : "jamais échantillonné un tick")
+                        + " avec les " + marchExpected + " membres suivis vivants");
+        check("marche-rapprochement", march.sampled() && march.closed() >= PackMarchProbe.MIN_CLOSED,
+                "centre rapproché de " + DevVerdict.fmt(march.closed()) + " blocs (>= "
+                        + (int) PackMarchProbe.MIN_CLOSED + " attendu, départ "
+                        + DevVerdict.fmt(march.startDist()) + ")");
+        check("marche-cohesion", march.sampled() && march.maxSpread() <= PackMarchProbe.MAX_SPREAD,
+                "écart max au centre " + DevVerdict.fmt(march.maxSpread()) + " blocs (<= packBreakRadius "
+                        + (int) PackMarchProbe.MAX_SPREAD + ")");
     }
 }

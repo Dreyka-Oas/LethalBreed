@@ -37,6 +37,24 @@ public final class PackArena {
 
     public static void build(ServerLevel ow) {
         ArenaBuilder.roofedCorridor(ow, CX, CZ, Y, 8, WEST, EAST);
+        forceCorridor(ow, true);
+    }
+
+    /**
+     * Force-load every chunk the corridor spans, not just the 3x3 around its centre.
+     *
+     * <p>{@code ArenaBuilder.forceChunks} covers 48 blocks; this corridor is 160 long because a migration has
+     * to have somewhere to migrate to. Without this, members walking east crossed out of the loaded area,
+     * unloaded, left the registry — and the rig stopped sampling, freezing its "closest approach" at whatever
+     * the pack had managed inside the first three chunks. The march looked far slower than it was.
+     */
+    public static void forceCorridor(ServerLevel ow, boolean forced) {
+        int chunkZ = CZ >> 4;
+        for (int chx = (CX - WEST) >> 4; chx <= (CX + EAST) >> 4; chx++) {
+            for (int chz = chunkZ - 1; chz <= chunkZ + 1; chz++) {
+                ow.setChunkForced(chx, chz, forced);
+            }
+        }
     }
 
     /** A wall right across the corridor. Returns how many blocks it is made of. */
@@ -97,6 +115,19 @@ public final class PackArena {
             }
         }
         return into.size();
+    }
+
+    /** How many of these zombies the mod actually knows about. A zombie missing from the registry is never
+     *  handed to PackPass, so it can never join anything — which looks identical, in the verdict, to a rule
+     *  that simply declined to form a pack. */
+    public static int registered(List<Zombie> zombies) {
+        int n = 0;
+        for (Zombie z : zombies) {
+            if (GameState.REGISTRY.get(z.getId()) != null) {
+                n++;
+            }
+        }
+        return n;
     }
 
     /** Members of {@code zombies} that belong to any pack. */
