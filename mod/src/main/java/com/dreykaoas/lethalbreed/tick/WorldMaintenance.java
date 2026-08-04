@@ -4,6 +4,8 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.pack.PackState;
+import com.dreykaoas.lethalbreed.pack.runtime.PackMarch;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -44,6 +46,18 @@ final class WorldMaintenance {
 
     /** Re-bucket moved prey and drop dead prey, once per dimension per tick. Costs O(prey), never
      *  O(zombies) — that asymmetry is the entire reason the index exists. */
+    /** Advance every pack in every loaded dimension: lifecycle first, then the march that plants the shared
+     *  waypoint. Must run BEFORE the bucket pass — LODManager reads that waypoint in the same activation, so
+     *  planting it afterwards would leave marching members frozen for one whole cycle. */
+    void tickPacks(MinecraftServer server, long gameTime) {
+        forEachLoadedContext(server, (level, ctx) -> {
+            ctx.packManager().tick(gameTime);
+            for (PackState pack : ctx.packManager().all()) {
+                PackMarch.tick(level, ctx.packManager(), pack, gameTime);
+            }
+        });
+    }
+
     void refreshTargetIndex(MinecraftServer server) {
         forEachLoadedContext(server, (level, ctx) -> ctx.targetIndex().refresh());
     }

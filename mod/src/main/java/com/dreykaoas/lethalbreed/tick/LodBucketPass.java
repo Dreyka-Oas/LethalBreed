@@ -77,7 +77,11 @@ final class LodBucketPass {
             // target (villager/animal) with no player within hardFreeze is frozen too, i.e. autonomous hunts far
             // from any player pause until a player approaches. That tradeoff is why this defaults to 0 (off);
             // enable it only if you accept "nobody's watching → stop simulating" semantics.
-            if (hardFreeze > 0.0) {
+            // A pack member is exempt: this cutoff wipes target AND memory before classify() runs, so with
+            // hardFreeze on, every migrating pack would stop dead the moment it left a player's radius —
+            // which is precisely when a migration is supposed to be happening. The cutoff still applies to
+            // every loose zombie, so its point (stop simulating what nobody watches) survives.
+            if (hardFreeze > 0.0 && !sz.pursuit().pack().inPack()) {
                 Player np = level.getNearestPlayer(sz.entity(), hardFreeze);
                 if (np == null) {
                     sz.pursuit().clearTarget();
@@ -110,6 +114,14 @@ final class LodBucketPass {
             if (prof) {
                 long n = System.nanoTime();
                 profiler.add(StageProfiler.Stage.GRID, n - t);
+                t = n;
+            }
+            // Pack decision runs here, BEFORE the FROZEN skip: a zombie with nothing to hunt is frozen, and
+            // a frozen zombie looking for company is the nominal case for forming a pack, not an edge one.
+            PackPass.decide(sz, ctx);
+            if (prof) {
+                long n = System.nanoTime();
+                profiler.add(StageProfiler.Stage.PACK, n - t);
                 t = n;
             }
             // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
