@@ -27,3 +27,6 @@ rs.txt
 Thumbs.db
 # Nested LethalBreed-web repo (separate, private git repo — do not track/embed)
 /web/
+
+# Logs serveur régénérés à chaque lancement (Gradle/Minecraft)
+/mod/logs/
