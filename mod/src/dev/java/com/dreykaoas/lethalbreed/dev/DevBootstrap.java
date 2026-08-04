@@ -11,6 +11,7 @@ import com.dreykaoas.lethalbreed.dev.arena.PlacedBlockHarness;
 import com.dreykaoas.lethalbreed.dev.contam.PlagueDamageHarness;
 import com.dreykaoas.lethalbreed.dev.contam.PlagueDisableHarness;
 import com.dreykaoas.lethalbreed.dev.arena.PresenceHarness;
+import com.dreykaoas.lethalbreed.dev.arena.pack.PackHarness;
 import com.dreykaoas.lethalbreed.dev.arena.shade.ShadeHarness;
 import com.dreykaoas.lethalbreed.dev.arena.statue.StatueHarness;
 
@@ -53,6 +54,7 @@ public final class DevBootstrap {
         ServerTickEvents.END_SERVER_TICK.register(MechanicsTestHarness.INSTANCE::onTick);
         // Foundation self-test: proves the synthetic player is present and the flow field / pathing follow.
         ServerTickEvents.END_SERVER_TICK.register(PresenceHarness.INSTANCE::onTick);
+        ServerTickEvents.END_SERVER_TICK.register(PackHarness.INSTANCE::onTick);
         // Contamination rigs. "clear" is standalone; the three "plague" rigs share one run and are serialised
         // by the start offsets in ContamRig (they mutate process-global plague config), with the disable rig
         // last because it owns the suite summary.

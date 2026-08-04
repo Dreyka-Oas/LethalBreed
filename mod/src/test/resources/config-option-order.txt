@@ -214,6 +214,7 @@ devPlacedTest
 devShadeTest
 devBreachTest
 devPresenceTest
+devPackTest
 devAutoHalt
 devClimbTest
 debugClimb
