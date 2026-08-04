@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.block.BlockOperationQueue;
 import com.dreykaoas.lethalbreed.block.BreachCoordinator;
 import com.dreykaoas.lethalbreed.block.BreakManager;
 import com.dreykaoas.lethalbreed.block.PlacedBlockTracker;
+import com.dreykaoas.lethalbreed.pack.PackManager;
 import com.dreykaoas.lethalbreed.sound.SoundEventBus;
 import com.dreykaoas.lethalbreed.spatial.SpatialGrid;
 import com.dreykaoas.lethalbreed.spatial.TargetIndex;
@@ -22,6 +23,7 @@ public final class WorldAIContext {
     private final BreachCoordinator breachCoordinator;
     private final SoundEventBus soundBus;
     private final TargetIndex targetIndex;
+    private final PackManager packManager;
 
     public WorldAIContext() {
         this.spatialGrid = new SpatialGrid();
@@ -32,6 +34,12 @@ public final class WorldAIContext {
         this.breachCoordinator = new BreachCoordinator();
         this.soundBus = new SoundEventBus();
         this.targetIndex = new TargetIndex();
+        this.packManager = new PackManager();
+    }
+
+    /** Pack instinct and migration for this dimension — a pack never crosses into another. */
+    public PackManager packManager() {
+        return packManager;
     }
 
     public BreakManager breakManager() {
