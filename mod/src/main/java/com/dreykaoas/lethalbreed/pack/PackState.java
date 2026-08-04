@@ -60,6 +60,8 @@ public final class PackState {
     public int dematStreak;
     /** Activations without headway, before the pack gives up on an unreachable destination. */
     public int stuckActivations;
+    /** Distance to the destination at the previous visit, to tell headway from stalling. */
+    public double lastDistToDest = Double.MAX_VALUE;
     /** Members that went to disk with the chunk before we could snapshot them. */
     public int detached;
 

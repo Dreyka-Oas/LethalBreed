@@ -17,6 +17,10 @@ package com.dreykaoas.lethalbreed.pack;
 public final class PackAdvance {
     private PackAdvance() {}
 
+    /** Below this much progress between two visits, a pack counts as making no headway. Loose enough to
+     *  ignore the jitter of a recomputed centroid, tight enough to catch a pack pinned against a wall. */
+    public static final double HEADWAY_EPSILON = 0.25;
+
     /**
      * Move {@code pos} toward the destination and report whether the pack has arrived.
      *

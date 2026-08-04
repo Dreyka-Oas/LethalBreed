@@ -19,6 +19,9 @@ public final class PackTether {
 
     private long packId = PackJoinRule.NO_PACK;
     private int strayCount;
+    /** Own activation counter. Deliberately NOT the brain's: that one drives the LOD tick throttle, and a
+     *  second consumer incrementing it would silently change how often distant zombies run their AI. */
+    private int decisions;
     private double wpX;
     private double wpY;
     private double wpZ;
@@ -29,6 +32,11 @@ public final class PackTether {
     public boolean inPack() { return packId != PackJoinRule.NO_PACK; }
 
     public int strayCount() { return strayCount; }
+
+    /** True on one activation in {@code divisor}, on this zombie's own schedule. */
+    public boolean dueToDecide(int divisor) {
+        return divisor <= 1 || (decisions++ % divisor) == 0;
+    }
 
     public void setStrayCount(int n) { this.strayCount = n; }
 
