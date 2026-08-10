@@ -25,20 +25,6 @@ public final class LethalBreedClientConfig {
     /** Distance (blocks) beyond which zombies are culled from rendering. */
     public double zombieRenderDistance = 96.0;
 
-    /** Render at most this many zombies per frame (0 = unlimited), nearest prioritized — Phase 7, NOT
-     *  enforced yet (like the far-detail/instanced/billboard flags below). Kept as a reserved staging knob. */
-    public int maxRenderedZombies = 400;
-
-    /** Reduce detail/animation for far zombies (placeholder until billboard LOD lands). */
-    public boolean reduceFarDetail = true;
-    /** Distance beyond which "far detail" reductions apply. */
-    public double farDetailDistance = 48.0;
-
-    /** Enable experimental instanced rendering (Phase 7). Off by default — heavy & WIP. */
-    public boolean instancedRendering = false;
-    /** Draw very distant zombies as flat billboards instead of full models (Phase 7). */
-    public boolean billboardFarZombies = false;
-
     /**
      * When Sodium is installed, defer to its frustum/chunk culling and keep the mod's render
      * tweaks conservative to avoid double work or conflicts.
@@ -90,9 +76,6 @@ public final class LethalBreedClientConfig {
             instance = new LethalBreedClientConfig();
         }
 
-        // Deliberately does NOT log maxRenderedZombies: that option is not enforced yet (Phase 7), and
-        // printing it as if it were active told a user who lowered it for FPS that it worked when it did
-        // nothing (audit #25).
         LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, sodium={}, iris={}",
                 instance.enabled, instance.cullDistantZombies, instance.zombieRenderDistance,
                 sodiumPresent, irisPresent);
