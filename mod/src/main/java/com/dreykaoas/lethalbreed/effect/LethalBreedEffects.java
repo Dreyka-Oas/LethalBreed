@@ -51,6 +51,6 @@ public final class LethalBreedEffects {
                 new SuperContaminationEffect(MobEffectCategory.HARMFUL, 0x3A5F0B));
         ZOMBIE_VISION = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
                 Identifier.fromNamespaceAndPath(LethalBreed.MOD_ID, "zombie_vision"),
-                new SuperContaminationEffect(MobEffectCategory.HARMFUL, 0x3A5F0B));
+                new MarkerEffect(MobEffectCategory.HARMFUL, 0x3A5F0B));
     }
 }
