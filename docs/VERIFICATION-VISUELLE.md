@@ -9,9 +9,12 @@ Compte à faire : **~10 minutes**, une seule session, un seul monde.
 
 ```bash
 cd mod
-export JAVA_HOME=/home/dreykaoas/.jdks/jdk-21.0.12+8
 ./gradlew runClient
 ```
+
+Un JDK 21 doit être sélectionnable par Gradle. S'il n'est pas trouvé automatiquement, pointe
+`org.gradle.java.home` dans **ton** `~/.gradle/gradle.properties` personnel — jamais dans un
+fichier versionné du dépôt (voir `mod/gradle.properties`, audit #4).
 
 Monde superflat, triche activée. Puis `/gamemode creative`.
 
