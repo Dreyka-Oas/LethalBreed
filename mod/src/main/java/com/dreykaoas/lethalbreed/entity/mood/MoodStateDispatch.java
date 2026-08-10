@@ -52,8 +52,10 @@ public final class MoodStateDispatch {
         return false;
     }
 
-    /** Drop the hunt: no melee target, no stale memory/sound pursuit. */
-    private static void dropHunt(Zombie entity, SmartZombie owner) {
+    /** Drop the hunt: no melee target, no stale memory/sound pursuit. Also called directly by
+     *  {@link com.dreykaoas.lethalbreed.entity.ZombieMood#sleep} when entering the SLEEPING state, which is
+     *  not one of {@link MoodStateDispatch}'s own dispatched states. */
+    public static void dropHunt(Zombie entity, SmartZombie owner) {
         entity.setTarget(null);
         owner.pursuit().clearTarget();
         owner.pursuit().clearMemory();

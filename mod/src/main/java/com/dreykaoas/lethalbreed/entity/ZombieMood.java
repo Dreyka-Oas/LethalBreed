@@ -365,7 +365,7 @@ public final class ZombieMood {
             return;
         }
         sleepSeekingShade = false;
-        suppressHunt();
+        MoodStateDispatch.dropHunt(entity, owner);
         entity.getNavigation().stop();
         // Grounded → freeze vanilla AI so RandomStrollGoal (default-on) can't walk the dozing zombie around.
         // Cleared on wake via clearSleepState(). Safe now because it's on the ground (gravity already applied).
@@ -375,13 +375,6 @@ public final class ZombieMood {
         }
         owner.setState(ZombieState.SLEEPING);
         owner.setLod(LODLevel.FROZEN);
-    }
-
-    private void suppressHunt() {
-        entity.setTarget(null);
-        owner.pursuit().clearTarget();
-        owner.pursuit().clearMemory();
-        owner.pursuit().clearSound();
     }
 
     /** Leave the SLEEPING state. When {@code investigate}, seed short-term memory with the last heard noise so
