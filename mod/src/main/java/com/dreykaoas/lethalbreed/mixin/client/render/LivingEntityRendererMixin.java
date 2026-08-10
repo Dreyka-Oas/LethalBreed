@@ -24,7 +24,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 @Mixin(LivingEntityRenderer.class)
 public class LivingEntityRendererMixin {
 
-    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
+    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "extractRenderState", at = @At("TAIL"))
     private void lethalbreed$carryBellyCharge(LivingEntity entity, LivingEntityRenderState state,
                                               float partialTick, CallbackInfo ci) {

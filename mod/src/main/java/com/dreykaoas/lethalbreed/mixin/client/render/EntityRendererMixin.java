@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityRenderer.class)
 public class EntityRendererMixin {
 
-    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
+    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private void lethalbreed$cullDistantZombies(Entity entity, Frustum frustum,
                                                 double camX, double camY, double camZ,
