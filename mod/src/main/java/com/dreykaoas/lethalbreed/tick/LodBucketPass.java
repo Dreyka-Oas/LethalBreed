@@ -34,6 +34,17 @@ final class LodBucketPass {
     // activation instead of always the same id-residue set.
     private long frozenRound = 0L;
 
+    /** Record one profiling checkpoint and return the new "last timestamp", or {@code t} unchanged when
+     *  profiling is off. No allocation — safe to call every activation of this hot per-zombie loop. */
+    private static long mark(StageProfiler profiler, StageProfiler.Stage stage, boolean prof, long t) {
+        if (!prof) {
+            return t;
+        }
+        long n = System.nanoTime();
+        profiler.add(stage, n - t);
+        return n;
+    }
+
     void run(MinecraftServer server, int buckets, int currentBucket, Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
         // buckets is supplied by the scheduler (the same value it used to derive currentBucket), so membership
         // stays consistent even when autoScaleBuckets recomputes it from population each tick. Computing the
@@ -100,45 +111,25 @@ final class LodBucketPass {
             // ALL buckets — a global tick%interval would only ever align with bucket 0.
             WorldAIContext classifyCtx = dimensions.get(sz.dimension());
             LODManager.classify(sz, level, classifyCtx.targetIndex());
-            if (prof) {
-                long n = System.nanoTime();
-                profiler.add(StageProfiler.Stage.CLASSIFY, n - t);
-                t = n;
-            }
+            t = mark(profiler, StageProfiler.Stage.CLASSIFY, prof, t);
             LODLevel lod = sz.lod();
             WorldAIContext ctx = dimensions.get(sz.dimension());
             // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
             // so neighbour queries still find them: a Hurleur rallying idle zombies, a Soigneur healing them,
             // and sound propagation all target exactly these.
             ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
-            if (prof) {
-                long n = System.nanoTime();
-                profiler.add(StageProfiler.Stage.GRID, n - t);
-                t = n;
-            }
+            t = mark(profiler, StageProfiler.Stage.GRID, prof, t);
             // Pack decision runs here, BEFORE the FROZEN skip: a zombie with nothing to hunt is frozen, and
             // a frozen zombie looking for company is the nominal case for forming a pack, not an edge one.
             PackPass.decide(sz, ctx);
-            if (prof) {
-                long n = System.nanoTime();
-                profiler.add(StageProfiler.Stage.PACK, n - t);
-                t = n;
-            }
+            t = mark(profiler, StageProfiler.Stage.PACK, prof, t);
             // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
             sz.applySunBurn(level);
-            if (prof) {
-                long n = System.nanoTime();
-                profiler.add(StageProfiler.Stage.SUNBURN, n - t);
-                t = n;
-            }
+            t = mark(profiler, StageProfiler.Stage.SUNBURN, prof, t);
             // Mood (celebrate/flee/regen) also runs before the FROZEN skip so a targetless fleeing/celebrating
             // zombie still gets processed; it can un-freeze itself (LOD→HIGH), so re-read the tier afterward.
             sz.updateMood(level, ctx);
-            if (prof) {
-                long n = System.nanoTime();
-                profiler.add(StageProfiler.Stage.MOOD, n - t);
-                t = n;
-            }
+            t = mark(profiler, StageProfiler.Stage.MOOD, prof, t);
             lod = sz.lod();
             if (lod == LODLevel.FROZEN) {
                 continue;
@@ -168,9 +159,7 @@ final class LodBucketPass {
 
             long tt = prof ? System.nanoTime() : 0L;
             sz.tick(level, ctx);
-            if (prof) {
-                profiler.add(StageProfiler.Stage.TICK, System.nanoTime() - tt);
-            }
+            mark(profiler, StageProfiler.Stage.TICK, prof, tt);
             if (sz.isClimbing()) {
                 climbers.add(sz);
             }
