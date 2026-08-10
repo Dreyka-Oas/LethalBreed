@@ -47,8 +47,6 @@ final class WorldMaintenance {
         });
     }
 
-    /** Re-bucket moved prey and drop dead prey, once per dimension per tick. Costs O(prey), never
-     *  O(zombies) — that asymmetry is the entire reason the index exists. */
     /** Advance every pack in every loaded dimension: lifecycle first, then the march that plants the shared
      *  waypoint. Must run BEFORE the bucket pass — LODManager reads that waypoint in the same activation, so
      *  planting it afterwards would leave marching members frozen for one whole cycle. */
