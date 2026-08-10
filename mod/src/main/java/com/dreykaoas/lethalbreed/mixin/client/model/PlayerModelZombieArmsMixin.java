@@ -25,7 +25,7 @@ public abstract class PlayerModelZombieArmsMixin extends HumanoidModel<AvatarRen
         super(root);
     }
 
-    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
+    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
     private void lethalbreed$zombieArms(AvatarRenderState state, CallbackInfo ci) {
         if (!((ZombieRenderFlags) state).lethalbreed$hallucinateZombie()) {

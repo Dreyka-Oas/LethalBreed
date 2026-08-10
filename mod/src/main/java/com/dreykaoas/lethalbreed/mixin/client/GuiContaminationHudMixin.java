@@ -26,7 +26,7 @@ public class GuiContaminationHudMixin {
      *  the sprite keeps its colour and only reads faintly sickly (red channel pulled down a touch). */
     private static final int TINT = 0xFF_D8FFD8;
 
-    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
+    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Redirect(require = 0, method = "renderHeart",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"))

@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(net.minecraft.client.renderer.entity.player.AvatarRenderer.class)
 public abstract class AvatarRendererHallucinationMixin {
 
-    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
+    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
             at = @At("TAIL"))
     private void lethalbreed$tagHallucination(net.minecraft.world.entity.Avatar entity, AvatarRenderState state,
