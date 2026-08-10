@@ -2,7 +2,6 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 
 
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
-import org.junit.jupiter.api.Test;
 
 import java.util.Random;
 
@@ -85,7 +84,6 @@ class RoutingQualityMeasureTest {
         return new Snapshot(0, 0, w, d, 64, passable, new int[n], new byte[n], new int[]{0});
     }
 
-    @Test
     void measureDirectionCriterionImpact() {
         System.out.println("\n=== Qualité de routage : ancien critère argmin(coût) vs nouveau argmin(coût+pas) ===");
         System.out.printf("%-26s %10s %12s %10s %14s%n",

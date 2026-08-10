@@ -2,7 +2,6 @@ package com.dreykaoas.lethalbreed.client.screen;
 
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -100,11 +99,6 @@ public final class CustomConfigScreen extends Screen {
     /** Auto-save: push one edit to the server (applies live + persists to JSON). */
     private void send(String name, String value) {
         ClientPlayNetworking.send(new LethalConfigPayloads.SetConfig(name, value));
-    }
-
-    @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partial) {
-        super.render(g, mouseX, mouseY, partial);
     }
 
     @Override

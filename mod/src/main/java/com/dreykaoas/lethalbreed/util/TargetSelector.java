@@ -54,12 +54,6 @@ public final class TargetSelector {
         return !e.isSpectator();
     }
 
-    /** Nearest valid living target that the zombie can SEE within {@code radius}, or null. VISION ONLY — sight
-     *  primes over sound by design: a live combat target is acquired only by line of sight (opaque blocks block
-     *  it; glass/ice/leaves do not). Hearing is handled separately by the sound bus: a heard noise feeds
-     *  the zombie's short-term MEMORY so it walks to investigate the SPOT, and this seen target overrides that
-     *  memory in {@code LODManager} the instant something comes into view. So a zombie hears a mob move behind a
-     *  wall and commits to the noise location; once it rounds the wall and sees the mob, sight takes over. */
     /** Sticky variant: prefer the already-committed {@code current} target over a marginally-closer new one
      *  (see {@link TargetingConfig#targetSwitchMargin}). While a zombie digs through a wall toward its prey the
      *  wall blocks LOS to that prey, so the plain nearest-visible pick would flip to whatever else is in view
@@ -82,6 +76,12 @@ public final class TargetSelector {
         return curSq <= self.distanceToSqr(best) * margin * margin ? current : best;
     }
 
+    /** Nearest valid living target that the zombie can SEE within {@code radius}, or null. VISION ONLY — sight
+     *  primes over sound by design: a live combat target is acquired only by line of sight (opaque blocks block
+     *  it; glass/ice/leaves do not). Hearing is handled separately by the sound bus: a heard noise feeds
+     *  the zombie's short-term MEMORY so it walks to investigate the SPOT, and this seen target overrides that
+     *  memory in {@code LODManager} the instant something comes into view. So a zombie hears a mob move behind a
+     *  wall and commits to the noise location; once it rounds the wall and sees the mob, sight takes over. */
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, TargetIndex index) {
         boolean prof = StageProfiler.enabled();
         long t0 = prof ? System.nanoTime() : 0L;
