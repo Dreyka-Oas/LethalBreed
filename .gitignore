@@ -30,3 +30,6 @@ Thumbs.db
 
 # Logs serveur régénérés à chaque lancement (Gradle/Minecraft)
 /mod/logs/
+
+# Local git worktrees (sdd execution) — never tracked
+/.worktrees/
