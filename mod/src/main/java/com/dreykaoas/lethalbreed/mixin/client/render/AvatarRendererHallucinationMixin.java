@@ -25,9 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(net.minecraft.client.renderer.entity.player.AvatarRenderer.class)
 public abstract class AvatarRendererHallucinationMixin {
 
-    // require = 0: purely presentational. lethalbreed.mixins.json sets defaultRequire=1, which turns any
-    // failed injection into a hard crash at load — correct for gameplay mixins, wrong here. A HUD or
-    // render mod that redirects the same call should cost the player a visual effect, not the game.
+    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
     @Inject(require = 0, method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
             at = @At("TAIL"))
     private void lethalbreed$tagHallucination(net.minecraft.world.entity.Avatar entity, AvatarRenderState state,

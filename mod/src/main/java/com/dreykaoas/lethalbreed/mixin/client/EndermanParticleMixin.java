@@ -22,9 +22,7 @@ public abstract class EndermanParticleMixin {
     private static final DustParticleOptions LETHALBREED$BLACK =
             new DustParticleOptions(0x000000, 1.0f);
 
-    // require = 0: purely presentational. lethalbreed.mixins.json sets defaultRequire=1, which turns any
-    // failed injection into a hard crash at load — correct for gameplay mixins, wrong here. A HUD or
-    // render mod that redirects the same call should cost the player a visual effect, not the game.
+    // require = 0: purely presentational — see PresentationalMixinNotes in this package's parent (mixin.client).
     @Redirect(require = 0, 
             method = "aiStep",
             at = @At(value = "INVOKE",
