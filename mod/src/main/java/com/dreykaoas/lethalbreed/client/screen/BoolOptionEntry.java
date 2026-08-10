@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.client.screen;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 
@@ -37,7 +38,7 @@ public final class BoolOptionEntry extends OptionEntry {
     }
 
     @Override
-    protected net.minecraft.client.gui.components.AbstractWidget control() {
+    protected AbstractWidget control() {
         return toggle;
     }
 }

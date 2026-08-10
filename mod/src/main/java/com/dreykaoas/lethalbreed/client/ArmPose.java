@@ -1,5 +1,7 @@
 package com.dreykaoas.lethalbreed.client;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.model.geom.ModelPart;
 
 /**
@@ -10,6 +12,7 @@ import net.minecraft.client.model.geom.ModelPart;
  * <p>Deliberately kept outside the {@code mixin} package tree: {@code MixinConfigTest} requires every
  * {@code .java} file under {@code mixin} to be a declared mixin, and this is a plain helper, not a mixin.
  */
+@Environment(EnvType.CLIENT)
 public final class ArmPose {
     private ArmPose() {}
 
