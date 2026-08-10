@@ -57,7 +57,7 @@ public final class TargetIndex {
     }
 
     private static long packKey(int cx, int cz) {
-        return (((long) cx) << 32) ^ (cz & 0xffffffffL);
+        return CellMath.packKey(cx, cz);
     }
 
     private static long keyOf(double x, double z) {
@@ -154,10 +154,10 @@ public final class TargetIndex {
         if (tracked.isEmpty()) {
             return;
         }
-        int minCx = Math.floorDiv((int) Math.floor(x - radius), CELL);
-        int maxCx = Math.floorDiv((int) Math.floor(x + radius), CELL);
-        int minCz = Math.floorDiv((int) Math.floor(z - radius), CELL);
-        int maxCz = Math.floorDiv((int) Math.floor(z + radius), CELL);
+        int minCx = CellMath.floorCell(x - radius, CELL);
+        int maxCx = CellMath.floorCell(x + radius, CELL);
+        int minCz = CellMath.floorCell(z - radius, CELL);
+        int maxCz = CellMath.floorCell(z + radius, CELL);
         double r2 = radius * radius;
         for (int cx = minCx; cx <= maxCx; cx++) {
             for (int cz = minCz; cz <= maxCz; cz++) {

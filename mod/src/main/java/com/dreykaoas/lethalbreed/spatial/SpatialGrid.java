@@ -41,7 +41,7 @@ public final class SpatialGrid {
     /** Pack a cell coordinate pair into one long key. The single source of truth for the cell hashing, so the
      *  radius scan and {@link #key} can never drift into two different packings. */
     private static long packKey(int cx, int cz) {
-        return (((long) cx) << 32) ^ (cz & 0xffffffffL);
+        return CellMath.packKey(cx, cz);
     }
 
     /** Re-bucket a zombie if it crossed a cell boundary. Returns the new cell key. */
@@ -90,10 +90,10 @@ public final class SpatialGrid {
     public List<SmartZombie> queryRadiusInto(List<SmartZombie> out, double x, double y, double z, double radius) {
         out.clear();
         int cell = cellSize();
-        int minCx = Math.floorDiv((int) Math.floor(x - radius), cell);
-        int maxCx = Math.floorDiv((int) Math.floor(x + radius), cell);
-        int minCz = Math.floorDiv((int) Math.floor(z - radius), cell);
-        int maxCz = Math.floorDiv((int) Math.floor(z + radius), cell);
+        int minCx = CellMath.floorCell(x - radius, cell);
+        int maxCx = CellMath.floorCell(x + radius, cell);
+        int minCz = CellMath.floorCell(z - radius, cell);
+        int maxCz = CellMath.floorCell(z + radius, cell);
         double r2 = radius * radius;
         double vlim = SchedulerConfig.spatialVerticalLimit;
         boolean checkY = vlim > 0.0 && !Double.isNaN(y);
