@@ -83,8 +83,7 @@ public final class LethalBreedClientConfig {
 
     /** Clamp the deserialized fields that are actually consumed at runtime. Only {@link #zombieRenderDistance}
      *  feeds {@link #effectiveCullDistanceSq}; a hand-edited {@code NaN}/negative there would break culling
-     *  (NaN disables it, a negative is squared to a positive cull radius). The Phase-7 reserved knobs are not
-     *  read yet, so they need no clamp until they are wired up. */
+     *  (NaN disables it, a negative is squared to a positive cull radius). */
     private void sanitize() {
         if (!Double.isFinite(zombieRenderDistance) || zombieRenderDistance < 0) {
             zombieRenderDistance = 96.0;
