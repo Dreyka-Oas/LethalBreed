@@ -96,7 +96,7 @@ public final class BreakManager {
             float mult = (float) Math.min(CombatMoveConfig.breakConcentrationCap,
                     1.0 + (concentrators - 1) * CombatMoveConfig.breakConcentrationPerBreaker);
             s.progress += rate * toolSpeed * mult / hardness;
-            s.showStage(level, pos, CrackingBlock.stage(s.progress * 10f));
+            s.showStage(level, pos, PlacedBlockPolicy.stage(s.progress * 10f));
             if (s.progress >= 1.0f) {
                 level.destroyBlock(pos, CombatMoveConfig.breakDropsItems, null, 512); // break effects; drops per config
                 s.clearCracks(level, pos);
