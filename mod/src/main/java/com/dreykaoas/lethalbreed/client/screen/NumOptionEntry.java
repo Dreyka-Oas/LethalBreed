@@ -4,11 +4,8 @@ import com.dreykaoas.lethalbreed.config.schema.ConfigType;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 
 /** Option row for a numeric value: an edit field validated against the row's kind (int/long/double). */
@@ -71,12 +68,7 @@ public final class NumOptionEntry extends OptionEntry {
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
-        return List.of(edit, reset);
-    }
-
-    @Override
-    public List<? extends NarratableEntry> narratables() {
-        return List.of(edit, reset);
+    protected net.minecraft.client.gui.components.AbstractWidget control() {
+        return edit;
     }
 }

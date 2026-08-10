@@ -5,6 +5,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
@@ -36,6 +38,20 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
     }
 
     protected abstract void doReset();
+
+    /** The one value-editing widget this row owns (a toggle button, an edit box, ...). Used to build the
+     *  shared focus/narration lists below — the reset button is common to every row, only this differs. */
+    protected abstract AbstractWidget control();
+
+    @Override
+    public List<? extends GuiEventListener> children() {
+        return List.of(control(), reset);
+    }
+
+    @Override
+    public List<? extends NarratableEntry> narratables() {
+        return List.of(control(), reset);
+    }
 
     /** Push any change this row is still holding back. Rows that send on every keystroke have nothing to do;
      *  {@link NumOptionEntry} debounces its edit field and overrides this so a pending edit is not lost when

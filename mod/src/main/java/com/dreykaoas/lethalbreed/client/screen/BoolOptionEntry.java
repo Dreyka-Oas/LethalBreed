@@ -3,11 +3,8 @@ package com.dreykaoas.lethalbreed.client.screen;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 
 /** Option row for a boolean value: an ON/OFF toggle button. */
@@ -40,12 +37,7 @@ public final class BoolOptionEntry extends OptionEntry {
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
-        return List.of(toggle, reset);
-    }
-
-    @Override
-    public List<? extends NarratableEntry> narratables() {
-        return List.of(toggle, reset);
+    protected net.minecraft.client.gui.components.AbstractWidget control() {
+        return toggle;
     }
 }
