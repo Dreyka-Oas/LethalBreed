@@ -32,11 +32,9 @@ public abstract class PlayerModelZombieArmsMixin extends HumanoidModel<AvatarRen
             return;
         }
         // Classic zombie stance: both arms straight out (~90° forward), no swing, slight inward tilt.
-        this.rightArm.xRot = -1.5f;
-        this.leftArm.xRot = -1.5f;
-        this.rightArm.yRot = 0.0f;
-        this.leftArm.yRot = 0.0f;
-        this.rightArm.zRot = 0.05f;
-        this.leftArm.zRot = -0.05f;
+        // Fully qualified: HumanoidModel declares its own nested ArmPose enum, which this mixin inherits
+        // and which would otherwise shadow the imported com.dreykaoas.lethalbreed.client.ArmPose helper.
+        com.dreykaoas.lethalbreed.client.ArmPose.set(this.rightArm, -1.5f, 0.0f, 0.05f);
+        com.dreykaoas.lethalbreed.client.ArmPose.set(this.leftArm, -1.5f, 0.0f, -0.05f);
     }
 }

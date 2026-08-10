@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client.model;
 
+import com.dreykaoas.lethalbreed.client.ArmPose;
 import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -30,11 +31,7 @@ public class ZombieSleepArmsMixin {
             return;
         }
         HumanoidModel<?> model = (HumanoidModel<?>) (Object) this;
-        model.rightArm.xRot = 0.0f;
-        model.leftArm.xRot = 0.0f;
-        model.rightArm.yRot = 0.0f;
-        model.leftArm.yRot = 0.0f;
-        model.rightArm.zRot = 0.0f;
-        model.leftArm.zRot = 0.0f;
+        ArmPose.set(model.rightArm, 0.0f, 0.0f, 0.0f);
+        ArmPose.set(model.leftArm, 0.0f, 0.0f, 0.0f);
     }
 }
