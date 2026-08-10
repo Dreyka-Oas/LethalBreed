@@ -1,14 +1,12 @@
 package com.dreykaoas.lethalbreed.config.bounds.engine;
 
 import com.dreykaoas.lethalbreed.config.BoundsRegistrar;
+import com.dreykaoas.lethalbreed.config.bounds.BoundsSplitNote;
 
 /**
  * Clamp ranges for the flow-field and pathing options (Compute / Pathing / Climb).
  *
- * <p>Split out of {@code ConfigBoundsTable}, which had grown to 305 append-only lines across nine unrelated
- * domains. Registration order does not matter — the table is a map keyed by lower-cased option name — but
- * grouping does: a bound belongs next to the options it governs, and {@code ConfigBoundsTest} fails the build
- * if any numeric option loses one.
+ * <p>See {@link BoundsSplitNote} for why this is its own class instead of one shared table.
  */
 public final class FlowBounds {
     private FlowBounds() {}
