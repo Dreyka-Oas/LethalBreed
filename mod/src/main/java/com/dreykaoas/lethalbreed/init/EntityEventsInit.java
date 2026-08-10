@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.init;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
+import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
@@ -12,6 +13,8 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.spawn.SpawnControl;
 import com.dreykaoas.lethalbreed.entity.spawn.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
+import com.dreykaoas.lethalbreed.pack.PackAttachment;
+import com.dreykaoas.lethalbreed.pack.PackJoinRule;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.spatial.TargetIndex;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
@@ -76,7 +79,18 @@ public final class EntityEventsInit {
                 // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
                 zombie.setPersistenceRequired();
                 AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
-                registry.add(zombie, world.dimension());
+                SmartZombie sz = registry.add(zombie, world.dimension());
+                // A member that went to disk carrying its pack attachment (see EntityEventsInit's
+                // ENTITY_UNLOAD handler, and PackAttachment's own javadoc) re-joins here, on the way back.
+                // Without this, the attachment is written but never read, so a straggler never returns to
+                // its pack — the pack's `detached` count never comes down, and it can outlive every real
+                // member it ever had.
+                if (PackConfig.packEnabled) {
+                    long packId = zombie.getAttachedOrElse(PackAttachment.PACK, PackJoinRule.NO_PACK);
+                    if (packId != PackJoinRule.NO_PACK) {
+                        dimensions.get(world.dimension()).packManager().rejoin(sz, packId);
+                    }
+                }
                 // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
                 // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
                 // setNoAi(true) applied by the caller a line before addFreshEntity — which is exactly how
@@ -103,6 +117,19 @@ public final class EntityEventsInit {
                 // here was never visited again and its cell slot stayed for the rest of the session —
                 // every death and every chunk unload leaked one, pinning entity -> level -> server, and
                 // neighbour queries (sound, Hurleur rally, Soigneur heal) kept matching those ghosts.
+                if (sz != null && sz.pursuit().pack().inPack()) {
+                    // The chunk beat the materialiser to it. The zombie is on its way to disk WITH its pack
+                    // attachment, so it will re-join on the way back: count it detached and write no ghost.
+                    // Writing one here is how a member ends up existing twice, and nothing in this mod ever
+                    // despawns, so a duplicate is permanent. Losing a straggler is the cheaper failure.
+                    // getRemovalReason().shouldSave() distinguishes "went to disk" from "was destroyed".
+                    var reason = entity.getRemovalReason();
+                    if (reason != null && reason.shouldSave()) {
+                        dimensions.get(sz.dimension()).packManager().detach(sz);
+                    } else {
+                        dimensions.get(sz.dimension()).packManager().leave(sz);
+                    }
+                }
                 if (sz != null) {
                     // Hand vanilla AI back BEFORE the mood object goes away. NoAI is persisted to NBT,
                     // the "we froze it" flag is not — so a dozing zombie unloaded while frozen would be

@@ -55,4 +55,32 @@ class PackStateTest {
         assertEquals(1, p.totalMembers());
         assertFalse(p.isEmpty());
     }
+
+    @Test
+    void aFreshlyCapturedGhostStartsAtZeroRetries() {
+        assertEquals(0, new Ghost(1L, 2L, new byte[0]).retries());
+    }
+
+    // ---- Materialiser give-up threshold ----
+
+    @Test
+    void aDisabledLimitNeverGivesUp() {
+        // packMaterializeRetries <= 0 must reproduce the old, pre-cutoff behaviour: retried forever.
+        assertFalse(PackState.retriesExhausted(0, 0));
+        assertFalse(PackState.retriesExhausted(1_000_000, 0));
+        assertFalse(PackState.retriesExhausted(5, -1));
+    }
+
+    @Test
+    void aGhostIsKeptWhileBelowTheLimit() {
+        assertFalse(PackState.retriesExhausted(4, 5));
+    }
+
+    @Test
+    void aGhostIsDroppedOnceItReachesTheLimit() {
+        // >= , not >: the sweep that pushes retries to the limit is the one that gives up, so a member is
+        // never carried one extra sweep past the operator's configured budget.
+        assertTrue(PackState.retriesExhausted(5, 5));
+        assertTrue(PackState.retriesExhausted(6, 5));
+    }
 }

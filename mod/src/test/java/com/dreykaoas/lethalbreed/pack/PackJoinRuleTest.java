@@ -172,4 +172,29 @@ class PackJoinRuleTest {
                 new long[] {99L, 99L}, new int[] {2, 3}, new double[] {1.0, 1.0}, 2);
         assertEquals(Kind.NONE, d.kind());
     }
+
+    // ---- Rejoin radius ----
+
+    @Test
+    void aMemberWellInsideTheRejoinRadiusIsNotTooFar() {
+        assertEquals(false, PackJoinRule.outsideRejoinRadius(30.0 * 30.0, 64.0));
+    }
+
+    @Test
+    void aMemberBeyondTheRejoinRadiusIsTooFar() {
+        assertEquals(true, PackJoinRule.outsideRejoinRadius(100.0 * 100.0, 64.0));
+    }
+
+    @Test
+    void exactlyAtTheRejoinRadiusIsStillCloseEnough() {
+        assertEquals(false, PackJoinRule.outsideRejoinRadius(64.0 * 64.0, 64.0));
+    }
+
+    @Test
+    void aNegativeConfiguredRadiusBehavesAsZero() {
+        // Bounds already keep packRejoinRadius positive in practice, but the guard must not let a
+        // misconfigured negative radius flip the comparison and accept anything as "close enough".
+        assertEquals(true, PackJoinRule.outsideRejoinRadius(1.0, -10.0));
+        assertEquals(false, PackJoinRule.outsideRejoinRadius(0.0, -10.0));
+    }
 }

@@ -333,4 +333,10 @@ packArriveDistance
 packMarchLead
 packStuckActivations
 packMigrateAtDay
+packVirtualEnabled
+packMaterializeInterval
+packDematGraceTicks
+packSpawnSpread
+packMaterializeRetries
+packRejoinRadius
 debugPacks

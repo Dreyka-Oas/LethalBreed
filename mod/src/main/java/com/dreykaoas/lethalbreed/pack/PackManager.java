@@ -82,9 +82,23 @@ public final class PackManager implements PackLifecycle.Registry {
         PackMembership.leave(sz, get(sz.pursuit().pack().packId()));
     }
 
-    /** A member came back from disk carrying a pack id. False → the pack is gone and the tag was cleared. */
+    /** A member came back from disk carrying a pack id. False → the pack is gone, or it reloaded too far from
+     *  where the pack now is, and the tag was cleared either way. */
     public boolean rejoin(SmartZombie sz, long packId) {
-        return PackMembership.rejoin(sz, get(packId));
+        PackState pack = get(packId);
+        if (pack != null) {
+            double dx = sz.x() - pack.x;
+            double dz = sz.z() - pack.z;
+            if (PackJoinRule.outsideRejoinRadius(dx * dx + dz * dz, PackConfig.packRejoinRadius)) {
+                // Too far from the pack's current position to still belong to it. It was counted `detached`
+                // while it sat on disk; release that count here too, or the pack would keep believing a
+                // member exists that will now never tick, ghost, or detach again.
+                pack.detached = Math.max(0, pack.detached - 1);
+                PackMembership.leave(sz, null);
+                return false;
+            }
+        }
+        return PackMembership.rejoin(sz, pack);
     }
 
     /** A member's chunk unloaded before we could snapshot it. See {@link PackMembership#detach}. */
@@ -114,6 +128,27 @@ public final class PackManager implements PackLifecycle.Registry {
             PackLifecycle.merge(pack, ordered, this, this::get);
         }
         cursor %= Math.max(1, ordered.size());
+    }
+
+    /** The id the next pack will take, so persistence can resume the sequence instead of reusing ids. */
+    public long nextId() {
+        return nextId;
+    }
+
+    /**
+     * Adopt a persisted set of packs at world load.
+     *
+     * <p>Their {@code liveIds} are left empty on purpose: runtime entity ids are reassigned every reload, so
+     * the live roster is rebuilt as members come back and re-join through their attachment. What is restored
+     * is the part nothing else owns — route, seed, ghosts, and the detached count.
+     */
+    public void restore(Iterable<PackState> saved, long nextId) {
+        packs.clear();
+        for (PackState p : saved) {
+            packs.put(p.id, p);
+        }
+        this.nextId = Math.max(1L, nextId);
+        this.cursor = 0;
     }
 
     /** This pack's own random stream. Re-derived per destination rather than kept as a field, so a reload
