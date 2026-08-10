@@ -5,8 +5,7 @@ import com.dreykaoas.lethalbreed.config.BoundsRegistrar;
 /**
  * Clamp ranges for the pack instinct and migration options.
  *
- * <p>Every numeric option needs an entry: {@code ConfigBoundsTest.everyScalarNumericOptionHasBounds} fails
- * the build otherwise. Booleans are exempt.
+ * <p>See {@link BoundsSplitNote} for why this is its own class instead of one shared table.
  */
 public final class PackBounds {
     private PackBounds() {}

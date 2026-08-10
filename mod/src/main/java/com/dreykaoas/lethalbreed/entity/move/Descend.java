@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Descend toward a lower target. Prefers to just walk: flat ground ahead is walked across, a short safe
- * drop ({@link LethalBreedConfig#safeDropBlocks}) is stepped off for free. Only when neither is possible
+ * drop ({@link CombatMoveConfig#safeDropBlocks}) is stepped off for free. Only when neither is possible
  * does it carve a forward STAIRCASE or build a stair over a genuine void — so it never breaks a floor it
  * could stand on, nor digs itself into an unsafe fall.
  */
