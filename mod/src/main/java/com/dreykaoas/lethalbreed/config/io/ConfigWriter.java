@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.config.io;
 
 import com.dreykaoas.lethalbreed.config.schema.ConfigCategory;
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
+import com.dreykaoas.lethalbreed.config.schema.ConfigPrimitive;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.google.gson.Gson;
@@ -43,24 +44,22 @@ public final class ConfigWriter {
                 json = new JsonObject();
                 byCategory.put(category, json);
             }
-            Class<?> t = f.getType();
+            ConfigPrimitive primitive = ConfigPrimitive.of(f.getType());
             try {
-                if (t == boolean.class) {
-                    json.add(f.getName(), new JsonPrimitive(f.getBoolean(null)));
-                } else if (t == int.class) {
-                    json.add(f.getName(), new JsonPrimitive(f.getInt(null)));
-                } else if (t == long.class) {
-                    json.add(f.getName(), new JsonPrimitive(f.getLong(null)));
-                } else if (t == double.class) {
-                    json.add(f.getName(), new JsonPrimitive(f.getDouble(null)));
-                } else if (t == float.class) {
-                    json.add(f.getName(), new JsonPrimitive(f.getFloat(null)));
-                } else if (t == double[].class) {
-                    com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
-                    for (double v : (double[]) f.get(null)) {
-                        arr.add(v);
+                switch (primitive) {
+                    case BOOL -> json.add(f.getName(), new JsonPrimitive(f.getBoolean(null)));
+                    case INT -> json.add(f.getName(), new JsonPrimitive(f.getInt(null)));
+                    case LONG -> json.add(f.getName(), new JsonPrimitive(f.getLong(null)));
+                    case DOUBLE -> json.add(f.getName(), new JsonPrimitive(f.getDouble(null)));
+                    case FLOAT -> json.add(f.getName(), new JsonPrimitive(f.getFloat(null)));
+                    case LIST -> {
+                        com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+                        for (double v : (double[]) f.get(null)) {
+                            arr.add(v);
+                        }
+                        json.add(f.getName(), arr);
                     }
-                    json.add(f.getName(), arr);
+                    case null -> { /* unsupported field type: ConfigFields.all() never yields one. */ }
                 }
             } catch (IllegalAccessException e) {
                 // Not writing an option here makes it vanish from the file on this save and come back as a

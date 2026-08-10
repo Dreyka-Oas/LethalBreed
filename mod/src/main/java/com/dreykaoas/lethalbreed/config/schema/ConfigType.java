@@ -13,13 +13,8 @@ public final class ConfigType {
     private ConfigType() {}
 
     public static String kind(Field f) {
-        Class<?> t = f.getType();
-        if (t == boolean.class) return "bool";
-        if (t == int.class) return "int";
-        if (t == long.class) return "long";
-        if (t == double.class) return "double";
-        if (t == double[].class) return "list";
-        return "float";
+        ConfigPrimitive p = ConfigPrimitive.of(f.getType());
+        return p != null ? p.label() : "float";
     }
 
     /** Format a double[] as a compact CSV (the storage + edit form for list options). */
