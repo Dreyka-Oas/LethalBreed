@@ -21,15 +21,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractZombieModel.class)
 public class ZombieBellyModelMixin {
 
+    /** How much charge=1 inflates the belly on x/z, on top of the base 1.0 scale — see class javadoc. */
+    private static final float GIRTH_XZ_SCALE = 1.3f;
+    /** How much charge=1 inflates the belly on y, on top of the base 1.0 scale — see class javadoc. */
+    private static final float GIRTH_Y_SCALE = 0.35f;
+
     // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$swellBelly(ZombieRenderState state, CallbackInfo ci) {
         float charge = ((ZombieRenderFlags) state).lethalbreed$bellyCharge();
         ModelPart body = ((HumanoidModel<?>) (Object) this).body;
-        float girth = 1.0f + charge * 1.3f;
+        float girth = 1.0f + charge * GIRTH_XZ_SCALE;
         body.xScale = girth;
         body.zScale = girth;
-        body.yScale = 1.0f + charge * 0.35f;
+        body.yScale = 1.0f + charge * GIRTH_Y_SCALE;
     }
 }
