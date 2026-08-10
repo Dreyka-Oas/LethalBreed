@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
+import com.dreykaoas.lethalbreed.entity.spawn.SpawnControl;
 import com.dreykaoas.lethalbreed.phase.PhaseConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
@@ -12,12 +13,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.Random;
 
@@ -43,7 +42,7 @@ public final class ZombieVariation {
     private static final long PHASE_SALT = 91237L;
 
     public static void apply(Zombie z) {
-        stripGear(z); // zombies never carry weapons/tools/armor (also clears vanilla natural gear + pickups)
+        SpawnControl.stripEquipment(z); // zombies never carry weapons/tools/armor (also clears vanilla natural gear + pickups)
         if (WorldSpawnConfig.enableVariation) {
             Random r = seeded(z, 0L);
             applyMultiplier(z, Attributes.SCALE, SCALE_ID, roll(r, WorldSpawnConfig.varScaleMin, WorldSpawnConfig.varScaleMax));
@@ -57,21 +56,6 @@ public final class ZombieVariation {
         } else {
             applyRandomEffect(z); // legacy flat effect roll when the phase system is off
         }
-    }
-
-    /** The six wearable/held slots a zombie could otherwise show gear in. */
-    private static final EquipmentSlot[] GEAR_SLOTS = {
-            EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
-            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
-
-    /** Remove every held/worn item so a zombie never appears with a weapon, tool or armor (covers vanilla
-     *  natural spawn gear too), and stop it from picking gear up off the ground. */
-    private static void stripGear(Zombie z) {
-        for (EquipmentSlot slot : GEAR_SLOTS) {
-            z.setItemSlot(slot, ItemStack.EMPTY);
-            z.setDropChance(slot, 0.0f);
-        }
-        z.setCanPickUpLoot(false);
     }
 
     /**
