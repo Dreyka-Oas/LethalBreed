@@ -30,6 +30,19 @@ public final class PackJoinRule {
     private static final Decision NOTHING = new Decision(Kind.NONE, NO_PACK);
 
     /**
+     * Whether a member reloading from disk is too far from its pack's current position to still rejoin it.
+     *
+     * <p>Squared distance in, so the caller never takes a square root just to compare against a radius. A
+     * pack keeps wandering while one of its members sits on disk — sometimes for well over a thousand ticks,
+     * per this project's own measurements — so "still carries the old pack id" is not by itself proof the
+     * member belongs where the pack is now.
+     */
+    public static boolean outsideRejoinRadius(double distToPackSq, double radius) {
+        double r = Math.max(0, radius);
+        return distToPackSq > r * r;
+    }
+
+    /**
      * Decide what this zombie does about pack membership this activation.
      *
      * @param myPackId          its current pack, or {@link #NO_PACK}

@@ -40,5 +40,12 @@ public final class PackBounds {
         // classify marching members as FROZEN and stop the migration dead.
         r.b("packMarchLead", 4, 128);
         r.b("packStuckActivations", 1, 128);
+
+        // ---- Virtualisation ----  (packVirtualEnabled is a boolean: no bounds)
+        r.b("packMaterializeInterval", 1, 1200);
+        r.b("packDematGraceTicks", 0, 12_000);
+        r.b("packSpawnSpread", 1, 32);
+        r.b("packMaterializeRetries", 0, 64);
+        r.b("packRejoinRadius", 8, 512);
     }
 }

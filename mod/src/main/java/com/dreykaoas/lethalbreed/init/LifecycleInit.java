@@ -11,6 +11,7 @@ import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
+import com.dreykaoas.lethalbreed.pack.runtime.PackSavedData;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -55,6 +56,7 @@ public final class LifecycleInit {
                 }
             }
             PhaseManager.get().load(server); // restore the persisted phase (survives close/reopen)
+            PackSavedData.loadAll(server, dimensions); // packs keep their route and ghosts across a restart
         });
 
         // Tell an operator, once on join, that the config file has a structural problem. The startup
@@ -84,6 +86,8 @@ public final class LifecycleInit {
         // written. Do NOT "tidy" this back into the SERVER_STOPPED handler below — that silently reintroduces
         // the frozen-statue bug this exists to fix (audit #2).
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            // Before saveAllChunks: see the class javadoc for why this cannot move to STOPPED.
+            PackSavedData.saveAll(server, dimensions);
             // Hand vanilla AI back to every zombie we are currently freezing, BEFORE saveAllChunks flushes
             // NoAI to NBT. NoAI persists to NBT; our flag does not.
             for (SmartZombie sz : registry.all()) {

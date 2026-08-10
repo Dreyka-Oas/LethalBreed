@@ -75,6 +75,25 @@ public final class PackConfig {
      *  night and do not burn under the sun below the immunity phase. */
     public static boolean packMigrateAtDay = false;
 
+    // ---- Virtualisation hors-vue ----
+    /** Dematerialise packs nobody can see, and bring them back on approach.
+     *  <p>Its own switch rather than a corner of packMigrationEnabled: this is the one part of the system
+     *  that creates and destroys entities, so an operator who suspects it must be able to stop it alone
+     *  without also stopping migration. Off leaves packs fully materialised, which simply costs more. */
+    public static boolean packVirtualEnabled = true;
+    /** Ticks between two materialisation sweeps. The sweep is O(packs), not O(zombies). */
+    public static int packMaterializeInterval = 20;
+    /** Consecutive sweeps a pack must be found not entity-ticking before it is dematerialised.
+     *  <p>A grace period, not a timer: chunk unloading has been measured in this project at 2, 35, 272 and
+     *  once over 1200 ticks, so a single observation proves nothing. */
+    public static int packDematGraceTicks = 40;
+    /** Radius over which restored members are scattered, so a pack does not come back in one column. */
+    public static int packSpawnSpread = 6;
+    /** How many sweeps a ghost may fail to restore before the pack gives up on it. */
+    public static int packMaterializeRetries = 5;
+    /** How far from its pack a returning member may be and still re-join it. */
+    public static double packRejoinRadius = 64.0;
+
     /** Log pack formation, merges and destination changes. Noisy; dev only. */
     public static boolean debugPacks = false;
 }

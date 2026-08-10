@@ -4,7 +4,10 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.pack.PackState;
+import com.dreykaoas.lethalbreed.pack.runtime.PackMaterializer;
+import com.dreykaoas.lethalbreed.pack.runtime.PackVirtualMove;
 import com.dreykaoas.lethalbreed.pack.runtime.PackMarch;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -52,8 +55,18 @@ final class WorldMaintenance {
     void tickPacks(MinecraftServer server, long gameTime) {
         forEachLoadedContext(server, (level, ctx) -> {
             ctx.packManager().tick(gameTime);
+            boolean sweep = PackConfig.packVirtualEnabled
+                    && gameTime % Math.max(1, PackConfig.packMaterializeInterval) == 0L;
             for (PackState pack : ctx.packManager().all()) {
-                PackMarch.tick(level, ctx.packManager(), pack, gameTime);
+                if (sweep) {
+                    PackMaterializer.tick(level, pack, gameTime);
+                }
+                if (pack.phase == PackState.Phase.VIRTUAL) {
+                    // A dematerialised pack has no members to walk it: it advances as a point instead.
+                    PackVirtualMove.tick(level, ctx.packManager(), pack, gameTime);
+                } else {
+                    PackMarch.tick(level, ctx.packManager(), pack, gameTime);
+                }
             }
         });
     }

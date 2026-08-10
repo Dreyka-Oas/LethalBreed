@@ -34,8 +34,24 @@ public final class PackState {
      *
      *  <p>Bytes rather than a {@code CompoundTag} so this class keeps no Minecraft type; the conversion
      *  happens in the world-side snapshot code. The UUID is kept out of the blob as well as in it, so the
-     *  "is this one already back in the world?" check costs nothing to answer. */
-    public record Ghost(long uuidMsb, long uuidLsb, byte[] nbt) {}
+     *  "is this one already back in the world?" check costs nothing to answer.
+     *
+     *  <p>{@code retries} counts consecutive failed restore sweeps, so {@code PackMaterializer} can give up
+     *  on a ghost that can never come back (e.g. a permanently occluded spawn point) instead of retrying it
+     *  every sweep forever. Defaults to 0 for freshly captured ghosts and for ghosts saved before this field
+     *  existed. */
+    public record Ghost(long uuidMsb, long uuidLsb, byte[] nbt, int retries) {
+        public Ghost(long uuidMsb, long uuidLsb, byte[] nbt) {
+            this(uuidMsb, uuidLsb, nbt, 0);
+        }
+    }
+
+    /** Whether a ghost that has now failed {@code retries} consecutive restore sweeps should be dropped
+     *  rather than tried again next sweep. {@code limit <= 0} disables the cutoff — retried forever, which
+     *  is the behaviour from before this cutoff existed. */
+    public static boolean retriesExhausted(int retries, int limit) {
+        return limit > 0 && retries >= limit;
+    }
 
     public long id;
     /** Pack position. XZ only: Y is meaningless for a pack that flies over terrain, and is resolved against
