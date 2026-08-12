@@ -26,6 +26,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -42,68 +43,7 @@ public final class EntityEventsInit {
 
     /** Register / unregister vanilla zombies as they load into a server level, applying spawn control. */
     private static void registerTracking(ZombieRegistry registry, DimensionManager dimensions) {
-        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            // Phase-gated hostile filtering. In phase 0 (classic) NOTHING hostile spawns; in phases 1..15 only
-            // plain Zombie is allowed (every other hostile is culled). Applies only to freshly-added entities,
-            // not chunk-reloads (isAddedToLevel true == first add). We gate on the type filter regardless.
-            if (WorldSpawnConfig.nightSpawnEnabled && SpawnFilter.shouldCull(entity)) {
-                entity.discard();
-                return;
-            }
-            // Discard blocked drowned/babies BEFORE tracking, so we don't contamination-track an entity we
-            // then toss this same load.
-            if (WorldSpawnConfig.blockDrowned && entity.getType() == EntityType.DROWNED) {
-                entity.discard();
-                return;
-            }
-            if (WorldSpawnConfig.blockBabyZombies && entity instanceof Zombie zb && zb.isBaby()) {
-                zb.discard();
-                return;
-            }
-            ContaminationManager.onLoad(entity); // re-track contaminated
-            // Index anything huntable that isn't a zombie or a player, so target acquisition never has to
-            // walk the horde to discard it (see TargetIndex). Registered AFTER the discard branches above,
-            // so a culled entity is never indexed in the first place.
-            if (TargetIndex.indexable(entity)) {
-                dimensions.get(world.dimension()).targetIndex().track((net.minecraft.world.entity.LivingEntity) entity);
-            }
-            // Track all zombie variants (plain Zombie, Husk, ZombieVillager, ZombifiedPiglin...).
-            // Drowned + babies are handled above (discarded when blocked).
-            if (entity instanceof Zombie zombie) {
-                if (WorldSpawnConfig.stripZombieEquipment) {
-                    SpawnControl.stripEquipment(zombie);
-                }
-                // Vanilla despawns non-persistent MONSTER-category mobs once every player is far enough away
-                // (random roll past 32 blocks, unconditional past 128) — that would silently undo the whole
-                // LOD/FROZEN system (TickScheduler/SpatialGrid), which exists specifically to keep the zombie
-                // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
-                zombie.setPersistenceRequired();
-                AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
-                SmartZombie sz = registry.add(zombie, world.dimension());
-                // A member that went to disk carrying its pack attachment (see EntityEventsInit's
-                // ENTITY_UNLOAD handler, and PackAttachment's own javadoc) re-joins here, on the way back.
-                // Without this, the attachment is written but never read, so a straggler never returns to
-                // its pack — the pack's `detached` count never comes down, and it can outlive every real
-                // member it ever had.
-                if (PackConfig.packEnabled) {
-                    long packId = zombie.getAttachedOrElse(PackAttachment.PACK, PackJoinRule.NO_PACK);
-                    if (packId != PackJoinRule.NO_PACK) {
-                        dimensions.get(world.dimension()).packManager().rejoin(sz, packId);
-                    }
-                }
-                // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
-                // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
-                // setNoAi(true) applied by the caller a line before addFreshEntity — which is exactly how
-                // this project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
-                // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
-                // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
-                // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,
-                // so the repair cannot be made safe. Audit #2 is prevented at the source instead: the freeze
-                // is released on ENTITY_UNLOAD and on SERVER_STOPPING (before saveAllChunks), so no new
-                // statue is ever written. A world already carrying one can be repaired by hand with
-                //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
-            }
-        });
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> onEntityLoad(registry, dimensions, entity, world));
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
             // Prey leaves the index the moment it leaves the level. TargetIndex.refresh() also sweeps dead
             // entries defensively, but relying on that alone is how the SpatialGrid leak (P7-1) happened.
@@ -142,6 +82,74 @@ public final class EntityEventsInit {
                 VanillaTargetingGoals.drop(entity.getId()); // release any stripped-goal snapshot
             }
         });
+    }
+
+    /** One ENTITY_LOAD firing: phase-gated spawn filtering, blocked-variant discards, contamination
+     *  re-tracking, target indexing, zombie registration and pack re-join. Moved out of the registration
+     *  lambda in {@link #registerTracking} verbatim — the reasoning behind each branch below is unchanged
+     *  from before the extraction. */
+    private static void onEntityLoad(ZombieRegistry registry, DimensionManager dimensions,
+                                      Entity entity, ServerLevel world) {
+        // Phase-gated hostile filtering. In phase 0 (classic) NOTHING hostile spawns; in phases 1..15 only
+        // plain Zombie is allowed (every other hostile is culled). Applies only to freshly-added entities,
+        // not chunk-reloads (isAddedToLevel true == first add). We gate on the type filter regardless.
+        if (WorldSpawnConfig.nightSpawnEnabled && SpawnFilter.shouldCull(entity)) {
+            entity.discard();
+            return;
+        }
+        // Discard blocked drowned/babies BEFORE tracking, so we don't contamination-track an entity we
+        // then toss this same load.
+        if (WorldSpawnConfig.blockDrowned && entity.getType() == EntityType.DROWNED) {
+            entity.discard();
+            return;
+        }
+        if (WorldSpawnConfig.blockBabyZombies && entity instanceof Zombie zb && zb.isBaby()) {
+            zb.discard();
+            return;
+        }
+        ContaminationManager.onLoad(entity); // re-track contaminated
+        // Index anything huntable that isn't a zombie or a player, so target acquisition never has to
+        // walk the horde to discard it (see TargetIndex). Registered AFTER the discard branches above,
+        // so a culled entity is never indexed in the first place.
+        if (TargetIndex.indexable(entity)) {
+            dimensions.get(world.dimension()).targetIndex().track((net.minecraft.world.entity.LivingEntity) entity);
+        }
+        // Track all zombie variants (plain Zombie, Husk, ZombieVillager, ZombifiedPiglin...).
+        // Drowned + babies are handled above (discarded when blocked).
+        if (entity instanceof Zombie zombie) {
+            if (WorldSpawnConfig.stripZombieEquipment) {
+                SpawnControl.stripEquipment(zombie);
+            }
+            // Vanilla despawns non-persistent MONSTER-category mobs once every player is far enough away
+            // (random roll past 32 blocks, unconditional past 128) — that would silently undo the whole
+            // LOD/FROZEN system (TickScheduler/SpatialGrid), which exists specifically to keep the zombie
+            // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
+            zombie.setPersistenceRequired();
+            AiConflictDetector.scanZombie(zombie, world); // once: detect foreign zombie-AI mods
+            SmartZombie sz = registry.add(zombie, world.dimension());
+            // A member that went to disk carrying its pack attachment (see EntityEventsInit's
+            // ENTITY_UNLOAD handler, and PackAttachment's own javadoc) re-joins here, on the way back.
+            // Without this, the attachment is written but never read, so a straggler never returns to
+            // its pack — the pack's `detached` count never comes down, and it can outlive every real
+            // member it ever had.
+            if (PackConfig.packEnabled) {
+                long packId = zombie.getAttachedOrElse(PackAttachment.PACK, PackJoinRule.NO_PACK);
+                if (packId != PackJoinRule.NO_PACK) {
+                    dimensions.get(world.dimension()).packManager().rejoin(sz, packId);
+                }
+            }
+            // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
+            // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
+            // setNoAi(true) applied by the caller a line before addFreshEntity — which is exactly how
+            // this project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
+            // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
+            // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
+            // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,
+            // so the repair cannot be made safe. Audit #2 is prevented at the source instead: the freeze
+            // is released on ENTITY_UNLOAD and on SERVER_STOPPING (before saveAllChunks), so no new
+            // statue is ever written. A world already carrying one can be repaired by hand with
+            //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
+        }
     }
 
     /** Loud sounds (block breaks) attract nearby zombies. */
