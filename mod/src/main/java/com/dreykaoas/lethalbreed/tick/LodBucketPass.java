@@ -163,6 +163,8 @@ final class LodBucketPass {
                 continue;
             }
 
+            // Per-stage timing: one branch per activation when disabled (a dev-only static), so a shipped
+            // jar pays nothing. See StageProfiler.
             boolean prof = StageProfiler.enabled();
 
             WorldAIContext classifyCtx = dimensions.get(sz.dimension());
