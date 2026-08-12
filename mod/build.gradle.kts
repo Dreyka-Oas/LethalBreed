@@ -66,6 +66,15 @@ tasks.withType<JavaCompile>().configureEach {
     options.release.set(21)
 }
 
+// Only the MAIN source set ships, so only it is stripped: dev and test keep full -g for IDE debugging.
+// Gradle's default is `debug = true` with a null debugLevel, which hands javac a bare `-g`
+// (= source,lines,vars). Dropping `vars` removes LocalVariableTable/LocalVariableTypeTable — the local
+// variable names that make a decompiled jar read like the original source. SourceFile and LineNumberTable
+// are kept on purpose: without them every player crash report says "(Unknown Source)".
+tasks.named<JavaCompile>("compileJava") {
+    options.debugOptions.debugLevel = "source,lines"
+}
+
 tasks.test {
     useJUnitPlatform()
 }
@@ -77,11 +86,21 @@ tasks.processResources {
     // Exclude the raw .cl from the output; the .clx copy is written by doLast below.
     exclude("kernels/*.cl")
     doLast {
-        val src = file("src/main/resources/kernels/bellman_ford.cl").readBytes()
+        // Truncate each line at its first `//` — the kernel has 23 comment-bearing lines and 10 of them are
+        // TRAILING comments on live code (18-22, 27, 36, 45, 61, 68), so dropping whole lines would delete
+        // working kernel code. There are no block comments and no `//` inside any string literal, so
+        // first-`//` truncation is safe. readText/writeText, not readBytes: line 1 holds a U+2014 em dash.
+        val raw = file("src/main/resources/kernels/bellman_ford.cl").readText(Charsets.UTF_8)
+        val stripped = raw.lineSequence()
+                .map { line -> val i = line.indexOf("//"); if (i >= 0) line.substring(0, i) else line }
+                .map { it.trimEnd() }
+                .filter { it.isNotEmpty() }
+                .joinToString("\n", postfix = "\n")
         val outDir = destinationDir.resolve("kernels")
         outDir.mkdirs()
-        outDir.resolve("bellman_ford.clx").writeBytes(src)
-        logger.lifecycle("[kernel] copied bellman_ford.cl -> .clx (${src.size} bytes)")
+        outDir.resolve("bellman_ford.clx").writeText(stripped, Charsets.UTF_8)
+        logger.lifecycle("[kernel] bellman_ford.cl -> .clx, comments stripped " +
+                "(${raw.toByteArray(Charsets.UTF_8).size} -> ${stripped.toByteArray(Charsets.UTF_8).size} bytes)")
     }
 }
 
