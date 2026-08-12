@@ -40,7 +40,7 @@ public final class StageProfiler {
         }
     }
 
-    static final Stage[] STAGES = Stage.values();
+    private static final Stage[] STAGES = Stage.values();
 
     private final long[] nanos = new long[STAGES.length];
     private final long[] calls = new long[STAGES.length];
@@ -48,15 +48,21 @@ public final class StageProfiler {
     public StageProfiler() {
     }
 
-    /** Whether measurement is on right now. Checked once per activation, not per stage. */
+    /** Whether a sample taken right now should actually be accumulated. {@link DevSink#stage} checks this
+     *  before every sample and drops it when false, so the arrays below only ever hold data collected while
+     *  {@code debugLogInterval} was positive — matching exactly what {@link PerfRecap#maybeLog} will drain,
+     *  instead of accumulating unboundedly whenever a sink happens to be installed. */
     public static boolean enabled() {
         return SchedulerConfig.debugLogInterval > 0;
     }
 
-    public void add(Stage s, long elapsedNanos) {
-        int i = s.ordinal();
-        nanos[i] += elapsedNanos;
-        calls[i]++;
+    /** Indexes the accumulator arrays directly with an already-resolved stage id, so {@link DevSink#stage} —
+     *  which only has the {@code int} id from the {@code DevProbe} seam — need not round-trip through
+     *  {@code Stage} just to call {@link #ordinal()} straight back to the same int. Package-private: the only
+     *  caller is {@code DevSink}, same package. */
+    void add(int stageOrdinal, long elapsedNanos) {
+        nanos[stageOrdinal] += elapsedNanos;
+        calls[stageOrdinal]++;
     }
 
     /** Formatted breakdown over {@code ticks} server ticks, ordered most-expensive first. Empty when

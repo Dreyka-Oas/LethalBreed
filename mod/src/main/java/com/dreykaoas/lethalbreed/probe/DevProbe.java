@@ -9,11 +9,13 @@ import net.minecraft.server.MinecraftServer;
  * so they cannot simply live in the {@code dev} source set — {@code main} has to call out. This class is
  * that call-out, and it is deliberately the only one: everything it forwards to lives in {@code dev}.
  *
- * <p><b>Cost in a player jar.</b> {@link #sink} is never assigned outside a development environment, so
- * {@link #on()} is a static load plus a null check that HotSpot folds away once profiling shows the field
- * is always null — and, crucially, the {@code System.nanoTime()} calls and message building at every call
- * site sit BEHIND that gate rather than in front of it. {@link #traceMask} works the same way for the
- * per-channel debug logs.
+ * <p><b>Cost in a player jar.</b> {@link #sink} is {@code volatile}, so {@link #on()} is one volatile field
+ * read plus a null check, paid at every call site, every tick — a volatile load is not constant-folded or
+ * hoisted the way a stable static would be, so this is a real, ongoing (if negligible) cost, not one the JIT
+ * eliminates. What DOES disappear on a player jar is everything BEHIND the gate: the
+ * {@code System.nanoTime()} calls and message building at every call site sit behind {@link #on()} rather
+ * than in front of it, so those never run. {@link #traceMask} works the same way for the per-channel debug
+ * logs.
  *
  * <p>{@code DevBootstrap} assigns both fields via {@link #install} inside its existing reflective entry
  * point ({@code LethalBreedMod#installDevHooks}), so this seam inherits that method's dev-env gate for

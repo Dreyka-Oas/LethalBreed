@@ -15,10 +15,6 @@ import java.util.concurrent.atomic.AtomicLongArray;
  */
 public final class DevSink implements DevProbe.Sink {
 
-    /** Cached once: {@code Stage.values()} clones its array on every call, and {@link #stage} runs per
-     *  stage per zombie activation — the measurement must not allocate or it measures itself. */
-    private static final StageProfiler.Stage[] STAGES = StageProfiler.STAGES;
-
     private final StageProfiler profiler;
     private final PerfRecap recap;
 
@@ -47,7 +43,13 @@ public final class DevSink implements DevProbe.Sink {
 
     @Override
     public void stage(int stage, long nanos) {
-        profiler.add(STAGES[stage], nanos);
+        // debugLogInterval gates whether a sample is worth keeping at all — see StageProfiler#enabled.
+        // Without this, PerfRecap.maybeLog's own "interval <= 0" bail-out means these arrays would just
+        // accumulate forever, never drained, until the interval is turned on mid-session.
+        if (!StageProfiler.enabled()) {
+            return;
+        }
+        profiler.add(stage, nanos);
     }
 
     @Override
