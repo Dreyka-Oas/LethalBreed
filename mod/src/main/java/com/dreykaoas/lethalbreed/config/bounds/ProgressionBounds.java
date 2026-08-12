@@ -5,7 +5,9 @@ import com.dreykaoas.lethalbreed.config.BoundsRegistrar;
 /**
  * Clamp ranges for the phase and special-variant options.
  *
- * <p>See {@link BoundsSplitNote} for why this is its own class instead of one shared table.
+ * <p>Split out of {@code ConfigBoundsTable}, which had grown to 305 append-only lines across nine unrelated
+ * domains: a bound belongs next to the options it governs, and {@code ConfigBoundsTest} fails the build if
+ * any numeric option loses one.
  */
 public final class ProgressionBounds {
     private ProgressionBounds() {}

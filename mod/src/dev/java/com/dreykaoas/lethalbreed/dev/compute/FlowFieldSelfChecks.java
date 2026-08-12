@@ -16,14 +16,21 @@ import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
  * no-corner-cut geometry below is therefore re-derived independently from {@link Snapshot}'s public
  * accessors, exactly as the deleted class's own javadoc already noted the checker does for cost values ("the
  * checker still independently re-derives costs") — this just extends that independence to the geometry too.
+ *
+ * <p><b>Kept in sync with {@code Neighbors8} by a test, not by construction.</b> {@code DX}/{@code DZ}/{@code
+ * isDiagonal} below are a deliberate re-derivation, not a copy-paste that's expected to track the original
+ * automatically — so nothing stops the two from silently disagreeing if either side's array is ever reordered
+ * or edited. {@code NeighborGeometryAlignmentTest} (in {@code src/test}, package {@code
+ * com.dreykaoas.lethalbreed.ai.flowfield}) pins both sets of arrays index-by-index; if you touch the geometry
+ * here or in {@code Neighbors8}, that test is what catches a drift.
  */
-final class FlowFieldSelfChecks {
+public final class FlowFieldSelfChecks {
     private FlowFieldSelfChecks() {}
 
-    private static final int[] DX = {1, -1, 0, 0, 1, 1, -1, -1};
-    private static final int[] DZ = {0, 0, 1, -1, 1, -1, 1, -1};
+    public static final int[] DX = {1, -1, 0, 0, 1, 1, -1, -1};
+    public static final int[] DZ = {0, 0, 1, -1, 1, -1, 1, -1};
 
-    private static boolean isDiagonal(int k) {
+    public static boolean isDiagonal(int k) {
         return DX[k] != 0 && DZ[k] != 0;
     }
 
