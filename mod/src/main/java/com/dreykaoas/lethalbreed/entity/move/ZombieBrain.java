@@ -128,10 +128,12 @@ public final class ZombieBrain {
         owner.setState(ZombieState.PURSUING_PLAYER);
         if (DevProbe.tracing(DevProbe.CLIMB)) {
             DevProbe.sink.trace(DevProbe.CLIMB, "z" + entity.getId()
-                    + " pursue tgt=(" + p.tgtX() + ", " + p.tgtY() + ", " + p.tgtZ() + ")"
-                    + " horizSq=" + horizSq + " dy=" + dy
+                    + " pursue y=" + MoveMath.f1(entity.getY())
+                    + " tgt=(" + MoveMath.f1(p.tgtX()) + ", " + MoveMath.f1(p.tgtY()) + ", " + MoveMath.f1(p.tgtZ()) + ")"
+                    + " horiz=" + MoveMath.f1(Math.sqrt(horizSq)) + " dy=" + MoveMath.f1(dy)
                     + " stuck=" + stuck + "/" + stuckTicks
-                    + " pillar=" + pillar.active());
+                    + " pillar=" + pillar.active()
+                    + " ground=" + entity.onGround());
         }
         if (packMarch) {
             // Dispatch is the only path to block breaking, pillaring and forced descent — skipping it is
