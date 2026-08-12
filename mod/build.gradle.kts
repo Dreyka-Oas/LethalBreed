@@ -1,5 +1,3 @@
-import net.fabricmc.loom.task.RemapJarTask
-
 plugins {
     id("fabric-loom") version "1.17.12"
     java
@@ -61,7 +59,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
-    withSourcesJar()
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -86,23 +83,6 @@ tasks.processResources {
         outDir.resolve("bellman_ford.clx").writeBytes(src)
         logger.lifecycle("[kernel] copied bellman_ford.cl -> .clx (${src.size} bytes)")
     }
-}
-
-// ---- Two build flavours ----
-// The default `remapJar` (→ `build`) packages ONLY the main source set: the shipped PLAYER jar, with zero
-// dev/test code. The `remapDevJar` task below packages main + the dev source set (harnesses + /lethaldev &
-// /lethalspawn commands): the DEVELOPER jar. Use build-player.bat / build-dev.bat to produce each.
-val devJar = tasks.register<Jar>("devJar") {
-    archiveClassifier.set("dev-unmapped")
-    from(sourceSets.main.get().output)
-    from(devSourceSet.output)
-}
-
-val remapDevJar = tasks.register<RemapJarTask>("remapDevJar") {
-    dependsOn(devJar)
-    inputFile.set(devJar.flatMap { it.archiveFile })
-    archiveClassifier.set("dev")
-    addNestedDependencies.set(true)
 }
 
 loom {
@@ -182,5 +162,7 @@ loom {
     }
 }
 
-// The shipped player jar is Loom's plain remapJar (no obfuscation): the source is MIT and lives in a
-// private repo, so there is nothing to hide. `gradlew build` / build-player.bat produce it directly.
+// `gradlew build` produces exactly one artifact: build/libs/lethalbreed-<version>.jar, the player jar.
+// build/devlibs holds Loom's unmapped intermediate — an implementation detail of remapJar, never shipped.
+// No sources jar, no javadoc jar, no dev flavour: dev tooling lives in src/dev and runs under runClient/
+// runServer only. Source is MIT in a private repo, so the jar is unobfuscated by choice.
