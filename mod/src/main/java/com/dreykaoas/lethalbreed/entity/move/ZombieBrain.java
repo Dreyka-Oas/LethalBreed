@@ -126,7 +126,12 @@ public final class ZombieBrain {
             nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
         }
         owner.setState(ZombieState.PURSUING_PLAYER);
-        if (DevProbe.tracing(DevProbe.CLIMB)) {
+        // Throttled to ~1-in-4: phase the entity id against the world's tick counter so different zombies
+        // log on different ticks and the per-tick volume stays bounded, without any new per-zombie field
+        // (mirrors the id+round staggering LodBucketPass already uses) and without touching `activations` /
+        // dueThisActivation(...), which LodBucketPass drives for an unrelated LOD cadence.
+        if (DevProbe.tracing(DevProbe.CLIMB)
+                && Math.floorMod(entity.getId() + level.getGameTime(), 4L) == 0L) {
             DevProbe.sink.trace(DevProbe.CLIMB, "z" + entity.getId()
                     + " pursue y=" + MoveMath.f1(entity.getY())
                     + " tgt=(" + MoveMath.f1(p.tgtX()) + ", " + MoveMath.f1(p.tgtY()) + ", " + MoveMath.f1(p.tgtZ()) + ")"
