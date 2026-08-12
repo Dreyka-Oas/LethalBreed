@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ConfigAccessResetTest {
 
-    /** resetAll() must report what it actually restored — the count is shown to the operator by
-     *  {@code /lethalconfig resetall}, and an inflated number is a lie about the state of their config. */
+    /** resetAll() must report what it actually restored — that count is what a caller would surface to
+     *  the operator, and an inflated number is a lie about the state of their config. */
     @Test
     void resetAllCountsOnlyRestoredOptions() {
         int options = ConfigSchema.all().size();

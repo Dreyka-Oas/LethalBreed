@@ -6,7 +6,9 @@ import com.dreykaoas.lethalbreed.dev.arena.ClimbTest;
 import com.dreykaoas.lethalbreed.dev.command.DevSpawnScheduler;
 import com.dreykaoas.lethalbreed.dev.contam.LeakProbeHarness;
 import com.dreykaoas.lethalbreed.dev.command.LethalDevCommand;
+import com.dreykaoas.lethalbreed.dev.command.LethalPhaseCommand;
 import com.dreykaoas.lethalbreed.dev.command.LethalSpawnCommand;
+import com.dreykaoas.lethalbreed.dev.command.LethalSpecialCommand;
 import com.dreykaoas.lethalbreed.dev.arena.PlacedBlockHarness;
 import com.dreykaoas.lethalbreed.dev.contam.PlagueDamageHarness;
 import com.dreykaoas.lethalbreed.dev.contam.PlagueDisableHarness;
@@ -34,7 +36,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
  * Single entry point for every development-only feature: the dev config holder ({@code DevTestConfig} and
  * its {@link DevBounds}), all of {@code main}'s instrumentation (the stage profiler, the perf recap, the dev
  * counters and the debug traces, installed here behind the {@link DevProbe} seam), plus the headless test
- * harnesses and the {@code /lethalspawn} load-test command. Lives in the {@code dev} source set, so it is
+ * harnesses and every developer command ({@code /lethalspawn}, {@code /lethaldev}, {@code /lethalphase},
+ * {@code /lethalspecial}). Lives in the {@code dev} source set, so it is
  * compiled and packaged ONLY for {@code runClient}/{@code runServer} — a shipped/remapped jar never contains
  * this class or anything under {@code com.dreykaoas.lethalbreed.dev}.
  *
@@ -146,10 +149,13 @@ public final class DevBootstrap {
             }
         });
 
-        // Dev commands: /lethalspawn (load-test spawn) + /lethaldev (exercise slow effects on demand).
+        // Dev commands: /lethalspawn (load-test spawn), /lethaldev (exercise slow effects on demand),
+        // /lethalphase (force the difficulty phase) and /lethalspecial (spawn a forced special type).
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             LethalSpawnCommand.register(dispatcher, registryAccess);
             LethalDevCommand.register(dispatcher);
+            LethalPhaseCommand.register(dispatcher);
+            LethalSpecialCommand.register(dispatcher);
         });
 
         LethalBreed.LOGGER.info("[LethalBreed] dev hooks installed (dev environment only).");

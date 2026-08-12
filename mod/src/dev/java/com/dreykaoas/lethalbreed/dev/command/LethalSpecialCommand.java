@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.command;
+package com.dreykaoas.lethalbreed.dev.command;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
@@ -13,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -26,13 +27,15 @@ import java.util.List;
  * {@code /lethalspecial <type> [count]} — spawn {@code count} zombies forced to a given special type around
  * the player, for testing each ability. The type argument suggests the available ids.
  *
- * <p>Operator-gated, for the same reason {@code dev/LethalSpawnCommand} is: it spawns entities that the
+ * <p>Operator-gated, for the same reason {@link LethalSpawnCommand} is: it spawns entities that the
  * mod marks persistent, so they never despawn on their own. The 200 cap is per invocation and there is no
  * global counter, which makes an ungated version an unbounded entity accumulator — and, in the
  * {@code bombeur} variant, a PvP weapon.
  */
 public final class LethalSpecialCommand {
     private LethalSpecialCommand() {}
+
+    private static final String PREFIX = "[LethalSpecial] ";
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lethalspecial")
@@ -61,7 +64,7 @@ public final class LethalSpecialCommand {
         String typeArg = StringArgumentType.getString(ctx, "type");
         SpecialType type = SpecialType.fromId(typeArg);
         if (type == SpecialType.NONE) {
-            CommandFeedback.failure(src, "unknown special type: " + typeArg);
+            fail(src, "unknown special type: " + typeArg);
             return 0;
         }
 
@@ -80,7 +83,17 @@ public final class LethalSpecialCommand {
             }
         }
 
-        CommandFeedback.success(src, "spawned " + count + " x " + type.frName(), true);
+        reply(src, "spawned " + count + " x " + type.frName(), true);
         return count;
+    }
+
+    /** Local stand-in for the shared {@code command.CommandFeedback}, which is package-private and
+     *  unreachable from {@code dev.command}. Mirrors its success/failure shape with its own prefix. */
+    private static void reply(CommandSourceStack src, String msg, boolean broadcast) {
+        src.sendSuccess(() -> Component.literal(PREFIX + msg), broadcast);
+    }
+
+    private static void fail(CommandSourceStack src, String msg) {
+        src.sendFailure(Component.literal(PREFIX + msg));
     }
 }

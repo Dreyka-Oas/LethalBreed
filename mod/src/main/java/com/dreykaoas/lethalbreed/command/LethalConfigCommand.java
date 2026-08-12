@@ -6,9 +6,7 @@ import com.dreykaoas.lethalbreed.config.io.ConfigStructure;
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -17,21 +15,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.lang.reflect.Field;
-import java.util.Locale;
 
 /**
- * {@code /lethalconfig} — runtime editor for EVERY field in the config, driven by reflection
- * ({@link ConfigFields}) so any new option is exposed automatically.
+ * {@code /lethalconfig} — the mod's single shipped, user-facing command.
  *
  * <ul>
- *   <li>{@code /lethalconfig}                  — open the in-game GUI menu (player only)</li>
- *   <li>{@code /lethalconfig list}             — print every option + value to chat</li>
- *   <li>{@code /lethalconfig verify}           — report the config file's structural health</li>
- *   <li>{@code /lethalconfig get <field>}      — show one option</li>
- *   <li>{@code /lethalconfig set <field> <v>}  — change one option (persists to JSON)</li>
- *   <li>{@code /lethalconfig reset <field>}    — restore one option to default</li>
- *   <li>{@code /lethalconfig reset all}        — restore everything to defaults</li>
+ *   <li>{@code /lethalconfig}          — open the in-game GUI menu (player only; console falls back to
+ *       the text dump)</li>
+ *   <li>{@code /lethalconfig verify}   — report the config file's structural health</li>
  * </ul>
+ *
+ * The GUI (and its console fallback) is driven by reflection over EVERY field in the config
+ * ({@link ConfigFields}), so any new option is exposed automatically. Editing an option is done through
+ * the GUI, which round-trips over the {@code SetConfig} C2S packet, not through a text subcommand.
  *
  * Op-gated (permission level 2 / GAMEMASTERS): config changes are global (the config is static) and
  * persisted to {@code config/oas/lethalbreed.json}, so editing is restricted to operators (in singleplayer
@@ -40,37 +36,11 @@ import java.util.Locale;
 public final class LethalConfigCommand {
     private LethalConfigCommand() {}
 
-    private static final SuggestionProvider<CommandSourceStack> FIELD_SUGGEST = (ctx, b) -> {
-        String rem = b.getRemaining().toLowerCase(Locale.ROOT);
-        for (Field f : ConfigFields.all()) {
-            if (f.getName().toLowerCase(Locale.ROOT).startsWith(rem)) {
-                b.suggest(f.getName());
-            }
-        }
-        return b.buildFuture();
-    };
-
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lethalconfig")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(LethalConfigCommand::openMenu)
-                .then(Commands.literal("list").executes(LethalConfigCommand::list))
-                .then(Commands.literal("verify").executes(LethalConfigCommand::verify))
-                .then(Commands.literal("get")
-                        .then(Commands.argument("field", StringArgumentType.word())
-                                .suggests(FIELD_SUGGEST)
-                                .executes(LethalConfigCommand::get)))
-                .then(Commands.literal("set")
-                        .then(Commands.argument("field", StringArgumentType.word())
-                                .suggests(FIELD_SUGGEST)
-                                .then(Commands.argument("value", StringArgumentType.greedyString())
-                                        .executes(LethalConfigCommand::set))))
-                .then(Commands.literal("reset")
-                        .executes(LethalConfigCommand::resetAll)
-                        .then(Commands.literal("all").executes(LethalConfigCommand::resetAll))
-                        .then(Commands.argument("field", StringArgumentType.word())
-                                .suggests(FIELD_SUGGEST)
-                                .executes(LethalConfigCommand::reset))));
+                .then(Commands.literal("verify").executes(LethalConfigCommand::verify)));
     }
 
     private static int openMenu(CommandContext<CommandSourceStack> ctx) {
@@ -157,59 +127,5 @@ public final class LethalConfigCommand {
                     .withStyle(ChatFormatting.GRAY), false);
         }
         return report.problemCount();
-    }
-
-    private static int get(CommandContext<CommandSourceStack> ctx) {
-        String name = StringArgumentType.getString(ctx, "field");
-        Field f = ConfigFields.find(name);
-        if (f == null) {
-            return unknown(ctx, name);
-        }
-        CommandFeedback.success(ctx.getSource(),
-                f.getName() + " = " + ConfigFields.read(f) + "  (default " + ConfigFields.defaultOf(f.getName()) + ")",
-                false);
-        return 1;
-    }
-
-    private static int set(CommandContext<CommandSourceStack> ctx) {
-        String name = StringArgumentType.getString(ctx, "field");
-        String raw = StringArgumentType.getString(ctx, "value").trim();
-        Field f = ConfigFields.find(name);
-        if (f == null) {
-            return unknown(ctx, name);
-        }
-        if (!ConfigFields.apply(name, raw, true)) {
-            CommandFeedback.failure(ctx.getSource(),
-                    "bad value '" + raw + "' for " + ConfigFields.kind(f) + " " + name);
-            return 0;
-        }
-        CommandFeedback.success(ctx.getSource(),
-                name + " -> " + ConfigFields.read(f), ChatFormatting.GREEN, true);
-        return 1;
-    }
-
-    private static int reset(CommandContext<CommandSourceStack> ctx) {
-        String name = StringArgumentType.getString(ctx, "field");
-        Field f = ConfigFields.find(name);
-        if (f == null) {
-            return unknown(ctx, name);
-        }
-        ConfigFields.apply(name, ConfigFields.defaultOf(name), true);
-        CommandFeedback.success(ctx.getSource(),
-                name + " reset to " + ConfigFields.read(f), ChatFormatting.YELLOW, true);
-        return 1;
-    }
-
-    private static int resetAll(CommandContext<CommandSourceStack> ctx) {
-        int n = ConfigFields.resetAll();
-        CommandFeedback.success(ctx.getSource(),
-                "reset " + n + " options to defaults", ChatFormatting.YELLOW, true);
-        return n;
-    }
-
-    private static int unknown(CommandContext<CommandSourceStack> ctx, String name) {
-        CommandFeedback.failure(ctx.getSource(),
-                "unknown option '" + name + "' — /lethalconfig list");
-        return 0;
     }
 }

@@ -67,7 +67,7 @@ public final class PhaseManager {
         store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
         // Clamp on restore, not just on write: a save produced before the ceiling existed (or hand-edited)
         // would otherwise reinstate an unbounded phase at every boot, which is the persistent half of the
-        // /lethalphase denial of service.
+        // forced-phase denial of service (the dev-only /lethalphase command, or a hand-edited save).
         phase = clampPhase(store.phase);
         lastAdvanceGameTime = store.lastAdvanceGameTime;
         nextIntervalTicks = store.nextIntervalTicks;
@@ -150,7 +150,7 @@ public final class PhaseManager {
         nextIntervalTicks = Math.max(1, ProgressionConfig.phaseIntervalTicks + j);
     }
 
-    /** Force a phase (e.g. /lethalphase) and announce it. Manual override ignores the configurable
+    /** Force a phase (e.g. the dev-only /lethalphase command) and announce it. Manual override ignores the configurable
      *  {@code phaseMax} — an admin can deliberately force any phase past the auto-advance ceiling — but
      *  NOT the hard {@link #MAX_PHASE} ceiling, which exists to keep the spawn loop finite. */
     public void setPhase(MinecraftServer server, int p) {
