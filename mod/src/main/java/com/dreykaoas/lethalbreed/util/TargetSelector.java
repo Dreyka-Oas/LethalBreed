@@ -85,27 +85,7 @@ public final class TargetSelector {
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, TargetIndex index) {
         boolean prof = StageProfiler.enabled();
         long t0 = prof ? System.nanoTime() : 0L;
-        // Broad phase. MEASURED (StageProfiler, ~100 zombies): asking the world for every LivingEntity in an
-        // 80-block box was ~50% of the whole reclassify stage, itself ~40% of the mod's tick time — because
-        // it visits the entire horde only to have isValid reject Zombie on each one.
-        //
-        // Shrinking the box does NOT fix that, and that was tested rather than assumed: narrowing the
-        // vertical extent to 24 blocks left the sweep at 23.8us/call against 22.1 without it. The cost is
-        // the entities inside, not the volume. So the horde is simply never offered to the scan: prey lives
-        // in the mod's own TargetIndex, and players — few, and far too important to risk a bookkeeping slip
-        // hiding one — are read live from the level.
-        List<LivingEntity> candidates = new ArrayList<>();
-        if (index != null) {
-            index.collectInto(candidates, self.getX(), self.getZ(), radius);
-            for (Player p : level.players()) {
-                candidates.add(p);
-            }
-            candidates.removeIf(e -> !isValid(self, e));
-        } else {
-            // No index wired (unit tests, or a call path that predates it): fall back to the world scan.
-            AABB box = self.getBoundingBox().inflate(radius);
-            candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
-        }
+        List<LivingEntity> candidates = collectCandidates(level, self, radius, index);
         if (prof) {
             StageProfiler.sub(StageProfiler.Stage.SCAN, System.nanoTime() - t0);
         }
@@ -129,6 +109,40 @@ public final class TargetSelector {
             return seen ? only : null;
         }
         long tOrder = prof ? System.nanoTime() : 0L;
+        double[] distSq = shuffleAndOrder(candidates, self);
+        if (prof) {
+            StageProfiler.sub(StageProfiler.Stage.ORDER, System.nanoTime() - tOrder);
+        }
+        return nearestVisible(level, self, candidates, distSq, radiusSq, n, prof);
+    }
+
+    private static List<LivingEntity> collectCandidates(ServerLevel level, Mob self, double radius, TargetIndex index) {
+        // Broad phase. MEASURED (StageProfiler, ~100 zombies): asking the world for every LivingEntity in an
+        // 80-block box was ~50% of the whole reclassify stage, itself ~40% of the mod's tick time — because
+        // it visits the entire horde only to have isValid reject Zombie on each one.
+        //
+        // Shrinking the box does NOT fix that, and that was tested rather than assumed: narrowing the
+        // vertical extent to 24 blocks left the sweep at 23.8us/call against 22.1 without it. The cost is
+        // the entities inside, not the volume. So the horde is simply never offered to the scan: prey lives
+        // in the mod's own TargetIndex, and players — few, and far too important to risk a bookkeeping slip
+        // hiding one — are read live from the level.
+        List<LivingEntity> candidates = new ArrayList<>();
+        if (index != null) {
+            index.collectInto(candidates, self.getX(), self.getZ(), radius);
+            for (Player p : level.players()) {
+                candidates.add(p);
+            }
+            candidates.removeIf(e -> !isValid(self, e));
+        } else {
+            // No index wired (unit tests, or a call path that predates it): fall back to the world scan.
+            AABB box = self.getBoundingBox().inflate(radius);
+            candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> isValid(self, e));
+        }
+        return candidates;
+    }
+
+    private static double[] shuffleAndOrder(List<LivingEntity> candidates, Mob self) {
+        int n = candidates.size();
         // Shuffle first so entities that end up EXACTLY tied (same distance band AND same height gap) resolve
         // at random — the sort below is stable, so it preserves this randomised order for equal keys.
         for (int i = n - 1; i > 0; i--) {
@@ -178,9 +192,11 @@ public final class TargetSelector {
             heightGap[j + 1] = ch;
             distSq[j + 1] = cd;
         }
-        if (prof) {
-            StageProfiler.sub(StageProfiler.Stage.ORDER, System.nanoTime() - tOrder);
-        }
+        return distSq;
+    }
+
+    private static LivingEntity nearestVisible(ServerLevel level, Mob self, List<LivingEntity> candidates,
+                                                double[] distSq, double radiusSq, int n, boolean prof) {
         long tLos = prof ? System.nanoTime() : 0L;
         try {
             for (int i = 0; i < n; i++) {
