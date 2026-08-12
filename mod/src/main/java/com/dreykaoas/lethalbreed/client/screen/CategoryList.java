@@ -37,7 +37,9 @@ public final class CategoryList extends ContainerObjectSelectionList<CategoryLis
         private final Button button;
 
         public CatEntry(String cat, boolean selected, Consumer<String> onSelect) {
-            this.button = Button.builder(Component.translatable("lethalbreed.category." + cat), b -> onSelect.accept(cat))
+            this.button = Button.builder(
+                    Component.translatableWithFallback("lethalbreed.category." + cat, cat),
+                    b -> onSelect.accept(cat))
                     .bounds(0, 0, 100, 20).build();
             this.button.active = !selected; // selected one greyed/disabled
         }
