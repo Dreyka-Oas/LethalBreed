@@ -65,34 +65,16 @@ public final class ZombieBrain {
         // Daytime sleep: a dozing zombie holds still. It is normally FROZEN (so this isn't even reached); this is
         // a defensive stop in case it is momentarily active. The walk-to-shade is NOT here — that's a normal
         // memory-target pursuit (NORMAL state) so the full breaking/pillaring nav carries it to the shade.
-        if (owner.mood().isSleeping()) {
-            pillar.cancel();
-            entity.getNavigation().stop();
-            owner.setState(ZombieState.SLEEPING);
-            return;
-        }
+        if (handleSleeping()) return;
         // Sun-shelter overrides even the retreat: a burning wounded zombie dashes to shade (mood already found
         // the refuge and dropped the target). Checked before flee so shade-seeking wins over the straight run.
-        if (owner.mood().isSheltering()) {
-            pillar.cancel();
-            owner.setState(ZombieState.SHELTERING);
-            owner.mood().driveShelter(level);
-            return;
-        }
+        if (handleSheltering(level)) return;
         // Low-health retreat overrides the hunt: the mood step already dropped the target; here we just steer
         // away from the threat (vanilla nav, so climb/descend still work). No leap/dig/dispatch while fleeing.
-        if (owner.mood().isFleeing()) {
-            pillar.cancel();
-            owner.setState(ZombieState.FLEEING);
-            owner.mood().driveFlee(level);
-            return;
-        }
+        if (handleFleeing(level)) return;
         pillar.tickCooldown();
         if (pillar.active()) return; // mid climb; the per-tick climbStep finishes it
-        if (!p.hasTarget()) {
-            owner.setState(p.hasSound() && nav.navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
-            return;
-        }
+        if (handleNoTarget(ctx, p)) return;
 
         // The vanilla attack target (melee) is set authoritatively in LODManager.classify, which runs in the
         // SAME activation immediately before this tick — so no setTarget re-assert is needed here (was
@@ -114,13 +96,7 @@ public final class ZombieBrain {
         // Swim mode only when actually floating/submerged (off the ground, or head underwater). A shallow
         // puddle the zombie is STANDING in (on ground, head clear) must NOT lock it into swim — it still needs
         // to pillar/jump out, so we fall through to the normal dispatch below. Deep water → swimStep drives it.
-        if (CombatMoveConfig.floatInWater && entity.isInWater()
-                && (!entity.onGround() || entity.isUnderWater())) {
-            pillar.cancel();
-            swimming = true;
-            owner.setState(ZombieState.PURSUING_PLAYER);
-            return;
-        }
+        if (handleSwimEntry()) return;
         swimming = false;
 
         // Block ops only when STUCK (no horizontal progress) — else it walks/auto-steps normally. Computed
@@ -164,6 +140,47 @@ public final class ZombieBrain {
         MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz, breaking);
         // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
         breaking = owner.state() == ZombieState.BREAKING;
+    }
+
+    private boolean handleSleeping() {
+        if (!owner.mood().isSleeping()) return false;
+        pillar.cancel();
+        entity.getNavigation().stop();
+        owner.setState(ZombieState.SLEEPING);
+        return true;
+    }
+
+    private boolean handleSheltering(ServerLevel level) {
+        if (!owner.mood().isSheltering()) return false;
+        pillar.cancel();
+        owner.setState(ZombieState.SHELTERING);
+        owner.mood().driveShelter(level);
+        return true;
+    }
+
+    private boolean handleFleeing(ServerLevel level) {
+        if (!owner.mood().isFleeing()) return false;
+        pillar.cancel();
+        owner.setState(ZombieState.FLEEING);
+        owner.mood().driveFlee(level);
+        return true;
+    }
+
+    private boolean handleNoTarget(WorldAIContext ctx, ZombiePursuit p) {
+        if (p.hasTarget()) return false;
+        owner.setState(p.hasSound() && nav.navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
+        return true;
+    }
+
+    private boolean handleSwimEntry() {
+        if (!(CombatMoveConfig.floatInWater && entity.isInWater()
+                && (!entity.onGround() || entity.isUnderWater()))) {
+            return false;
+        }
+        pillar.cancel();
+        swimming = true;
+        owner.setState(ZombieState.PURSUING_PLAYER);
+        return true;
     }
 
     /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the jump-and-place
