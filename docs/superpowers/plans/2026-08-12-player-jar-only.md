@@ -209,7 +209,7 @@ grep -ral LocalVariableTable --include="*.class" build/classes/java/main | wc -l
 grep -ral LineNumberTable   --include="*.class" build/classes/java/main | wc -l
 ```
 
-Expected: `233` and `233`. These are the before values.
+Expected: `234` and `234` on the current tree (the class count drifts as source files are added; what matters is the before/after delta, not the absolute).
 
 - [ ] **Step 2: Scope `-g:source,lines` to `compileJava`**
 
@@ -249,7 +249,7 @@ grep -ral LocalVariableTable --include="*.class" build/classes/java/main | wc -l
 grep -ral LineNumberTable   --include="*.class" build/classes/java/main | wc -l
 ```
 
-Expected: `0` and `233`. If `LineNumberTable` also reports 0, `debugLevel` was set to `none` — fix it before continuing.
+Expected: `0` for LocalVariableTable and an UNCHANGED count for LineNumberTable (234 today). If `LineNumberTable` also reports 0, `debugLevel` was set to `none` — fix it before continuing.
 
 - [ ] **Step 4: Strip comments from the packaged kernel**
 
@@ -2043,7 +2043,7 @@ echo "JiJ jocl:         $(unzip -l $J | grep -c 'META-INF/jars/jocl-2.0.5.jar') 
 echo "dev lang:         $(unzip -p $J assets/lethalbreed/lang/en_us.json | grep -ic 'dev only') (expect 0)"
 echo "kernel comments:  $(unzip -p $J kernels/bellman_ford.clx | grep -c '//') (expect 0)"
 echo "local var tables: $(grep -ral LocalVariableTable --include='*.class' build/classes/java/main | wc -l) (expect 0)"
-echo "line tables:      $(grep -ral LineNumberTable --include='*.class' build/classes/java/main | wc -l) (expect 233)"
+echo "line tables:      $(grep -ral LineNumberTable --include='*.class' build/classes/java/main | wc -l) (expect unchanged, ~234 — must NOT be 0)"
 unzip -p $J META-INF/MANIFEST.MF | grep -c 'Fabric-Mapping-Namespace'
 ```
 
