@@ -69,7 +69,10 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
     }
 
     protected void drawLabel(GuiGraphics g, int rightControlsW) {
-        String label = Component.translatable("lethalbreed.option." + row.name()).getString();
+        // Fall back to the raw field name: dev-registered options have no shipped translation, and a
+        // future option that forgets one degrades to something readable instead of the full key.
+        String label = Component.translatableWithFallback(
+                "lethalbreed.option." + row.name(), row.name()).getString();
         label = truncateToWidth(label, getContentWidth() - rightControlsW - 6);
         g.drawString(font, label, getContentX(), getContentY() + 3, 0xFFFFFFFF);
         drawDesc(g, rightControlsW);
@@ -121,8 +124,8 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
             return;
         }
         List<Component> lines = new ArrayList<>();
-        // Title: localized label + (technicalName) in grey.
-        lines.add(Component.translatable("lethalbreed.option." + row.name())
+        // Title: localized label (falls back to the raw field name) + (technicalName) in grey.
+        lines.add(Component.translatableWithFallback("lethalbreed.option." + row.name(), row.name())
                 .append(Component.literal(" (" + row.name() + ")").withStyle(ChatFormatting.DARK_GRAY)));
         // Description (live GPU on the useGpu row, else the static .desc translation).
         if ("useGpu".equals(row.name()) && gpuInfo != null && !gpuInfo.isEmpty()) {
