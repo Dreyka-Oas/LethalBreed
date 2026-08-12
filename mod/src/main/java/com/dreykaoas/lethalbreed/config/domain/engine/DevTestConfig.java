@@ -47,7 +47,8 @@ public final class DevTestConfig {
     // ---- Dev climb test (headless) ----
     /** Build a wall + villager-on-top + zombies arena on server start, for autonomous climb testing. */
     public static boolean devClimbTest = false;
-    /** Log each targeting zombie's approach/climb state ([ClimbDbg] lines). Auto-enabled by the climb test. */
+    /** Log each targeting zombie's approach/climb state via the CLIMB dev-probe trace channel. Auto-enabled
+     *  by the climb test. */
     public static boolean debugClimb = false;
 
     /** Radius (blocks) around the player used by the /lethalspawn dev command. */

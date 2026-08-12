@@ -7,8 +7,6 @@ import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -18,15 +16,14 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
- * The latent stage (one-shot slow + symptom-surfacing roll), the effect icon, and the dev-only action-bar
- * indicator. Split out of {@link ContaminationLifecycle} to keep both under the file-size limit.
+ * The latent stage (one-shot slow + symptom-surfacing roll) and the effect icon. Split out of
+ * {@link ContaminationLifecycle} to keep both under the file-size limit.
  */
 public final class ContaminationSymptoms {
     private ContaminationSymptoms() {}
 
     private static final Identifier LATENT_SLOW_ID =
             Identifier.fromNamespaceAndPath("lethalbreed", "contam_latent_slow");
-    private static final boolean DEV = net.fabricmc.loader.api.FabricLoader.getInstance().isDevelopmentEnvironment();
 
     /** Latent stage: no icon, no damage. Expire the one-shot slow, and every 5–10 in-game days roll a small
      *  chance to surface symptoms (which flips the victim into the visible/damaging stage). */
@@ -80,23 +77,6 @@ public final class ContaminationSymptoms {
         AttributeInstance inst = e.getAttribute(Attributes.MOVEMENT_SPEED);
         if (inst != null) {
             inst.removeModifier(LATENT_SLOW_ID);
-        }
-    }
-
-    /** Dev-only action-bar tag showing the plague stage. Players see it on themselves; other victims name-tag.
-     *  No-op outside a dev environment. */
-    public static void showDevIndicator(LivingEntity e) {
-        if (!DEV) {
-            return;
-        }
-        boolean sym = ContaminationState.symptomatic(e);
-        Component tag = Component.literal(sym ? "[INFECTÉ ✦ symptômes]" : "[INFECTÉ latent]")
-                .withStyle(sym ? ChatFormatting.RED : ChatFormatting.GREEN);
-        if (e instanceof net.minecraft.server.level.ServerPlayer p) {
-            p.displayClientMessage(tag, true); // action bar
-        } else {
-            e.setCustomName(tag);
-            e.setCustomNameVisible(true);
         }
     }
 

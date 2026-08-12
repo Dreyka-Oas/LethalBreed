@@ -5,12 +5,12 @@ import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import net.minecraft.world.entity.LivingEntity;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
-import com.dreykaoas.lethalbreed.entity.move.dispatch.ClimbDebug;
 import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;
 import com.dreykaoas.lethalbreed.entity.LODLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombiePursuit;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -29,7 +29,6 @@ public final class ZombieBrain {
     private int activations;
     private double lastHorizDistSq = -1.0;
     private int stuckTicks = 0;
-    private final ClimbDebug climbDebug = new ClimbDebug();
     private boolean swimming = false;
     private boolean breaking = false; // latched last tick: hold position on the block instead of re-pathing
 
@@ -127,7 +126,13 @@ public final class ZombieBrain {
             nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
         }
         owner.setState(ZombieState.PURSUING_PLAYER);
-        climbDebug.log(entity, p, horizSq, dy, stuck, stuckTicks, pillar.active());
+        if (DevProbe.tracing(DevProbe.CLIMB)) {
+            DevProbe.sink.trace(DevProbe.CLIMB, "z" + entity.getId()
+                    + " pursue tgt=(" + p.tgtX() + ", " + p.tgtY() + ", " + p.tgtZ() + ")"
+                    + " horizSq=" + horizSq + " dy=" + dy
+                    + " stuck=" + stuck + "/" + stuckTicks
+                    + " pillar=" + pillar.active());
+        }
         if (packMarch) {
             // Dispatch is the only path to block breaking, pillaring and forced descent — skipping it is
             // what makes a migration non-destructive. Clear the latch too, so a member that aggroes mid-wall

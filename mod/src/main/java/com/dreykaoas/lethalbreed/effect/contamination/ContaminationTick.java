@@ -71,10 +71,6 @@ public final class ContaminationTick {
             c++;
             e.setAttached(ContaminationState.CONTAM, c);
 
-            // Dev-only visual: since the latent stage is invisible by design, show a debug action-bar tag so a
-            // developer can confirm infection state in-game. Never shown outside a dev environment.
-            ContaminationSymptoms.showDevIndicator(e);
-
             if (!ContaminationState.symptomatic(e)) {
                 ContaminationSymptoms.tickLatent(e, t);
                 continue;
