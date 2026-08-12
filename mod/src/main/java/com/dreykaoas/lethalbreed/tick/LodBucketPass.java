@@ -45,6 +45,82 @@ final class LodBucketPass {
         return n;
     }
 
+    /** Player simulation-distance cutoff: if no player is within hardFreeze blocks, freeze WITHOUT the
+     *  target scan classify() does, and report that the caller should skip this activation. NOTE this is
+     *  deliberately PLAYER-only — a zombie hunting a non-player target (villager/animal) with no player
+     *  within hardFreeze is frozen too, i.e. autonomous hunts far from any player pause until a player
+     *  approaches. That tradeoff is why this defaults to 0 (off); enable it only if you accept "nobody's
+     *  watching → stop simulating" semantics.
+     *  A pack member is exempt: this cutoff wipes target AND memory before classify() runs, so with
+     *  hardFreeze on, every migrating pack would stop dead the moment it left a player's radius —
+     *  which is precisely when a migration is supposed to be happening. The cutoff still applies to
+     *  every loose zombie, so its point (stop simulating what nobody watches) survives. */
+    private static boolean hardFreezeSkip(SmartZombie sz, ServerLevel level, double hardFreeze) {
+        if (hardFreeze > 0.0 && !sz.pursuit().pack().inPack()) {
+            Player np = level.getNearestPlayer(sz.entity(), hardFreeze);
+            if (np == null) {
+                sz.pursuit().clearTarget();
+                sz.pursuit().clearMemory();
+                sz.setLod(LODLevel.FROZEN);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Runs the classify → grid → pack → sun-burn → mood phase for one zombie activation and returns the
+     *  LOD tier after mood processing (mood can un-freeze a zombie, so the tier must be re-read afterward). */
+    private LODLevel classifyAndUpdate(SmartZombie sz, ServerLevel level, WorldAIContext classifyCtx,
+                                        WorldAIContext ctx, boolean prof) {
+        long t = prof ? System.nanoTime() : 0L;
+        // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
+        // ALL buckets — a global tick%interval would only ever align with bucket 0.
+        LODManager.classify(sz, level, classifyCtx.targetIndex());
+        t = mark(profiler, StageProfiler.Stage.CLASSIFY, prof, t);
+        LODLevel lod = sz.lod();
+        // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
+        // so neighbour queries still find them: a Hurleur rallying idle zombies, a Soigneur healing them,
+        // and sound propagation all target exactly these.
+        ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
+        t = mark(profiler, StageProfiler.Stage.GRID, prof, t);
+        // Pack decision runs here, BEFORE the FROZEN skip: a zombie with nothing to hunt is frozen, and
+        // a frozen zombie looking for company is the nominal case for forming a pack, not an edge one.
+        PackPass.decide(sz, ctx);
+        t = mark(profiler, StageProfiler.Stage.PACK, prof, t);
+        // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
+        sz.applySunBurn(level);
+        t = mark(profiler, StageProfiler.Stage.SUNBURN, prof, t);
+        // Mood (celebrate/flee/regen) also runs before the FROZEN skip so a targetless fleeing/celebrating
+        // zombie still gets processed; it can un-freeze itself (LOD→HIGH), so re-read the tier afterward.
+        sz.updateMood(level, ctx);
+        mark(profiler, StageProfiler.Stage.MOOD, prof, t);
+        return sz.lod();
+    }
+
+    /** Distance-tier throttle divisor: distant zombies run their AI less often. Under server lag (stress=2)
+     *  every tier — HIGH included — is throttled extra to shed load. */
+    private static int divisorFor(LODLevel lod, int stress) {
+        int divisor = switch (lod) {
+            case MEDIUM -> SchedulerConfig.lodMediumTickDivisor;
+            case LOW -> SchedulerConfig.lodLowTickDivisor;
+            default -> 1;
+        };
+        return divisor * stress;
+    }
+
+    private void tickAndCollect(SmartZombie sz, ServerLevel level, WorldAIContext ctx, boolean prof,
+                                 Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
+        long tt = prof ? System.nanoTime() : 0L;
+        sz.tick(level, ctx);
+        mark(profiler, StageProfiler.Stage.TICK, prof, tt);
+        if (sz.isClimbing()) {
+            climbers.add(sz);
+        }
+        if (sz.isSwimming()) {
+            swimmers.add(sz);
+        }
+    }
+
     void run(MinecraftServer server, int buckets, int currentBucket, Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
         // buckets is supplied by the scheduler (the same value it used to derive currentBucket), so membership
         // stays consistent even when autoScaleBuckets recomputes it from population each tick. Computing the
@@ -83,68 +159,21 @@ final class LodBucketPass {
                 continue;
             }
 
-            // Player simulation-distance cutoff: if no player is within hardFreeze blocks, freeze WITHOUT the
-            // target scan classify() does. NOTE this is deliberately PLAYER-only — a zombie hunting a non-player
-            // target (villager/animal) with no player within hardFreeze is frozen too, i.e. autonomous hunts far
-            // from any player pause until a player approaches. That tradeoff is why this defaults to 0 (off);
-            // enable it only if you accept "nobody's watching → stop simulating" semantics.
-            // A pack member is exempt: this cutoff wipes target AND memory before classify() runs, so with
-            // hardFreeze on, every migrating pack would stop dead the moment it left a player's radius —
-            // which is precisely when a migration is supposed to be happening. The cutoff still applies to
-            // every loose zombie, so its point (stop simulating what nobody watches) survives.
-            if (hardFreeze > 0.0 && !sz.pursuit().pack().inPack()) {
-                Player np = level.getNearestPlayer(sz.entity(), hardFreeze);
-                if (np == null) {
-                    sz.pursuit().clearTarget();
-                    sz.pursuit().clearMemory();
-                    sz.setLod(LODLevel.FROZEN);
-                    continue;
-                }
+            if (hardFreezeSkip(sz, level, hardFreeze)) {
+                continue;
             }
 
-            // Per-stage timing: one branch per activation when disabled (a dev-only static), so a shipped
-            // jar pays nothing. See StageProfiler.
             boolean prof = StageProfiler.enabled();
-            long t = prof ? System.nanoTime() : 0L;
 
-            // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
-            // ALL buckets — a global tick%interval would only ever align with bucket 0.
             WorldAIContext classifyCtx = dimensions.get(sz.dimension());
-            LODManager.classify(sz, level, classifyCtx.targetIndex());
-            t = mark(profiler, StageProfiler.Stage.CLASSIFY, prof, t);
-            LODLevel lod = sz.lod();
             WorldAIContext ctx = dimensions.get(sz.dimension());
-            // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
-            // so neighbour queries still find them: a Hurleur rallying idle zombies, a Soigneur healing them,
-            // and sound propagation all target exactly these.
-            ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
-            t = mark(profiler, StageProfiler.Stage.GRID, prof, t);
-            // Pack decision runs here, BEFORE the FROZEN skip: a zombie with nothing to hunt is frozen, and
-            // a frozen zombie looking for company is the nominal case for forming a pack, not an edge one.
-            PackPass.decide(sz, ctx);
-            t = mark(profiler, StageProfiler.Stage.PACK, prof, t);
-            // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
-            sz.applySunBurn(level);
-            t = mark(profiler, StageProfiler.Stage.SUNBURN, prof, t);
-            // Mood (celebrate/flee/regen) also runs before the FROZEN skip so a targetless fleeing/celebrating
-            // zombie still gets processed; it can un-freeze itself (LOD→HIGH), so re-read the tier afterward.
-            sz.updateMood(level, ctx);
-            t = mark(profiler, StageProfiler.Stage.MOOD, prof, t);
-            lod = sz.lod();
+            LODLevel lod = classifyAndUpdate(sz, level, classifyCtx, ctx, prof);
             if (lod == LODLevel.FROZEN) {
                 continue;
             }
             // Distance-tier throttle: distant zombies run their AI less often. Under server lag (stress=2)
             // every tier — HIGH included — is throttled extra to shed load.
-            int divisor = 1;
-            if (SchedulerConfig.throttleByLod) {
-                divisor = switch (lod) {
-                    case MEDIUM -> SchedulerConfig.lodMediumTickDivisor;
-                    case LOW -> SchedulerConfig.lodLowTickDivisor;
-                    default -> 1;
-                };
-            }
-            divisor *= stress;
+            int divisor = SchedulerConfig.throttleByLod ? divisorFor(lod, stress) : stress;
             if (!sz.dueThisActivation(divisor)) {
                 continue;
             }
@@ -157,15 +186,7 @@ final class LodBucketPass {
             }
             spent++;
 
-            long tt = prof ? System.nanoTime() : 0L;
-            sz.tick(level, ctx);
-            mark(profiler, StageProfiler.Stage.TICK, prof, tt);
-            if (sz.isClimbing()) {
-                climbers.add(sz);
-            }
-            if (sz.isSwimming()) {
-                swimmers.add(sz);
-            }
+            tickAndCollect(sz, level, ctx, prof, climbers, swimmers);
         }
     }
 
