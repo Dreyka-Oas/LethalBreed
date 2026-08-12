@@ -4,7 +4,6 @@ import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.pack.PackAdvance;
 import com.dreykaoas.lethalbreed.pack.PackManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
-import com.dreykaoas.lethalbreed.pack.PackWander;
 
 import net.minecraft.server.level.ServerLevel;
 

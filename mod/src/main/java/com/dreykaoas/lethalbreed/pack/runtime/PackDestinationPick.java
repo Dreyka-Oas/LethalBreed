@@ -11,6 +11,10 @@ import net.minecraft.world.level.border.WorldBorder;
  * Shared plumbing between {@link PackMarch} and {@link PackVirtualMove}: both need a fresh heading/destination
  * from {@link PackWander#next} built off the current world border, and both write it onto the pack the same
  * way. Only the two callers' dwell-time bookkeeping differs, so that part stays with each of them.
+ *
+ * <p>The border is read as four ints so {@link PackWander} stays free of any world type — and, more to the
+ * point, so there is no parameter through which a player position could ever reach it. This method is the one
+ * place that reads the world border and calls {@link PackWander#next}, so it is where that invariant must hold.
  */
 final class PackDestinationPick {
     private PackDestinationPick() {}
