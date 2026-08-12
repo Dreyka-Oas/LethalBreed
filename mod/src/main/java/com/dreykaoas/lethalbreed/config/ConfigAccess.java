@@ -35,7 +35,7 @@ public final class ConfigAccess {
      * <p>Not optional. {@link #reset} does {@code Field.set(null, DEFAULTS.get(name))}, and for a field with
      * no entry that is {@code Field.set(null, null)} on a primitive — an {@link IllegalArgumentException},
      * which the {@code catch (IllegalAccessException)} there does NOT cover, so
-     * {@code /lethalconfig resetall} would abort mid-loop. {@link #defaultOf} would also report {@code "?"}
+     * {@link #resetAll} would abort mid-loop. {@link #defaultOf} would also report {@code "?"}
      * for the option, in the GUI tooltip and in the wire snapshot.
      *
      * <p>Public only because {@code ConfigSchema} sits in the {@code config.schema} sub-package; it is that
@@ -123,8 +123,8 @@ public final class ConfigAccess {
             f.set(null, ConfigType.copyIfArray(DEFAULTS.get(f.getName())));
             return true;
         } catch (IllegalAccessException e) {
-            // Counting a reset that did not happen makes /lethalconfig resetall report a config state the
-            // operator does not have. Say so, and let the caller count only what landed.
+            // Counting a reset that did not happen makes resetAll() report a config state the operator
+            // does not have. Say so, and let the caller count only what landed.
             LethalBreed.LOGGER.error("[LethalBreed] could not reset config option {}", f.getName(), e);
             return false;
         }

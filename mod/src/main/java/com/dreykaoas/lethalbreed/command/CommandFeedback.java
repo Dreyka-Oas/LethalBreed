@@ -14,10 +14,6 @@ final class CommandFeedback {
 
     private static final String PREFIX = "[LethalBreed] ";
 
-    static void success(CommandSourceStack src, String msg, boolean broadcast) {
-        src.sendSuccess(() -> Component.literal(PREFIX + msg), broadcast);
-    }
-
     static void success(CommandSourceStack src, String msg, ChatFormatting style, boolean broadcast) {
         src.sendSuccess(() -> Component.literal(PREFIX + msg).withStyle(style), broadcast);
     }

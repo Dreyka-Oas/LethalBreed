@@ -73,7 +73,7 @@ public final class ProgressionConfig {
     public static int phaseMax = 50;
     /** Once {@link #phaseMax} is reached (and {@link #phaseMaxEnabled} is true): true = loop back to
      *  phase 1 and climb again; false = stay pinned at {@link #phaseMax}. No effect when
-     *  {@link #phaseMaxEnabled} is false. Only the auto-advance timer respects this — {@code /lethalphase}
-     *  can still force any phase manually. */
+     *  {@link #phaseMaxEnabled} is false. Only the auto-advance timer respects this — the dev-only
+     *  {@code /lethalphase} command can still force any phase manually. */
     public static boolean phaseLoopEnabled = false;
 }
