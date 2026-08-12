@@ -1,7 +1,6 @@
 package com.dreykaoas.lethalbreed.config.schema;
 
 import com.dreykaoas.lethalbreed.config.ConfigAccess;
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
 
 import java.lang.reflect.Field;
 

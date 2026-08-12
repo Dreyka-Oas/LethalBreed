@@ -6,7 +6,7 @@ import com.dreykaoas.lethalbreed.dev.harness.TickPhasedHarness;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

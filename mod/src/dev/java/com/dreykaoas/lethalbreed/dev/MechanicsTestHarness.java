@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev;
 import com.dreykaoas.lethalbreed.dev.harness.TickPhasedHarness;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.dev.mechanics.MechPhaseArena;
 import com.dreykaoas.lethalbreed.dev.mechanics.MechSunArena;

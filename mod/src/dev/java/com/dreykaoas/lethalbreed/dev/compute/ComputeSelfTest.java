@@ -7,7 +7,6 @@ import com.dreykaoas.lethalbreed.ai.flowfield.CellClassifier;
 import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;
 import com.dreykaoas.lethalbreed.ai.flowfield.CpuFlowField;
 import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
-import com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldChecks;
 import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
@@ -40,9 +39,11 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
  *
  * <p><b>Why this lives in {@code dev} now.</b> It used to sit in {@code ai.flowfield} in {@code src/main},
  * purely so it could reach the package-private {@link Snapshot}, which meant this whole harness shipped
- * inside the player jar. {@code Snapshot.openSquare} and {@code FlowFieldChecks} are now public (the
- * {@code Snapshot} constructor deliberately is not), so it belongs in the dev source set with every other
- * harness and is compiled only for {@code runClient}/{@code runServer}.
+ * inside the player jar. {@code Snapshot.openSquare} is now public (the {@code Snapshot} constructor
+ * deliberately is not), so it belongs in the dev source set with every other harness and is compiled only for
+ * {@code runClient}/{@code runServer}. The solver-quality checks route through {@link FlowFieldSelfChecks},
+ * a dev-local reimplementation of the deleted {@code ai.flowfield.FlowFieldChecks} — see that class's javadoc
+ * for why it is re-derived here rather than moved.
  */
 public final class ComputeSelfTest {
     private ComputeSelfTest() {}
@@ -57,31 +58,31 @@ public final class ComputeSelfTest {
             Snapshot s = buildSnapshot();
             FlowField cpu = CpuFlowField.compute(s);
 
-            boolean cpuSane = FlowFieldChecks.cpuSanity(cpu, SIZE, SIZE);
+            boolean cpuSane = FlowFieldSelfChecks.cpuSanity(cpu, SIZE, SIZE);
             DevVerdict.check(SUITE, "cpu-sanity", cpuSane, "seed=0 and a far cell is reachable & > 0");
 
             // Direction field: ties make CPU vs GPU directions legitimately differ, so don't compare them to
             // each other — instead assert each backend's directions are SELF-CONSISTENT (every reachable
             // non-seed cell steps to a strictly cheaper neighbour, i.e. a valid descending gradient).
-            DevVerdict.check(SUITE, "cpu-direction", FlowFieldChecks.directionsDescend(cpu, SIZE, SIZE),
+            DevVerdict.check(SUITE, "cpu-direction", FlowFieldSelfChecks.directionsDescend(cpu, SIZE, SIZE),
                     "every reachable cell steps strictly downhill");
             // Optimality (stronger than descent): the cost field is the Bellman-Ford fixpoint — no passable
             // cell can be relaxed further, so every cost is the true shortest distance, not merely descending.
-            DevVerdict.check(SUITE, "cpu-optimal", FlowFieldChecks.costFieldOptimal(s, cpu),
+            DevVerdict.check(SUITE, "cpu-optimal", FlowFieldSelfChecks.costFieldOptimal(s, cpu),
                     "cost field is the Bellman fixpoint (no cell improvable)");
 
             GpuComputeManager gpu = GpuComputeManager.get();
             if (FlowConfig.useGpu && gpu.isAvailable()) {
                 FlowField g = gpu.solve(s);
-                int[] diff = FlowFieldChecks.compareCost(s, cpu, g);
+                int[] diff = FlowFieldSelfChecks.compareCost(s, cpu, g);
                 boolean parity = diff[0] == 0;
                 DevVerdict.check(SUITE, "gpu-cpu-parity", parity, parity
                         ? "all " + (SIZE * SIZE) + " cells match on " + gpu.deviceName()
                         : diff[0] + " mismatching cells (first @cellIndex=" + diff[1]
                                 + " cpu=" + diff[2] + " gpu=" + diff[3] + ")");
-                DevVerdict.check(SUITE, "gpu-direction", FlowFieldChecks.directionsDescend(g, SIZE, SIZE),
+                DevVerdict.check(SUITE, "gpu-direction", FlowFieldSelfChecks.directionsDescend(g, SIZE, SIZE),
                         "every reachable cell steps strictly downhill");
-                DevVerdict.check(SUITE, "gpu-optimal", FlowFieldChecks.costFieldOptimal(s, g),
+                DevVerdict.check(SUITE, "gpu-optimal", FlowFieldSelfChecks.costFieldOptimal(s, g),
                         "cost field is the Bellman fixpoint (no cell improvable)");
             } else {
                 // Not a check: a machine with no GPU must not book a failure. Logged under the same prefix so
@@ -129,7 +130,7 @@ public final class ComputeSelfTest {
         try {
             FlowConfig.flowCpuThreads = saved == 1 ? 2 : 1; // guaranteed different -> rebuild
             FlowField again = CpuFlowField.compute(s);
-            return FlowFieldChecks.compareCost(s, reference, again)[0] == 0;
+            return FlowFieldSelfChecks.compareCost(s, reference, again)[0] == 0;
         } finally {
             FlowConfig.flowCpuThreads = saved;
         }

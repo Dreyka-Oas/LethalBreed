@@ -1,5 +1,7 @@
-package com.dreykaoas.lethalbreed.config;
+package com.dreykaoas.lethalbreed.dev.config;
 
+import com.dreykaoas.lethalbreed.config.ConfigAccess;
+import com.dreykaoas.lethalbreed.config.ConfigBounds;
 import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
 import com.dreykaoas.lethalbreed.config.schema.ConfigType;
 

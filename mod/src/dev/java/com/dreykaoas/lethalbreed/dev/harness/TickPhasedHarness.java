@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev.harness;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;

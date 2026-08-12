@@ -44,10 +44,8 @@ public final class Snapshot {
     public int originZ() { return originZ; }
     public int width() { return width; }
     public int depth() { return depth; }
-    public int focusY() { return focusY; }
     public boolean[] passable() { return passable; }
     public boolean[] walk() { return passable; } // GPU path compatibility
     public int[] extraCost() { return extraCost; }
-    public byte[] flags() { return flags; }
     public int[] seedCells() { return seedCells; }
 }

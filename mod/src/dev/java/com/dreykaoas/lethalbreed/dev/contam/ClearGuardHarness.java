@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev.contam;
 import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 import com.dreykaoas.lethalbreed.dev.harness.TickPhasedHarness;
 
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;

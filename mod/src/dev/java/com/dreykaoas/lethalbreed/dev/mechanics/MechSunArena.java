@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev.mechanics;
 import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

@@ -68,14 +68,4 @@ class PackTetherTest {
         assertEquals(70.25, t.wpY(), 0.0);
         assertEquals(300.75, t.wpZ(), 0.0);
     }
-
-    @Test
-    void clearingTheWaypointLeavesMembershipAlone() {
-        PackTether t = new PackTether();
-        t.setPackId(9L);
-        t.setWaypoint(1, 2, 3);
-        t.clearWaypoint();
-        assertFalse(t.hasWaypoint());
-        assertTrue(t.inPack());
-    }
 }

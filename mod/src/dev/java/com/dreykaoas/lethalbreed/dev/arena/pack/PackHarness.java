@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev.arena.pack;
 
 import com.dreykaoas.lethalbreed.GameState;
-import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
