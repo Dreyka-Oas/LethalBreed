@@ -4,12 +4,11 @@ package com.dreykaoas.lethalbreed.entity.move;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 
-import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -94,10 +93,14 @@ public final class PillarClimb {
         }
         computeHeading();
 
-        if (DevTestConfig.debugClimb && (age % 3 == 1)) {
-            LethalBreed.LOGGER.info("[ClimbDbg] z{} PILLAR y={} dyTgt={} horiz={} age={} risen={} ground={}",
-                    entity.getId(), MoveMath.f1(entity.getY()), MoveMath.f1(dyToTarget), MoveMath.f1(h), age,
-                    MoveMath.f1(risen()), entity.onGround());
+        if (DevProbe.tracing(DevProbe.CLIMB) && (age % 3 == 1)) {
+            DevProbe.sink.trace(DevProbe.CLIMB, "z" + entity.getId()
+                    + " PILLAR y=" + MoveMath.f1(entity.getY())
+                    + " dyTgt=" + MoveMath.f1(dyToTarget)
+                    + " horiz=" + MoveMath.f1(h)
+                    + " age=" + age
+                    + " risen=" + MoveMath.f1(risen())
+                    + " ground=" + entity.onGround());
         }
 
         // Reached the target's height → hop forward off the column toward the target and stop.
