@@ -8,6 +8,7 @@ import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.LODLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -22,12 +23,10 @@ import java.util.Set;
 final class LodBucketPass {
     private final ZombieRegistry registry;
     private final DimensionManager dimensions;
-    private final StageProfiler profiler;
 
-    LodBucketPass(ZombieRegistry registry, DimensionManager dimensions, StageProfiler profiler) {
+    LodBucketPass(ZombieRegistry registry, DimensionManager dimensions) {
         this.registry = registry;
         this.dimensions = dimensions;
-        this.profiler = profiler;
     }
 
     // Rotated each run() so the frozen-reclassify skip staggers WHICH frozen zombies refresh on a given
@@ -36,12 +35,12 @@ final class LodBucketPass {
 
     /** Record one profiling checkpoint and return the new "last timestamp", or {@code t} unchanged when
      *  profiling is off. No allocation — safe to call every activation of this hot per-zombie loop. */
-    private static long mark(StageProfiler profiler, StageProfiler.Stage stage, boolean prof, long t) {
+    private static long mark(int stage, boolean prof, long t) {
         if (!prof) {
             return t;
         }
         long n = System.nanoTime();
-        profiler.add(stage, n - t);
+        DevProbe.sink.stage(stage, n - t);
         return n;
     }
 
@@ -76,24 +75,24 @@ final class LodBucketPass {
         // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
         // ALL buckets — a global tick%interval would only ever align with bucket 0.
         LODManager.classify(sz, level, classifyCtx.targetIndex());
-        t = mark(profiler, StageProfiler.Stage.CLASSIFY, prof, t);
+        t = mark(DevProbe.CLASSIFY, prof, t);
         LODLevel lod = sz.lod();
         // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
         // so neighbour queries still find them: a Hurleur rallying idle zombies, a Soigneur healing them,
         // and sound propagation all target exactly these.
         ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
-        t = mark(profiler, StageProfiler.Stage.GRID, prof, t);
+        t = mark(DevProbe.GRID, prof, t);
         // Pack decision runs here, BEFORE the FROZEN skip: a zombie with nothing to hunt is frozen, and
         // a frozen zombie looking for company is the nominal case for forming a pack, not an edge one.
         PackPass.decide(sz, ctx);
-        t = mark(profiler, StageProfiler.Stage.PACK, prof, t);
+        t = mark(DevProbe.PACK, prof, t);
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
-        t = mark(profiler, StageProfiler.Stage.SUNBURN, prof, t);
+        t = mark(DevProbe.SUNBURN, prof, t);
         // Mood (celebrate/flee/regen) also runs before the FROZEN skip so a targetless fleeing/celebrating
         // zombie still gets processed; it can un-freeze itself (LOD→HIGH), so re-read the tier afterward.
         sz.updateMood(level, ctx);
-        mark(profiler, StageProfiler.Stage.MOOD, prof, t);
+        mark(DevProbe.MOOD, prof, t);
         return sz.lod();
     }
 
@@ -112,7 +111,7 @@ final class LodBucketPass {
                                  Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
         long tt = prof ? System.nanoTime() : 0L;
         sz.tick(level, ctx);
-        mark(profiler, StageProfiler.Stage.TICK, prof, tt);
+        mark(DevProbe.TICK, prof, tt);
         if (sz.isClimbing()) {
             climbers.add(sz);
         }
@@ -133,6 +132,9 @@ final class LodBucketPass {
         double mspt = server.getAverageTickTimeNanos() / 1_000_000.0;
         int stress = (SchedulerConfig.msptThrottle && mspt > SchedulerConfig.msptThrottleThreshold) ? 2 : 1;
         long round = frozenRound++;
+        // Per-stage timing: one static read per TICK when disabled (hoisted out of the loop — it used to be
+        // re-evaluated per zombie). A shipped jar has no sink, so this folds to a constant false.
+        boolean prof = DevProbe.on();
         for (SmartZombie sz : registry.all()) {
             if (Math.floorMod(sz.id(), buckets) != currentBucket) {
                 continue;
@@ -162,10 +164,6 @@ final class LodBucketPass {
             if (hardFreezeSkip(sz, level, hardFreeze)) {
                 continue;
             }
-
-            // Per-stage timing: one branch per activation when disabled (a dev-only static), so a shipped
-            // jar pays nothing. See StageProfiler.
-            boolean prof = StageProfiler.enabled();
 
             WorldAIContext classifyCtx = dimensions.get(sz.dimension());
             WorldAIContext ctx = dimensions.get(sz.dimension());

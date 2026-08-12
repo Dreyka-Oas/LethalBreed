@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -60,7 +61,8 @@ final class FlowFieldSnapshotBuilder {
         int breakCost = FlowConfig.flowBreakCost;
         int buildCost = FlowConfig.flowBuildCost;
 
-        long t0 = System.nanoTime();
+        boolean prof = DevProbe.on();
+        long t0 = prof ? System.nanoTime() : 0L;
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int cx = 0; cx < width; cx++) {
             int wx = minX + cx;
@@ -89,8 +91,9 @@ final class FlowFieldSnapshotBuilder {
                 }
             }
         }
-        com.dreykaoas.lethalbreed.tick.StageProfiler.sub(
-                com.dreykaoas.lethalbreed.tick.StageProfiler.Stage.FLOWSNAP, System.nanoTime() - t0);
+        if (prof) {
+            DevProbe.sink.stage(DevProbe.FLOWSNAP, System.nanoTime() - t0);
+        }
 
         List<Integer> seeds = new ArrayList<>(players.size());
         for (ServerPlayer p : players) {
