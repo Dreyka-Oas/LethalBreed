@@ -6,6 +6,7 @@ import com.dreykaoas.lethalbreed.effect.contamination.symptom.ContaminationSympt
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -31,7 +32,9 @@ public final class ContaminationLifecycle {
         e.setAttached(ContaminationState.SYMPTOMATIC, false);
         ContaminationState.tracked.add(e);
         ContaminationSymptoms.applyLatentSlow(e);
-        ContaminationState.INFECT_COUNT.incrementAndGet();
+        if (DevProbe.on()) {
+            DevProbe.sink.count(DevProbe.INFECT, DevProbe.GLOBAL);
+        }
     }
 
     /** Re-track a contaminated entity after chunk reload (its attachment persists, the in-memory set doesn't).
@@ -97,7 +100,9 @@ public final class ContaminationLifecycle {
         e.removeAttached(ContaminationState.SYMPTOMATIC);
         e.removeAttached(ContaminationState.LEVEL);
         e.removeAttached(ContaminationState.INTENSITY);
-        ContaminationState.DEATH_COUNT.incrementAndGet();
+        if (DevProbe.on()) {
+            DevProbe.sink.count(DevProbe.DEATH, DevProbe.GLOBAL);
+        }
         if (ContaminationConfig.contamReanimateHumanoids && isHumanoid(e)) {
             reanimate(e, level);
         }

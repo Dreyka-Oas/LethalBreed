@@ -81,7 +81,6 @@ public final class PhaseManager {
         com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
                 "[LethalBreed] phase loaded: {} (worldAge={}, nextIn={})",
                 phase, overworld.getGameTime(), nextIntervalTicks);
-        logPhases();
     }
 
     /** Push the cached mirror into the world store and mark it dirty so it is written on the next save. */
@@ -94,27 +93,12 @@ public final class PhaseManager {
         }
     }
 
-    /** Fixed preview range logged to the console on load, for a quick sanity glance (phase is unbounded,
-     *  so there's no full list to dump any more). */
-    private static final int[] LOG_PREVIEW_PHASES = {0, 1, 5, 10, 15, 20, 30, 50, 100};
-
     /** Cyclic color palette for the phase broadcast/command text — only the tier THRESHOLDS
      *  ({@link ProgressionConfig#phaseColorThresholds}) are configurable, this list is fixed. */
     private static final ChatFormatting[] COLOR_PALETTE = {
             ChatFormatting.GRAY, ChatFormatting.GREEN, ChatFormatting.YELLOW, ChatFormatting.GOLD,
             ChatFormatting.RED, ChatFormatting.DARK_RED, ChatFormatting.LIGHT_PURPLE, ChatFormatting.DARK_PURPLE,
     };
-
-    /** Dump a preview of the phase curve to the server console so it's visible at a glance. */
-    public void logPhases() {
-        com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("[LethalBreed] Phase curve preview:");
-        for (int i : LOG_PREVIEW_PHASES) {
-            PhaseConfig.PhaseDef d = PhaseConfig.def(i);
-            com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
-                    "  Phase {} — hp[{},{}] dmg[{},{}] spd[{},{}]",
-                    i, d.hpMin(), d.hpMax(), d.dmgMin(), d.dmgMax(), d.spdMin(), d.spdMax());
-        }
-    }
 
     /** Color for a given phase, per the configured tier thresholds (largest threshold <= phase wins). */
     public static ChatFormatting colorFor(int phase) {

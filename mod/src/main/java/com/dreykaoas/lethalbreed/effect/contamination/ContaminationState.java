@@ -39,10 +39,6 @@ public final class ContaminationState {
     public static final AttachmentType<Double> INTENSITY = AttachmentRegistry.createPersistent(
             Identifier.fromNamespaceAndPath("lethalbreed", "contam_intensity"), Codec.DOUBLE);
 
-    // Dev instrumentation (headless harness).
-    public static final java.util.concurrent.atomic.AtomicInteger INFECT_COUNT = new java.util.concurrent.atomic.AtomicInteger();
-    public static final java.util.concurrent.atomic.AtomicInteger DEATH_COUNT = new java.util.concurrent.atomic.AtomicInteger();
-
     public static final Set<LivingEntity> tracked = new HashSet<>();
     /** Server-tick of the next plague pulse per victim (transient; reseeded on load). */
     public static final java.util.Map<LivingEntity, Long> nextPulse = new java.util.HashMap<>();
