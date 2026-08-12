@@ -1,7 +1,6 @@
-package com.dreykaoas.lethalbreed.tick;
+package com.dreykaoas.lethalbreed.dev.probe;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
-import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * Per-stage timing for the server tick, so the cost ranking is measured instead of argued.
@@ -12,10 +11,11 @@ import net.fabricmc.loader.api.FabricLoader;
  * analytical, never measured, and the two that were independently re-derived came back an order of
  * magnitude smaller.
  *
- * <p><b>Cost of measuring.</b> Enabled only in a development environment AND when
- * {@code debugLogInterval > 0}, so a published jar never pays for it and never logs. When enabled it is
- * two {@code System.nanoTime()} calls per stage per zombie activation; that overhead lands identically
- * on a before and an after run, so comparisons stay valid.
+ * <p><b>Cost of measuring.</b> This class lives in the {@code dev} source set and is only ever reached
+ * through {@code DevSink}, i.e. through the {@code DevProbe} seam — a published jar contains neither, so
+ * it never pays for measurement and never logs. When a sink IS installed it is two
+ * {@code System.nanoTime()} calls per stage per zombie activation; that overhead lands identically on a
+ * before and an after run, so comparisons stay valid.
  */
 public final class StageProfiler {
 
@@ -40,32 +40,17 @@ public final class StageProfiler {
         }
     }
 
-    /** Sub-stage timing is recorded from {@code TargetSelector}, which sits outside the tick package and has
-     *  no scheduler reference. One profiler exists per server, so a static side-channel is the honest
-     *  trade — and the whole thing is compiled out of the hot path by {@link #enabled()} anyway. */
-    private static volatile StageProfiler active;
-
-    /** Record a sub-stage sample from outside the tick package. No-op when profiling is off. */
-    public static void sub(Stage s, long elapsedNanos) {
-        StageProfiler p = active;
-        if (p != null) {
-            p.add(s, elapsedNanos);
-        }
-    }
-
-    private static final Stage[] STAGES = Stage.values();
-    private static final boolean DEV = FabricLoader.getInstance().isDevelopmentEnvironment();
+    static final Stage[] STAGES = Stage.values();
 
     private final long[] nanos = new long[STAGES.length];
     private final long[] calls = new long[STAGES.length];
 
     public StageProfiler() {
-        active = this;
     }
 
     /** Whether measurement is on right now. Checked once per activation, not per stage. */
     public static boolean enabled() {
-        return DEV && SchedulerConfig.debugLogInterval > 0;
+        return SchedulerConfig.debugLogInterval > 0;
     }
 
     public void add(Stage s, long elapsedNanos) {

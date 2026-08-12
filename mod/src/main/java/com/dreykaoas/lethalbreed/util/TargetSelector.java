@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.util;
 
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.spatial.TargetIndex;
-import com.dreykaoas.lethalbreed.tick.StageProfiler;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -83,11 +83,11 @@ public final class TargetSelector {
      *  memory in {@code LODManager} the instant something comes into view. So a zombie hears a mob move behind a
      *  wall and commits to the noise location; once it rounds the wall and sees the mob, sight takes over. */
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, TargetIndex index) {
-        boolean prof = StageProfiler.enabled();
+        boolean prof = DevProbe.on();
         long t0 = prof ? System.nanoTime() : 0L;
         List<LivingEntity> candidates = collectCandidates(level, self, radius, index);
         if (prof) {
-            StageProfiler.sub(StageProfiler.Stage.SCAN, System.nanoTime() - t0);
+            DevProbe.sink.stage(DevProbe.SCAN, System.nanoTime() - t0);
         }
         int n = candidates.size();
         if (n == 0) {
@@ -104,14 +104,14 @@ public final class TargetSelector {
             long tl = prof ? System.nanoTime() : 0L;
             boolean seen = !TargetingConfig.requireLineOfSight || canSee(level, self, only);
             if (prof) {
-                StageProfiler.sub(StageProfiler.Stage.LOS, System.nanoTime() - tl);
+                DevProbe.sink.stage(DevProbe.LOS, System.nanoTime() - tl);
             }
             return seen ? only : null;
         }
         long tOrder = prof ? System.nanoTime() : 0L;
         double[] distSq = shuffleAndOrder(candidates, self);
         if (prof) {
-            StageProfiler.sub(StageProfiler.Stage.ORDER, System.nanoTime() - tOrder);
+            DevProbe.sink.stage(DevProbe.ORDER, System.nanoTime() - tOrder);
         }
         return nearestVisible(level, self, candidates, distSq, radiusSq, n, prof);
     }
@@ -210,7 +210,7 @@ public final class TargetSelector {
             return null;
         } finally {
             if (prof) {
-                StageProfiler.sub(StageProfiler.Stage.LOS, System.nanoTime() - tLos);
+                DevProbe.sink.stage(DevProbe.LOS, System.nanoTime() - tLos);
             }
         }
     }

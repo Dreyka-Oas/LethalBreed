@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.HashSet;
@@ -16,16 +17,15 @@ import java.util.Set;
  *
  * <p>This class is the orchestrator: it owns the per-tick state and drives the split passes in a
  * fixed order — world rules + sound, then the bucketed {@link LodBucketPass}, then the every-tick
- * climb/swim {@link EveryTickPass}, then {@link WorldMaintenance#drainBlockOps drains}, then the dev
- * {@link PerfRecap}. The scheduling math and pass order are deliberate; the helpers are pure splits.
+ * climb/swim {@link EveryTickPass}, then {@link WorldMaintenance#drainBlockOps drains}, then the
+ * end-of-tick report through {@link DevProbe}. The scheduling math and pass order are deliberate; the
+ * helpers are pure splits.
  */
 public final class TickScheduler {
     private final ZombieRegistry registry;
     private final LodBucketPass bucketPass;
     private final EveryTickPass everyTickPass;
     private final WorldMaintenance world;
-    private final PerfRecap perfRecap;
-    private final StageProfiler profiler = new StageProfiler();
 
     private long tickCounter = 0L;
     private final Set<SmartZombie> climbers = new HashSet<>(); // zombies mid jump-pillar, ticked every tick
@@ -33,14 +33,14 @@ public final class TickScheduler {
 
     public TickScheduler(ZombieRegistry registry, DimensionManager dimensions) {
         this.registry = registry;
-        this.bucketPass = new LodBucketPass(registry, dimensions, profiler);
+        this.bucketPass = new LodBucketPass(registry, dimensions);
         this.everyTickPass = new EveryTickPass(dimensions);
         this.world = new WorldMaintenance(dimensions);
-        this.perfRecap = new PerfRecap(registry, dimensions, profiler);
     }
 
     public void onServerTick(MinecraftServer server) {
-        long t0 = System.nanoTime();
+        boolean probing = DevProbe.on();
+        long t0 = probing ? System.nanoTime() : 0L;
         // Auto-scale: pick the bucket count so each tick processes ~autoScaleBucketLoad zombies, instead of a
         // fixed tickBuckets. buckets is computed once here and handed to the pass so membership stays consistent.
         int buckets;
@@ -67,8 +67,9 @@ public final class TickScheduler {
         everyTickPass.processClimbers(server, climbers);
         everyTickPass.processSwimmers(server, swimmers);
         world.drainBlockOps(server, tickCounter);
-        perfRecap.accumulate(System.nanoTime() - t0);
-        perfRecap.maybeLog(server, tickCounter);
+        if (probing) {
+            DevProbe.sink.tickEnd(server, tickCounter, System.nanoTime() - t0);
+        }
         tickCounter++;
     }
 

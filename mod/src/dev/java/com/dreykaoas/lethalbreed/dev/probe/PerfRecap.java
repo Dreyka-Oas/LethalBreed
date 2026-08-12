@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.tick;
+package com.dreykaoas.lethalbreed.dev.probe;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 
@@ -12,17 +12,18 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 
 /**
- * Dev perf recap, emitted every {@code debugLogInterval} ticks (~5s). Active ONLY in a development
- * environment AND when {@code SchedulerConfig.debugLogInterval > 0} — so a built/published jar never logs.
+ * Dev perf recap, emitted every {@code debugLogInterval} ticks (~5s). Lives in the {@code dev} source set
+ * and is only ever driven by {@code DevSink#tickEnd}, so a built/published jar contains neither and never
+ * logs. Still requires {@code SchedulerConfig.debugLogInterval > 0} to say anything.
  */
-final class PerfRecap {
+public final class PerfRecap {
     private final ZombieRegistry registry;
     private final DimensionManager dimensions;
     private final StageProfiler profiler;
 
     private long aiNanosAccum = 0L; // our AI time accumulated over the perf-recap interval
 
-    PerfRecap(ZombieRegistry registry, DimensionManager dimensions, StageProfiler profiler) {
+    public PerfRecap(ZombieRegistry registry, DimensionManager dimensions, StageProfiler profiler) {
         this.registry = registry;
         this.dimensions = dimensions;
         this.profiler = profiler;

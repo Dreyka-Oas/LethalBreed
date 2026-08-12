@@ -15,16 +15,23 @@ import com.dreykaoas.lethalbreed.dev.arena.pack.PackHarness;
 import com.dreykaoas.lethalbreed.dev.arena.shade.ShadeHarness;
 import com.dreykaoas.lethalbreed.dev.arena.statue.StatueHarness;
 
+import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.compute.ComputeSelfTest;
+import com.dreykaoas.lethalbreed.dev.probe.DevSink;
+import com.dreykaoas.lethalbreed.dev.probe.PerfRecap;
+import com.dreykaoas.lethalbreed.dev.probe.StageProfiler;
 import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
 /**
- * Single entry point for every development-only feature (headless test harnesses + the {@code /lethalspawn}
- * load-test command). Lives in the {@code dev} source set, so it is compiled and packaged ONLY for
+ * Single entry point for every development-only feature: all of {@code main}'s instrumentation (the stage
+ * profiler, the perf recap, the dev counters and the debug traces, installed here behind the
+ * {@link DevProbe} seam), plus the headless test harnesses and the {@code /lethalspawn} load-test command.
+ * Lives in the {@code dev} source set, so it is compiled and packaged ONLY for
  * {@code runClient}/{@code runServer} — a shipped/remapped jar never contains this class or anything under
  * {@code com.dreykaoas.lethalbreed.dev}.
  *
@@ -42,6 +49,15 @@ public final class DevBootstrap {
      * dev classes.
      */
     public static void install() {
+        // FIRST of all: hand main its instrumentation. Everything below (and every harness) reads through
+        // the sink, so it must exist before any dev flag is applied or any tick listener is registered.
+        // The profiler is built first and handed to BOTH collaborators — the sink feeds it, the recap
+        // drains it — so neither has to be patched up after construction.
+        StageProfiler profiler = new StageProfiler();
+        PerfRecap recap = new PerfRecap(GameState.REGISTRY, GameState.DIMENSIONS, profiler);
+        DevProbe.install(new DevSink(profiler, recap),
+                (1 << DevProbe.CLIMB) | (1 << DevProbe.PACKS) | (1 << DevProbe.CONTAM));
+
         // FIRST, before anything reads a dev flag: let LB_DEV_TEST / -Dlethalbreed.devTest force exactly one
         // suite on and every other one off. Every gate below (and every SERVER_STARTED listener registered
         // here) therefore sees the selected configuration, not whatever the config file was left holding.
