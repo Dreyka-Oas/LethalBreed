@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.config.bounds;
 import com.dreykaoas.lethalbreed.config.BoundsRegistrar;
 
 /**
- * Clamp ranges for the phase, special-variant and dev options.
+ * Clamp ranges for the phase and special-variant options.
  *
  * <p>See {@link BoundsSplitNote} for why this is its own class instead of one shared table.
  */
@@ -75,7 +75,5 @@ public final class ProgressionBounds {
         r.b("specialJuggernautScale", 0.05, 10);
         r.b("specialJuggernautHealthMul", 0.05, 100);
         r.b("specialJuggernautResistanceAmp", 0, 9);
-        r.b("devSpawnRadius", 1, 256);
-
     }
 }

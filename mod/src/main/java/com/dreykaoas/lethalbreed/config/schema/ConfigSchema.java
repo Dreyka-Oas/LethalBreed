@@ -4,7 +4,6 @@ import com.dreykaoas.lethalbreed.config.ConfigAccess;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
@@ -30,35 +29,75 @@ import java.util.List;
  * in {@link #HOLDERS}. To add a config option, add a public static non-final primitive field to one of those
  * holders (or add a new holder to {@link #HOLDERS}) and the rest of the config layer (load/save, GUI,
  * commands) keeps working unchanged.
+ *
+ * <p>The holder list is not fixed at compile time: {@link #registerHolder} adds one at runtime. That exists
+ * for exactly one caller — {@code DevBootstrap}, in a development environment — so the dev-only options and
+ * the "Dev / Debug" GUI tab they produce simply do not exist in a player's game, and are never written into
+ * a player's {@code lethalbreed.json}.
  */
 public final class ConfigSchema {
     private ConfigSchema() {}
 
-    /** Every class whose public-static-non-final primitive fields are config options. */
-    private static final Class<?>[] HOLDERS = {
+    /** Every class whose public-static-non-final primitive fields are config options. Shipped holders are
+     *  listed here; {@link #registerHolder} appends a dev-only one at runtime, which is why this is a
+     *  mutable list rather than the {@code Class<?>[]} it used to be. */
+    private static final List<Class<?>> HOLDERS = new ArrayList<>(List.of(
             SchedulerConfig.class,
             FlowConfig.class,
             TargetingConfig.class,
             WorldSpawnConfig.class,
             CombatMoveConfig.class,
-            // These three were one holder (ProgressionConfig). They MUST stay adjacent and in this order:
+            // These two were one holder (ProgressionConfig). They MUST stay adjacent and in this order:
             // ConfigSchema.all() order is the on-disk write order within a category (ConfigSchemaOrderTest).
             ProgressionConfig.class,
             SpecialVariantConfig.class,
-            DevTestConfig.class,
             ContaminationConfig.class,
             ZombieMoodConfig.class,
             ExpertConfig.class,
             // Appended last on purpose: inserting a holder mid-list would shift the on-disk write order of
             // every option after it, rewriting every existing user's config file for nothing.
-            PackConfig.class,
-    };
+            PackConfig.class));
 
-    /** Editable fields in source-declaration order, across all holders. Computed once — the holder classes
-     *  and their fields are fixed at compile time, so re-running reflection on every call (config load, every
-     *  GUI keystroke via {@code ConfigAccess}, every {@code find()}) only rebuilt an identical list. Returned
-     *  as an unmodifiable view since every caller only iterates it (audit #29). */
-    private static final List<Field> ALL = Collections.unmodifiableList(scan());
+    /** Editable fields in source-declaration order, across all holders. Cached rather than recomputed on
+     *  every call (config load, every GUI keystroke via {@code ConfigAccess}, every {@code find()}) — those
+     *  only ever rebuilt an identical list. Returned as an unmodifiable view since every caller only
+     *  iterates it (audit #29).
+     *
+     *  <p>{@code volatile} and nullable rather than {@code final}: {@link #registerHolder} runs on the
+     *  mod-init thread while every read happens on the server (or client) thread, so the invalidation has to
+     *  publish safely. A benign race can recompute the list twice; both results are equal. */
+    private static volatile List<Field> all;
+
+    /**
+     * Add a config holder after class-init, so its options join the schema, the JSON file and the GUI.
+     *
+     * <p>Called only by {@code DevBootstrap} in a development environment. A shipped jar has no dev source
+     * set, so this is never reached there — which is precisely why a player's config has no dev options and
+     * the GUI sidebar has no "Dev / Debug" tab.
+     *
+     * <p>Registering the same holder twice is a no-op: the duplicate would list every one of its options
+     * twice, and {@code ConfigWriter} would write each of them twice into the JSON.
+     */
+    public static void registerHolder(Class<?> holder) {
+        if (HOLDERS.contains(holder)) {
+            return;
+        }
+        HOLDERS.add(holder);
+        all = null;
+        // Without this the holder's fields have no factory default, and resetAll() would call
+        // Field.set(null, null) on a primitive — an IllegalArgumentException nothing catches.
+        ConfigAccess.captureDefaultsFor(holder);
+    }
+
+    /**
+     * Undo a {@link #registerHolder}. Exists for tests — a registration is process-global, and a test that
+     * leaves one behind changes the option list every later test sees. Nothing in production unregisters.
+     */
+    static void unregisterHolder(Class<?> holder) {
+        if (HOLDERS.remove(holder)) {
+            all = null;
+        }
+    }
 
     private static List<Field> scan() {
         List<Field> out = new ArrayList<>();
@@ -75,7 +114,12 @@ public final class ConfigSchema {
     }
 
     public static List<Field> all() {
-        return ALL;
+        List<Field> a = all;
+        if (a == null) {
+            a = Collections.unmodifiableList(scan());
+            all = a;
+        }
+        return a;
     }
 
     public static Field find(String name) {

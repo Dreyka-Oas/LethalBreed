@@ -68,7 +68,4 @@ public final class SchedulerConfig {
     public static boolean msptThrottle = false;
     /** Server mean-MSPT (ms) above which {@link #msptThrottle} kicks in (vanilla target tick = 50 ms). */
     public static double msptThrottleThreshold = 45.0;
-
-    /** How often (ticks) to emit the dev perf recap (100 ticks = 5s). 0 disables (default — no log spam). */
-    public static int debugLogInterval = 0;
 }

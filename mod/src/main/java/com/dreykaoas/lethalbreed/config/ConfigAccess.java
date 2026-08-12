@@ -8,6 +8,7 @@ import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 import com.dreykaoas.lethalbreed.LethalBreed;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -22,8 +23,40 @@ import java.util.Map;
 public final class ConfigAccess {
     private ConfigAccess() {}
 
-    /** Default snapshot captured at class init, BEFORE the JSON load or any command can mutate fields. */
+    /** Default snapshot captured at class init, BEFORE the JSON load or any command can mutate fields.
+     *  Only the reference is final: {@link #captureDefaultsFor} adds entries for a holder that joined the
+     *  schema after this class was initialised. */
     private static final Map<String, Object> DEFAULTS = snapshot();
+
+    /**
+     * Capture defaults for a holder registered after class-init, called from
+     * {@link ConfigSchema#registerHolder}.
+     *
+     * <p>Not optional. {@link #reset} does {@code Field.set(null, DEFAULTS.get(name))}, and for a field with
+     * no entry that is {@code Field.set(null, null)} on a primitive — an {@link IllegalArgumentException},
+     * which the {@code catch (IllegalAccessException)} there does NOT cover, so
+     * {@code /lethalconfig resetall} would abort mid-loop. {@link #defaultOf} would also report {@code "?"}
+     * for the option, in the GUI tooltip and in the wire snapshot.
+     *
+     * <p>Public only because {@code ConfigSchema} sits in the {@code config.schema} sub-package; it is that
+     * method's private helper and has no other caller.
+     */
+    public static void captureDefaultsFor(Class<?> holder) {
+        for (Field f : holder.getDeclaredFields()) {
+            int m = f.getModifiers();
+            if (!Modifier.isPublic(m) || !Modifier.isStatic(m) || Modifier.isFinal(m)
+                    || !ConfigSchema.isSupported(f.getType())) {
+                continue;
+            }
+            try {
+                DEFAULTS.put(f.getName(), ConfigType.copyIfArray(f.get(null)));
+            } catch (IllegalAccessException e) {
+                // Same reasoning as snapshot(): an option with no factory default resets to nothing and
+                // reports success anyway. A broken build, not a runtime condition to tolerate.
+                throw new IllegalStateException("cannot capture default for " + f.getName(), e);
+            }
+        }
+    }
 
     private static Map<String, Object> snapshot() {
         Map<String, Object> m = new LinkedHashMap<>();
