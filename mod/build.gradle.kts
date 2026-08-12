@@ -10,10 +10,20 @@ base {
     archivesName.set(project.property("archives_base_name") as String)
 }
 
-// Development-only source set: headless test harnesses + the /lethalspawn load-test command. It compiles
-// against main but is NEVER packaged into the shipped/remapped jar (see below), so a production jar contains
-// zero test/dev code and stays as light as possible. It is added to the runClient/runServer classpath so the
-// harnesses run under `gradlew runServer` / start.bat only.
+// Development-only source set. It now holds everything that used to live scattered across main behind
+// isDevelopmentEnvironment() checks: the headless verification harnesses, every profiler/counter/debug-trace
+// consumer, the dev config holder (DevTestConfig/DevBounds/ConfigOverride) and its "Dev / Debug" config tab,
+// and all four dev commands (/lethaldev, /lethalspawn, /lethalphase, /lethalspecial). It compiles against
+// main but is NEVER packaged into the shipped/remapped jar (see below), so a production jar contains zero
+// dev code and stays as light as possible. It is added to the runClient/runServer classpath so all of the
+// above runs under `gradlew runServer` / start.bat only.
+//
+// main keeps exactly one seam back into this source set: com.dreykaoas.lethalbreed.probe.DevProbe. Timings,
+// counters and traces measure things that happen INSIDE main-source code (a tick, a stage, a hit), so they
+// cannot be observed purely from dev — main has to call out to record them. DevProbe is that single call-out:
+// a volatile sink field plus cheap gate checks, wired up by DevBootstrap (in dev) through the existing
+// devHook("install") reflective call, so a player jar pays only an idle volatile read per gated call site and
+// none of the actual measurement code, which never ships.
 val devSourceSet: SourceSet = sourceSets.create("dev") {
     java.srcDir("src/dev/java")
     // Compile/run against everything main sees (Minecraft, Fabric loader/API, JOCL) plus main's own classes.
@@ -21,11 +31,12 @@ val devSourceSet: SourceSet = sourceSets.create("dev") {
     runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
 }
 
-// The dev source set holds the headless harnesses, and until now nothing could unit-test them: every rule in
-// them (how long to wait for a chunk, when a measurement is vacuous) was only ever exercised by starting a
-// real dedicated server, which takes minutes and cannot force the interesting timings. Putting dev's output on
-// the test classpath makes its PURE logic — the classes that take no Minecraft type — reachable from plain
-// JUnit. It changes nothing about packaging: the shipped jar is still built from `main` alone.
+// The dev source set holds the headless harnesses plus everything they exercise (instrumentation, dev config,
+// dev commands), and until now nothing could unit-test any of it: every rule in there (how long to wait for a
+// chunk, when a measurement is vacuous, when a counter or trace gate should fire) was only ever exercised by
+// starting a real dedicated server, which takes minutes and cannot force the interesting timings. Putting
+// dev's output on the test classpath makes its PURE logic — the classes that take no Minecraft type — reachable
+// from plain JUnit. It changes nothing about packaging: the shipped jar is still built from `main` alone.
 sourceSets.test {
     compileClasspath += devSourceSet.output
     runtimeClasspath += devSourceSet.output
