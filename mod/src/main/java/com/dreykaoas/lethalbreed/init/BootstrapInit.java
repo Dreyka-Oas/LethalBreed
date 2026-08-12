@@ -12,7 +12,6 @@ import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.dreykaoas.lethalbreed.pack.PackAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
-import com.dreykaoas.lethalbreed.util.InstalledMods;
 
 import static com.dreykaoas.lethalbreed.LethalBreed.LOGGER;
 
@@ -30,7 +29,6 @@ public final class BootstrapInit {
         ZombieStateAttachment.init(); // register the per-zombie behaviour-state attachment (drives sleep silence)
         ContaminationManager.init(); // register the contamination attachment
         PackAttachment.init(); // register the pack-membership attachment (survives chunk unload)
-        InstalledMods.detect();
         AiConflictDetector.checkModList();
         LOGGER.info("[LethalBreed] init — MC 1.21.11, Java 21 (Liberica NIK/GraalVM). Buckets={}, cell={}b",
                 SchedulerConfig.tickBuckets, SchedulerConfig.spatialCellSize);

@@ -3,10 +3,9 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 
 /**
  * The 8-neighbour offsets and the no-corner-cutting rule, shared by the CPU {@link BellmanFordSolver} (both its
- * relaxation and its direction-extraction pass) and the {@link FlowFieldChecks} optimality checker so they all
- * enumerate neighbours and reject diagonal corner-cuts the exact same way. Pure geometry — no field values are
- * shared, so the checker still independently re-derives costs. (The GPU kernel re-declares the same constants in
- * OpenCL, which cannot import Java.)
+ * relaxation and its direction-extraction pass) so it enumerates neighbours and rejects diagonal corner-cuts
+ * consistently. Pure geometry. (The GPU kernel re-declares the same constants in OpenCL, which cannot import
+ * Java.)
  */
 final class Neighbors8 {
     private Neighbors8() {

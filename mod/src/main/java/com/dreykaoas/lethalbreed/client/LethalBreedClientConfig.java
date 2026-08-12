@@ -33,7 +33,6 @@ public final class LethalBreedClientConfig {
 
     // ---- runtime (not serialized) ----
     private static transient boolean sodiumPresent = false;
-    private static transient boolean irisPresent = false;
     private static LethalBreedClientConfig instance = new LethalBreedClientConfig();
 
     public static LethalBreedClientConfig get() {
@@ -52,7 +51,6 @@ public final class LethalBreedClientConfig {
 
     public static void load() {
         sodiumPresent = FabricLoader.getInstance().isModLoaded("sodium");
-        irisPresent = FabricLoader.getInstance().isModLoaded("iris");
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         Path file = FabricLoader.getInstance().getConfigDir().resolve("lethalbreed-client.json");
@@ -76,9 +74,9 @@ public final class LethalBreedClientConfig {
             instance = new LethalBreedClientConfig();
         }
 
-        LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, sodium={}, iris={}",
+        LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, sodium={}",
                 instance.enabled, instance.cullDistantZombies, instance.zombieRenderDistance,
-                sodiumPresent, irisPresent);
+                sodiumPresent);
     }
 
     /** Clamp the deserialized fields that are actually consumed at runtime. Only {@link #zombieRenderDistance}

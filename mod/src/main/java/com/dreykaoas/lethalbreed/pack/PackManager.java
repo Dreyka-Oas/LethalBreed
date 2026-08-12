@@ -51,10 +51,6 @@ public final class PackManager implements PackLifecycle.Registry {
         return packs.containsKey(id);
     }
 
-    public int packCount() {
-        return packs.size();
-    }
-
     /** Live view for the harness and the debug command. Never mutate through it. */
     public Iterable<PackState> all() {
         return packs.values();

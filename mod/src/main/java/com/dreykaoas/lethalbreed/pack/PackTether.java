@@ -62,8 +62,6 @@ public final class PackTether {
         this.hasWaypoint = true;
     }
 
-    public void clearWaypoint() { this.hasWaypoint = false; }
-
     public boolean hasWaypoint() { return hasWaypoint; }
 
     public double wpX() { return wpX; }
