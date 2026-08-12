@@ -17,9 +17,10 @@ import net.minecraft.server.MinecraftServer;
  * than in front of it, so those never run. {@link #traceMask} works the same way for the per-channel debug
  * logs.
  *
- * <p>{@code DevBootstrap} assigns both fields via {@link #install} inside its existing reflective entry
- * point ({@code LethalBreedMod#installDevHooks}), so this seam inherits that method's dev-env gate for
- * free and adds no second reflective lookup.
+ * <p>{@code DevBootstrap} assigns both fields via {@link #install}, which {@code LethalBreedMod} reaches
+ * through its existing {@code devHook("install")} reflective call (the second of the two-phase
+ * {@code devHook("registerConfig")} / {@code devHook("install")} shape), so this seam inherits that call's
+ * dev-env gate for free and adds no second reflective lookup.
  *
  * <p>Ids are plain {@code int} constants rather than an enum on purpose: an enum would ship its constants,
  * its {@code values()} array and its labels. The labels live in {@code dev}.

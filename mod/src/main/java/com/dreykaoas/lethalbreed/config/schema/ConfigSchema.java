@@ -65,7 +65,13 @@ public final class ConfigSchema {
      *
      *  <p>{@code volatile} and nullable rather than {@code final}: {@link #registerHolder} runs on the
      *  mod-init thread while every read happens on the server (or client) thread, so the invalidation has to
-     *  publish safely. A benign race can recompute the list twice; both results are equal. */
+     *  publish safely. That safety does not come from "any race here is benign" — {@code all = null} is
+     *  indistinguishable from the field's initial default, so a reader racing with {@link #registerHolder}
+     *  would have no happens-before edge on the preceding {@code HOLDERS.add} and could cache a list
+     *  omitting the just-added holder. It comes from there being no such race in practice: registration
+     *  happens-before any other thread starts — {@link #registerHolder} runs as the first statement of
+     *  {@code onInitialize()}, on the mod-init thread, before any server or render thread exists, and
+     *  {@code Thread.start} supplies the edge. */
     private static volatile List<Field> all;
 
     /**
@@ -92,6 +98,11 @@ public final class ConfigSchema {
     /**
      * Undo a {@link #registerHolder}. Exists for tests — a registration is process-global, and a test that
      * leaves one behind changes the option list every later test sees. Nothing in production unregisters.
+     *
+     * <p>Not a full undo: it does not remove the {@code ConfigAccess.DEFAULTS} entries
+     * {@link ConfigAccess#captureDefaultsFor} added for the holder, so those keys persist in that map for
+     * the JVM's lifetime. Harmless today — {@code DEFAULTS} is only ever read by key, never iterated — but a
+     * test relying on the defaults map being fully clean after unregistering would not find that here.
      */
     static void unregisterHolder(Class<?> holder) {
         if (HOLDERS.remove(holder)) {
