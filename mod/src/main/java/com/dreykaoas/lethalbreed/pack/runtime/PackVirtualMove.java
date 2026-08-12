@@ -7,7 +7,6 @@ import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.pack.PackWander;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.border.WorldBorder;
 
 /**
  * Advances a pack that has no bodies left to walk it: a point sliding across the map.
@@ -52,17 +51,7 @@ public final class PackVirtualMove {
     }
 
     private static void chooseNext(ServerLevel level, PackState pack, long gameTime) {
-        WorldBorder border = level.getWorldBorder();
-        double[] heading = new double[2];
-        PackWander.Destination next = PackWander.next(
-                (int) Math.round(pack.x), (int) Math.round(pack.z), pack.headingX, pack.headingZ,
-                (int) Math.floor(border.getMinX()), (int) Math.floor(border.getMinZ()),
-                (int) Math.ceil(border.getMaxX()), (int) Math.ceil(border.getMaxZ()),
-                PackManager.rngFor(pack), heading);
-        pack.destX = next.x();
-        pack.destZ = next.z();
-        pack.headingX = heading[0];
-        pack.headingZ = heading[1];
+        PackDestinationPick.pick(level, pack);
         pack.dwellUntil = gameTime + Math.max(0, PackConfig.packDwellTicks);
     }
 }
