@@ -105,38 +105,30 @@ public final class ZombieMood {
         return sleepSeekingShade;
     }
 
-    /** Once-per-activation mood step: state transitions, distress scream, and self-heal. */
-    public void update(ServerLevel level, WorldAIContext ctx) {
+    private boolean guardUpdate(ServerLevel level) {
         if (!entity.isAlive()) {
-            return;
+            return true;
         }
         if (!ZombieMoodConfig.moodEnabled) {
             // Mood disabled at runtime: don't leave a zombie frozen mid-doze — hand it back to the normal hunt.
             if (state == State.SLEEPING) {
                 wake(level.getGameTime(), false);
             }
-            return;
+            return true;
         }
-        long now = level.getGameTime();
-        float max = entity.getMaxHealth();
-        float frac = max <= 0.0f ? 1.0f : entity.getHealth() / max;
-        LivingEntity threat = currentThreat();
-        // Flee threat (only when the flee behaviour is on): a WOUNDED zombie flees the nearest nearby PLAYER too,
-        // not only whatever last hit it. Sleep-disturbance below still uses the plain `threat` (a silent nearby
-        // player must NOT wake a sleeper).
-        LivingEntity fleeThreat = ZombieMoodConfig.fleeEnabled ? flightThreat(threat, frac) : null;
+        return false;
+    }
 
-        // Celebration latch expires on its own; if still hurt AND flee is on, roll into FLEEING to keep healing.
+    private void updateCelebrationExpiry(long now, float frac) {
         if (state == State.CELEBRATING && now >= celebrateUntil) {
             entity.setAggressive(false);
             state = (ZombieMoodConfig.fleeEnabled && frac < ZombieMoodConfig.regainHealthFraction)
                     ? State.FLEEING : State.NORMAL;
             distressScreamed = false;
         }
+    }
 
-        // Flee hysteresis — ONLY when fleeEnabled. Wounded zombie retreats (+ distress rally scream in apply),
-        // enters below fleeHealthFraction, leaves at regain or when cornered. Disabled → it never flees; drop any
-        // lingering FLEEING straight back to the hunt (so toggling it off at runtime doesn't strand a fleer).
+    private void updateFleeHysteresis(long now, float frac, LivingEntity fleeThreat) {
         if (ZombieMoodConfig.fleeEnabled) {
             if (state == State.FLEEING) {
                 var outcome = FleeHysteresis.whileFleeing(entity, fleeThreat, frac, fleeTracker);
@@ -158,8 +150,9 @@ public final class ZombieMood {
             state = State.NORMAL;
             distressScreamed = false;
         }
+    }
 
-        // Sun-shelter override: dashes to shade instead of a straight retreat while burning in the open.
+    private void updateSunShelter(ServerLevel level, float frac) {
         boolean fleeingOrSheltering = state == State.FLEEING || state == State.SHELTERING;
         if (SunShelterOverride.eligible(fleeingOrSheltering, frac)) {
             var res = SunShelterOverride.evaluate(entity, level, shelterTarget);
@@ -169,6 +162,32 @@ public final class ZombieMood {
             shelterTarget = null; // no longer eligible (healed up / threat gone path handled above)
             state = State.FLEEING;
         }
+    }
+
+    /** Once-per-activation mood step: state transitions, distress scream, and self-heal. */
+    public void update(ServerLevel level, WorldAIContext ctx) {
+        if (guardUpdate(level)) {
+            return;
+        }
+        long now = level.getGameTime();
+        float max = entity.getMaxHealth();
+        float frac = max <= 0.0f ? 1.0f : entity.getHealth() / max;
+        LivingEntity threat = currentThreat();
+        // Flee threat (only when the flee behaviour is on): a WOUNDED zombie flees the nearest nearby PLAYER too,
+        // not only whatever last hit it. Sleep-disturbance below still uses the plain `threat` (a silent nearby
+        // player must NOT wake a sleeper).
+        LivingEntity fleeThreat = ZombieMoodConfig.fleeEnabled ? flightThreat(threat, frac) : null;
+
+        // Celebration latch expires on its own; if still hurt AND flee is on, roll into FLEEING to keep healing.
+        updateCelebrationExpiry(now, frac);
+
+        // Flee hysteresis — ONLY when fleeEnabled. Wounded zombie retreats (+ distress rally scream in apply),
+        // enters below fleeHealthFraction, leaves at regain or when cornered. Disabled → it never flees; drop any
+        // lingering FLEEING straight back to the hunt (so toggling it off at runtime doesn't strand a fleer).
+        updateFleeHysteresis(now, frac, fleeThreat);
+
+        // Sun-shelter override: dashes to shade instead of a straight retreat while burning in the open.
+        updateSunShelter(level, frac);
 
         // Daytime sleep (runs only when NOT busy fleeing/sheltering/celebrating): a targetless zombie dozes by
         // day; below the immunity phase it first shuffles to shade. Owns the SLEEPING state + wake handling.
@@ -213,10 +232,7 @@ public final class ZombieMood {
      *  fraction that grows with the phase). Runs once per activation even while FROZEN, so a dozing zombie keeps
      *  checking whether it should wake. */
     private void handleDaySleep(ServerLevel level, long now, LivingEntity threat) {
-        if (!ZombieMoodConfig.daySleepEnabled) {
-            if (state == State.SLEEPING) {
-                wake(now, false);
-            }
+        if (daySleepDisabled(now)) {
             return;
         }
         // Sleep timers/NoAi are valid ONLY while actually SLEEPING. If another subsystem moved us out of it
@@ -234,20 +250,50 @@ public final class ZombieMood {
         // fire, and reaching shade is exactly how it escapes that. Only a mob or NON-fire damage disturbs.
         boolean disturbed = threat != null || (entity.hurtTime > 0 && !entity.isOnFire());
 
-        if (state == State.SLEEPING) {
-            if (!day || disturbed || DaySleep.staysAwake(entity, phase)) {
-                wake(now, false); // night fell / hit / promoted to the awake minority → back to the hunt
-                return;
-            }
-            if (wakeAt != Long.MIN_VALUE && now >= wakeAt) {
-                wake(now, true); // reaction delay elapsed → wake and head to the noise it heard
-                return;
-            }
-            dozeInPlace(); // a dozing zombie is always dormant (FROZEN + NoAi-held)
+        if (handleSleepingDoze(now, day, disturbed, phase)) {
             return;
         }
 
         // ---- state == NORMAL: hunt if roused, else shelter/sleep by day ----
+        if (handleRoused(now, day, disturbed, phase)) {
+            return;
+        }
+
+        // Idle daytime sleeper → SHELTER first (if it would burn under open sky), then doze.
+        if (dozeIfNotExposed(level, phase)) {
+            return;
+        }
+
+        seekShade(level, now);
+    }
+
+    private boolean daySleepDisabled(long now) {
+        if (ZombieMoodConfig.daySleepEnabled) {
+            return false;
+        }
+        if (state == State.SLEEPING) {
+            wake(now, false);
+        }
+        return true;
+    }
+
+    private boolean handleSleepingDoze(long now, boolean day, boolean disturbed, int phase) {
+        if (state != State.SLEEPING) {
+            return false;
+        }
+        if (!day || disturbed || DaySleep.staysAwake(entity, phase)) {
+            wake(now, false); // night fell / hit / promoted to the awake minority → back to the hunt
+            return true;
+        }
+        if (wakeAt != Long.MIN_VALUE && now >= wakeAt) {
+            wake(now, true); // reaction delay elapsed → wake and head to the noise it heard
+            return true;
+        }
+        dozeInPlace(); // a dozing zombie is always dormant (FROZEN + NoAi-held)
+        return true;
+    }
+
+    private boolean handleRoused(long now, boolean day, boolean disturbed, int phase) {
         // A HIT keeps it awake to fight back.
         if (disturbed) {
             alertUntil = now + ZombieMoodConfig.daySleepAlertTicks;
@@ -264,26 +310,31 @@ public final class ZombieMood {
                 && !owner.pursuit().pack().hasWaypoint();
         if (!day || disturbed || alert || investigatingNoise || DaySleep.staysAwake(entity, phase)) {
             sleepSeekingShade = false; // busy hunting/investigating — abandon any shade-seek
-            return;
+            return true;
         }
+        return false;
+    }
 
-        // Idle daytime sleeper → SHELTER first (if it would burn under open sky), then doze.
+    private boolean dozeIfNotExposed(ServerLevel level, int phase) {
         boolean exposed = DaySleep.burnsInSun(phase) && level.canSeeSky(entity.blockPosition());
-        if (!exposed) {
-            // In shade, or the horde is sun-immune → doze here. Snuff any residual sun-fire from the shade-run so
-            // it isn't "asleep in the shade yet still on fire".
-            if (sleepSeekingShade && entity.getRemainingFireTicks() > 0
-                    && !level.canSeeSky(entity.blockPosition())) {
-                entity.setRemainingFireTicks(0);
-            }
-            dozeInPlace();
-            if (entity.onGround()) {
-                state = State.SLEEPING; // only commit to SLEEPING once grounded+frozen; if it's still finishing a
-                                        // leap/fall arc, dozeInPlace deferred — stay NORMAL and retry next tick.
-            }
-            return;
+        if (exposed) {
+            return false;
         }
+        // In shade, or the horde is sun-immune → doze here. Snuff any residual sun-fire from the shade-run so
+        // it isn't "asleep in the shade yet still on fire".
+        if (sleepSeekingShade && entity.getRemainingFireTicks() > 0
+                && !level.canSeeSky(entity.blockPosition())) {
+            entity.setRemainingFireTicks(0);
+        }
+        dozeInPlace();
+        if (entity.onGround()) {
+            state = State.SLEEPING; // only commit to SLEEPING once grounded+frozen; if it's still finishing a
+                                    // leap/fall arc, dozeInPlace deferred — stay NORMAL and retry next tick.
+        }
+        return true;
+    }
 
+    private void seekShade(ServerLevel level, long now) {
         // Master toggle (ZombieMoodConfig.sunShelterEnabled): with sun-shelter off, NO shade detour exists
         // anywhere — the exposed sleeper keeps roaming in the open and simply burns. This is the second of the
         // two ShelterFinder.findShade call sites; the other is SunShelterOverride.eligible.
