@@ -16,6 +16,7 @@ import com.dreykaoas.lethalbreed.entity.mood.sleep.ShelterFinder;
 import com.dreykaoas.lethalbreed.entity.mood.sleep.SunShelterOverride;
 import com.dreykaoas.lethalbreed.entity.mood.ZombieMoodSounds;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -30,10 +31,6 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * once per activation from {@code LodBucketPass}; the {@code drive*} methods run every tick from the brain.
  */
 public final class ZombieMood {
-    /** Dev instrumentation: incremented each time a fleer fires its distress scream + rally emit. */
-    public static final java.util.concurrent.atomic.AtomicInteger DISTRESS_COUNT =
-            new java.util.concurrent.atomic.AtomicInteger();
-
     private final Zombie entity;
     private final SmartZombie owner;
 
@@ -62,11 +59,6 @@ public final class ZombieMood {
      *  search can re-plan. 60 ticks — three seconds of no progress at all, comfortably longer than a re-path
      *  or a block break, and far shorter than the burn that kills an exposed zombie. */
     private final ShadeStall shadeStall = new ShadeStall(60);
-    /** Dev instrumentation: findShade calls made by THIS zombie. {@code ShelterFinder.SCAN_COUNT} is
-     *  process-wide, and in a populated world it counts hundreds of strangers — the shade rig measured 243
-     *  sweeps with 421 foreign zombies resident, and 66 with 90, while its own probe sat in a 1x1 pen. A
-     *  per-entity count is the only one a rig can assert on. Read-only, exactly like DISTRESS_COUNT. */
-    private int shadeScans;
     // True while WE hold the zombie's vanilla AI off (setNoAi) so a dozing zombie stays perfectly still instead
     // of being walked around by vanilla RandomStrollGoal. Tracked so we only ever clear the NoAi WE set.
     private boolean noAiFrozen = false;
@@ -198,7 +190,9 @@ public final class ZombieMood {
         boolean screamed = MoodStateDispatch.apply(state, entity, level, owner, ctx, fleeThreat, distressScreamed);
         if (screamed) {
             distressScreamed = true;
-            DISTRESS_COUNT.incrementAndGet();
+            if (DevProbe.on()) {
+                DevProbe.sink.count(DevProbe.DISTRESS, DevProbe.GLOBAL);
+            }
         }
 
         // Self-heal while fleeing, sheltering, or celebrating and still hurt.
@@ -366,7 +360,9 @@ public final class ZombieMood {
         if (!moved && now < shadeRetryAt) {
             return;
         }
-        shadeScans++;
+        if (DevProbe.on()) {
+            DevProbe.sink.count(DevProbe.SHADE_SCAN, entity.getId());
+        }
         BlockPos shade = ShelterFinder.findShade(level, here, ZombieMoodConfig.shelterSearchRadius);
         if (shade == null) {
             abandonShadeSeek(now, here);
@@ -391,11 +387,6 @@ public final class ZombieMood {
         owner.pursuit().clearMemory();
         shadeFailedAt = here;
         shadeRetryAt = now + ZombieMoodConfig.shelterRetryTicks;
-    }
-
-    /** findShade calls made by this zombie. Dev instrumentation; nothing in main reads it. */
-    public int shadeScans() {
-        return shadeScans;
     }
 
     /** Hold the dozing pose: drop any hunt the classify pass seeded, stop moving, sync the sleep animation, and

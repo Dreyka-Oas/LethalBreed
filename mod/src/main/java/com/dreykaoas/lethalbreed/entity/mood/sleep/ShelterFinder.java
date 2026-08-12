@@ -1,20 +1,13 @@
 package com.dreykaoas.lethalbreed.entity.mood.sleep;
 
+import com.dreykaoas.lethalbreed.probe.DevProbe;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 /** Pure search helper: finds the nearest shaded, standable refuge around a point. No instance state. */
 public final class ShelterFinder {
     private ShelterFinder() {}
-
-    /** Dev instrumentation: incremented once per {@link #findShade} call. The sweep is
-     *  {@code (2r+1)² × (2·max(4, r/2)+1)} position tests — 8112 at the default radius 12 — so "how often does
-     *  a zombie that CANNOT find shade re-run it" is the entire content of audit #6, and a count is the only
-     *  way a headless rig can state it as a number rather than an impression. Shipped read-only, exactly like
-     *  {@code ContaminationState.INFECT_COUNT} and {@code ZombieMood.DISTRESS_COUNT}: nothing in {@code main}
-     *  ever reads it, so it can never change behaviour. */
-    public static final java.util.concurrent.atomic.AtomicLong SCAN_COUNT =
-            new java.util.concurrent.atomic.AtomicLong();
 
     /** A block of vertical distance costs this many blocks of horizontal distance in the nearness score, so a
      *  zombie ducks under the CLOSEST roof at (or near) its own level rather than climbing far for cover. */
@@ -26,7 +19,9 @@ public final class ShelterFinder {
      *  count. Returns the closest such foot position (vertical distance weighted), or null when none is in range.
      *  Does NOT path-check: the brain breaks/pillars/carves its way to the returned target. */
     public static BlockPos findShade(ServerLevel level, BlockPos origin, int radius) {
-        SCAN_COUNT.incrementAndGet();
+        if (DevProbe.on()) {
+            DevProbe.sink.count(DevProbe.SHELTER_SCAN, DevProbe.GLOBAL);
+        }
         int vBand = Math.max(4, radius / 2);
         BlockPos best = null;
         double bestScore = Double.MAX_VALUE;

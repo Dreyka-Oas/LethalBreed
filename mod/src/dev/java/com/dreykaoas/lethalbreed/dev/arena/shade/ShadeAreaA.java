@@ -6,8 +6,9 @@ import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
+import com.dreykaoas.lethalbreed.dev.probe.DevSink;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.entity.mood.sleep.ShelterFinder;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -22,9 +23,9 @@ import net.minecraft.world.level.block.Blocks;
  *
  * <p>An open stone plate with no cover inside {@code shelterSearchRadius}, and a 1x1 bedrock pen the victim
  * cannot leave, in the rain — the one state where an exposed zombie neither finds shade nor burns to death, so
- * the loop the cooldown bounds runs forever. The number asserted on is the PROBE'S OWN sweep count, because
- * {@code ShelterFinder.SCAN_COUNT} is process-wide: measured 243 global sweeps with 421 foreign zombies
- * resident and 66 with 90, while the penned probe made four.
+ * the loop the cooldown bounds runs forever. The number asserted on is the PROBE'S OWN sweep count, read
+ * per-entity off {@link DevSink}, because the process-wide {@code SHELTER_SCAN} counter is global: measured
+ * 243 global sweeps with 421 foreign zombies resident and 66 with 90, while the penned probe made four.
  *
  * <p>Split out of ShadeHarness, which held both areas, their diagnostics and the tick dispatch in 485 lines.
  */
@@ -67,7 +68,7 @@ final class ShadeAreaA {
             aZombie.setPos(AX + 0.5, ShadeHarness.Y, AZ + 0.5);
         }
         foreignZombies = clearForeignZombies(ow);
-        scanBase = ShelterFinder.SCAN_COUNT.get();   // kept only to show the global/per-entity gap in the log
+        scanBase = DevSink.get().counter(DevProbe.SHELTER_SCAN);   // kept only to show the global/per-entity gap in the log
         LethalBreed.LOGGER.info("[Shade] area A built @({}, {}, {}): open {}×{} plate + 1×1 pen, raining={}, "
                         + "no cover within shelterSearchRadius={}; zombie={} scanBase={}",
                 AX, ShadeHarness.Y, AZ, A_HALF * 2, A_HALF * 2, ow.isRaining(),
@@ -89,7 +90,7 @@ final class ShadeAreaA {
             LethalBreed.LOGGER.info("[Shade] area A probe: pos={} canSeeSky={} inWaterOrRain={} onFire={} "
                             + "health={} raining={} scans={}",
                     at, sky, wet, aZombie.isOnFire(), aZombie.getHealth(), ow.isRaining(),
-                    ShelterFinder.SCAN_COUNT.get() - scanBase);
+                    DevSink.get().counter(DevProbe.SHELTER_SCAN) - scanBase);
         }
         traceScans(at, tick);
         foreignZombies = Math.max(foreignZombies, countForeignZombies(ow));
@@ -98,7 +99,7 @@ final class ShadeAreaA {
     /**
      * Remove every zombie in the world except the probe, and report how many there were.
      *
-     * <p>{@code ShelterFinder.SCAN_COUNT} is ONE process-wide counter. This rig already serialises its own two
+     * <p>The process-wide {@code SHELTER_SCAN} counter is ONE counter. This rig already serialises its own two
      * areas for that reason, but it billed the probe for the whole world: the dev arenas share a persistent
      * save and every rig marks its zombies {@code setPersistenceRequired}, so leftovers from earlier runs load
      * with the arena chunks and — being exposed, by day, with no cover — each start sweeping too.
@@ -120,7 +121,7 @@ final class ShadeAreaA {
             }
         }
         if (removed > 0) {
-            LethalBreed.LOGGER.info("[Shade] removed {} leftover zombie(s) so SCAN_COUNT measures the probe "
+            LethalBreed.LOGGER.info("[Shade] removed {} leftover zombie(s) so SHELTER_SCAN measures the probe "
                     + "alone.", removed);
         }
         return 0; // the purge succeeded; any NEW arrival is what the window must catch
@@ -148,7 +149,7 @@ final class ShadeAreaA {
      * discriminating evidence.
      */
     static void traceScans(BlockPos at, int tick) {
-        long scans = ShelterFinder.SCAN_COUNT.get() - scanBase;
+        long scans = DevSink.get().counter(DevProbe.SHELTER_SCAN) - scanBase;
         if (scans == lastTracedScans) {
             return;
         }
@@ -163,12 +164,13 @@ final class ShadeAreaA {
     }
 
     static void evaluate(ServerLevel ow) {
-        // THE PROBE'S OWN sweeps. ShelterFinder.SCAN_COUNT is process-wide and this world is a populated city:
-        // measured 243 global sweeps with 421 foreign zombies resident, and 66 with 90, while the probe sat in
-        // a 1x1 pen the whole time. The global number was never about the throttle.
+        // THE PROBE'S OWN sweeps, read per-entity off DevSink. The process-wide SHELTER_SCAN counter is
+        // global and this world is a populated city: measured 243 global sweeps with 421 foreign zombies
+        // resident, and 66 with 90, while the probe sat in a 1x1 pen the whole time. The global number was
+        // never about the throttle.
         SmartZombie sz = aZombie == null ? null : GameState.REGISTRY.get(aZombie.getId());
-        long delta = sz == null ? -1 : sz.mood().shadeScans();
-        long global = ShelterFinder.SCAN_COUNT.get() - scanBase;
+        long delta = sz == null ? -1 : DevSink.get().counter(DevProbe.SHADE_SCAN, aZombie.getId());
+        long global = DevSink.get().counter(DevProbe.SHELTER_SCAN) - scanBase;
         long budget = ShadeHarness.WINDOW / Math.max(1, ZombieMoodConfig.shelterRetryTicks) + 2;
         DevVerdict.check(ShadeHarness.SUITE, "scan-throttled", sz != null && delta <= budget,
                 "the probe ran findShade " + delta + " times in " + ShadeHarness.WINDOW + " ticks (budget " + budget
@@ -189,7 +191,7 @@ final class ShadeAreaA {
                         + "burned-to-death victim would pass scan-throttled for the wrong reason");
 
         if (aZombie != null) {
-            aZombie.remove(Entity.RemovalReason.DISCARDED); // stop it feeding SCAN_COUNT during area B
+            aZombie.remove(Entity.RemovalReason.DISCARDED); // stop it feeding SHELTER_SCAN during area B
         }
         ArenaBuilder.releaseChunks(ow, AX, AZ);
     }

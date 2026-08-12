@@ -4,9 +4,10 @@ import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
+import com.dreykaoas.lethalbreed.dev.probe.DevSink;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
-import com.dreykaoas.lethalbreed.entity.ZombieMood;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -42,6 +43,11 @@ public final class MechPhaseArena {
 
     public static void build(ServerLevel ow, MinecraftServer server, MechTestState s, ConfigOverride cfg) {
         PhaseManager.get().setPhase(server, GEAR_PHASE);
+        // Zero every dev counter up front, once, rather than per-counter at each sub-arena: nothing below has
+        // run yet, so this is equivalent to the old per-field .set(0) calls but doesn't need a narrower
+        // "reset just this one counter" method on DevSink. Safe unguarded: this class only ever runs after
+        // DevBootstrap#install has installed the sink.
+        DevSink.get().resetCounters();
         buildPhaseGear(ow, s);
         buildContamination(ow, s, cfg);
         buildFleeRally(ow, s);
@@ -74,8 +80,6 @@ public final class MechPhaseArena {
                 .set("contamSymptomMaxDays", 0.0)
                 .set("contamSymptomMinPct", 100.0)
                 .set("contamSymptomMaxPct", 100.0);
-        ContaminationManager.INFECT_COUNT.set(0);
-        ContaminationManager.DEATH_COUNT.set(0);
         ArenaBuilder.forceChunks(ow, CONTAM_X);
         MechTestArena.floor(ow, CONTAM_X, true);
         s.contamPos = new BlockPos(CONTAM_X, Y, 0);
@@ -97,7 +101,6 @@ public final class MechPhaseArena {
      * screams had fired, which means the memory came from somewhere else and the check's premise was false.
      */
     private static void buildFleeRally(ServerLevel ow, MechTestState s) {
-        ZombieMood.DISTRESS_COUNT.set(0);
         ArenaBuilder.forceChunks(ow, RALLY_X);
         MechTestArena.floor(ow, RALLY_X, true);
         for (int x = RALLY_X - 3; x <= RALLY_X + 19; x++) {
@@ -164,13 +167,14 @@ public final class MechPhaseArena {
     }
 
     private static void evaluateContamination(MechSunArena.Check check) {
-        int infect = ContaminationManager.INFECT_COUNT.get();
-        int died = ContaminationManager.DEATH_COUNT.get();
+        DevSink sink = DevSink.get();
+        long infect = sink.counter(DevProbe.INFECT);
+        long died = sink.counter(DevProbe.DEATH);
         check.record("contamination", infect > 0 && died > 0, "infect=" + infect + " died=" + died);
     }
 
     private static void evaluateRally(MechTestState s, MechSunArena.Check check) {
-        int distress = ZombieMood.DISTRESS_COUNT.get();
+        long distress = DevSink.get().counter(DevProbe.DISTRESS);
         boolean fleerAlive = s.fleer != null && !s.fleer.isRemoved();
         check.record("flee-rally", distress > 0 && s.rallyHelped,
                 "distressScreams=" + distress + " helpersRallied=" + s.rallyHelped

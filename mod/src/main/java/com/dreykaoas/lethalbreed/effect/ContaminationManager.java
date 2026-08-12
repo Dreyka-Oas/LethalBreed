@@ -31,17 +31,11 @@ import net.minecraft.world.entity.LivingEntity;
  *
  * <p>This class is the public facade, kept thin: it owns no state and no logic of its own. The actual attachments,
  * shared state, and behavior live under {@code com.dreykaoas.lethalbreed.effect.contamination} (state, episodes,
- * hallucination, lifecycle, symptoms, and the per-tick sweep) — this class only re-exports
- * {@link com.dreykaoas.lethalbreed.effect.contamination.ContaminationState}'s dev counters for the headless
- * harness and delegates every method straight through, so the dependency stays one-way (this facade
- * depends on {@code contamination}, never the reverse).
+ * hallucination, lifecycle, symptoms, and the per-tick sweep) — this class delegates every method straight
+ * through, so the dependency stays one-way (this facade depends on {@code contamination}, never the reverse).
  */
 public final class ContaminationManager {
     private ContaminationManager() {}
-
-    // Dev instrumentation (headless harness).
-    public static final java.util.concurrent.atomic.AtomicInteger INFECT_COUNT = ContaminationState.INFECT_COUNT;
-    public static final java.util.concurrent.atomic.AtomicInteger DEATH_COUNT = ContaminationState.DEATH_COUNT;
 
     public static void init() {}
 

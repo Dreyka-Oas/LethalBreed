@@ -38,7 +38,7 @@ import net.minecraft.world.level.gamerules.GameRules;
  *
  * <p><b>Area A — the throttle.</b> An open stone plate with no cover inside {@code shelterSearchRadius}, and a
  * 1×1 bedrock pen the zombie cannot leave (so it can never "move more than 4 blocks", which legitimately
- * re-arms the search). Its {@code ShelterFinder.SCAN_COUNT} delta over 400 ticks must sit near
+ * re-arms the search). Its per-entity {@code SHADE_SCAN} delta over 400 ticks must sit near
  * {@code window / shelterRetryTicks}, not near one scan per activation. The measured number is logged so the
  * before/after lives in the log rather than in an argument.
  *
@@ -69,7 +69,7 @@ import net.minecraft.world.level.gamerules.GameRules;
  * the thing being measured rather than the thing being hoped for, and it opens on the observed condition
  * rather than on a tick count, so a slow first activation delays the walk instead of invalidating it.
  *
- * <p><b>Why the two areas run in series, not together.</b> {@code SCAN_COUNT} is one process-wide counter.
+ * <p><b>Why the two areas run in series, not together.</b> {@code SHELTER_SCAN} is one process-wide counter.
  * Area B's zombie also calls {@code findShade} (it succeeds, then stops), so building both at once would fold
  * B's scans into A's measurement and blur exactly the number the rig exists to state. Same pattern as
  * {@code ContamRig}'s start offsets: rigs that share process-global state are serialised in time.
