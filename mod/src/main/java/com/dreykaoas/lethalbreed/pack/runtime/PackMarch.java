@@ -9,7 +9,6 @@ import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.pack.PackWander;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.border.WorldBorder;
 
 /**
  * Moves a materialised pack: picks the destination when there is none, plants the shared waypoint, and
@@ -70,19 +69,7 @@ public final class PackMarch {
     }
 
     private static void chooseDestination(ServerLevel level, PackState pack, long gameTime) {
-        WorldBorder border = level.getWorldBorder();
-        double[] heading = new double[2];
-        // The border is read as four ints so PackWander stays free of any world type — and, more to the
-        // point, so there is no parameter through which a player position could ever reach it.
-        PackWander.Destination next = PackWander.next(
-                (int) Math.round(pack.x), (int) Math.round(pack.z), pack.headingX, pack.headingZ,
-                (int) Math.floor(border.getMinX()), (int) Math.floor(border.getMinZ()),
-                (int) Math.ceil(border.getMaxX()), (int) Math.ceil(border.getMaxZ()),
-                PackManager.rngFor(pack), heading);
-        pack.destX = next.x();
-        pack.destZ = next.z();
-        pack.headingX = heading[0];
-        pack.headingZ = heading[1];
+        PackDestinationPick.pick(level, pack);
         pack.dwellUntil = gameTime + dwell(pack);
         // A fresh destination is further away than the old one by construction, so carrying the previous
         // distance over would score the very first check as "no headway" and start the stuck counter at 1.
