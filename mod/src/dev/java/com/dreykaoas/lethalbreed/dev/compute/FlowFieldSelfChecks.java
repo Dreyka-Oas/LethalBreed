@@ -9,7 +9,7 @@ import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
  * {@link ComputeSelfTest}.
  *
  * <p><b>Why this is a dev-local REIMPLEMENTATION and not a moved copy.</b> The shipped jar used to carry this
- * as {@code ai.flowfield.FlowFieldChecks}, deleted as part of removing the accidental API surface: it read
+ * as a class in {@code ai.flowfield}, deleted as part of removing the accidental API surface: it read
  * {@code Neighbors8.DX/DZ/isDiagonal/cornerBlocked}, and {@code Neighbors8} is (correctly) package-private
  * final — widening it just so a dev-only checker could reach it would grow the shipped API to serve dev code,
  * the opposite of why this whole harness moved out of {@code src/main} in the first place. The 8-neighbour /
@@ -34,8 +34,11 @@ public final class FlowFieldSelfChecks {
         return DX[k] != 0 && DZ[k] != 0;
     }
 
-    /** A diagonal step is blocked unless BOTH orthogonally-adjacent cells are passable (never cut a corner). */
-    private static boolean cornerBlocked(boolean[] passable, int cx, int cz, int nx, int nz, int depth, int k) {
+    /** A diagonal step is blocked unless BOTH orthogonally-adjacent cells are passable (never cut a corner).
+     *  Public (not {@code private}) only so {@code NeighborGeometryAlignmentTest} — in package {@code
+     *  ai.flowfield}, not this class's package — can drive it directly against {@code
+     *  Neighbors8.cornerBlocked}; safe to widen since {@code src/dev} never ships. */
+    public static boolean cornerBlocked(boolean[] passable, int cx, int cz, int nx, int nz, int depth, int k) {
         return isDiagonal(k) && (!passable[cx * depth + nz] || !passable[nx * depth + cz]);
     }
 

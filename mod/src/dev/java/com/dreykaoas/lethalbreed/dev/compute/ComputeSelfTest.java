@@ -42,8 +42,8 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
  * inside the player jar. {@code Snapshot.openSquare} is now public (the {@code Snapshot} constructor
  * deliberately is not), so it belongs in the dev source set with every other harness and is compiled only for
  * {@code runClient}/{@code runServer}. The solver-quality checks route through {@link FlowFieldSelfChecks},
- * a dev-local reimplementation of the deleted {@code ai.flowfield.FlowFieldChecks} — see that class's javadoc
- * for why it is re-derived here rather than moved.
+ * a dev-local reimplementation of the correctness predicates a deleted {@code src/main} class once carried —
+ * see that class's javadoc for why it is re-derived here rather than moved.
  */
 public final class ComputeSelfTest {
     private ComputeSelfTest() {}

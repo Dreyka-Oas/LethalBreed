@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * The direction field must not merely descend — it must REALIZE each cell's converged cost.
  *
- * <p>{@link FlowFieldChecks#directionsDescend} only asserts {@code cost[next] < cost[here]}, which any
- * downhill step satisfies. That is weaker than correctness: the relaxation defines
+ * <p>Merely descending only asserts {@code cost[next] < cost[here]}, which any downhill step satisfies.
+ * That is weaker than correctness: the relaxation defines
  * {@code cost[i] = min over n of (cost[n] + step(i,n) + extra[i])}, so the emitted direction must point at
  * a neighbour that ACHIEVES that minimum. A step that descends but does not realize the cost sends the
  * zombie on a strictly longer route than the field it is reading claims.
