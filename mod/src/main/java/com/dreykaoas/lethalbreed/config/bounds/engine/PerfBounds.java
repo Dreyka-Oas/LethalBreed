@@ -29,8 +29,6 @@ public final class PerfBounds {
         r.b("lodMediumNavMultiplier", 1, 1000);
         r.b("lodLowNavMultiplier", 1, 1000);
         r.b("msptThrottleThreshold", 1, 1000);
-        r.b("debugLogInterval", 0, 1_000_000);
-
 
         r.b("expertStepDeadzone", 0, 4);
         r.b("expertBreakHeightEpsilon", 0, 1);

@@ -22,7 +22,6 @@ lodMediumNavMultiplier
 lodLowNavMultiplier
 msptThrottle
 msptThrottleThreshold
-debugLogInterval
 useGpu
 flowCpuThreads
 gpuWorkgroupSize
@@ -204,21 +203,6 @@ specialBondisseurLeapAmp
 specialJuggernautScale
 specialJuggernautHealthMul
 specialJuggernautResistanceAmp
-devSpecialTest
-devMechTest
-devComputeTest
-devPlagueTest
-devStatueTest
-devClearTest
-devPlacedTest
-devShadeTest
-devBreachTest
-devPresenceTest
-devPackTest
-devAutoHalt
-devClimbTest
-debugClimb
-devSpawnRadius
 contaminationEnabled
 contamBaseChance
 contamPhaseScale
@@ -339,4 +323,3 @@ packDematGraceTicks
 packSpawnSpread
 packMaterializeRetries
 packRejoinRadius
-debugPacks

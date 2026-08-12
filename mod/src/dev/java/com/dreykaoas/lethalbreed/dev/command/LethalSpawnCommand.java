@@ -2,8 +2,7 @@ package com.dreykaoas.lethalbreed.dev.command;
 
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
-import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -56,10 +55,10 @@ public final class LethalSpawnCommand {
         long dueTick = level.getServer().getTickCount() + (long) delaySeconds * 20L;
         DevSpawnScheduler.schedule(dueTick, level, player.blockPosition(), type, count, DevTestConfig.devSpawnRadius);
 
-        // The dev perf recap is driven solely by SchedulerConfig.debugLogInterval (and only logs in a dev
+        // The dev perf recap is driven solely by DevTestConfig.debugLogInterval (and only logs in a dev
         // env). The command does NOT mutate config — ConfigIo serialises every static field on the next save,
         // so a runtime tweak here would silently become permanent. Just report the current state truthfully.
-        int recapInterval = SchedulerConfig.debugLogInterval;
+        int recapInterval = DevTestConfig.debugLogInterval;
         String recap = recapInterval > 0
                 ? ("perf recap every " + recapInterval + " ticks (dev only)")
                 : "perf recap OFF — set debugLogInterval > 0 to enable";

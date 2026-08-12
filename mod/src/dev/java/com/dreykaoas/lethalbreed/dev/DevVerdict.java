@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.LinkedHashMap;

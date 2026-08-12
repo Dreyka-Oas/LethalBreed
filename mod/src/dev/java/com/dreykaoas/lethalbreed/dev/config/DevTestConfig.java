@@ -1,16 +1,20 @@
-package com.dreykaoas.lethalbreed.config.domain.engine;
-
-import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
+package com.dreykaoas.lethalbreed.dev.config;
 
 /**
- * Development-only toggles: the headless verification arenas, the climb debug stream and the
- * {@code /lethalspawn} radius. Every one of these is off for shipping; the {@code dev} source set that
- * reads them is never packaged into a player jar.
+ * Development-only toggles: the headless verification arenas, the perf-recap interval and the
+ * {@code /lethalspawn} radius.
  *
- * <p>Split out of {@code ProgressionConfig}, which held three unrelated domains. Field NAMES are
- * unchanged and the holders stay adjacent in {@code ConfigSchema.HOLDERS} in their original order, so
- * the on-disk JSON, {@code ConfigBoundsTable}, {@code ConfigCategory} and every translation key are
- * unaffected — see {@code ConfigSchemaOrderTest}.
+ * <p>This holder lives in the {@code dev} source set and is never packaged, so a player's jar has no such
+ * options at all: they are absent from {@code lethalbreed.json}, absent from {@code /lethalconfig}, and the
+ * GUI's "Dev / Debug" sidebar tab does not exist because no row ever carries that category. In a development
+ * environment {@code DevBootstrap} calls {@code ConfigSchema.registerHolder(DevTestConfig.class)} — before
+ * the JSON is read, so a developer's own values still load — and {@code ConfigBounds.registerGroup} adds the
+ * matching ranges from {@link DevBounds}.
+ *
+ * <p>Because registration happens at runtime, this holder has no fixed position in
+ * {@code ConfigSchema.HOLDERS}: it is appended last, so its options are written after every shipped one.
+ * That is invisible to players and irrelevant to {@code ConfigSchemaOrderTest}, which pins the SHIPPED
+ * option order only.
  */
 public final class DevTestConfig {
     private DevTestConfig() {}
@@ -47,10 +51,13 @@ public final class DevTestConfig {
     // ---- Dev climb test (headless) ----
     /** Build a wall + villager-on-top + zombies arena on server start, for autonomous climb testing. */
     public static boolean devClimbTest = false;
-    /** Log each targeting zombie's approach/climb state via the CLIMB dev-probe trace channel. Auto-enabled
-     *  by the climb test. */
-    public static boolean debugClimb = false;
 
     /** Radius (blocks) around the player used by the /lethalspawn dev command. */
     public static int devSpawnRadius = 16;
+
+    /** How often (ticks) to emit the dev perf recap (100 ticks = 5s). 0 disables (default — no log spam).
+     *  <p>Moved here from {@code SchedulerConfig} with the rest of the dev options: its only readers
+     *  ({@code StageProfiler#enabled}, {@code PerfRecap#maybeLog}, {@code /lethalspawn}) are all dev-side, so
+     *  in a player jar it was an option that could be set and could never do anything. */
+    public static int debugLogInterval = 0;
 }

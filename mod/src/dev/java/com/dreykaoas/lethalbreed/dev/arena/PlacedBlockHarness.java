@@ -7,7 +7,7 @@ import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.block.PlacedBlockPolicy;
 import com.dreykaoas.lethalbreed.block.PlacedBlockTracker;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;

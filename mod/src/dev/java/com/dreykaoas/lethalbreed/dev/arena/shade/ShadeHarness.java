@@ -7,7 +7,7 @@ import com.dreykaoas.lethalbreed.dev.harness.TickWait;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

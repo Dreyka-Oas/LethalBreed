@@ -29,33 +29,42 @@ public final class LethalBreedMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        // The dev config holder must join the schema BEFORE BootstrapInit.run() reads lethalbreed.json:
+        // the loader is field-driven, so options it cannot match are warned about and dropped on the next
+        // write — which would delete a developer's own dev settings from their own file on first launch.
+        devHook("registerConfig");
         BootstrapInit.run();
         EntityEventsInit.register(REGISTRY, DIMENSIONS);
         TickInit.register(SCHEDULER);
         CommandInit.register();
         LifecycleInit.register(REGISTRY, DIMENSIONS, SCHEDULER);
-        installDevHooks();
+        // Everything else dev-side stays LAST, after the load: it ends with DevTestSelector.apply(), which
+        // forces exactly one arena flag on, and the JSON load would overwrite that decision.
+        devHook("install");
     }
 
     /**
-     * Wire the development-only harnesses and load-test command — but ONLY in a development environment.
-     * The dev code lives in a separate {@code dev} source set that is never packaged into the shipped jar,
-     * so we load its entry point ({@code com.dreykaoas.lethalbreed.dev.DevBootstrap}) reflectively: on a
-     * production jar the class is absent and the lookup fails silently, leaving zero dev wiring active.
+     * Call one development-only entry point — but ONLY in a development environment. The dev code lives in a
+     * separate {@code dev} source set that is never packaged into the shipped jar, so we reach its bootstrap
+     * ({@code com.dreykaoas.lethalbreed.dev.DevBootstrap}) reflectively: on a production jar the class is
+     * absent and the lookup fails silently, leaving zero dev wiring active.
+     *
+     * @param method argument-free static method on {@code DevBootstrap} — {@code registerConfig} (before the
+     *               config load) or {@code install} (after it)
      */
-    private static void installDevHooks() {
+    private static void devHook(String method) {
         if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
             return;
         }
         try {
             Class.forName("com.dreykaoas.lethalbreed.dev.DevBootstrap")
-                    .getMethod("install")
+                    .getMethod(method)
                     .invoke(null);
         } catch (ClassNotFoundException e) {
             // Dev source set not on the classpath (shipped jar) — expected, nothing to install.
             LethalBreed.LOGGER.debug("[LethalBreed] no dev source set on classpath; skipping dev hooks.");
         } catch (ReflectiveOperationException e) {
-            LethalBreed.LOGGER.warn("[LethalBreed] failed to install dev hooks", e);
+            LethalBreed.LOGGER.warn("[LethalBreed] failed to run dev hook {}", method, e);
         }
     }
 }

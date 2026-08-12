@@ -43,7 +43,9 @@ final class PackSetup {
         cfg.set("packDecisionDivisor", 1);  // decide every activation: converge inside a 300-tick window
         cfg.set("packsPerTick", 8);
         cfg.set("packFormMinSize", 3);
-        cfg.set("debugPacks", stage == 0);  // one stage only: at divisor 1 this is a line per zombie per tick
+        // The pack debug stream used to be gated per stage by a `debugPacks` config option. That option is
+        // gone: the trace now runs on the DevProbe.PACKS channel, which DevBootstrap enables once for the
+        // whole dev run, so there is no per-stage switch left to flip.
     }
 
     /**
@@ -55,9 +57,8 @@ final class PackSetup {
      */
     static void report(int stage, List<Zombie> spawned) {
         LethalBreed.LOGGER.info("[Pack] stage {} : spawned={} registered={} registrySize={} packEnabled={}"
-                        + " debugPacks={} formMin={} divisor={}",
+                        + " formMin={} divisor={}",
                 stage, spawned.size(), PackArena.registered(spawned), GameState.REGISTRY.size(),
-                PackConfig.packEnabled, PackConfig.debugPacks, PackConfig.packFormMinSize,
-                PackConfig.packDecisionDivisor);
+                PackConfig.packEnabled, PackConfig.packFormMinSize, PackConfig.packDecisionDivisor);
     }
 }

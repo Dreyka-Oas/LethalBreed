@@ -21,32 +21,56 @@ import com.dreykaoas.lethalbreed.dev.compute.ComputeSelfTest;
 import com.dreykaoas.lethalbreed.dev.probe.DevSink;
 import com.dreykaoas.lethalbreed.dev.probe.PerfRecap;
 import com.dreykaoas.lethalbreed.dev.probe.StageProfiler;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.config.ConfigBounds;
+import com.dreykaoas.lethalbreed.config.schema.ConfigSchema;
+import com.dreykaoas.lethalbreed.dev.config.DevBounds;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
 /**
- * Single entry point for every development-only feature: all of {@code main}'s instrumentation (the stage
- * profiler, the perf recap, the dev counters and the debug traces, installed here behind the
- * {@link DevProbe} seam), plus the headless test harnesses and the {@code /lethalspawn} load-test command.
- * Lives in the {@code dev} source set, so it is compiled and packaged ONLY for
- * {@code runClient}/{@code runServer} — a shipped/remapped jar never contains this class or anything under
- * {@code com.dreykaoas.lethalbreed.dev}.
+ * Single entry point for every development-only feature: the dev config holder ({@code DevTestConfig} and
+ * its {@link DevBounds}), all of {@code main}'s instrumentation (the stage profiler, the perf recap, the dev
+ * counters and the debug traces, installed here behind the {@link DevProbe} seam), plus the headless test
+ * harnesses and the {@code /lethalspawn} load-test command. Lives in the {@code dev} source set, so it is
+ * compiled and packaged ONLY for {@code runClient}/{@code runServer} — a shipped/remapped jar never contains
+ * this class or anything under {@code com.dreykaoas.lethalbreed.dev}.
  *
- * <p>{@code main} never imports this class directly; it is loaded by reflection from
+ * <p>{@code main} never imports this class directly; both entry points are loaded by reflection from
  * {@code LethalBreedMod#installDevHooks} and only when {@code FabricLoader.isDevelopmentEnvironment()} is
  * true. On a production jar the reflective lookup simply fails ({@link ClassNotFoundException}) and is
- * swallowed, so no dev wiring ever runs.
+ * swallowed, so no dev wiring ever runs — and, since {@link #registerConfig} is where the dev options join
+ * the schema, a player's config file and config GUI have no dev options and no "Dev / Debug" tab.
+ *
+ * <p>There are two entry points because they must straddle the config load: {@link #registerConfig} before
+ * it, {@link #install} after it. See each for why.
  */
 public final class DevBootstrap {
     private DevBootstrap() {}
 
     /**
-     * Wire every dev hook. Called reflectively by the main mod initializer (dev env only). The signature is
-     * a stable, argument-free contract so the reflective call site in {@code main} needs no knowledge of the
-     * dev classes.
+     * Phase 1 of 2: put the dev config holder into the schema. Called reflectively by the main mod
+     * initializer BEFORE {@code BootstrapInit.run()} reads {@code lethalbreed.json}.
+     *
+     * <p>The ordering is the whole point. The loader is field-driven: a key it cannot match to a schema field
+     * is reported as unknown and dropped on the next write. Register after the load and a developer's own dev
+     * options are warned about and then deleted from their own config file on first launch.
+     *
+     * <p>Kept apart from {@link #install} because that one ends with {@link DevTestSelector#apply()}, which
+     * FORCES exactly one suite flag on — a decision the JSON load would overwrite if it ran afterwards. So
+     * the two halves straddle the load: schema first, selection last.
+     */
+    public static void registerConfig() {
+        ConfigSchema.registerHolder(DevTestConfig.class);
+        ConfigBounds.registerGroup(DevBounds::register);
+    }
+
+    /**
+     * Phase 2 of 2: wire every dev hook. Called reflectively by the main mod initializer (dev env only),
+     * AFTER the config load. The signature is a stable, argument-free contract so the reflective call site
+     * in {@code main} needs no knowledge of the dev classes.
      */
     public static void install() {
         // FIRST of all: hand main its instrumentation. Everything below (and every harness) reads through

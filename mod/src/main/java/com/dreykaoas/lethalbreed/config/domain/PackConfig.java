@@ -93,7 +93,4 @@ public final class PackConfig {
     public static int packMaterializeRetries = 5;
     /** How far from its pack a returning member may be and still re-join it. */
     public static double packRejoinRadius = 64.0;
-
-    /** Log pack formation, merges and destination changes. Noisy; dev only. */
-    public static boolean debugPacks = false;
 }

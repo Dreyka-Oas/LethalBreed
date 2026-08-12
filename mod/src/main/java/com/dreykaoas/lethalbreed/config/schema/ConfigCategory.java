@@ -11,13 +11,23 @@ public final class ConfigCategory {
     public static String of(String name) {
         String n = name.toLowerCase(Locale.ROOT);
         // dev/debug-named options belong in the Dev tab regardless of other keyword matches (e.g.
-        // devClimbTest/debugClimb would otherwise be pulled into Climb by the "climb" rule below).
+        // devClimbTest would otherwise be pulled into Climb by the "climb" rule below).
+        //
+        // NO SHIPPED OPTION MATCHES THIS RULE ANY MORE — every dev/debug-named one lives on the dev-only
+        // DevTestConfig holder, which joins the schema at runtime and only in a development environment.
+        // The rule stays because that holder still needs it (devSpecialTest…, debugLogInterval), and it is
+        // exactly why a player's GUI has no "Dev" tab: CustomConfigScreen builds its sidebar from the
+        // categories the rows actually carry, so with no such row the tab is simply never created.
+        //
+        // contamDevTimeScale deliberately does NOT match: it starts with "contam", so it lands on the
+        // Contamination tab. That is correct — it is a real player option (ContaminationState reads it to
+        // divide the plague timers) and it stays in src/main.
         if (n.startsWith("dev") || n.startsWith("debug")) return "Dev";
         // Expert / low-level constants (tolerances, safety clamps, vanilla magic numbers) get their own tab.
         if (n.startsWith("expert")) return "Expert";
         // Pack MUST come before nearly everything else: packBreakRadius would be captured by "break" →
         // Breaking, packStuckActivations by "stuck" → Climb, packDwellTicks by "day"-adjacent rules. It sits
-        // AFTER the dev/debug rule so debugPacks still lands in the Dev tab with its siblings.
+        // AFTER the dev/debug rule so a dev-only pack option would still land in the Dev tab.
         if (n.startsWith("pack")) return "Meute";
         if (n.contains("contam")) return "Contamination";
         if (n.contains("flee") || n.contains("regen") || n.contains("regain") || n.contains("distress")

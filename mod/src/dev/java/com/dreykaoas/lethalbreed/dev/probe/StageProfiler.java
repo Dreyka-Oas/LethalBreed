@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.dev.probe;
 
-import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 
 /**
  * Per-stage timing for the server tick, so the cost ranking is measured instead of argued.
@@ -53,7 +53,7 @@ public final class StageProfiler {
      *  {@code debugLogInterval} was positive — matching exactly what {@link PerfRecap#maybeLog} will drain,
      *  instead of accumulating unboundedly whenever a sink happens to be installed. */
     public static boolean enabled() {
-        return SchedulerConfig.debugLogInterval > 0;
+        return DevTestConfig.debugLogInterval > 0;
     }
 
     /** Indexes the accumulator arrays directly with an already-resolved stage id, so {@link DevSink#stage} —

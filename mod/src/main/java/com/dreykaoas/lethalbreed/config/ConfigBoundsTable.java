@@ -39,6 +39,15 @@ final class ConfigBoundsTable {
         return BOUNDS.get(name.toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * Register one more bounds group after class-init, for options whose holder joined the schema at runtime
+     * ({@link ConfigSchema#registerHolder}). The dev source set is the only such caller; the static block
+     * below therefore never has to name a group that does not exist in a shipped jar.
+     */
+    static void registerGroup(java.util.function.Consumer<BoundsRegistrar> group) {
+        group.accept(ConfigBoundsTable::b);
+    }
+
     static {
         PerfBounds.register(ConfigBoundsTable::b);
         FlowBounds.register(ConfigBoundsTable::b);

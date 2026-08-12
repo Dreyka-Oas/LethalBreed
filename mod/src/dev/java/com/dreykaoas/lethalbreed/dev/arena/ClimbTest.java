@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.dev.arena;
 import com.dreykaoas.lethalbreed.dev.DevFakePlayer;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
@@ -31,13 +31,14 @@ import java.util.List;
  * three zombies a short walk away, then measures what they actually did.
  *
  * <p><b>Why this used to prove nothing.</b> It was a one-shot {@code SERVER_STARTED} scenario with no
- * assertions at all: it logged its arena line, left {@code debugClimb} on, and asked a human to read the
- * {@code [ClimbDbg]} stream. Headless it produced ZERO {@code [ClimbDbg]} lines for a whole run — no player
- * was connected, so {@code FlowFieldManager.tick} nulled the field on its first line, the zombies never
- * pathed, and a rig that did nothing was byte-for-byte indistinguishable from a rig that passed. Two things
- * fix that: a {@link DevFakePlayer} (so the field exists and the zombies have prey), and per-zombie telemetry
- * latched over the window and turned into PASS/FAIL. {@code debugClimb} stays on so the human stream still
- * exists — but nothing here needs a human any more.
+ * assertions at all: it logged its arena line, turned on the climb debug stream, and asked a human to read
+ * the {@code [ClimbDbg]} output. Headless it produced ZERO {@code [ClimbDbg]} lines for a whole run — no
+ * player was connected, so {@code FlowFieldManager.tick} nulled the field on its first line, the zombies
+ * never pathed, and a rig that did nothing was byte-for-byte indistinguishable from a rig that passed. Two
+ * things fix that: a {@link DevFakePlayer} (so the field exists and the zombies have prey), and per-zombie
+ * telemetry latched over the window and turned into PASS/FAIL. The human stream still exists — {@code
+ * DevBootstrap} enables the {@code DevProbe.CLIMB} channel for every dev run — but nothing here needs a
+ * human any more.
  *
  * <p><b>What the 3-block window at {@code gy+4..gy+6} is for.</b> Regression cover for the wall-scale's
  * face-end scan: a zombie scaling the centre column must climb PAST the gap (the wall resumes above it) to
@@ -74,8 +75,8 @@ public final class ClimbTest {
 
     public static void onTick(MinecraftServer server) {
         // Dev-env gate: this force-loads chunks, builds a wall, spawns mobs AND flips
-        // WorldSpawnConfig.forceDayTime + DevTestConfig.debugClimb at runtime. Far too destructive for a
-        // real world, so it runs ONLY under gradle runServer even if the GUI toggle is left on.
+        // WorldSpawnConfig.forceDayTime at runtime. Far too destructive for a real world, so it runs ONLY
+        // under gradle runServer even if the GUI toggle is left on.
         if (!DevTestConfig.devClimbTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
             return;
         }
@@ -174,7 +175,6 @@ public final class ClimbTest {
             minDist[i] = Double.MAX_VALUE;
         }
 
-        DevTestConfig.debugClimb = true;
         LethalBreed.LOGGER.info(
                 "[ClimbTest] flat arena: floor y={}, wall x={} ({} tall, y {}..{}), villager @({},{},{}), {} zombies "
                         + "west, fakePlayer={}. Climbing {} blocks reaches the villager. Watch [ClimbDbg].",

@@ -4,7 +4,7 @@ import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 import com.dreykaoas.lethalbreed.dev.harness.TickPhasedHarness;
 
 import com.dreykaoas.lethalbreed.config.ConfigOverride;
-import com.dreykaoas.lethalbreed.config.domain.engine.DevTestConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 
 import net.minecraft.server.MinecraftServer;

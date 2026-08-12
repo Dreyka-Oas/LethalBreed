@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.dev.probe;
 
-import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
+import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
@@ -14,7 +14,7 @@ import net.minecraft.server.MinecraftServer;
 /**
  * Dev perf recap, emitted every {@code debugLogInterval} ticks (~5s). Lives in the {@code dev} source set
  * and is only ever driven by {@code DevSink#tickEnd}, so a built/published jar contains neither and never
- * logs. Still requires {@code SchedulerConfig.debugLogInterval > 0} to say anything.
+ * logs. Still requires {@code DevTestConfig.debugLogInterval > 0} to say anything.
  */
 public final class PerfRecap {
     private final ZombieRegistry registry;
@@ -35,7 +35,7 @@ public final class PerfRecap {
     }
 
     void maybeLog(MinecraftServer server, long tickCounter) {
-        int interval = SchedulerConfig.debugLogInterval;
+        int interval = DevTestConfig.debugLogInterval;
         if (interval <= 0 || tickCounter % interval != 0) {
             return;
         }
