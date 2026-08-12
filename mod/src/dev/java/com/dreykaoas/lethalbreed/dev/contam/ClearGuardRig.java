@@ -47,7 +47,7 @@ public final class ClearGuardRig {
         }
         ContaminationManager.contaminate(c);
         if (symptomatic) {
-            ContaminationManager.forceSymptomatic(c);
+            DevContam.forceSymptomatic(c);
         }
     }
 

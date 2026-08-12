@@ -98,7 +98,7 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
         }
         victimId = c.getUUID();
         ContaminationManager.contaminate(c);
-        ContaminationManager.forceSymptomatic(c);
+        DevContam.forceSymptomatic(c);
         churn = new ChunkChurn("plague-disabled reloads", CX, CZ, ROUNDS, HALF_BUDGET);
         check("tracked-on-infect", ContaminationState.tracked.size() == 1,
                 "tracked.size()=" + ContaminationState.tracked.size() + " after one contaminate() — "

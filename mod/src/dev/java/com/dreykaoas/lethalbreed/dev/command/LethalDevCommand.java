@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.dev.command;
 
 import com.dreykaoas.lethalbreed.dev.DevBootstrap;
+import com.dreykaoas.lethalbreed.dev.contam.DevContam;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
@@ -78,14 +79,14 @@ public final class LethalDevCommand {
         if (!ContaminationManager.isContaminated(target)) {
             ContaminationManager.contaminate(target); // convenience: infect first so "symptoms" always works
         }
-        ContaminationManager.forceSymptomatic(target);
+        DevContam.forceSymptomatic(target);
         reply(ctx, ChatFormatting.RED, "forced symptoms on " + name(target));
         return 1;
     }
 
     private static int setLevel(CommandContext<CommandSourceStack> ctx, int n) throws CommandSyntaxException {
         LivingEntity target = target(ctx);
-        ContaminationManager.forceLevel(target, n);
+        DevContam.forceLevel(target, n);
         int got = ContaminationManager.plagueLevel(target);
         reply(ctx, got > 0 ? ChatFormatting.RED : ChatFormatting.YELLOW,
                 got > 0 ? "set " + name(target) + " to plague level " + got

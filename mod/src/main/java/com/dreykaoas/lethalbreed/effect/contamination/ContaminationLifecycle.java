@@ -14,9 +14,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Infection entry/exit points: contaminate, chunk-load re-tracking, death (+ humanoid reanimation), the outright
- * cure, and the dev tools that force-advance a victim's stage/level. Everything here mutates
- * {@link ContaminationState}'s shared maps/set.
+ * Infection entry/exit points: contaminate, chunk-load re-tracking, death (+ humanoid reanimation), and the
+ * outright cure. Everything here mutates {@link ContaminationState}'s shared maps/set. The dev tools that
+ * force-advance a victim's stage/level moved to {@code com.dreykaoas.lethalbreed.dev.contam.DevContam}
+ * (src/dev) so the shipped jar has no plague-mutation entry point.
  */
 public final class ContaminationLifecycle {
     private ContaminationLifecycle() {}
@@ -106,33 +107,6 @@ public final class ContaminationLifecycle {
         if (ContaminationConfig.contamReanimateHumanoids && isHumanoid(e)) {
             reanimate(e, level);
         }
-    }
-
-    /** Dev tool: immediately surface symptoms on a contaminated victim (skips the 5–10 in-game-day roll), so the
-     *  visible/damaging stage can be inspected on demand. No-op if the victim isn't contaminated. */
-    public static void forceSymptomatic(LivingEntity e) {
-        if (ContaminationState.age(e) <= 0 || ContaminationState.symptomatic(e)) {
-            return;
-        }
-        e.setAttached(ContaminationState.SYMPTOMATIC, true);
-        ContaminationState.setLevel(e, 1);
-        ContaminationState.nextSymptomRoll.remove(e);
-    }
-
-    /** Dev tool: jump a victim straight to a plague level (infect + surface symptoms first if needed). Clamped
-     *  to [1, maxLevel]. Rerolls the per-victim intensity for that level. */
-    public static void forceLevel(LivingEntity e, int lvl) {
-        if (ContaminationState.age(e) <= 0) {
-            contaminate(e);
-        }
-        if (ContaminationState.age(e) <= 0) {
-            return; // contamination disabled or entity ineligible
-        }
-        if (!ContaminationState.symptomatic(e)) {
-            e.setAttached(ContaminationState.SYMPTOMATIC, true);
-            ContaminationState.nextSymptomRoll.remove(e);
-        }
-        ContaminationState.setLevel(e, lvl);
     }
 
     /** Spawn a fresh zombie at the victim's death spot (its "reanimation"). Villagers rise as zombie villagers. */

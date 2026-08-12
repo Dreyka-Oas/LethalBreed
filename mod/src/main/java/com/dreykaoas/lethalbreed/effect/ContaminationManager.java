@@ -77,18 +77,6 @@ public final class ContaminationManager {
         return ContaminationState.symptomatic(e);
     }
 
-    /** Dev tool: immediately surface symptoms on a contaminated victim (skips the 5–10 in-game-day roll), so
-     *  the visible/damaging stage can be inspected on demand. No-op if the victim isn't contaminated. */
-    public static void forceSymptomatic(LivingEntity e) {
-        ContaminationLifecycle.forceSymptomatic(e);
-    }
-
-    /** Dev tool: jump a victim straight to a plague level (infect + surface symptoms first if needed). Clamped
-     *  to [1, maxLevel]. Rerolls the per-victim intensity for that level. */
-    public static void forceLevel(LivingEntity e, int lvl) {
-        ContaminationLifecycle.forceLevel(e, lvl);
-    }
-
     /** Current plague level for external/dev readout (1 while symptomatic, 0 if not symptomatic). */
     public static int plagueLevel(LivingEntity e) {
         return ContaminationState.symptomatic(e) ? ContaminationState.level(e) : 0;

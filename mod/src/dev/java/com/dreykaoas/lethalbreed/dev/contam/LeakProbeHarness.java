@@ -80,7 +80,7 @@ public final class LeakProbeHarness extends TickPhasedHarness {
             return;
         }
         ContaminationManager.contaminate(victim);
-        ContaminationManager.forceSymptomatic(victim);
+        DevContam.forceSymptomatic(victim);
         victimRef = new WeakReference<>(victim);
     }
 

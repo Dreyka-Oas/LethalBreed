@@ -78,7 +78,7 @@ public final class PlagueDamageHarness extends TickPhasedHarness {
             return;
         }
         ContaminationManager.contaminate(victim);
-        ContaminationManager.forceSymptomatic(victim);
+        DevContam.forceSymptomatic(victim);
         startHealth = victim.getHealth();
         maxHealth = startHealth;
         lastHealth = startHealth;
