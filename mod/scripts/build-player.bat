@@ -18,6 +18,6 @@ if errorlevel 1 (
 )
 
 echo.
-echo [build-player] Done. Player jar(s) in build\libs\ (exclude the *-dev.jar / *-sources.jar):
-dir /b build\libs\*.jar 2>nul | findstr /v /i "dev sources"
+echo [build-player] Done. Player jar in build\libs\:
+dir /b build\libs\*.jar 2>nul
 endlocal
