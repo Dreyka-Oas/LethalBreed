@@ -34,16 +34,6 @@ public final class ConfigBounds {
      *
      * @throws IllegalArgumentException when the value is non-finite and the field has no registered bounds
      */
-    /**
-     * Register a bounds group defined outside this package — i.e. the dev source set, whose options join the
-     * schema at runtime via {@link ConfigSchema#registerHolder}. {@link ConfigBoundsTable} and its {@code b}
-     * hook are package-private on purpose; this is the one door into them, and it is the mirror image of
-     * {@code registerHolder}: a field and its bound always move together.
-     */
-    public static void registerGroup(java.util.function.Consumer<BoundsRegistrar> group) {
-        ConfigBoundsTable.registerGroup(group);
-    }
-
     public static Object clamp(String name, Object value) {
         Range r = ConfigBoundsTable.get(name);
         if (r == null) {
@@ -91,5 +81,15 @@ public final class ConfigBounds {
                 }
             }
         }
+    }
+
+    /**
+     * Register a bounds group defined outside this package — i.e. the dev source set, whose options join the
+     * schema at runtime via {@link ConfigSchema#registerHolder}. {@link ConfigBoundsTable} and its {@code b}
+     * hook are package-private on purpose; this is the one door into them, and it is the mirror image of
+     * {@code registerHolder}: a field and its bound always move together.
+     */
+    public static void registerGroup(java.util.function.Consumer<BoundsRegistrar> group) {
+        ConfigBoundsTable.registerGroup(group);
     }
 }

@@ -20,7 +20,12 @@ import net.fabricmc.loader.api.FabricLoader;
  * the server thread for now; off-thread compute (flow field, GPU) arrives in later phases behind
  * the thread-safety discipline described in plan.md.
  *
- * <p>Registration is split into {@code init.*} helpers; {@code onInitialize} keeps the original order.
+ * <p>Registration is split into {@code init.*} helpers. {@code onInitialize} straddles them with two dev
+ * hooks: {@code devHook("registerConfig")} runs first, before {@link BootstrapInit#run()} reads the config
+ * file, so a dev-only holder can join the schema in time to have its options loaded; {@code
+ * devHook("install")} runs last, after every other {@code init.*} registration, so its config-driven
+ * decisions are not overwritten by the load. See {@link #devHook} for why both are reflective and both are
+ * no-ops on a shipped jar.
  */
 public final class LethalBreedMod implements ModInitializer {
     private static final DimensionManager DIMENSIONS = GameState.DIMENSIONS;

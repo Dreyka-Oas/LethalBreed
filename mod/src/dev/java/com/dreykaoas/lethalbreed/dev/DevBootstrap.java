@@ -39,10 +39,12 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
  * this class or anything under {@code com.dreykaoas.lethalbreed.dev}.
  *
  * <p>{@code main} never imports this class directly; both entry points are loaded by reflection from
- * {@code LethalBreedMod#installDevHooks} and only when {@code FabricLoader.isDevelopmentEnvironment()} is
- * true. On a production jar the reflective lookup simply fails ({@link ClassNotFoundException}) and is
- * swallowed, so no dev wiring ever runs — and, since {@link #registerConfig} is where the dev options join
- * the schema, a player's config file and config GUI have no dev options and no "Dev / Debug" tab.
+ * {@code LethalBreedMod}'s private {@code devHook(String)} helper — called twice, as
+ * {@code devHook("registerConfig")} and {@code devHook("install")} — and only when
+ * {@code FabricLoader.isDevelopmentEnvironment()} is true. On a production jar the reflective lookup simply
+ * fails ({@link ClassNotFoundException}) and is swallowed, so no dev wiring ever runs — and, since
+ * {@link #registerConfig} is where the dev options join the schema, a player's config file and config GUI
+ * have no dev options and no "Dev / Debug" tab.
  *
  * <p>There are two entry points because they must straddle the config load: {@link #registerConfig} before
  * it, {@link #install} after it. See each for why.

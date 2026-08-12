@@ -27,7 +27,7 @@ final class PackSetup {
     /** Night, so no day-sleep competes with the migration. */
     private static final long NIGHT = 18000L;
 
-    static void prepare(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
+    static void prepare(ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
         // server.properties ships difficulty=peaceful, and peaceful deletes every monster on the tick after
         // it spawns — setPersistenceRequired does not save it. Without this line the corridor is empty a
         // dozen ticks in, and the rig reports "no pack formed" about a population that no longer exists.
