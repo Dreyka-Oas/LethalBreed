@@ -19,11 +19,13 @@ import net.minecraft.commands.Commands;
  * <p>The reply goes to the sender alone ({@code sendSuccess(…, false)}) — asking what phase it is must not
  * spam the other players.
  *
- * <p>Forcing the phase ({@code /lethalphase <n>}) is a separate branch registered from {@code src/dev} by
- * {@code LethalPhaseCommand} and never shipped. That branch carries its OWN operator gate rather than
- * relying on this literal: Brigadier keeps the FIRST registration's {@code requires()} when it merges two
- * registrations of one literal, so the ungated node below would otherwise hand the forcing branch to every
- * player in the dev environment. {@code LiteralMergeTest} pins both halves of that rule.
+ * <p>There is no {@code /lethalphase <n>} any more, in either source set. Forcing the phase was deleted
+ * rather than moved: every dev harness that needs a phase sets it through {@code PhaseManager.setPhase}
+ * directly, so the command duplicated an API the tests already call.
+ *
+ * <p>Because this literal is ungated and registered first, any branch ever added to it — from either
+ * source set — must carry its own {@code requires()}: Brigadier keeps the FIRST registration's when it
+ * merges, so a gate declared on a second registration of {@code lethalphase} would be silently dropped.
  */
 public final class PhaseCommand {
     private PhaseCommand() {}

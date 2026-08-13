@@ -9,11 +9,10 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
  * Registers the commands a player jar ships: {@code /lethalconfig}, {@code /lethaldev level <n>},
  * {@code /lethaldev cure} and the bare {@code /lethalphase} readout.
  *
- * <p>Everything else ({@code /lethalspawn}, {@code /lethalspecial}, {@code /lethalphase <n>} and the other
- * four {@code /lethaldev} subcommands) is a developer tool living in the {@code dev} source set and
- * registered by {@code DevBootstrap}, so a player jar contains none of it. Those dev branches attach to
- * the {@code lethaldev} and {@code lethalphase} literals registered here — Brigadier merges the trees,
- * which is why a dev branch that needs a permission gate must carry it on its own node.
+ * <p>Everything else ({@code /lethalspawn}, {@code /lethalspecial} and the other four {@code /lethaldev}
+ * subcommands) is a developer tool living in the {@code dev} source set and registered by
+ * {@code DevBootstrap}, so a player jar contains none of it. Those dev subcommands attach to the
+ * {@code lethaldev} literal registered here — Brigadier merges the two trees.
  */
 public final class CommandInit {
     private CommandInit() {}
