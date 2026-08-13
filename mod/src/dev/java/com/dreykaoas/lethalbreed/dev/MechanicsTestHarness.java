@@ -78,6 +78,9 @@ public final class MechanicsTestHarness extends TickPhasedHarness {
             // fire state at the evaluation tick would then read as "never burned".
             state.latchFire();
         } else {
+            // Keep the fleer's aggressor memory alive first: vanilla drops it after ~100 ticks and this
+            // window is 400, after which the zombie flees from nothing and can no longer scream.
+            state.refreshFleeThreat();
             // Same reasoning for the rally: sound memory expires in about ten seconds, so a single
             // end-of-window sample would miss a rally that fired and lapsed.
             state.latchRally();

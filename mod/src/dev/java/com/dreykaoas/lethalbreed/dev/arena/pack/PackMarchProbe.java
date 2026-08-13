@@ -27,9 +27,9 @@ final class PackMarchProbe {
     private double maxSpread;
     private boolean sampled;
 
-    /** Push the pack east down the corridor and record how it travels. */
+    /** Push the arena's pack east down the corridor and record how it travels. */
     void observe(ServerLevel ow, List<Zombie> members, int expected) {
-        PackState pack = firstPack(ow);
+        PackState pack = arenaPack(ow, members);
         if (pack == null) {
             return;
         }
@@ -64,9 +64,31 @@ final class PackMarchProbe {
         }
     }
 
-    private static PackState firstPack(ServerLevel ow) {
-        for (PackState p : GameState.DIMENSIONS.get(ow.dimension()).packManager().all()) {
-            return p;
+    /**
+     * The pack the arena's own members belong to, resolved through one of them.
+     *
+     * <p>This used to take whatever {@code packManager().all()} yielded first. That backing store is a
+     * {@code Long2ObjectOpenHashMap}, so "first" is hash order — and the overworld holds packs this arena
+     * never built: the registry is already ~40 zombies deep at stage 0 for 12 spawned, with pack formation
+     * enabled. The probe therefore grabbed an unrelated wild pack at random, forced ITS destination across
+     * the map, and then measured the arena's members against that pack's centre.
+     *
+     * <p>That is the whole of the march flakiness. The start distance should be a constant ~120 blocks
+     * (the destination is {@code CX + 120} and the pack forms at {@code CX}); observed runs reported 313,
+     * 646 and 745 instead, and a "max spread" of 728 blocks was never a pack scattering — it was the gap
+     * between this arena and someone else's pack.
+     */
+    private static PackState arenaPack(ServerLevel ow, List<Zombie> members) {
+        var manager = GameState.DIMENSIONS.get(ow.dimension()).packManager();
+        for (Zombie z : members) {
+            SmartZombie sz = GameState.REGISTRY.get(z.getId());
+            if (sz == null || !sz.isValid() || !sz.pursuit().pack().inPack()) {
+                continue;
+            }
+            PackState p = manager.get(sz.pursuit().pack().packId());
+            if (p != null) {
+                return p;
+            }
         }
         return null;
     }

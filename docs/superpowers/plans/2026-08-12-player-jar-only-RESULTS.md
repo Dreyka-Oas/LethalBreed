@@ -2,7 +2,7 @@
 
 Branche : `chore/player-jar-only` · 21 commits depuis `5095b69` · plan : [2026-08-12-player-jar-only.md](2026-08-12-player-jar-only.md)
 
-**État : relu et testé.** Build propre (`clean --rerun-tasks`), 229 tests unitaires, 0 échec ; 12 suites de harness relancées, 68/70 checks (§6) ; jar vérifié dans un vrai client Prism.
+**État : relu et testé.** Build propre (`clean --rerun-tasks`), 229 tests unitaires, 0 échec ; les 12 suites de harness vertes après correction de deux défauts d'arène (§6) ; kernel OpenCL validé sur GPU réel (§7) ; jar vérifié dans un vrai client Prism.
 
 ---
 
@@ -56,42 +56,59 @@ Gain de la suppression : 5,4 Ko sur 787 Ko (0,7 %).
 
 Si tu veux revenir dessus, tout est dans [LethalConfigCommand.java](../../../mod/src/main/java/com/dreykaoas/lethalbreed/command/LethalConfigCommand.java) — restaurer `FIELD_SUGGEST`, les littéraux dans `register()`, les quatre handlers, `unknown()`, et la surcharge 3-arg `CommandFeedback.success`. Rien là-dedans n'est du code dev.
 
-## 6. Échecs de harness — mesurés, et plus instables que décrit
+## 6. Les deux échecs de harness — trouvés et corrigés
 
-Les 12 suites relancées intégralement le 13/08 après tous les changements de commandes et le
-nettoyage de code mort : **10 vertes, 2 en échec, 71 checks passés sur 73.**
+Les 12 suites relancées le 13/08 donnaient 10 vertes et 2 en échec, `mech/flee-rally` et
+`pack/marche-cohesion`. Ils sont corrigés. **Aucun code livré n'est en cause : les deux défauts
+étaient dans les arènes de test elles-mêmes**, et les deux correctifs vivent dans `src/dev`.
 
-¹ `compute` a d'abord rendu 6/6 sur le chemin CPU, ses trois checks GPU en SKIP ; relancée avec
-OpenCL fonctionnel (voir §7), elle passe 9/9.
+### `pack` — la sonde suivait la mauvaise meute
 
-| Suite | Verdict | Suite | Verdict |
-|---|---|---|---|
-| special | 8/8 | placed | 7/7 |
-| mech | 4/5 ❌ | shade | 3/3 |
-| climb | 4/4 | breach | 5/5 |
-| compute | 9/9 ¹ | presence | 4/4 |
-| plague | 11/11 | pack | 10/11 ❌ |
-| statue | 4/4 | clear | 6/6 |
+`PackMarchProbe` prenait sa meute avec `packManager().all()` puis « la première ». Le stockage est un
+`Long2ObjectOpenHashMap` : « première » veut dire ordre de hachage. Or l'overworld contient des meutes
+que l'arène n'a pas construites — 41 zombies suivis au stage 0 pour 12 générés, formation activée. La
+sonde attrapait donc une meute sauvage au hasard, lui forçait sa destination à travers la carte, puis
+mesurait les membres de l'arène contre le centre de cette meute-là.
 
-Les deux échecs restants : `mech/flee-rally` (0 cri de détresse mais des renforts ralliés — le
-check suppose une arène silencieuse qu'elle n'est pas) et `pack/marche-cohesion` (écart max 199,60
-blocs pour un `packBreakRadius` de 40).
+C'est toute l'explication des chiffres absurdes. La distance de départ devrait être constante, environ
+120 blocs — la destination est à `CX + 120` et la meute se forme en `CX`. Les runs rapportaient 313,
+646 et 745. Et un « écart max » de 728 blocs n'a jamais été une meute qui se disperse : c'était la
+distance entre cette arène et la meute de quelqu'un d'autre.
 
-**Cette section affirmait auparavant quatre échecs « reproduits à l'identique ». C'était faux sur
-deux points, et les chiffres le montrent :**
+La sonde résout maintenant sa meute par le `packId` d'un de ses propres membres, via
+`PackManager.get(long)`.
 
-- `shade/reaches-shelter` **passe** désormais, explicitement (`seek latched=true, under cover=true,
-  sleeping=true`). Il n'était donc pas systématiquement en échec, mais instable.
-- `pack/marche-rapprochement` **passe** avec **267,86 blocs** de rapprochement pour un départ à
-  313,10. La conclusion précédente — « rapprochement de 0,00 bloc […] la meute ne migre pas du
-  tout » — ne tient pas : la meute migre. Et `marche-cohesion` échoue à 199,60 blocs d'écart, pas
-  723,62.
+### `mech` — le scénario était impossible, pas instable
 
-Ces deux checks varient donc fortement d'une exécution à l'autre. Ce qu'on peut affirmer : aucun
-des deux échecs restants n'est causé par cette branche (aucun code de meute, de fuite ou de son
-n'y a été touché), mais l'affirmation « reproduit à l'identique sur le code pré-branche » ne peut
-pas être maintenue pour des checks dont le résultat change d'un run à l'autre. Leur instabilité
-est elle-même le défaut à investiguer, hors de cette branche.
+`buildFleeRally` ne forçait aucune option, contrairement à `buildContamination` qui en épingle dix. Or
+la config du run porte `fleeEnabled: false`, et `ZombieMood` fait
+`fleeThreat = fleeEnabled ? flightThreat(...) : null`. Le zombie n'entrait donc **jamais** en FLEEING
+et le cri de détresse ne pouvait pas partir. `distressScreams=0` n'était pas un aléa mais une
+certitude — le message du check disait déjà que sa prémisse était fausse.
+
+Un second défaut se cachait derrière : vanilla efface `lastHurtByMob` après ~100 ticks alors que la
+fenêtre du test en fait 400. Passé ce délai `currentThreat` renvoie null, et le repli est « le joueur
+le plus proche » — un serveur headless n'en a aucun. Même avec `fleeEnabled`, le cri n'aurait été
+possible que dans les 100 premiers ticks.
+
+L'arène épingle désormais les cinq options dont elle dépend, et rafraîchit la mémoire d'agresseur à
+chaque tick de la fenêtre.
+
+### Vérification
+
+Cinq exécutions de chaque suite après correction : **10/10 PASS**.
+
+| | avant | après (5 runs) |
+|---|---|---|
+| `flee-rally` cris de détresse | 0 (toujours) | 1 à 2 |
+| `pack` distance de départ | 313 · 646 · 745 | **127,50 constant** |
+| `pack` écart max au centre | 199 · 561 · 728 | 20,9 à 27,8 (seuil 40) |
+
+La distance de départ enfin constante est la preuve directe que la sonde verrouille la bonne meute.
+
+**Ce que ça corrige aussi dans ce document :** la section précédente parlait de checks « instables ».
+C'était encore inexact. `flee-rally` échouait de façon déterministe ; seul `pack` variait, et sa
+variation était le tirage aléatoire d'une meute, pas du bruit de mesure.
 
 ## 7. Points ouverts
 

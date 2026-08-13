@@ -50,7 +50,7 @@ public final class MechPhaseArena {
         DevSink.get().resetCounters();
         buildPhaseGear(ow, s);
         buildContamination(ow, s, cfg);
-        buildFleeRally(ow, s);
+        buildFleeRally(ow, s, cfg);
         LethalBreed.LOGGER.info("[MechTest] phase-{} arena built", GEAR_PHASE);
     }
 
@@ -100,7 +100,20 @@ public final class MechPhaseArena {
      * That claim is now ASSERTED rather than assumed: a previous run reported helpers rallied while zero
      * screams had fired, which means the memory came from somewhere else and the check's premise was false.
      */
-    private static void buildFleeRally(ServerLevel ow, MechTestState s) {
+    private static void buildFleeRally(ServerLevel ow, MechTestState s, ConfigOverride cfg) {
+        // Pin every option this scenario depends on, exactly as buildContamination does for its own.
+        //
+        // fleeEnabled is the one that mattered: the run config ships it FALSE, and ZombieMood reads
+        //     fleeThreat = fleeEnabled ? flightThreat(...) : null
+        // so the zombie never entered FLEEING and the distress scream could never fire. The check was not
+        // flaky on this at all — it was deterministically impossible, and "0 screams while helpers rallied"
+        // was the arena telling us so. An arena that leaves a switch it needs to the ambient config is
+        // testing the config, not the code.
+        cfg.set("fleeEnabled", true)
+                .set("moodEnabled", true)
+                .set("fleeHealthFraction", 0.3333)   // 4/20 hp = 20 %, comfortably under the threshold
+                .set("distressDistance", 12.0)       // the fleer starts 15 blocks out, so it is already past
+                .set("distressRallyRadius", 32.0);   // helpers sit ~3 blocks away, well inside
         ArenaBuilder.forceChunks(ow, RALLY_X);
         MechTestArena.floor(ow, RALLY_X, true);
         for (int x = RALLY_X - 3; x <= RALLY_X + 19; x++) {
@@ -127,6 +140,7 @@ public final class MechPhaseArena {
             ow.addFreshEntity(fleer);
         }
         s.fleer = fleer;
+        s.fleeThreat = threat;
 
         List<Zombie> helpers = new ArrayList<>();
         for (int i = 0; i < 4; i++) {

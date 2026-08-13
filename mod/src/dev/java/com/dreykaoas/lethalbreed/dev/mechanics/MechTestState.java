@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.dev.mechanics;
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -23,6 +24,9 @@ public final class MechTestState {
 
     // ---- Flee / distress-rally scenario ----
     Zombie fleer;
+    /** What the fleer runs from. Held so the window can keep the aggressor memory alive — see
+     *  {@link #refreshFleeThreat}. */
+    LivingEntity fleeThreat;
     List<Zombie> rallyHelpers = List.of();
     /** Latched true if any idle helper acquired sound-memory (rallied to the fleer) during the window. */
     boolean rallyHelped;
@@ -34,6 +38,25 @@ public final class MechTestState {
         }
         if (sunZombie != null && sunZombie.getRemainingFireTicks() > 0) {
             sunZombieWasOnFire = true;
+        }
+    }
+
+    /**
+     * Re-arm the fleer's aggressor memory, every tick of the window.
+     *
+     * <p>Vanilla clears {@code lastHurtByMob} about 100 ticks after it is set, and the rally window is 400.
+     * Once it lapses, {@code MoodStateDispatch.currentThreat} returns null and {@code flightThreat} falls
+     * back to the nearest PLAYER — of which a headless server has none. The zombie is then fleeing with a
+     * null threat, and the distress scream, which requires a non-null one, can never fire again.
+     *
+     * <p>That left the scream possible only inside the first ~100 ticks, and only on a mood tick where the
+     * state had already latched to FLEEING — a race the check lost more often than it won, reporting zero
+     * screams while helpers rallied off some other sound. Refreshing the memory makes the scenario the one
+     * the check describes: a wounded zombie with a LIVE threat 15 blocks away.
+     */
+    public void refreshFleeThreat() {
+        if (fleer != null && !fleer.isRemoved() && fleeThreat != null && fleeThreat.isAlive()) {
+            fleer.setLastHurtByMob(fleeThreat);
         }
     }
 
