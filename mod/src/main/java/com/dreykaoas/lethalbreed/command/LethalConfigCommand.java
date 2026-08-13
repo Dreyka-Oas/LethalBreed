@@ -97,12 +97,14 @@ public final class LethalConfigCommand {
             CommandFeedback.success(ctx.getSource(),
                     "Structure OK — " + report.recognised() + "/" + report.keysInFile()
                             + " options reconnues.", ChatFormatting.GREEN, false);
+            reportAutoFixed(ctx, report);
             return 1;
         }
 
         CommandFeedback.success(ctx.getSource(),
                 report.problemCount() + " problème(s) de structure — " + report.recognised() + "/"
                         + report.keysInFile() + " options reconnues.", ChatFormatting.GOLD, false);
+        reportAutoFixed(ctx, report);
         for (ConfigStructure.Unknown u : report.unknown()) {
             String line = u.suggestion() != null
                     ? "  option inconnue '" + u.name() + "' — vouliez-vous '" + u.suggestion() + "' ?"
@@ -115,10 +117,23 @@ public final class LethalConfigCommand {
                     "  '" + d + "' apparaît dans deux catégories — une seule copie est lue")
                     .withStyle(ChatFormatting.RED), false);
         }
+        return report.problemCount();
+    }
+
+    /** What the loader repaired on its own. Stated in grey, after the headline and never as a problem:
+     *  the file is already correct on these points, or will be at the next write. */
+    private static void reportAutoFixed(CommandContext<CommandSourceStack> ctx,
+                                        ConfigStructure.Report report) {
+        for (ConfigStructure.Rename r : report.renamed()) {
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "  '" + r.from() + "' corrigé en '" + r.to() + "' — ta valeur est conservée")
+                    .withStyle(ChatFormatting.GRAY), false);
+        }
         for (String c : report.bogusCategory()) {
             ctx.getSource().sendSuccess(() -> Component.literal(
-                    "  '" + c + "' n'est pas une catégorie — ses options seront déplacées")
-                    .withStyle(ChatFormatting.RED), false);
+                    "  '" + c + "' n'est pas une catégorie — ses options sont replacées à la prochaine "
+                            + "écriture")
+                    .withStyle(ChatFormatting.GRAY), false);
         }
         if (!report.misplaced().isEmpty()) {
             ctx.getSource().sendSuccess(() -> Component.literal(
@@ -126,6 +141,5 @@ public final class LethalConfigCommand {
                             + "automatiquement à la prochaine écriture")
                     .withStyle(ChatFormatting.GRAY), false);
         }
-        return report.problemCount();
     }
 }

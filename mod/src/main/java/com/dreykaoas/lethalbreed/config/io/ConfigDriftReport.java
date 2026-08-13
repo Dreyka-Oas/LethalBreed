@@ -14,13 +14,23 @@ import java.nio.file.Path;
 public final class ConfigDriftReport {
     private ConfigDriftReport() {}
 
-    /** Say what is wrong with the file's shape, once per problem, naming the offending key. */
+    /** Say what is wrong with the file's shape, once per problem, naming the offending key. Drift the
+     *  loader repairs by itself is stated at INFO — it is a record of what happened, not a warning. */
     public static void emit(ConfigStructure.Report report, Path path) {
+        for (ConfigStructure.Rename r : report.renamed()) {
+            LethalBreed.LOGGER.info(
+                    "[LethalBreed] misspelled option '{}' in {} — reading it as '{}'; your value is kept "
+                            + "and the file is corrected on the next write.",
+                    r.from(), path.getFileName(), r.to());
+        }
         for (ConfigStructure.Unknown u : report.unknown()) {
             if (u.suggestion() != null) {
+                // Reaching here with a suggestion means the repair was NOT safe to make: either that
+                // option is already set elsewhere in the file, or another name is just as close.
                 LethalBreed.LOGGER.warn(
-                        "[LethalBreed] unknown option '{}' in {} — did you mean '{}'? It does nothing and "
-                                + "will be dropped when the file is rewritten.",
+                        "[LethalBreed] unknown option '{}' in {} — did you mean '{}'? Too ambiguous to "
+                                + "correct automatically; it does nothing and will be dropped when the "
+                                + "file is rewritten.",
                         u.name(), path.getFileName(), u.suggestion());
             } else {
                 LethalBreed.LOGGER.warn(
@@ -35,9 +45,11 @@ public final class ConfigDriftReport {
                             + "read, and which one wins is not something you should rely on.", d);
         }
         for (String c : report.bogusCategory()) {
-            LethalBreed.LOGGER.warn(
+            // Corrected by the write that follows this read, exactly like a misplaced option, so this
+            // is information rather than something the operator has to act on.
+            LethalBreed.LOGGER.info(
                     "[LethalBreed] '{}' is not a config category — its options are still read by name, "
-                            + "but they will be moved to their real category on the next write.", c);
+                            + "and they move to their real category on the next write.", c);
         }
         if (!report.misplaced().isEmpty()) {
             // Expected during the flat -> nested migration and corrected automatically, so this is
