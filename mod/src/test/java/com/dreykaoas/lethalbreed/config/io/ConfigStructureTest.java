@@ -55,20 +55,55 @@ class ConfigStructureTest {
     }
 
     @Test
-    void aMisspelledKeySuggestsTheClosestRealOption() {
-        // The headline case: today such an edit does nothing AND the line is silently deleted on the
-        // next save, so the user watches their edit vanish with no explanation.
+    void aMisspelledKeyIsRepairedOntoTheRealOption() {
+        // The headline case: such an edit used to do nothing AND the line was silently deleted on the
+        // next save, so the user watched their edit vanish with no explanation. It is now carried onto
+        // the real name, which means the value takes effect and the file comes out correct.
         ConfigStructure.Report r = ConfigStructure.check(parse("{\"Perf\":{\"tickBucket\":5}}"), KNOWN);
-        assertEquals(1, r.unknown().size());
-        assertEquals("tickBucket", r.unknown().get(0).name());
-        assertEquals("tickBuckets", r.unknown().get(0).suggestion());
+        assertEquals(List.of(new ConfigStructure.Rename("tickBucket", "tickBuckets")), r.renamed());
+        assertTrue(r.unknown().isEmpty(), "a repaired typo is not left as an unknown key");
+        assertTrue(r.clean(), "the user has nothing to act on once it is repaired");
+        assertEquals(1, r.autoFixedCount());
     }
 
     @Test
-    void anUnrelatedKeyGetsNoSuggestion() {
+    void aTypoIsNotRepairedWhenTheRealOptionIsAlreadySet() {
+        // Repairing here would overwrite the value the user deliberately wrote on the correct line.
+        ConfigStructure.Report r = ConfigStructure.check(parse(
+                "{\"Perf\":{\"tickBuckets\":5,\"tickBucket\":9}}"), KNOWN);
+        assertTrue(r.renamed().isEmpty(), "the correct key already carries the user's intent");
+        assertEquals(1, r.unknown().size());
+        assertEquals("tickBucket", r.unknown().get(0).name());
+        assertFalse(r.clean(), "a value that is genuinely lost still needs the user");
+    }
+
+    @Test
+    void twoTypoesConvergingOnOneOptionAreBothLeftAlone() {
+        // Which of the two lines did the user mean? Applying either is a coin flip on their setting.
+        ConfigStructure.Report r = ConfigStructure.check(parse(
+                "{\"Perf\":{\"tickBucket\":5},\"Mood\":{\"tickBucketss\":9}}"), KNOWN);
+        assertTrue(r.renamed().isEmpty(), "an ambiguous repair must not be guessed");
+        assertEquals(2, r.unknown().size());
+    }
+
+    @Test
+    void anUnrelatedKeyGetsNoSuggestionAndNoRepair() {
         ConfigStructure.Report r = ConfigStructure.check(parse("{\"Perf\":{\"zzzzzzzzzzzz\":5}}"), KNOWN);
         assertEquals(1, r.unknown().size());
         assertNull(r.unknown().get(0).suggestion(), "a wild guess is worse than no guess");
+        assertTrue(r.renamed().isEmpty());
+    }
+
+    @Test
+    void aFileOfNothingButTyposIsRepairedRatherThanQuarantined() {
+        // unusable() triggers moving the file aside and starting from defaults. Every key here is
+        // about to be repaired and applied, so throwing the file away would destroy settings we can
+        // in fact read.
+        ConfigStructure.Report r = ConfigStructure.check(parse(
+                "{\"Perf\":{\"tickBucket\":5},\"Mood\":{\"daySleepEnable\":true}}"), KNOWN);
+        assertEquals(0, r.recognised());
+        assertEquals(2, r.renamed().size());
+        assertFalse(r.unusable(), "a file we can repair is not a file to quarantine");
     }
 
     @Test

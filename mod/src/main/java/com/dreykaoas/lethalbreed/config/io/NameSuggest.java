@@ -19,20 +19,42 @@ final class NameSuggest {
      *  "tickBuckets" but a name sharing nothing with any option returns null rather than a nonsense
      *  suggestion. Ties resolve to the alphabetically first candidate so the answer is deterministic. */
     static String suggest(String name, Set<String> knownNames) {
+        return best(name, knownNames, false);
+    }
+
+    /** Same search, but {@code null} as soon as two candidates sit at the same best distance.
+     *
+     *  <p>{@link #suggest} is allowed to break a tie alphabetically because it only ever prints
+     *  "did you mean …?" and the user decides. This one feeds the automatic repair in
+     *  {@code ConfigStructure}, which rewrites the file without asking: a coin flip between two
+     *  equally plausible options would silently apply the user's value to the wrong setting, which
+     *  is strictly worse than dropping it and saying so. */
+    static String suggestUnique(String name, Set<String> knownNames) {
+        return best(name, knownNames, true);
+    }
+
+    private static String best(String name, Set<String> knownNames, boolean requireUnique) {
         int budget = Math.max(2, name.length() / 4);
         String best = null;
         int bestDistance = Integer.MAX_VALUE;
+        int atBestDistance = 0;
         for (String candidate : knownNames) {
             int d = distance(name, candidate, budget);
             if (d > budget) {
                 continue;
             }
-            if (d < bestDistance || (d == bestDistance && best != null && candidate.compareTo(best) < 0)) {
+            if (d < bestDistance) {
                 bestDistance = d;
                 best = candidate;
+                atBestDistance = 1;
+            } else if (d == bestDistance) {
+                atBestDistance++;
+                if (candidate.compareTo(best) < 0) {
+                    best = candidate;
+                }
             }
         }
-        return best;
+        return requireUnique && atBestDistance > 1 ? null : best;
     }
 
     /** Levenshtein distance, two-row form, abandoning early once every cell in a row exceeds the budget

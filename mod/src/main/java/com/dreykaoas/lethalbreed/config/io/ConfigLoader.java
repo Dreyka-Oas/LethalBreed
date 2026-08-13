@@ -88,6 +88,18 @@ public final class ConfigLoader {
             }
             ConfigDriftReport.emit(report, path);
 
+            // Repair the misspellings the check found unambiguous, BEFORE the apply loop: the loop is
+            // field-driven and would never look at a key the schema does not have, so without this the
+            // user's value is dropped and the write below deletes the line. Moving it onto the real
+            // name means the edit takes effect and the file comes out correct — the point being that
+            // the file fixes itself rather than asking the user to fix it.
+            for (ConfigStructure.Rename rename : report.renamed()) {
+                JsonElement carried = values.remove(rename.from());
+                if (carried != null) {
+                    values.put(rename.to(), carried);
+                }
+            }
+
             int applied = 0;
             int ignored = 0;
             for (Field f : ConfigFields.all()) {

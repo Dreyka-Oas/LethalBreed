@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -71,7 +72,31 @@ class ConfigLoaderTest {
         ConfigStructure.Report report = ConfigLoader.load(cfg);
 
         assertNotNull(report, "nothing was quarantined, so the drift still describes the live file");
-        assertFalse(report.unknown().isEmpty(), "the misspelled key must be reported");
+        assertEquals(List.of(new ConfigStructure.Rename("daySleepEnabld", "daySleepEnabled")),
+                report.renamed(), "the misspelled key must be repaired, not merely reported");
+    }
+
+    /** End to end: a misspelled key must both take effect in memory and come out corrected on disk.
+     *  Repairing the report without carrying the value would be the same silent no-op as before. */
+    @Test
+    void aMisspelledKeyIsAppliedAndRewrittenUnderItsRealName() throws Exception {
+        Field target = ConfigSchema.find("daySleepEnabled");
+        assertNotNull(target);
+        String original = ConfigAccess.read(target);
+        boolean flipped = !Boolean.parseBoolean(original);
+        try {
+            Path cfg = write("{\"Mood\": {\"daySleepEnabld\": " + flipped + "}}");
+            ConfigLoader.load(cfg);
+
+            assertEquals(String.valueOf(flipped), ConfigAccess.read(target),
+                    "the value on the misspelled line must reach the real option");
+            String rewritten = Files.readString(cfg);
+            assertTrue(rewritten.contains("daySleepEnabled"), "the corrected name must be on disk");
+            assertFalse(rewritten.contains("daySleepEnabld\""), "the typo must be gone from the file");
+        } finally {
+            // The config is static: leaving it flipped would leak into whatever test runs next.
+            ConfigAccess.apply("daySleepEnabled", original, false);
+        }
     }
 
     @Test

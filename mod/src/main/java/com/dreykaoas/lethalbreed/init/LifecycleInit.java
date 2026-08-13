@@ -63,6 +63,11 @@ public final class LifecycleInit {
         // WARN covers dedicated-server admins who read logs; this covers everyone else, because a
         // solo player never opens latest.log and would otherwise just watch their hand-edited line
         // stop working with no explanation anywhere they look.
+        //
+        // Only for drift the loader could NOT repair — clean() ignores renamed typos, misplaced
+        // options and stale category names, all of which the load-then-write cycle corrects by itself.
+        // A message about a file that is already fixed is noise, and noise is what makes an operator
+        // stop reading these.
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ConfigStructure.Report report = ConfigIo.lastReport();
             if (report == null || report.clean()) {
