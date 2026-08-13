@@ -94,7 +94,9 @@ est elle-même le défaut à investiguer, hors de cette branche.
 
 **Avant publication :**
 - Le strip des commentaires du kernel OpenCL a été prouvé équivalent octet pour octet, mais **cette machine n'a pas d'ICD OpenCL** — le kernel n'a jamais été compilé par un vrai `clBuildProgram`. La suite `compute` passe 6/6, mais sur le chemin CPU : elle ne prouve rien sur le kernel. À revérifier sur une machine avec GPU.
-- **Un seul chemin n'a pas pu être testé** : l'avis de connexion opérateur (`LifecycleInit`). Il exige qu'un joueur op rejoigne un monde, ce qui n'est pas automatisable ici — le client de test s'arrête au menu principal. Ses deux entrées sont en revanche vérifiées séparément : `report.clean()` est bien faux sur la config cassée du test client, et la garde de permission est celle du paquet `SetConfig`.
+- L'avis de connexion opérateur (`LifecycleInit`) **est vérifié** : `runServer` avec une config cassée + `runClient1`, qui rejoint automatiquement en `Tester1` (op 4, serveur en `online-mode=false`). L'avis étant envoyé au joueur et non journalisé côté serveur, l'assertion porte sur le log du client. Les deux moitiés du comportement sont couvertes :
+  - **dérive non réparable** (une faute ambiguë + un doublon) → `[LethalBreed] 2 problème(s) dans la structure de config/oas/lethalbreed.json :` suivi des deux lignes nommant `daySleepEnable` et `lodHigh` ;
+  - **dérive uniquement réparable** (faute résoluble + option mal rangée + catégorie fantôme) → le serveur journalise les trois réparations, `Tester1 joined the game`, et le client reçoit **zéro** message. C'est le point même de la refonte : ce qui se corrige tout seul ne dérange plus personne.
 - Les joueurs existants verront **un lancement** de WARN pour les 17 clés désormais inconnues, plus une ligne `'Dev' is not a config category`, puis le fichier est réécrit propre. Aucun réglage perdu. Mérite une ligne de changelog.
 
 **Résidus assumés :**
