@@ -9,7 +9,6 @@ import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.command.LookTarget;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
@@ -29,13 +28,15 @@ import net.minecraft.world.entity.LivingEntity;
  * it must not re-declare {@code level} or {@code cure}, and why its {@code requires} gate has to stay at the same
  * permission level as the shipped one (a merge keeps the first node's requirement).
  *
+ * <p>{@code timescale} was removed: {@code contamDevTimeScale} is a real player-facing config option with
+ * its own row in the Contamination tab, so the command was a second, dev-only way to set something the GUI
+ * already sets. {@code status} still reports its current value.
+ *
  * <p>Subcommands added here (all operate on the entity the player is looking at, else the player itself):
  * <ul>
  *   <li>{@code contaminate} — infect now (starts the latent stage).</li>
  *   <li>{@code symptoms} — force the symptomatic stage now (skips the 5–10 in-game-day roll).</li>
  *   <li>{@code status} — report the plague stage of the target.</li>
- *   <li>{@code timescale [factor]} — read/set the plague time-compression factor (e.g. 2 = twice as fast,
- *       so pulses and symptom rolls fire in half the time). {@code 1} restores real timing.</li>
  * </ul>
  * Op-gated (level 2) as a defence-in-depth alongside the dev-env-only registration.
  */
@@ -47,12 +48,7 @@ public final class LethalDevCommand {
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("contaminate").executes(LethalDevCommand::contaminate))
                 .then(Commands.literal("symptoms").executes(LethalDevCommand::symptoms))
-                .then(Commands.literal("status").executes(LethalDevCommand::status))
-                .then(Commands.literal("timescale")
-                        .executes(LethalDevCommand::showTimescale)
-                        .then(Commands.argument("factor", DoubleArgumentType.doubleArg(0.001, 10000.0))
-                                .executes(ctx -> setTimescale(ctx,
-                                        DoubleArgumentType.getDouble(ctx, "factor"))))));
+                .then(Commands.literal("status").executes(LethalDevCommand::status)));
     }
 
     private static int contaminate(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -83,18 +79,6 @@ public final class LethalDevCommand {
         reply(ctx, ChatFormatting.GRAY, LookTarget.name(target) + " — plague: " + stage
                 + (lvl > 0 ? " (level " + lvl + ")" : "")
                 + " | timescale x" + ContaminationConfig.contamDevTimeScale);
-        return 1;
-    }
-
-    private static int showTimescale(CommandContext<CommandSourceStack> ctx) {
-        reply(ctx, ChatFormatting.GRAY, "plague timescale = x" + ContaminationConfig.contamDevTimeScale);
-        return 1;
-    }
-
-    private static int setTimescale(CommandContext<CommandSourceStack> ctx, double factor) {
-        ContaminationConfig.contamDevTimeScale = factor;
-        reply(ctx, ChatFormatting.GREEN, "plague timescale set to x" + factor
-                + " (affects newly-scheduled pulses/rolls)");
         return 1;
     }
 
