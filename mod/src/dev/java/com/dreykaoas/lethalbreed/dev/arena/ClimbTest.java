@@ -163,7 +163,7 @@ public final class ClimbTest {
         // Three zombies on the flat platform to the west — they should walk to the wall base then climb it.
         MOB.clear();
         for (int i = 0; i < 3; i++) {
-            Entity z = EntityType.ZOMBIE.spawn(level, new BlockPos(cx - 5 + i, gy, cz), EntitySpawnReason.COMMAND);
+            Entity z = ArenaBuilder.spawnZombie(level, new BlockPos(cx - 5 + i, gy, cz));
             if (z instanceof Zombie zb) {
                 zb.setPersistenceRequired();
                 MOB.add(zb);

@@ -86,8 +86,7 @@ public final class PackArena {
     public static List<Zombie> spawnRow(ServerLevel ow, int x0, int stepX, int n) {
         List<Zombie> out = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            Zombie z = EntityType.ZOMBIE.spawn(ow, new BlockPos(x0 + i * stepX, Y, CZ),
-                    EntitySpawnReason.COMMAND);
+            Zombie z = ArenaBuilder.spawnZombie(ow, new BlockPos(x0 + i * stepX, Y, CZ));
             if (z != null) {
                 z.setPersistenceRequired();
                 out.add(z);

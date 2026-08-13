@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.dev.command;
 
+import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
@@ -72,7 +73,7 @@ public final class LethalSpecialCommand {
             double ang = (Math.PI * 2 * i) / count;
             BlockPos pos = player.blockPosition().offset((int) Math.round(Math.cos(ang) * 3), 0,
                     (int) Math.round(Math.sin(ang) * 3));
-            Zombie z = EntityType.ZOMBIE.spawn(level, pos, EntitySpawnReason.COMMAND);
+            Zombie z = ArenaBuilder.spawnZombie(level, pos);
             if (z == null) {
                 continue;
             }

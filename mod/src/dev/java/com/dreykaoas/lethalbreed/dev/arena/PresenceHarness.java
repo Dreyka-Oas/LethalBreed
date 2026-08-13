@@ -100,8 +100,9 @@ public final class PresenceHarness extends TickPhasedHarness {
         zombies.clear();
         startDistSum = 0.0;
         for (int i = 0; i < ZOMBIES; i++) {
-            Zombie z = EntityType.ZOMBIE.spawn(ow,
-                    new BlockPos(CX - START_OFFSET, Y, CZ - 2 + i), EntitySpawnReason.COMMAND);
+            // Retry on discard: a baby roll is thrown away by blockBabyZombies at ENTITY_LOAD, and a row of
+            // five loses one about a quarter of the time — which is exactly how often zombies-approach failed.
+            Zombie z = ArenaBuilder.spawnZombie(ow, new BlockPos(CX - START_OFFSET, Y, CZ - 2 + i));
             if (z != null) {
                 z.setPersistenceRequired();
                 zombies.add(z);

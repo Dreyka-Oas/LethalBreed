@@ -10,9 +10,11 @@ import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.cow.Cow;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 /**
  * In-process proof that the plague's static collections release their victims — the checkable replacement for
@@ -74,6 +76,20 @@ public final class LeakProbeHarness extends TickPhasedHarness {
     @Override
     protected void build(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
         cfg.set("contaminationEnabled", true);
+        // Start from an empty tracker. The whole probe hinges on `tracked` reaching ZERO when our victim is
+        // cured, because only then does ContaminationTick.tick take the early return whose scratch buffer we
+        // are measuring. Any other victim already in the world keeps the set non-empty, the early return
+        // never happens, and the check reports a leak that is not there.
+        //
+        // The shared Greenfield save carries such victims: CONTAM is a PERSISTENT attachment, so a mob some
+        // past run infected comes back tracked at chunk load. Killing them off in the world is not the
+        // answer either — this harness must own its precondition rather than assume the world grants it.
+        // Same defect as PackMarchProbe taking "the first pack": exclusivity assumed, never established.
+        for (LivingEntity stale : List.copyOf(ContaminationState.tracked)) {
+            if (stale != victim) {
+                ContaminationManager.clearPlague(stale);
+            }
+        }
         ContamRig.arena(ow, CX, CZ, 4, 4);
         victim = ContamRig.cow(ow, CX, CZ, 0.0f);
         if (victim == null) {

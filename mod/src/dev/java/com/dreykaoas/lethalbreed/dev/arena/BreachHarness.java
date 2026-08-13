@@ -204,8 +204,7 @@ public final class BreachHarness {
     private static void spawnZombies(ServerLevel ow, int x, int z) {
         MOB.clear();
         for (int i = 0; i < ZOMBIES; i++) {
-            Zombie zb = EntityType.ZOMBIE.spawn(ow, new BlockPos(x, Y, z - ZOMBIES / 2 + i),
-                    EntitySpawnReason.COMMAND);
+            Zombie zb = ArenaBuilder.spawnZombie(ow, new BlockPos(x, Y, z - ZOMBIES / 2 + i));
             if (zb != null) {
                 zb.setPersistenceRequired();
                 MOB.add(zb);

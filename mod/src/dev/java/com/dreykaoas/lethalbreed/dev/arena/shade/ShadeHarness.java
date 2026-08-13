@@ -120,6 +120,12 @@ public final class ShadeHarness {
             ShadeAreaA.observe(ow, tick, false);
             ShadeAreaA.evaluate(ow);
         } else if (tick == B_BUILD) {
+            // Stop the rain area A asked for. The two areas want opposite skies: A's whole mechanism is a
+            // WET zombie hunting cover, so worldRules() turns rain on for 24000 ticks; B's threat is the SUN,
+            // and under rain there is nothing to flee — the zombie engages the seek, then drops it a hundred
+            // ticks later and stops halfway to the shelter. That is precisely the reaches-shelter failure,
+            // and it lands or not depending on where the weather happens to be, which is why it looked random.
+            ow.setWeatherParameters(24000, 0, false, false);
             ShadeAreaB.build(ow);
         } else if (tick > B_BUILD && tick < B_EVAL) {
             ShadeAreaB.observe(ow, tick);

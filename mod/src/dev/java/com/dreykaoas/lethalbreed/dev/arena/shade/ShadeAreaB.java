@@ -78,7 +78,7 @@ final class ShadeAreaB {
                 }
             }
         }
-        bZombie = EntityType.ZOMBIE.spawn(ow, new BlockPos(BX, ShadeHarness.Y, BZ), EntitySpawnReason.COMMAND);
+        bZombie = ArenaBuilder.spawnZombie(ow, new BlockPos(BX, ShadeHarness.Y, BZ));
         if (bZombie != null) {
             bZombie.setPersistenceRequired();
             bZombie.setPos(BX + 0.5, ShadeHarness.Y, BZ + 0.5);

@@ -269,7 +269,7 @@ public final class StatueHarness {
         // spawn(), NOT create()+addFreshEntity: only spawn() drives the ENTITY_LOAD event that registers the
         // zombie with ZombieRegistry, and an unregistered zombie has no SmartZombie, no ZombieMood, and can
         // therefore never doze at all. MechTestArena spawns the same way for the same reason.
-        Zombie z = EntityType.ZOMBIE.spawn(ow, new BlockPos(CX, Y, CZ), EntitySpawnReason.COMMAND);
+        Zombie z = ArenaBuilder.spawnZombie(ow, new BlockPos(CX, Y, CZ));
         if (z == null) {
             DevVerdict.check(SUITE, "probe-spawned", false, "EntityType.ZOMBIE.spawn returned null at "
                     + CX + "," + Y + "," + CZ);

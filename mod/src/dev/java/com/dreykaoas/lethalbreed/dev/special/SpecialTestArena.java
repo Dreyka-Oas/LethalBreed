@@ -55,7 +55,7 @@ public final class SpecialTestArena {
             ArenaBuilder.forceChunks(ow, cx);
             buildPlatform(ow, cx);
 
-            Zombie z = EntityType.ZOMBIE.spawn(ow, pos, EntitySpawnReason.COMMAND);
+            Zombie z = ArenaBuilder.spawnZombie(ow, pos);
             if (z == null) {
                 continue;
             }
@@ -104,9 +104,9 @@ public final class SpecialTestArena {
         Zombie extra = null;
         if (type == SpecialType.HURLEUR) {
             // 9 blocks from the howler (< its 24 radius) but 11 from the cow (> detect 10) → stays targetless.
-            extra = EntityType.ZOMBIE.spawn(ow, new BlockPos(cx, Y, 9), EntitySpawnReason.COMMAND);
+            extra = ArenaBuilder.spawnZombie(ow, new BlockPos(cx, Y, 9));
         } else if (type == SpecialType.SOIGNEUR) {
-            extra = EntityType.ZOMBIE.spawn(ow, new BlockPos(cx + 1, Y, 0), EntitySpawnReason.COMMAND);
+            extra = ArenaBuilder.spawnZombie(ow, new BlockPos(cx + 1, Y, 0));
             if (extra != null) {
                 extra.setHealth(4.0f); // hurt so Regen is observable
             }

@@ -3,6 +3,9 @@ package com.dreykaoas.lethalbreed.dev.arena;
 import com.dreykaoas.lethalbreed.dev.DevTestSelector;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 
@@ -103,4 +106,36 @@ public final class ArenaBuilder {
 
     /** Arena floor Y shared by the verification-band harnesses (matches the legacy arenas' Y=101). */
     public static final int VERIFY_Y = 101;
+
+    /** How many times {@link #spawnZombie} will re-roll before giving up. Five is far past the point where
+     *  a run of babies stops being plausible (0.05^5) and keeps a broken world from looping forever. */
+    private static final int SPAWN_ATTEMPTS = 5;
+
+    /**
+     * Spawn one plain, surviving zombie — retrying when the mod throws the newly spawned one away.
+     *
+     * <p>Vanilla's {@code finalizeSpawn} makes roughly 5 % of zombies babies, and the mod's own
+     * {@code blockBabyZombies} rule discards those at ENTITY_LOAD, which fires INSIDE {@code spawn()}. The
+     * call therefore returns a non-null entity that is already removed. An arena spawning a row of five hits
+     * this about a quarter of the time, and every check demanding "all N alive" then fails for a reason that
+     * has nothing to do with what it measures.
+     *
+     * <p>This is the "the world intermittently drops one or two of a spawn row before they ever reach the
+     * registry" that {@code PackMarchProbe} works around rather than explains. It is not the world being
+     * flaky: it is a 5 % dice roll meeting a config option that is on by default.
+     *
+     * @return a live, registered zombie, or {@code null} if every attempt was discarded
+     */
+    public static Zombie spawnZombie(ServerLevel ow, BlockPos pos) {
+        for (int attempt = 0; attempt < SPAWN_ATTEMPTS; attempt++) {
+            Zombie z = EntityType.ZOMBIE.spawn(ow, pos, EntitySpawnReason.COMMAND);
+            if (z != null && !z.isRemoved()) {
+                return z;
+            }
+            if (z != null) {
+                z.discard(); // belt and braces: it is already gone, but never leave a half-added entity behind
+            }
+        }
+        return null;
+    }
 }

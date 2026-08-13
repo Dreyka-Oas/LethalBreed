@@ -60,8 +60,7 @@ public final class MechPhaseArena {
         MechTestArena.floor(ow, GEAR_X, true);
         s.gearPos = new BlockPos(GEAR_X, Y, 0);
         for (int i = 0; i < 20; i++) {
-            Zombie z = EntityType.ZOMBIE.spawn(ow, new BlockPos(GEAR_X - 2 + i % 4, Y, i % 5),
-                    EntitySpawnReason.COMMAND);
+            Zombie z = ArenaBuilder.spawnZombie(ow, new BlockPos(GEAR_X - 2 + i % 4, Y, i % 5));
             if (z != null) {
                 z.setPersistenceRequired();
             }
@@ -144,8 +143,7 @@ public final class MechPhaseArena {
 
         List<Zombie> helpers = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            Zombie h = EntityType.ZOMBIE.spawn(ow, new BlockPos(RALLY_X + 13 + i % 2, Y, 3 + i),
-                    EntitySpawnReason.COMMAND);
+            Zombie h = ArenaBuilder.spawnZombie(ow, new BlockPos(RALLY_X + 13 + i % 2, Y, 3 + i));
             if (h != null) {
                 h.setPersistenceRequired();
                 helpers.add(h);
