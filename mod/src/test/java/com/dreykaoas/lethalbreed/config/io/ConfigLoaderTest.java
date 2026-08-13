@@ -34,8 +34,8 @@ class ConfigLoaderTest {
     }
 
     /** The bug: the report describes the file that was just moved aside and replaced. Serving it afterwards
-     *  makes {@code /lethalconfig verify} and the operator join notice nag, for the whole session, about
-     *  problems in a file that no longer exists. */
+     *  makes the operator join notice nag, for the whole session, about problems in a file that no longer
+     *  exists. */
     @Test
     void reportsNothingOnceAnUnusableFileHasBeenQuarantined() throws Exception {
         Path cfg = write("{\"Nonsense\": 1, \"AlsoNonsense\": 2}");

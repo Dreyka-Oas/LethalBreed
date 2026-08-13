@@ -22,9 +22,16 @@ Monde superflat, triche activée. Puis `/gamemode creative`.
 > retombe sur toi qu'à défaut. Regarde le ciel vide avant chaque commande, sinon tu contamines
 > un zombie voisin sans t'en rendre compte.
 >
-> Les commandes du plan d'origine sont périmées : c'est `/lethalphase 1` (pas `set 1`),
-> `/lethaldev contaminate` (pas `@s`), et `/lethalspawn minecraft:zombie 5` (l'entité est
-> obligatoire).
+> Les commandes ont changé depuis le plan d'origine : `/lethaldev contaminate` (pas `@s`) et
+> `/lethalspawn minecraft:zombie 5` (l'entité est obligatoire). `/lethalconfig set` n'existe plus :
+> passe par la GUI (`/lethalconfig`) ou par le fichier.
+>
+> **`/lethalphase <n>` n'existe plus non plus**, et il n'y a aucun remplaçant direct : la phase est
+> de la donnée de **sauvegarde** (`PhaseSavedData`), pas une option de config, donc on ne peut pas
+> la poser à la main. Le seul levier depuis le jeu est de faire avancer la progression vite —
+> baisse `phaseIntervalTicks` (défaut 36000 ≈ 30 min) et `phaseJitterTicks` à quelques centaines
+> dans la GUI, attends les paliers, puis remets les valeurs. `/lethalphase` sert à confirmer où tu
+> en es.
 
 ---
 
@@ -67,8 +74,8 @@ Jamais vérifié visuellement — le commit d'origine le dit lui-même.
 /gamemode creative
 /time set day
 /gamerule doDaylightCycle false
-/lethalphase 1
 ```
+Phase 1 est la valeur de départ d'un monde neuf ; vérifie-la avec `/lethalphase`.
 Construis une plateforme 5×5 avec un toit 3 blocs au-dessus, puis dessous :
 ```
 /lethalspawn minecraft:zombie 5
@@ -89,10 +96,11 @@ Contexte : le champ de navigation **n'a jamais tourné**. `lastComputeTick` part
 en permanence. Les zombies se déplaçaient en repli vanilla depuis toujours. C'est corrigé
 (`8fde16b`) et ça n'a jamais été vu en jeu.
 
+Il faut être en phase 10 : baisse `phaseIntervalTicks` et `phaseJitterTicks` (voir le piège en
+tête de doc), laisse la progression monter, et confirme avec `/lethalphase`. Règle
+`debugLogInterval` à 100 dans la GUI (`/lethalconfig`), puis :
 ```
-/lethalphase 10
 /time set night
-/lethalconfig set debugLogInterval 100
 /lethalspawn minecraft:zombie 60
 ```
 
@@ -104,7 +112,8 @@ première fois que ça se voit avec un vrai joueur).
 Surveille la ligne `PerfRecap` : le stage `flowsnap` doit maintenant afficher un coût non nul —
 avant le correctif il était structurellement à zéro puisque rien n'était jamais calculé.
 
-**À restaurer avant de quitter** : `/lethalconfig set debugLogInterval 0` et `/lethalphase 1`.
+**À restaurer avant de quitter** : `debugLogInterval` à 0, et `phaseIntervalTicks` /
+`phaseJitterTicks` à leurs valeurs d'origine (36000 / 3600).
 
 ---
 

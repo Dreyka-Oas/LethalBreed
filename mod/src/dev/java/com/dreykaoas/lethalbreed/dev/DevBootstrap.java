@@ -36,8 +36,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
  * Single entry point for every development-only feature: the dev config holder ({@code DevTestConfig} and
  * its {@link DevBounds}), all of {@code main}'s instrumentation (the stage profiler, the perf recap, the dev
  * counters and the debug traces, installed here behind the {@link DevProbe} seam), plus the headless test
- * harnesses and every developer command ({@code /lethalspawn}, {@code /lethaldev}, {@code /lethalphase},
- * {@code /lethalspecial}). Lives in the {@code dev} source set, so it is
+ * harnesses and the developer commands ({@code /lethalspawn}, {@code /lethalspecial}, and the dev-only
+ * branches of {@code /lethaldev}). Lives in the {@code dev} source set, so it is
  * compiled and packaged ONLY for {@code runClient}/{@code runServer} — a shipped/remapped jar never contains
  * this class or anything under {@code com.dreykaoas.lethalbreed.dev}.
  *
@@ -157,8 +157,10 @@ public final class DevBootstrap {
             }
         });
 
-        // Dev commands: /lethalspawn (load-test spawn), /lethaldev (exercise slow effects on demand),
-        // /lethalphase (force the difficulty phase) and /lethalspecial (spawn a forced special type).
+        // Dev commands: /lethalspawn (load-test spawn), /lethalspecial (spawn a forced special type), and
+        // the dev-only branches of /lethaldev. That last literal is registered in src/main by
+        // PlagueCommand, which ships `level` and `cure`; the four added here graft onto the same node
+        // because Brigadier merges two registrations of one literal (see LiteralMergeTest).
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             LethalSpawnCommand.register(dispatcher, registryAccess);
             LethalDevCommand.register(dispatcher);

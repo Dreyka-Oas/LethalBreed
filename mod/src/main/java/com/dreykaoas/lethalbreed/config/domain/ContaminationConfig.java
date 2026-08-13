@@ -117,7 +117,10 @@ public final class ContaminationConfig {
     public static double contamCureMaxPct = 8.0;
 
     /** Dev time-compression for plague timers: every pulse/symptom interval is divided by this factor, so a
-     *  developer can watch the (normally days-long) progression fast. Default 1.0 = real timing. Only ever
-     *  changed by the dev-only {@code /lethaldev timescale} command; a shipped config keeps it at 1.0. */
+     *  developer can watch the (normally days-long) progression fast. Default 1.0 = real timing.
+     *
+     *  <p>Despite the name it is a normal player-facing option with its own row in the Contamination tab —
+     *  the {@code /lethaldev timescale} command that used to be its only writer was removed as a duplicate
+     *  of that row. {@code /lethaldev status} still reports the current value. */
     public static double contamDevTimeScale = 1.0;
 }

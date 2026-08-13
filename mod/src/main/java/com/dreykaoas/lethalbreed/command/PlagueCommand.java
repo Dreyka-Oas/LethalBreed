@@ -23,7 +23,7 @@ import net.minecraft.world.entity.LivingEntity;
  *
  * <p>Both act on the entity you are looking at, else yourself ({@link LookTarget}).
  *
- * <p>The other four subcommands (contaminate, symptoms, status, timescale) stay in {@code src/dev} and are
+ * <p>The other three subcommands (contaminate, symptoms, status) stay in {@code src/dev} and are
  * added to this same {@code lethaldev} literal by {@code DevBootstrap}: Brigadier merges two registrations
  * of one literal, so the dev environment sees the full tree and a player sees these two branches alone.
  * {@code LiteralMergeTest} pins that contract — including the fact that a merge keeps the FIRST
