@@ -59,14 +59,17 @@ Si tu veux revenir dessus, tout est dans [LethalConfigCommand.java](../../../mod
 ## 6. Échecs de harness — mesurés, et plus instables que décrit
 
 Les 12 suites relancées intégralement le 13/08 après tous les changements de commandes et le
-nettoyage de code mort : **10 vertes, 2 en échec, 68 checks passés sur 70.**
+nettoyage de code mort : **10 vertes, 2 en échec, 71 checks passés sur 73.**
+
+¹ `compute` a d'abord rendu 6/6 sur le chemin CPU, ses trois checks GPU en SKIP ; relancée avec
+OpenCL fonctionnel (voir §7), elle passe 9/9.
 
 | Suite | Verdict | Suite | Verdict |
 |---|---|---|---|
 | special | 8/8 | placed | 7/7 |
 | mech | 4/5 ❌ | shade | 3/3 |
 | climb | 4/4 | breach | 5/5 |
-| compute | 6/6 | presence | 4/4 |
+| compute | 9/9 ¹ | presence | 4/4 |
 | plague | 11/11 | pack | 10/11 ❌ |
 | statue | 4/4 | clear | 6/6 |
 
@@ -93,7 +96,11 @@ est elle-même le défaut à investiguer, hors de cette branche.
 ## 7. Points ouverts
 
 **Avant publication :**
-- Le strip des commentaires du kernel OpenCL a été prouvé équivalent octet pour octet, mais **cette machine n'a pas d'ICD OpenCL** — le kernel n'a jamais été compilé par un vrai `clBuildProgram`. La suite `compute` passe 6/6, mais sur le chemin CPU : elle ne prouve rien sur le kernel. À revérifier sur une machine avec GPU.
+- ~~Le kernel OpenCL n'a jamais été compilé par un vrai `clBuildProgram`.~~ **Vérifié le 13/08.** Le diagnostic « pas d'ICD » était incomplet : la machine a une Radeon RX 9060 XT et le loader `OpenCL-ICD-Loader`, il manquait le pilote vendeur. Avec `mesa-libOpenCL` (rusticl) installé, plus deux détails qui bloquaient encore :
+  - `RUSTICL_ENABLE=radeonsi` est requis, sinon la plateforme s'expose sans aucun périphérique ;
+  - JOCL charge `libOpenCL.so` **sans version**, alors que Fedora ne livre que `libOpenCL.so.1` (le lien non versionné est dans le paquet `-devel`). Un lien symbolique dans un dossier pointé par `LD_LIBRARY_PATH` suffit — pas besoin de root.
+
+  Résultat : `GPU: AMD Radeon RX 9060 XT — OpenCL OK`, le kernel strippé compile, et `compute` passe de 6/6 à **9/9** — les trois checks GPU étaient jusque-là en SKIP. `gpu-cpu-parity` PASS sur les 4096 cellules, `gpu-direction` et `gpu-optimal` PASS. Le strip est donc prouvé fonctionnellement, plus seulement octet pour octet.
 - L'avis de connexion opérateur (`LifecycleInit`) **est vérifié** : `runServer` avec une config cassée + `runClient1`, qui rejoint automatiquement en `Tester1` (op 4, serveur en `online-mode=false`). L'avis étant envoyé au joueur et non journalisé côté serveur, l'assertion porte sur le log du client. Les deux moitiés du comportement sont couvertes :
   - **dérive non réparable** (une faute ambiguë + un doublon) → `[LethalBreed] 2 problème(s) dans la structure de config/oas/lethalbreed.json :` suivi des deux lignes nommant `daySleepEnable` et `lodHigh` ;
   - **dérive uniquement réparable** (faute résoluble + option mal rangée + catégorie fantôme) → le serveur journalise les trois réparations, `Tester1 joined the game`, et le client reçoit **zéro** message. C'est le point même de la refonte : ce qui se corrige tout seul ne dérange plus personne.
