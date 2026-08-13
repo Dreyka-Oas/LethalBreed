@@ -2,7 +2,7 @@
 
 Branche : `chore/player-jar-only` · 21 commits depuis `5095b69` · plan : [2026-08-12-player-jar-only.md](2026-08-12-player-jar-only.md)
 
-**État : prêt à relire, une décision produit à confirmer (§5).** Build vert, 224 tests, 0 échec.
+**État : relu et testé.** Build propre (`clean --rerun-tasks`), 229 tests unitaires, 0 échec ; 12 suites de harness relancées, 68/70 checks (§6) ; jar vérifié dans un vrai client Prism.
 
 ---
 
@@ -56,25 +56,45 @@ Gain de la suppression : 5,4 Ko sur 787 Ko (0,7 %).
 
 Si tu veux revenir dessus, tout est dans [LethalConfigCommand.java](../../../mod/src/main/java/com/dreykaoas/lethalbreed/command/LethalConfigCommand.java) — restaurer `FIELD_SUGGEST`, les littéraux dans `register()`, les quatre handlers, `unknown()`, et la surcharge 3-arg `CommandFeedback.success`. Rien là-dedans n'est du code dev.
 
-## 6. Échecs de harness — antérieurs, pas causés par la branche
+## 6. Échecs de harness — mesurés, et plus instables que décrit
 
-4 sous-checks échouent sur 3 suites. **Aucun n'est une régression de cette branche :**
+Les 12 suites relancées intégralement le 13/08 après tous les changements de commandes et le
+nettoyage de code mort : **10 vertes, 2 en échec, 68 checks passés sur 70.**
 
-| Check | Preuve |
-|---|---|
-| `shade/reaches-shelter` | reproduit à l'identique sur le code pré-branche (test au `git stash`, Task 5) |
-| `mech/flee-rally` | idem |
-| `pack/marche-rapprochement` | voir ci-dessous |
-| `pack/marche-cohesion` | voir ci-dessous |
+| Suite | Verdict | Suite | Verdict |
+|---|---|---|---|
+| special | 8/8 | placed | 7/7 |
+| mech | 4/5 ❌ | shade | 3/3 |
+| climb | 4/4 | breach | 5/5 |
+| compute | 6/6 | presence | 4/4 |
+| plague | 11/11 | pack | 10/11 ❌ |
+| statue | 4/4 | clear | 6/6 |
 
-Les deux `pack` ont demandé deux passes. Une première analyse statique concluait « pas de régression » ; la revue finale l'a **réfutée** en montrant que la ligne supprimée `cfg.set("debugPacks", stage == 0)` était un gate **par étape**, et que le log toujours actif pouvait faire monter le mspt → `msptThrottle` → `stress = 2` → diviseurs LOD doublés → migration à demi-vitesse. Théorie plausible, donc testée : le gate par étape a été restauré et le harness relancé. **Toujours 2/11 en échec.** La théorie est donc fausse, et les chiffres le confirment — rapprochement de `0.00` blocs pour un départ à 745,87, écart max 723,62 blocs : la meute ne migre pas du tout, ce n'est pas une dégradation de performance.
+Les deux échecs restants : `mech/flee-rally` (0 cri de détresse mais des renforts ralliés — le
+check suppose une arène silencieuse qu'elle n'est pas) et `pack/marche-cohesion` (écart max 199,60
+blocs pour un `packBreakRadius` de 40).
 
-Ces deux checks méritent une investigation à part, hors de cette branche.
+**Cette section affirmait auparavant quatre échecs « reproduits à l'identique ». C'était faux sur
+deux points, et les chiffres le montrent :**
+
+- `shade/reaches-shelter` **passe** désormais, explicitement (`seek latched=true, under cover=true,
+  sleeping=true`). Il n'était donc pas systématiquement en échec, mais instable.
+- `pack/marche-rapprochement` **passe** avec **267,86 blocs** de rapprochement pour un départ à
+  313,10. La conclusion précédente — « rapprochement de 0,00 bloc […] la meute ne migre pas du
+  tout » — ne tient pas : la meute migre. Et `marche-cohesion` échoue à 199,60 blocs d'écart, pas
+  723,62.
+
+Ces deux checks varient donc fortement d'une exécution à l'autre. Ce qu'on peut affirmer : aucun
+des deux échecs restants n'est causé par cette branche (aucun code de meute, de fuite ou de son
+n'y a été touché), mais l'affirmation « reproduit à l'identique sur le code pré-branche » ne peut
+pas être maintenue pour des checks dont le résultat change d'un run à l'autre. Leur instabilité
+est elle-même le défaut à investiguer, hors de cette branche.
 
 ## 7. Points ouverts
 
 **Avant publication :**
-- Le strip des commentaires du kernel OpenCL a été prouvé équivalent octet pour octet, mais **cette machine n'a pas d'ICD OpenCL** — le kernel n'a jamais été compilé par un vrai `clBuildProgram`. À revérifier sur une machine avec GPU.
+- Le strip des commentaires du kernel OpenCL a été prouvé équivalent octet pour octet, mais **cette machine n'a pas d'ICD OpenCL** — le kernel n'a jamais été compilé par un vrai `clBuildProgram`. La suite `compute` passe 6/6, mais sur le chemin CPU : elle ne prouve rien sur le kernel. À revérifier sur une machine avec GPU.
+- **Un seul chemin n'a pas pu être testé** : l'avis de connexion opérateur (`LifecycleInit`). Il exige qu'un joueur op rejoigne un monde, ce qui n'est pas automatisable ici — le client de test s'arrête au menu principal. Ses deux entrées sont en revanche vérifiées séparément : `report.clean()` est bien faux sur la config cassée du test client, et la garde de permission est celle du paquet `SetConfig`.
 - Les joueurs existants verront **un lancement** de WARN pour les 17 clés désormais inconnues, plus une ligne `'Dev' is not a config category`, puis le fichier est réécrit propre. Aucun réglage perdu. Mérite une ligne de changelog.
 
 **Résidus assumés :**

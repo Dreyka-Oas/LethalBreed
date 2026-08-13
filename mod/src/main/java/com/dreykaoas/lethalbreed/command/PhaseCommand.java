@@ -36,8 +36,11 @@ public final class PhaseCommand {
 
     private static int show(CommandContext<CommandSourceStack> ctx) {
         int p = PhaseManager.current();
+        // The name alone, not "Phase p — <name>": PhaseDef.name is built as "Phase " + p, so spelling the
+        // number out as well printed "Phase 1 — Phase 1". Reading it from the def rather than formatting
+        // the number here keeps the command correct if phases ever get real names.
         CommandFeedback.success(ctx.getSource(),
-                "Phase " + p + " — " + PhaseConfig.def(p).name(), ChatFormatting.GOLD, false);
+                PhaseConfig.def(p).name(), ChatFormatting.GOLD, false);
         return p;
     }
 }
