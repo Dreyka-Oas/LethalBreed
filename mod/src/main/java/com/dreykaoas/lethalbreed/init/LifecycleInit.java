@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 /**
@@ -44,6 +45,11 @@ import net.minecraft.server.permissions.Permissions;
 public final class LifecycleInit {
     private LifecycleInit() {}
 
+    /** How many offending keys the join notice names before it stops and points at the log. A join
+     *  message that fills the chat box is a message nobody reads, and past a handful of unrepairable
+     *  keys the file needs opening anyway. */
+    private static final int JOIN_NOTICE_LINES = 6;
+
     public static void register(ZombieRegistry registry, DimensionManager dimensions, TickScheduler scheduler) {
         // Warm the GPU compute backend at boot (when enabled) so its detection line — GPU name or CPU
         // fallback — is logged once at startup instead of lazily on the first flow-field solve.
@@ -68,6 +74,12 @@ public final class LifecycleInit {
         // options and stale category names, all of which the load-then-write cycle corrects by itself.
         // A message about a file that is already fixed is noise, and noise is what makes an operator
         // stop reading these.
+        //
+        // It names every offending key rather than counting them. This used to be a count plus
+        // "/lethalconfig verify", which made the reader run a command to be told the one thing the
+        // message was for; that subcommand is gone. What survives here is rare by construction (a
+        // typo too ambiguous to correct, or an option written twice), so the line budget below is a
+        // guard against a pathological file, not an expected path.
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ConfigStructure.Report report = ConfigIo.lastReport();
             if (report == null || report.clean()) {
@@ -77,10 +89,38 @@ public final class LifecycleInit {
             if (!handler.getPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
                 return;
             }
-            handler.getPlayer().sendSystemMessage(Component.literal(
+            ServerPlayer op = handler.getPlayer();
+            op.sendSystemMessage(Component.literal(
                             "[LethalBreed] " + report.problemCount()
-                                    + " problème(s) dans la structure de la config — /lethalconfig verify")
+                                    + " problème(s) dans la structure de config/oas/lethalbreed.json :")
                     .withStyle(ChatFormatting.GOLD));
+
+            int shown = 0;
+            for (ConfigStructure.Unknown u : report.unknown()) {
+                if (shown == JOIN_NOTICE_LINES) {
+                    break;
+                }
+                shown++;
+                op.sendSystemMessage(Component.literal(u.suggestion() != null
+                                ? "  '" + u.name() + "' — vouliez-vous '" + u.suggestion()
+                                        + "' ? Trop ambigu pour être corrigé tout seul."
+                                : "  '" + u.name() + "' ne correspond à aucune option.")
+                        .withStyle(ChatFormatting.RED));
+            }
+            for (String d : report.duplicated()) {
+                if (shown == JOIN_NOTICE_LINES) {
+                    break;
+                }
+                shown++;
+                op.sendSystemMessage(Component.literal(
+                                "  '" + d + "' est écrit dans deux catégories — une seule copie est lue.")
+                        .withStyle(ChatFormatting.RED));
+            }
+            if (report.problemCount() > shown) {
+                op.sendSystemMessage(Component.literal(
+                                "  … et " + (report.problemCount() - shown) + " autre(s) — voir latest.log")
+                        .withStyle(ChatFormatting.GRAY));
+            }
         });
 
         // NoAI-release MUST happen here, on STOPPING, not on STOPPED: Fabric fires SERVER_STOPPING at HEAD of

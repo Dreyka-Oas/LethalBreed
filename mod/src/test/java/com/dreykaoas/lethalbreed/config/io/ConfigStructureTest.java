@@ -63,7 +63,6 @@ class ConfigStructureTest {
         assertEquals(List.of(new ConfigStructure.Rename("tickBucket", "tickBuckets")), r.renamed());
         assertTrue(r.unknown().isEmpty(), "a repaired typo is not left as an unknown key");
         assertTrue(r.clean(), "the user has nothing to act on once it is repaired");
-        assertEquals(1, r.autoFixedCount());
     }
 
     @Test

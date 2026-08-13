@@ -42,7 +42,7 @@ Coûts runtime supprimés du jar joueur : une instance `ClimbDebug` **par zombie
 
 ## 5. ⚠️ Une décision produit à confirmer
 
-`/lethalconfig` a été réduit à sa forme nue (ouvre la GUI) + `verify`. `list`, `get`, `set`, `reset <champ>` et `reset all` ont été supprimés — c'était le choix retenu, en sachant qu'il coûtait l'édition de config à chaud sur serveur dédié headless.
+`/lethalconfig` a été réduit à sa forme nue (ouvre la GUI). `list`, `get`, `set`, `reset <champ>` et `reset all` ont été supprimés — c'était le choix retenu, en sachant qu'il coûtait l'édition de config à chaud sur serveur dédié headless. `verify` a suivi plus tard, une fois le loader capable de réparer les dérives tout seul : ce qu'il rapportait est désormais soit corrigé avant qu'on puisse le lire, soit énoncé en entier par l'avis de connexion. Le jar ne livre donc plus qu'une seule forme de commande.
 
 **Fait découvert après coup, à trancher :** il n'existe **aucun autre chemin** vers un reset global. La GUI n'a qu'un bouton de reset par ligne, pas de reset-all, et aucun paquet réseau ne le porte. Conséquence : `ConfigFields.resetAll()` → `ConfigAccess.resetAll()` n'a plus d'appelant et part en **code mort** dans le jar. Sur un serveur dédié, la console n'a plus aucun moyen de modifier une valeur de config.
 

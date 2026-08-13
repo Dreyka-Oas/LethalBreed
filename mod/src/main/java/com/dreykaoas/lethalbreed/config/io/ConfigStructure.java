@@ -87,11 +87,6 @@ public final class ConfigStructure {
         public int problemCount() {
             return unknown.size() + duplicated.size();
         }
-
-        /** Number of things the loader corrected by itself — worth stating once, never worth a warning. */
-        public int autoFixedCount() {
-            return renamed.size() + bogusCategory.size() + misplaced.size();
-        }
     }
 
     /**
