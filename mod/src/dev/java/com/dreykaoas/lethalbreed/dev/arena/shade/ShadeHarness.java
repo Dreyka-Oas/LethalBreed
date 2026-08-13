@@ -86,7 +86,6 @@ public final class ShadeHarness {
     static final int AX = 90;
     static final int AZ = ArenaBuilder.VERIFY_BAND_Z + 60; // z=460
     /** Diagnostic tick offset: the exposure preconditions are logged rather than assumed. */
-    static final int A_PROBE = 60;
     /** Area B: open plate + a roofed shelter {@link #B_SHELTER_DX} blocks east. */
     static final int BX = 150;
     static final int BZ = ArenaBuilder.VERIFY_BAND_Z + 60; // z=460

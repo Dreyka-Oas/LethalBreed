@@ -90,8 +90,8 @@ public final class ConfigSchema {
         }
         HOLDERS.add(holder);
         all = null;
-        // Without this the holder's fields have no factory default, and resetAll() would call
-        // Field.set(null, null) on a primitive — an IllegalArgumentException nothing catches.
+        // Without this the holder's fields have no factory default, so defaultOf() answers "?" for them
+        // and the GUI's per-row reset icon writes that back as the value.
         ConfigAccess.captureDefaultsFor(holder);
     }
 

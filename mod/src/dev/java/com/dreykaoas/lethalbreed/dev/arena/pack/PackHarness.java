@@ -32,7 +32,7 @@ import java.util.Set;
  * can merge, a member can be re-homed, and an instantaneous reading catches whichever moment it lands on.
  *
  * <p><b>The {@code rejoin} stage does not reproduce a real chunk unload</b> — same limitation as
- * {@code PackChurnProbe}, and for the same reason: this corridor is force-loaded, so it never happens on its
+ * the dematerialise round trip, and for the same reason: this corridor is force-loaded, so it never happens on its
  * own, and the real trigger has been measured elsewhere in this project at up to 1200 ticks, which is not a
  * budget a deterministic gate can afford. It instead drives {@link PackManager#detach} and
  * {@link PackManager#rejoin} directly — the exact two calls {@code EntityEventsInit}'s {@code ENTITY_UNLOAD}
@@ -41,7 +41,7 @@ import java.util.Set;
  * attachment) is internally consistent, both when the member is still near its pack and when the pack has
  * wandered past {@code packRejoinRadius} while the member was away. What it does NOT prove: that
  * {@code ENTITY_LOAD} is reached at all on a genuine reload — that remains the one unproven link, same as
- * {@code PackChurnProbe}'s.
+ * the dematerialise round trip's.
  */
 public final class PackHarness extends TickPhasedHarness {
 

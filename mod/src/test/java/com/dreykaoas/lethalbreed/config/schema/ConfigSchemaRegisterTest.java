@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,12 +47,14 @@ class ConfigSchemaRegisterTest {
     }
 
     @Test
-    void resetDoesNotThrowOnALateRegisteredField() {
+    void aLateRegisteredFieldGetsItsDefaultCaptured() {
+        // registerHolder must capture defaults for the holder it adds. Without that, defaultOf answers "?"
+        // for these fields, the GUI ships "?" as their default, and the row's reset icon writes it back.
         ConfigSchema.registerHolder(LateHolder.class);
         LateHolder.lateCount = 999;
 
-        assertDoesNotThrow(ConfigAccess::resetAllInMemory);
-        assertEquals(7, LateHolder.lateCount, "the late-captured default must be restored");
+        assertEquals("7", ConfigAccess.defaultOf("lateCount"),
+                "the late-registered field's factory default must have been captured");
     }
 
     /** Registering twice must not duplicate the option — a duplicate would be written to the JSON twice. */
