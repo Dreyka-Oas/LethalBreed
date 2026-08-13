@@ -23,17 +23,16 @@ import net.minecraft.world.entity.LivingEntity;
  * demand instead of waiting out their real timers. Registered ONLY from {@link DevBootstrap} (dev source set),
  * so none of these subcommands is present in a shipped player jar.
  *
- * <p>The {@code lethaldev} literal itself, and its {@code level <n>} subcommand, are registered by
- * {@code PlagueLevelCommand} in src/main and DO ship. Brigadier merges two registrations of the same
+ * <p>The {@code lethaldev} literal itself, and its {@code level <n>} and {@code cure} subcommands, are
+ * registered by {@code PlagueCommand} in src/main and DO ship. Brigadier merges two registrations of the same
  * literal, so this class adds its branches onto that node rather than creating a second one — which is why
- * it must not re-declare {@code level}, and why its {@code requires} gate has to stay at the same
+ * it must not re-declare {@code level} or {@code cure}, and why its {@code requires} gate has to stay at the same
  * permission level as the shipped one (a merge keeps the first node's requirement).
  *
  * <p>Subcommands added here (all operate on the entity the player is looking at, else the player itself):
  * <ul>
  *   <li>{@code contaminate} — infect now (starts the latent stage).</li>
  *   <li>{@code symptoms} — force the symptomatic stage now (skips the 5–10 in-game-day roll).</li>
- *   <li>{@code cure} — clear the plague outright.</li>
  *   <li>{@code status} — report the plague stage of the target.</li>
  *   <li>{@code timescale [factor]} — read/set the plague time-compression factor (e.g. 2 = twice as fast,
  *       so pulses and symptom rolls fire in half the time). {@code 1} restores real timing.</li>
@@ -48,7 +47,6 @@ public final class LethalDevCommand {
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("contaminate").executes(LethalDevCommand::contaminate))
                 .then(Commands.literal("symptoms").executes(LethalDevCommand::symptoms))
-                .then(Commands.literal("cure").executes(LethalDevCommand::cure))
                 .then(Commands.literal("status").executes(LethalDevCommand::status))
                 .then(Commands.literal("timescale")
                         .executes(LethalDevCommand::showTimescale)
@@ -74,13 +72,6 @@ public final class LethalDevCommand {
         }
         DevContam.forceSymptomatic(target);
         reply(ctx, ChatFormatting.RED, "forced symptoms on " + LookTarget.name(target));
-        return 1;
-    }
-
-    private static int cure(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        LivingEntity target = LookTarget.of(ctx);
-        ContaminationManager.clearPlague(target);
-        reply(ctx, ChatFormatting.AQUA, "cleared plague from " + LookTarget.name(target));
         return 1;
     }
 

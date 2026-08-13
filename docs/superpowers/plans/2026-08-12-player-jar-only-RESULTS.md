@@ -28,7 +28,7 @@ Vérifié sur l'artefact construit : **0 classe** sous `com/dreykaoas/lethalbree
 
 Les **4 commandes** (`/lethaldev`, `/lethalspawn`, `/lethalphase`, `/lethalspecial`), les **12 suites de harness**, l'onglet de config dev et le flux du profileur fonctionnent tous — ils ne sont simplement plus dans le jar.
 
-**Exception ajoutée après coup :** `/lethaldev level <n>` a été rapatrié dans `src/main` sur demande, et livre donc dans le jar. Le littéral `lethaldev` et cette seule sous-commande sont enregistrés par `PlagueLevelCommand` (src/main) ; les cinq autres sous-commandes viennent se greffer sur le même nœud depuis `src/dev`, Brigadier fusionnant deux enregistrements d'un même littéral. Ce comportement — et le fait que la fusion conserve le `requires()` du **premier** enregistrement — est épinglé par `LiteralMergeTest`.
+**Exception ajoutée après coup :** `/lethaldev level <n>` et `/lethaldev cure` ont été rapatriés dans `src/main` sur demande, et livrent donc dans le jar. Le littéral `lethaldev` et ces deux sous-commandes sont enregistrés par `PlagueCommand` (src/main) ; les quatre autres viennent se greffer sur le même nœud depuis `src/dev`, Brigadier fusionnant deux enregistrements d'un même littéral. Ce comportement — et le fait que la fusion conserve le `requires()` du **premier** enregistrement — est épinglé par `LiteralMergeTest`.
 
 ## 3. L'architecture
 

@@ -13,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The Brigadier behaviour the split of {@code /lethaldev} rests on.
  *
- * <p>{@code PlagueLevelCommand} (src/main, shipped) registers the {@code lethaldev} literal carrying only
- * {@code level}; {@code LethalDevCommand} (src/dev, never packaged) registers the same literal carrying the
- * other five subcommands. That only produces one working command tree because {@code CommandNode.addChild}
+ * <p>{@code PlagueCommand} (src/main, shipped) registers the {@code lethaldev} literal carrying
+ * {@code level} and {@code cure}; {@code LethalDevCommand} (src/dev, never packaged) registers the same
+ * literal carrying the other four subcommands. That only produces one working command tree because {@code CommandNode.addChild}
  * merges into an existing child of the same name instead of replacing it or adding a duplicate.
  *
  * <p>Nothing here touches Minecraft — Brigadier is a plain library, so the contract can be pinned headlessly.
