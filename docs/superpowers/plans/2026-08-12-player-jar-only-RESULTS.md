@@ -28,6 +28,8 @@ Vérifié sur l'artefact construit : **0 classe** sous `com/dreykaoas/lethalbree
 
 Les **4 commandes** (`/lethaldev`, `/lethalspawn`, `/lethalphase`, `/lethalspecial`), les **12 suites de harness**, l'onglet de config dev et le flux du profileur fonctionnent tous — ils ne sont simplement plus dans le jar.
 
+**Exception ajoutée après coup :** `/lethaldev level <n>` a été rapatrié dans `src/main` sur demande, et livre donc dans le jar. Le littéral `lethaldev` et cette seule sous-commande sont enregistrés par `PlagueLevelCommand` (src/main) ; les cinq autres sous-commandes viennent se greffer sur le même nœud depuis `src/dev`, Brigadier fusionnant deux enregistrements d'un même littéral. Ce comportement — et le fait que la fusion conserve le `requires()` du **premier** enregistrement — est épinglé par `LiteralMergeTest`.
+
 ## 3. L'architecture
 
 `src/dev` était déjà exclu de `remapJar` par construction : c'est devenu la destination. Le code dev que `src/main` n'appelle jamais a été **déplacé**. L'instrumentation que `src/main` appelle depuis ses chemins chauds ne pouvait pas bouger, donc `main` garde **une seule** classe de couture — [DevProbe](../../../mod/src/main/java/com/dreykaoas/lethalbreed/probe/DevProbe.java), 1 803 octets — dont le champ `sink` est `null` dans le jar joueur. `DevBootstrap` y installe l'implémentation réelle via le hook réflexif dev qui existait déjà.

@@ -7,9 +7,13 @@ import net.minecraft.world.entity.LivingEntity;
 
 /**
  * The plague-forcing dev tools that used to sit in {@code ContaminationManager} /
- * {@link ContaminationLifecycle} (src/main). They live here, in the dev source set, so the shipped jar has no
- * plague-mutation entry point — only {@link com.dreykaoas.lethalbreed.dev.command.LethalDevCommand} and the
- * plague dev harnesses ever need to force a victim's stage/level on demand.
+ * {@link ContaminationLifecycle} (src/main). They live here, in the dev source set, because only
+ * {@link com.dreykaoas.lethalbreed.dev.command.LethalDevCommand} and the plague dev harnesses ever need to
+ * force a victim's stage on demand.
+ *
+ * <p>{@code forceLevel} used to live here too. It moved back to {@link ContaminationLifecycle} when
+ * {@code /lethaldev level} became a shipped command — the jar needs the capability, so hiding it in the
+ * dev source set would only have meant a second copy.
  */
 public final class DevContam {
     private DevContam() {}
@@ -25,19 +29,4 @@ public final class DevContam {
         ContaminationState.nextSymptomRoll.remove(e);
     }
 
-    /** Dev tool: jump a victim straight to a plague level (infect + surface symptoms first if needed). Clamped
-     *  to [1, maxLevel]. Rerolls the per-victim intensity for that level. */
-    public static void forceLevel(LivingEntity e, int lvl) {
-        if (ContaminationState.age(e) <= 0) {
-            ContaminationLifecycle.contaminate(e);
-        }
-        if (ContaminationState.age(e) <= 0) {
-            return; // contamination disabled or entity ineligible
-        }
-        if (!ContaminationState.symptomatic(e)) {
-            e.setAttached(ContaminationState.SYMPTOMATIC, true);
-            ContaminationState.nextSymptomRoll.remove(e);
-        }
-        ContaminationState.setLevel(e, lvl);
-    }
 }
