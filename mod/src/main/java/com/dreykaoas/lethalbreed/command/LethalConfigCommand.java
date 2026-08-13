@@ -1,8 +1,5 @@
 package com.dreykaoas.lethalbreed.command;
 
-import com.dreykaoas.lethalbreed.config.io.ConfigIo;
-import com.dreykaoas.lethalbreed.config.io.ConfigStructure;
-
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.mojang.brigadier.CommandDispatcher;
@@ -17,13 +14,14 @@ import net.minecraft.server.level.ServerPlayer;
 import java.lang.reflect.Field;
 
 /**
- * {@code /lethalconfig} — the mod's single shipped, user-facing command.
+ * {@code /lethalconfig} — the mod's single shipped, user-facing command: open the in-game GUI menu
+ * (player only; a console sender falls back to the text dump).
  *
- * <ul>
- *   <li>{@code /lethalconfig}          — open the in-game GUI menu (player only; console falls back to
- *       the text dump)</li>
- *   <li>{@code /lethalconfig verify}   — report the config file's structural health</li>
- * </ul>
+ * <p>It had a {@code verify} subcommand that printed the config file's structural health. It was
+ * removed once the loader learned to repair drift by itself: what it reported is now either fixed
+ * before anyone could read it, or stated in full by the operator join notice in {@code LifecycleInit}.
+ * A command whose only job is to show the detail another message left out is a message that should
+ * have carried its detail.
  *
  * The GUI (and its console fallback) is driven by reflection over EVERY field in the config
  * ({@link ConfigFields}), so any new option is exposed automatically. Editing an option is done through
@@ -39,8 +37,7 @@ public final class LethalConfigCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lethalconfig")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                .executes(LethalConfigCommand::openMenu)
-                .then(Commands.literal("verify").executes(LethalConfigCommand::verify)));
+                .executes(LethalConfigCommand::openMenu));
     }
 
     private static int openMenu(CommandContext<CommandSourceStack> ctx) {
@@ -80,66 +77,4 @@ public final class LethalConfigCommand {
         return ConfigFields.all().size();
     }
 
-    /** Report what the last config read made of the file's SHAPE — misspelled option names, options
-     *  filed under two categories, categories that do not exist. Not values: those are the user's to
-     *  choose, and an out-of-range one is clamped on the way in by design.
-     *
-     *  <p>This exists because a log line is close to worthless to a solo player, who never opens
-     *  latest.log. The startup WARN is for dedicated-server admins; this is for everyone else. */
-    private static int verify(CommandContext<CommandSourceStack> ctx) {
-        ConfigStructure.Report report = ConfigIo.lastReport();
-        if (report == null) {
-            CommandFeedback.failure(ctx.getSource(),
-                    "Config jamais lue depuis ce démarrage — rien à vérifier.");
-            return 0;
-        }
-        if (report.clean()) {
-            CommandFeedback.success(ctx.getSource(),
-                    "Structure OK — " + report.recognised() + "/" + report.keysInFile()
-                            + " options reconnues.", ChatFormatting.GREEN, false);
-            reportAutoFixed(ctx, report);
-            return 1;
-        }
-
-        CommandFeedback.success(ctx.getSource(),
-                report.problemCount() + " problème(s) de structure — " + report.recognised() + "/"
-                        + report.keysInFile() + " options reconnues.", ChatFormatting.GOLD, false);
-        reportAutoFixed(ctx, report);
-        for (ConfigStructure.Unknown u : report.unknown()) {
-            String line = u.suggestion() != null
-                    ? "  option inconnue '" + u.name() + "' — vouliez-vous '" + u.suggestion() + "' ?"
-                    : "  option inconnue '" + u.name() + "'";
-            ctx.getSource().sendSuccess(
-                    () -> Component.literal(line).withStyle(ChatFormatting.RED), false);
-        }
-        for (String d : report.duplicated()) {
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "  '" + d + "' apparaît dans deux catégories — une seule copie est lue")
-                    .withStyle(ChatFormatting.RED), false);
-        }
-        return report.problemCount();
-    }
-
-    /** What the loader repaired on its own. Stated in grey, after the headline and never as a problem:
-     *  the file is already correct on these points, or will be at the next write. */
-    private static void reportAutoFixed(CommandContext<CommandSourceStack> ctx,
-                                        ConfigStructure.Report report) {
-        for (ConfigStructure.Rename r : report.renamed()) {
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "  '" + r.from() + "' corrigé en '" + r.to() + "' — ta valeur est conservée")
-                    .withStyle(ChatFormatting.GRAY), false);
-        }
-        for (String c : report.bogusCategory()) {
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "  '" + c + "' n'est pas une catégorie — ses options sont replacées à la prochaine "
-                            + "écriture")
-                    .withStyle(ChatFormatting.GRAY), false);
-        }
-        if (!report.misplaced().isEmpty()) {
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "  " + report.misplaced().size() + " option(s) mal rangée(s) — corrigé "
-                            + "automatiquement à la prochaine écriture")
-                    .withStyle(ChatFormatting.GRAY), false);
-        }
-    }
 }
