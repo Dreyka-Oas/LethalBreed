@@ -30,7 +30,7 @@ public final class ConfigIo {
     private ConfigIo() {}
 
     /** Structure check from the last load. Volatile because load() runs on the main thread at boot but
-     *  the join notice and /lethalconfig verify read it from the server thread. */
+     *  the operator join notice reads it from the server thread. */
     private static volatile ConfigStructure.Report lastReport;
 
     /** {@code config/oas/lethalbreed.json}. The "oas" folder is the author's namespace. */
@@ -47,8 +47,8 @@ public final class ConfigIo {
     }
 
     /** The structure check from the most recent {@link #load()}, or null if the config has not been
-     *  read yet. Read by {@code /lethalconfig verify} and the operator join notice — a log line alone
-     *  is close to worthless to a solo player, who never opens latest.log. */
+     *  read yet. Read by the operator join notice — a log line alone is close to worthless to a solo
+     *  player, who never opens latest.log. */
     public static ConfigStructure.Report lastReport() {
         return lastReport;
     }

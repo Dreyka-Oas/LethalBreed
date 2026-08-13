@@ -66,8 +66,8 @@ public final class PhaseManager {
         ServerLevel overworld = server.overworld();
         store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
         // Clamp on restore, not just on write: a save produced before the ceiling existed (or hand-edited)
-        // would otherwise reinstate an unbounded phase at every boot, which is the persistent half of the
-        // forced-phase denial of service (the dev-only /lethalphase command, or a hand-edited save).
+        // would otherwise reinstate an unbounded phase at every boot. The command that could force a
+        // phase is gone, but a hand-edited save can still carry one, and setPhase remains callable.
         phase = clampPhase(store.phase);
         lastAdvanceGameTime = store.lastAdvanceGameTime;
         nextIntervalTicks = store.nextIntervalTicks;

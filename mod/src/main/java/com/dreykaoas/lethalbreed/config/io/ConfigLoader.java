@@ -81,9 +81,9 @@ public final class ConfigLoader {
                     ConfigWriter.save(path);
                 }
                 // Deliberately NOT the report: it describes the file we just moved aside. The config now
-                // running is pristine defaults, so there is nothing for /lethalconfig verify or the operator
-                // join notice to nag about — and nagging about a file that no longer exists, for the rest of
-                // the session, is worse than saying nothing.
+                // running is pristine defaults, so there is nothing for the operator join notice to nag
+                // about — and nagging about a file that no longer exists, for the rest of the session, is
+                // worse than saying nothing.
                 return null;
             }
             ConfigDriftReport.emit(report, path);
