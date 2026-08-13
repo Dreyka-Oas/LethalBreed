@@ -56,10 +56,6 @@ public final class ConfigFields {
         return ConfigAccess.apply(name, raw, persist);
     }
 
-    public static int resetAll() {
-        return ConfigAccess.resetAll();
-    }
-
     /** Encode every option as {@code name<SEP>kind<SEP>value<SEP>default<SEP>category}, one per line, for the GUI. */
     public static String encodeSnapshot() {
         StringBuilder sb = new StringBuilder();

@@ -32,11 +32,10 @@ public final class ConfigAccess {
      * Capture defaults for a holder registered after class-init, called from
      * {@link ConfigSchema#registerHolder}.
      *
-     * <p>Not optional. {@link #reset} does {@code Field.set(null, DEFAULTS.get(name))}, and for a field with
-     * no entry that is {@code Field.set(null, null)} on a primitive — an {@link IllegalArgumentException},
-     * which the {@code catch (IllegalAccessException)} there does NOT cover, so
-     * {@link #resetAll} would abort mid-loop. {@link #defaultOf} would also report {@code "?"}
-     * for the option, in the GUI tooltip and in the wire snapshot.
+     * <p>Not optional. {@link #defaultOf} reports {@code "?"} for an option with no captured entry, and
+     * that value travels: it reaches the GUI tooltip and the wire snapshot, and it is what the row's reset
+     * icon writes back when clicked. A missed capture therefore does not fail loudly — it silently turns
+     * one option's reset button into a corruption button.
      *
      * <p>Public only because {@code ConfigSchema} sits in the {@code config.schema} sub-package; it is that
      * method's private helper and has no other caller.
@@ -117,36 +116,4 @@ public final class ConfigAccess {
         return true;
     }
 
-    /** Restore one option to its captured default. Returns true when the field was actually written. */
-    public static boolean reset(Field f) {
-        try {
-            f.set(null, ConfigType.copyIfArray(DEFAULTS.get(f.getName())));
-            return true;
-        } catch (IllegalAccessException e) {
-            // Counting a reset that did not happen makes resetAll() report a config state the operator
-            // does not have. Say so, and let the caller count only what landed.
-            LethalBreed.LOGGER.error("[LethalBreed] could not reset config option {}", f.getName(), e);
-            return false;
-        }
-    }
-
-    /** Restore every option to its default WITHOUT persisting. Returns the number actually restored.
-     *  Split out of {@link #resetAll()} so the reset path is reachable from a headless test — {@code save()}
-     *  reaches {@code FabricLoader}, which does not exist in the test source set. */
-    public static int resetAllInMemory() {
-        int n = 0;
-        for (Field f : ConfigSchema.all()) {
-            if (reset(f)) {
-                n++;
-            }
-        }
-        return n;
-    }
-
-    /** Restore every option to its default and persist. Returns the number actually restored. */
-    public static int resetAll() {
-        int n = resetAllInMemory();
-        ConfigIo.save();
-        return n;
-    }
 }
