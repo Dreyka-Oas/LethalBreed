@@ -62,22 +62,4 @@ class LiteralMergeTest {
         assertEquals(0, dispatcher.getSmartUsage(dispatcher.getRoot(), new Object()).size(),
                 "the FIRST registration's requires() is the one that survives the merge");
     }
-
-    @Test
-    void aGateOnTheBranchSurvivesWhereAGateOnTheLiteralWouldNot() {
-        // How /lethalphase is built, and why. The shipped half registers the literal UNGATED so any player
-        // can read the phase; the dev half adds the forcing branch. Gating that branch's own node is the
-        // only placement that works — a requires() on the dev literal is dropped by the merge, which would
-        // hand phase forcing to every player in the dev environment.
-        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
-        dispatcher.register(literal("lethalphase").executes(c -> 1));                      // shipped, ungated
-        dispatcher.register(literal("lethalphase")
-                .then(literal("force").requires(s -> false).executes(c -> 1)));            // dev, gated node
-
-        CommandNode<Object> root = dispatcher.getRoot().getChild("lethalphase");
-        assertTrue(root.canUse(new Object()), "the readout stays open to everyone");
-        assertNotNull(root.getChild("force"));
-        assertTrue(!root.getChild("force").canUse(new Object()),
-                "a requires() on the child node is NOT discarded by the merge");
-    }
 }

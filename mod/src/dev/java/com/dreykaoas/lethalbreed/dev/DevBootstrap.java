@@ -6,7 +6,6 @@ import com.dreykaoas.lethalbreed.dev.arena.ClimbTest;
 import com.dreykaoas.lethalbreed.dev.command.DevSpawnScheduler;
 import com.dreykaoas.lethalbreed.dev.contam.LeakProbeHarness;
 import com.dreykaoas.lethalbreed.dev.command.LethalDevCommand;
-import com.dreykaoas.lethalbreed.dev.command.LethalPhaseCommand;
 import com.dreykaoas.lethalbreed.dev.command.LethalSpawnCommand;
 import com.dreykaoas.lethalbreed.dev.command.LethalSpecialCommand;
 import com.dreykaoas.lethalbreed.dev.arena.PlacedBlockHarness;
@@ -163,7 +162,6 @@ public final class DevBootstrap {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             LethalSpawnCommand.register(dispatcher, registryAccess);
             LethalDevCommand.register(dispatcher);
-            LethalPhaseCommand.register(dispatcher);
             LethalSpecialCommand.register(dispatcher);
         });
 
