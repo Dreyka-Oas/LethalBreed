@@ -15,9 +15,11 @@ import net.minecraft.world.entity.player.Player;
 
 /**
  * Infection entry/exit points: contaminate, chunk-load re-tracking, death (+ humanoid reanimation), and the
- * outright cure. Everything here mutates {@link ContaminationState}'s shared maps/set. The dev tools that
- * force-advance a victim's stage/level moved to {@code com.dreykaoas.lethalbreed.dev.contam.DevContam}
- * (src/dev) so the shipped jar has no plague-mutation entry point.
+ * outright cure. Everything here mutates {@link ContaminationState}'s shared maps/set.
+ *
+ * <p>The plague-forcing tools moved to {@code com.dreykaoas.lethalbreed.dev.contam.DevContam} (src/dev),
+ * with one exception: {@link #forceLevel} came back here when {@code /lethaldev level} became a shipped
+ * command. It is the shipped jar's only plague-mutation entry point, and it is op-gated at the command.
  */
 public final class ContaminationLifecycle {
     private ContaminationLifecycle() {}
@@ -36,6 +38,33 @@ public final class ContaminationLifecycle {
         if (DevProbe.on()) {
             DevProbe.sink.count(DevProbe.INFECT, DevProbe.GLOBAL);
         }
+    }
+
+    /**
+     * Jump a victim straight to a plague level, infecting it and surfacing its symptoms first if needed.
+     * Clamped to {@code [1, contamMaxLevel]} by {@link ContaminationState#setLevel}, which also rerolls the
+     * per-victim intensity for the new level.
+     *
+     * <p>This does NOT pin the level. The victim rejoins the normal progression immediately: the 1–2
+     * in-game-day evolve roll keeps climbing it toward the cap, and its pending roll timer is left
+     * untouched. It is a jump, not a lock.
+     *
+     * <p>It lives in the shipped source set because {@code /lethaldev level} does, unlike the rest of the
+     * plague-forcing tools in {@code dev.contam.DevContam}. Nothing else in {@code src/main} calls it —
+     * the ordinary path into a level is {@code ContaminationEvolve}.
+     */
+    public static void forceLevel(LivingEntity e, int lvl) {
+        if (ContaminationState.age(e) <= 0) {
+            contaminate(e);
+        }
+        if (ContaminationState.age(e) <= 0) {
+            return; // contamination disabled or entity ineligible
+        }
+        if (!ContaminationState.symptomatic(e)) {
+            e.setAttached(ContaminationState.SYMPTOMATIC, true);
+            ContaminationState.nextSymptomRoll.remove(e);
+        }
+        ContaminationState.setLevel(e, lvl);
     }
 
     /** Re-track a contaminated entity after chunk reload (its attachment persists, the in-memory set doesn't).
