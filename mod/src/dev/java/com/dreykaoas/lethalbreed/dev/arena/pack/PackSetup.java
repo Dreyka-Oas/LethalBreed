@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.config.ConfigOverride;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,7 +28,7 @@ final class PackSetup {
     /** Night, so no day-sleep competes with the migration. */
     private static final long NIGHT = 18000L;
 
-    static void prepare(ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
+    static void prepare(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
         // server.properties ships difficulty=peaceful, and peaceful deletes every monster on the tick after
         // it spawns — setPersistenceRequired does not save it. Without this line the corridor is empty a
         // dozen ticks in, and the rig reports "no pack formed" about a population that no longer exists.
@@ -43,9 +44,8 @@ final class PackSetup {
         cfg.set("packDecisionDivisor", 1);  // decide every activation: converge inside a 300-tick window
         cfg.set("packsPerTick", 8);
         cfg.set("packFormMinSize", 3);
-        // The pack debug stream used to be gated per stage by a `debugPacks` config option. That option is
-        // gone: the trace now runs on the DevProbe.PACKS channel, which DevBootstrap enables once for the
-        // whole dev run, so there is no per-stage switch left to flip.
+        // one stage only: at divisor 1 this is a line per zombie per tick
+        DevProbe.setTracing(DevProbe.PACKS, stage == 0);
     }
 
     /**

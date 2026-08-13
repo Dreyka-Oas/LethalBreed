@@ -60,4 +60,16 @@ public final class DevTestConfig {
      *  ({@code StageProfiler#enabled}, {@code PerfRecap#maybeLog}, {@code /lethalspawn}) are all dev-side, so
      *  in a player jar it was an option that could be set and could never do anything. */
     public static int debugLogInterval = 0;
+
+    // ---- Trace channels (DevProbe) ----
+    /** Emit a {@code [ClimbDbg]} line (1-in-4) for every pursuing zombie's climb decision. Off for shipping;
+     *  {@code ClimbTest} turns its own channel on for the duration of its run via {@code DevProbe.setTracing}. */
+    public static boolean debugClimb = false;
+    /** Emit a {@code [PackDbg]} line for every pack decision. Off for shipping; {@code PackSetup} turns the
+     *  channel on for one stage only via {@code DevProbe.setTracing} — at divisor 1 this is a line per zombie
+     *  per tick, so more than one stage at once floods the log. */
+    public static boolean debugPacks = false;
+    /** Show every tracked contamination victim's stage as a live action-bar tag (players) or name tag (mobs).
+     *  Off for shipping. */
+    public static boolean debugContam = false;
 }

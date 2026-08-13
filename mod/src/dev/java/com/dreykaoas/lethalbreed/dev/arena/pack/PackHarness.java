@@ -95,7 +95,7 @@ public final class PackHarness extends TickPhasedHarness {
 
     @Override
     protected void build(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
-        PackSetup.prepare(ow, server, cfg);
+        PackSetup.prepare(stage, ow, server, cfg);
         PackArena.build(ow);
 
         switch (stage) {

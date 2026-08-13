@@ -10,6 +10,7 @@ import com.dreykaoas.lethalbreed.dev.command.LethalPhaseCommand;
 import com.dreykaoas.lethalbreed.dev.command.LethalSpawnCommand;
 import com.dreykaoas.lethalbreed.dev.command.LethalSpecialCommand;
 import com.dreykaoas.lethalbreed.dev.arena.PlacedBlockHarness;
+import com.dreykaoas.lethalbreed.dev.contam.ContaminationIndicator;
 import com.dreykaoas.lethalbreed.dev.contam.PlagueDamageHarness;
 import com.dreykaoas.lethalbreed.dev.contam.PlagueDisableHarness;
 import com.dreykaoas.lethalbreed.dev.arena.PresenceHarness;
@@ -84,8 +85,13 @@ public final class DevBootstrap {
         // drains it — so neither has to be patched up after construction.
         StageProfiler profiler = new StageProfiler();
         PerfRecap recap = new PerfRecap(GameState.REGISTRY, GameState.DIMENSIONS, profiler);
-        DevProbe.install(new DevSink(profiler, recap),
-                (1 << DevProbe.CLIMB) | (1 << DevProbe.PACKS) | (1 << DevProbe.CONTAM));
+        // Each trace channel is opt-in, defaulting off (DevTestConfig.debugClimb/debugPacks/debugContam are
+        // all false for shipping-shaped runs). A harness that needs its own channel for its own run/stage
+        // flips it at runtime with DevProbe.setTracing — see ClimbTest and PackSetup.
+        int traceMask = (DevTestConfig.debugClimb ? 1 << DevProbe.CLIMB : 0)
+                | (DevTestConfig.debugPacks ? 1 << DevProbe.PACKS : 0)
+                | (DevTestConfig.debugContam ? 1 << DevProbe.CONTAM : 0);
+        DevProbe.install(new DevSink(profiler, recap), traceMask);
 
         // FIRST, before anything reads a dev flag: let LB_DEV_TEST / -Dlethalbreed.devTest force exactly one
         // suite on and every other one off. Every gate below (and every SERVER_STARTED listener registered
@@ -107,6 +113,9 @@ public final class DevBootstrap {
         ServerTickEvents.END_SERVER_TICK.register(PlagueDamageHarness.INSTANCE::onTick);
         ServerTickEvents.END_SERVER_TICK.register(LeakProbeHarness.INSTANCE::onTick);
         ServerTickEvents.END_SERVER_TICK.register(PlagueDisableHarness.INSTANCE::onTick);
+        // Live action-bar/name-tag indicator for every tracked contamination victim. Gated on the
+        // DevProbe.CONTAM channel (DevTestConfig.debugContam), like every other trace channel.
+        ServerTickEvents.END_SERVER_TICK.register(ContaminationIndicator::onTick);
         // Statue / placed-block / shade / breach rigs, and the climb arena (which is a tick harness now, not a
         // one-shot SERVER_STARTED scenario — see ClimbTest). Each self-gates on its own ProgressionConfig flag.
         ServerTickEvents.END_SERVER_TICK.register(StatueHarness::onTick);

@@ -79,16 +79,32 @@ public final class DevProbe {
     /** Bitmask of enabled trace channels; {@code 0} on a player jar. */
     public static volatile int traceMask;
 
-    /** Install the dev implementation. Called only from {@code DevBootstrap#install}. */
+    /** Install the dev implementation. Called only from {@code DevBootstrap#install}.
+     *
+     * <p><b>Invariant:</b> {@code traceMask != 0} implies {@code sink != null}. Hot-path call sites
+     * ({@code PillarClimb}, {@code ZombieBrain}, {@code PackPass}) gate on {@link #tracing(int)} and then
+     * dereference {@link #sink} unchecked, so that implication must hold at every observable point — hence
+     * {@code sink} is assigned before {@code traceMask} here, and {@link #uninstall()} clears them in the
+     * opposite order. */
     public static void install(Sink newSink, int newTraceMask) {
         sink = newSink;
         traceMask = newTraceMask;
     }
 
-    /** Restore the player-jar state. Exists for tests; nothing in production calls it. */
+    /** Restore the player-jar state. Exists for tests; nothing in production calls it.
+     *
+     * <p>Clears {@code traceMask} before {@code sink} — the reverse of {@link #install}'s order — to preserve
+     * the same invariant ({@code traceMask != 0} implies {@code sink != null}) at every observable point. */
     public static void uninstall() {
-        sink = null;
         traceMask = 0;
+        sink = null;
+    }
+
+    /** Flip a single trace channel on or off without disturbing the others. Exists so a harness can take
+     *  per-run or per-stage control of one channel (e.g. {@code PackSetup} gating {@code PACKS} to one stage)
+     *  without clobbering whatever {@code DevBootstrap} set for the rest of the run. A trivial bit twiddle. */
+    public static void setTracing(int channel, boolean enabled) {
+        traceMask = enabled ? (traceMask | (1 << channel)) : (traceMask & ~(1 << channel));
     }
 
     /** Whether any instrumentation is listening. Guards every timing and counting call site. */

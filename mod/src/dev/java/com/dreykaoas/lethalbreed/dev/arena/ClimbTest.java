@@ -8,6 +8,7 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
@@ -36,9 +37,9 @@ import java.util.List;
  * player was connected, so {@code FlowFieldManager.tick} nulled the field on its first line, the zombies
  * never pathed, and a rig that did nothing was byte-for-byte indistinguishable from a rig that passed. Two
  * things fix that: a {@link DevFakePlayer} (so the field exists and the zombies have prey), and per-zombie
- * telemetry latched over the window and turned into PASS/FAIL. The human stream still exists — {@code
- * DevBootstrap} enables the {@code DevProbe.CLIMB} channel for every dev run — but nothing here needs a
- * human any more.
+ * telemetry latched over the window and turned into PASS/FAIL. The human stream still exists — this rig turns
+ * the {@code DevProbe.CLIMB} channel on for its own run via {@code DevProbe.setTracing} — but nothing here
+ * needs a human any more.
  *
  * <p><b>What the 3-block window at {@code gy+4..gy+6} is for.</b> Regression cover for the wall-scale's
  * face-end scan: a zombie scaling the centre column must climb PAST the gap (the wall resumes above it) to
@@ -175,6 +176,9 @@ public final class ClimbTest {
             minDist[i] = Double.MAX_VALUE;
         }
 
+        // Turn the CLIMB trace channel on for this run — DevTestConfig.debugClimb defaults off, and this is
+        // the one rig that wants to watch [ClimbDbg] live, same as it used to set debugClimb directly.
+        DevProbe.setTracing(DevProbe.CLIMB, true);
         LethalBreed.LOGGER.info(
                 "[ClimbTest] flat arena: floor y={}, wall x={} ({} tall, y {}..{}), villager @({},{},{}), {} zombies "
                         + "west, fakePlayer={}. Climbing {} blocks reaches the villager. Watch [ClimbDbg].",
