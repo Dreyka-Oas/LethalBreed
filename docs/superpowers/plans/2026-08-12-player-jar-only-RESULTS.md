@@ -56,59 +56,69 @@ Gain de la suppression : 5,4 Ko sur 787 Ko (0,7 %).
 
 Si tu veux revenir dessus, tout est dans [LethalConfigCommand.java](../../../mod/src/main/java/com/dreykaoas/lethalbreed/command/LethalConfigCommand.java) — restaurer `FIELD_SUGGEST`, les littéraux dans `register()`, les quatre handlers, `unknown()`, et la surcharge 3-arg `CommandFeedback.success`. Rien là-dedans n'est du code dev.
 
-## 6. Les deux échecs de harness — trouvés et corrigés
+## 6. Le harness — six défauts d'arène, aucun dans le code livré
 
-Les 12 suites relancées le 13/08 donnaient 10 vertes et 2 en échec, `mech/flee-rally` et
-`pack/marche-cohesion`. Ils sont corrigés. **Aucun code livré n'est en cause : les deux défauts
-étaient dans les arènes de test elles-mêmes**, et les deux correctifs vivent dans `src/dev`.
+Au départ : 10 suites vertes, 2 en échec. Mais en relançant, **une suite différente échouait à chaque
+campagne** — `mech`, puis `statue` et `breach`, puis `plague`, puis `presence`, puis `special`… alors
+que chacun de ces checks passait 5/5 exécuté seul. Douze checks capricieux, c'est une explication qui
+n'en est pas une. La vraie : des arènes qui **supposent un état du monde qu'elles n'établissent pas**,
+dans une sauvegarde que les douze partagent.
 
-### `pack` — la sonde suivait la mauvaise meute
+### Les six défauts
 
-`PackMarchProbe` prenait sa meute avec `packManager().all()` puis « la première ». Le stockage est un
-`Long2ObjectOpenHashMap` : « première » veut dire ordre de hachage. Or l'overworld contient des meutes
-que l'arène n'a pas construites — 41 zombies suivis au stage 0 pour 12 générés, formation activée. La
-sonde attrapait donc une meute sauvage au hasard, lui forçait sa destination à travers la carte, puis
-mesurait les membres de l'arène contre le centre de cette meute-là.
+| Arène | Ce qui n'allait pas |
+|---|---|
+| `pack` | prenait « la première » meute de `packManager().all()` — un `Long2ObjectOpenHashMap`, donc l'ordre de hachage. Elle mesurait une meute sauvage prise au hasard. |
+| `mech` | ne forçait aucune option, et la config porte `fleeEnabled=false` : le zombie n'entrait jamais en FLEEING, le cri de détresse était **impossible**. |
+| `mech` (2) | vanilla efface `lastHurtByMob` après ~100 ticks pour une fenêtre de 400 ; ensuite le repli est « le joueur le plus proche », et un serveur headless n'en a aucun. |
+| `plague` | exige que le compteur `tracked` tombe à zéro, mais `CONTAM` est une attache **persistante** : une victime d'un run passé revient suivie au chargement du chunk. |
+| toutes | **le tirage bébé.** `EntityType.ZOMBIE.spawn` passe par `finalizeSpawn`, ~5 % des zombies naissent bébés, et `blockBabyZombies` les jette à l'ENTITY_LOAD — qui se déclenche **à l'intérieur** de `spawn()`. L'appel rend une entité non-nulle déjà supprimée. |
+| `shade` | l'aire A a besoin de **pluie** (c'est son mécanisme) et la force pour 24000 ticks ; l'aire B enchaîne dans la même fenêtre avec le **soleil** pour menace. Personne ne coupait la pluie. |
 
-C'est toute l'explication des chiffres absurdes. La distance de départ devrait être constante, environ
-120 blocs — la destination est à `CX + 120` et la meute se forme en `CX`. Les runs rapportaient 313,
-646 et 745. Et un « écart max » de 728 blocs n'a jamais été une meute qui se disperse : c'était la
-distance entre cette arène et la meute de quelqu'un d'autre.
+Le tirage bébé est le plus instructif. Une rangée de cinq zombies en perd un environ une fois sur
+quatre — exactement la fréquence à laquelle `presence/zombies-approach` signalait « jamais les 5
+vivants » et `statue` ne trouvait « aucun probe dans l'arène ». C'est aussi ce que la sonde `pack`
+décrit depuis toujours comme « ce monde perd par intermittence un ou deux zombies d'une rangée » :
+pas un monde capricieux, un dé à 5 % rencontrant une option activée par défaut. `ArenaBuilder` expose
+désormais un `spawnZombie` qui retente, et les onze sites de spawn l'utilisent.
 
-La sonde résout maintenant sa meute par le `packId` d'un de ses propres membres, via
-`PackManager.get(long)`.
+### Deux expériences pour établir la cause commune
 
-### `mech` — le scénario était impossible, pas instable
+- **Monde vierge** : pire, pas mieux. `special` tombe à 1/8 — les spéciaux exigent une phase minimale
+  (`specialSplitterPhase = 11`) et un monde neuf démarre à 0. Le harness dépend de l'état accumulé de
+  Greenfield, pas seulement de sa géographie.
+- **Greenfield nettoyé, restauré à l'identique avant chaque suite** (les reflinks btrfs rendent la
+  copie de 2,2 Go quasi gratuite : 0,4 s) : `special`, `statue`, `breach` et `presence` repassent.
 
-`buildFleeRally` ne forçait aucune option, contrairement à `buildContamination` qui en épingle dix. Or
-la config du run porte `fleeEnabled: false`, et `ZombieMood` fait
-`fleeThreat = fleeEnabled ? flightThreat(...) : null`. Le zombie n'entrait donc **jamais** en FLEEING
-et le cri de détresse ne pouvait pas partir. `distressScreams=0` n'était pas un aléa mais une
-certitude — le message du check disait déjà que sa prémisse était fausse.
+### Où on en est
 
-Un second défaut se cachait derrière : vanilla efface `lastHurtByMob` après ~100 ticks alors que la
-fenêtre du test en fait 400. Passé ce délai `currentThreat` renvoie null, et le repli est « le joueur
-le plus proche » — un serveur headless n'en a aucun. Même avec `fleeEnabled`, le cri n'aurait été
-possible que dans les 100 premiers ticks.
+**11 suites sur 12, systématiquement**, et 12/12 quand `shade` tombe du bon côté de son tirage. Les
+onze autres sont désormais stables — c'était l'objectif, et il tient campagne après campagne.
 
-L'arène épingle désormais les cinq options dont elle dépend, et rafraîchit la mémoire d'agresseur à
-chaque tick de la fenêtre.
+### `shade/reaches-shelter` — ouvert, mesuré à ~2/3 de réussite
 
-### Vérification
+**Deux tentatives de correction, toutes deux révoquées après mesure.** Elles valent d'être racontées :
 
-Cinq exécutions de chaque suite après correction : **10/10 PASS**.
+- **Couper la pluie de l'aire A avant l'aire B.** Raisonnement : B a le soleil pour menace, la pluie
+  n'a rien à y faire. Faux. Le log montre que sous la pluie le zombie **ne brûle pas**
+  (`onFire=false`) et cherche son abri quand même — la recherche est pilotée par l'exposition, pas par
+  les dégâts. Ciel dégagé, il prend feu : −9 PV en 120 ticks, il lâche sa cible et erre. Le check est
+  passé de « passe » à 1/5 sur ce seul changement.
+- **Élargir la fenêtre B de 400 à 900 ticks.** Il a fini **au-delà** de l'abri (x=157 alors que le
+  toit couvre z 458-462). Plus de temps ne le fait pas converger.
 
-| | avant | après (5 runs) |
-|---|---|---|
-| `flee-rally` cris de détresse | 0 (toujours) | 1 à 2 |
-| `pack` distance de départ | 313 · 646 · 745 | **127,50 constant** |
-| `pack` écart max au centre | 199 · 561 · 728 | 20,9 à 27,8 (seuil 40) |
+**Une erreur de protocole de ma part, corrigée :** j'ai d'abord mesuré un taux de 0/4 avec un script
+qui ne restaurait pas le monde entre les runs. Ce n'était pas le check, c'était mon monde qui se
+dégradait. Avec la restauration, la mesure honnête est **2 réussites sur 3**.
 
-La distance de départ enfin constante est la preuve directe que la sonde verrouille la bonne meute.
+Ce qu'on sait donc : la recherche s'engage à chaque fois (`seek latched=true`), le zombie marche, et
+environ une fois sur trois il n'entre pas sous le toit — position finale différente à chaque échec
+(x=151, 153, 155, 157). Le diagnostic le montre en état `PURSUING_PLAYER`, occupé à poursuivre plutôt
+qu'à se mettre à l'abri.
 
-**Ce que ça corrige aussi dans ce document :** la section précédente parlait de checks « instables ».
-C'était encore inexact. `flee-rally` échouait de façon déterministe ; seul `pack` variait, et sa
-variation était le tirage aléatoire d'une meute, pas du bruit de mesure.
+Aller plus loin demande d'entrer dans le comportement de la recherche d'ombre du mod, pas dans
+l'arène. Continuer à ajuster des constantes jusqu'au vert reviendrait à régler le test plutôt que le
+problème — et rien ne permet d'exclure que ce check signale quelque chose de réel.
 
 ## 7. Points ouverts
 
