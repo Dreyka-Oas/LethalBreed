@@ -5,10 +5,15 @@ Branche : `chore/player-jar-only` · design validé le 2026-08-14
 ## 1. Le problème
 
 Le Bombeur (`SpecialType.BOMBEUR`, débloqué phase 4, poids 7) s'amorce dès que sa cible est à 3 blocs, puis
-explose en **0.83 seconde** (`charge += 0.06` par activation, détonation à 1.0). Deux défauts :
+gonfle jusqu'à détoner (`charge += 0.06` par activation, détonation à 1.0). Trois défauts :
 
-1. **Aucune fenêtre de réaction.** 0.83 s ne suffit ni à reculer, ni à se mettre à couvert, ni à poser un bloc.
-2. **Fuir ne sert à rien.** Une fois `charge > 0`, `armed` reste vrai pour toujours : le Bombeur poursuit et
+1. **La durée est couplée à un réglage de performance.** `SpecialBehavior.tick` n'est pas appelé à chaque
+   tick : `LodBucketPass` n'active chaque zombie qu'une fois tous les `tickBuckets` ticks (5 par défaut).
+   La mèche dure donc `16.7 activations × 5 = 83 ticks ≈ 4.2 s` — mais passer `tickBuckets` à 10 la ferait
+   silencieusement passer à 8.3 s, et `autoScaleBuckets` peut faire varier ce nombre à l'exécution. Le tempo
+   d'une mécanique de gameplay ne doit pas dépendre d'un levier d'optimisation.
+2. **La durée est fixe.** Toujours la même : une fois le tempo appris, le Bombeur devient un métronome.
+3. **Fuir ne sert à rien.** Une fois `charge > 0`, `armed` reste vrai pour toujours : le Bombeur poursuit et
    détone quoi qu'il arrive. En phase 14 son multiplicateur de vitesse avoisine ×1.5, donc il court plus vite
    qu'un joueur en sprint — sortir de portée est de toute façon impossible.
 
@@ -37,8 +42,15 @@ puissance 3.0 inflige **23.4 dégâts au contact** sur 20 PV — un one-shot san
 Tirée **une seule fois à l'amorçage**, uniformément dans `[specialBombeurFuseMinTicks,
 specialBombeurFuseMaxTicks]` = **30 à 120 ticks** (1.5 s à 6 s).
 
-`charge` reste la progression `0 → 1` : elle est déjà synchronisée aux clients pour le gonflement du ventre,
-donc le rendu existant continue de fonctionner sans y toucher. Seule la **vitesse** de remplissage change.
+**Échéance absolue, pas accumulation.** À l'amorçage on retient l'instant (`level.getGameTime()`) et la durée
+tirée ; la détonation a lieu quand `now − armedAt ≥ fuseTicks`. C'est ce qui découple le tempo de
+`tickBuckets` : quelle que soit la cadence d'activation, 30 ticks de jeu restent 1.5 seconde. Une activation
+manquée ne rallonge plus la mèche, elle décale juste le moment où on constate l'échéance (au pire de
+`tickBuckets` ticks, soit 0.25 s par défaut).
+
+`charge` reste la progression `0 → 1` synchronisée aux clients pour le gonflement du ventre — mais elle est
+désormais **dérivée** de l'échéance (`(now − armedAt) / fuseTicks`) au lieu d'être accumulée. Le rendu
+existant continue de fonctionner sans y toucher, et le gonflement devient linéaire en temps réel.
 
 Conséquence gratuite et voulue : le ventre gonfle sur toute la durée de la mèche, donc **un Bombeur qui gonfle
 lentement annonce visuellement une grosse explosion**. Le tell existe déjà, il devient informatif.
@@ -146,8 +158,8 @@ Si `specialBombeurBlindThreshold` vaut 1.0, `(1 − seuil)` s'annule : la cécit
 
 | Fichier | Changement |
 |---|---|
-| `special/SpecialAttachment.java` | nouveau `BOMBEUR_RATE` (`Float`, transitoire comme `BOMBEUR_CHARGE`) |
-| `special/SpecialBehavior.java` | tire la mèche à l'amorçage, accumule `charge += rate` |
+| `special/SpecialAttachment.java` | nouveaux `BOMBEUR_FUSE` (`Integer`, durée tirée) et `BOMBEUR_ARMED_AT` (`Long`, instant d'amorçage) — transitoires, non synchronisés |
+| `special/SpecialBehavior.java` | tire la mèche à l'amorçage, dérive `charge` de l'échéance, détone à expiration |
 | `special/runtime/BombeurBlast.java` | **nouveau** — calcul pur : `rate → ratio`, `ratio → power`, `(ratio, dist) → intensity`, `intensity → effets` |
 | `special/runtime/SpecialAbilities.java` | `bomb()` calcule la puissance et déclenche l'éclaboussure |
 | `config/domain/SpecialVariantConfig.java` | champs de config (voir §8) |
@@ -199,6 +211,9 @@ les bornes, le code doit les réordonner à la lecture plutôt que produire un `
 
 - La mèche mesurée tombe dans `[30, 120]` ticks et **varie d'un Bombeur à l'autre** (une valeur constante sur
   N zombies est un échec — c'est précisément le bug que le design corrige).
+- **La durée réelle est indépendante de `tickBuckets`** : la même mèche tirée mesure le même nombre de ticks
+  de jeu avec `tickBuckets` à 1 et à 10. C'est le check qui pinne la correction du défaut n°1 ; sans lui, une
+  régression vers l'accumulation par activation repasserait inaperçue.
 - Une victime placée **hors du souffle mais dans l'éclaboussure** prend 0 dégât et porte bien les effets.
   C'est le check central : il vérifie les deux rayons d'un coup.
 - Une victime **hors de l'éclaboussure** ne porte aucun effet.
