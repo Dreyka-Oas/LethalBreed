@@ -37,7 +37,20 @@ public final class SpecialTestEvaluator {
                 case SPRINTEUR -> { pass = z.getEffect(MobEffects.SPEED) != null; detail = "speed effect"; }
                 case BONDISSEUR -> { pass = z.getEffect(LethalBreedEffects.LEAP) != null; detail = "LEAP effect"; }
                 case JUGGERNAUT -> { pass = z.getEffect(MobEffects.RESISTANCE) != null; detail = "resistance effect"; }
-                case BOMBEUR -> { pass = z.isRemoved(); detail = "exploded (removed)"; }
+                case BOMBEUR -> {
+                    boolean gone = z.isRemoved();
+                    var cow = c.cow();
+                    boolean alive = cow != null && cow.isAlive();
+                    // Nausea AND Slowness together: both are unconditional in the splatter, so requiring the
+                    // pair rules out a stray effect from some other source passing as a hit.
+                    boolean splattered = alive
+                            && cow.getEffect(MobEffects.NAUSEA) != null
+                            && cow.getEffect(MobEffects.SLOWNESS) != null;
+                    // A dead witness proves the blast reached it, which says nothing about the wider ring —
+                    // only a survivor can carry the splatter, so only then is the effect check meaningful.
+                    pass = gone && (!alive || splattered);
+                    detail = "exploded=" + gone + " cowAlive=" + alive + " splattered=" + splattered;
+                }
                 case HURLEUR -> {
                     pass = SpecialBehavior.HURL_COUNT.get() > 0;
                     boolean hasTgt = z.getTarget() != null;
