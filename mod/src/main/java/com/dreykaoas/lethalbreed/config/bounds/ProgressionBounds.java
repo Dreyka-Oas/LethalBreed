@@ -56,9 +56,14 @@ public final class ProgressionBounds {
         r.b("specialSplitterPhase", 0, 1_000_000);
         r.b("specialSplitterWeight", 0, 1_000_000);
         // Per-type behaviour magnitudes.
-        r.b("specialBombeurPower", 0, 100);
         r.b("specialBombeurArmRange", 0, 64);
-        r.b("specialBombeurFusePerTick", 0.001, 1.0);
+        r.b("specialBombeurFuseMinTicks", 1, 6_000);
+        r.b("specialBombeurFuseMaxTicks", 1, 6_000);
+        r.b("specialBombeurPowerMin", 0, 100);
+        r.b("specialBombeurPowerMax", 0, 100);
+        r.b("specialBombeurSplatterMul", 0, 10);
+        r.b("specialBombeurInfectChance", 0, 1);
+        r.b("specialBombeurBlindThreshold", 0, 1);
         r.b("specialHurleurRadius", 0, 128);
         r.b("specialSoigneurRadius", 0, 128);
         r.b("specialSoigneurRegenTicks", 1, 72_000);
