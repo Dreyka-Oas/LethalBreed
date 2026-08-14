@@ -56,7 +56,7 @@ public final class Leap {
         double ndx = dx * inv;
         double ndz = dz * inv;
         // Only leap if there's ground to land on — never leap into a gap / off a short bridge.
-        if (!hasLanding(level, ndx, ndz)) {
+        if (!hasLanding(level, ndx, ndz, ldf)) {
             return false;
         }
         entity.setDeltaMovement(ndx * CombatMoveConfig.leapHorizontalSpeed * leapFactor * ldf,
@@ -68,9 +68,16 @@ public final class Leap {
         return true;
     }
 
-    /** True if there is solid ground near where a leap would land (so we don't jump into a gap). */
-    private boolean hasLanding(ServerLevel level, double ndx, double ndz) {
-        int dist = CombatMoveConfig.leapLandingScanDist;
+    /**
+     * True if there is solid ground near where a leap would land (so we don't jump into a gap).
+     *
+     * <p>The probe follows {@code ldf}. The launch velocity below is multiplied by it — a Bondisseur carrying
+     * LEAP flies roughly twice as far — while this scan used a flat {@code leapLandingScanDist}, so the
+     * invariant "never leap into a gap" was checked at 3 blocks for a jump landing at 7 or more. Scaling the
+     * probe by the same factor keeps the check aimed where the zombie will actually come down.
+     */
+    private boolean hasLanding(ServerLevel level, double ndx, double ndz, double ldf) {
+        int dist = Mth.ceil(CombatMoveConfig.leapLandingScanDist * Math.max(1.0, ldf));
         int lx = Mth.floor(entity.getX() + ndx * dist);
         int lz = Mth.floor(entity.getZ() + ndz * dist);
         int ly = Mth.floor(entity.getY());

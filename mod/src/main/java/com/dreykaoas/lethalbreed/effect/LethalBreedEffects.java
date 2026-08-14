@@ -8,6 +8,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 
 /**
@@ -34,11 +35,18 @@ public final class LethalBreedEffects {
         return SUPER_CONTAMINATION != null && entity.hasEffect(SUPER_CONTAMINATION);
     }
 
+    /** Highest Resistance this mod will ever grant. Vanilla reduces damage by {@code 5*(amp+1)} out of 25, so
+     *  amplifier 4 is exactly total immunity: no sword, arrow, fire, fall or poison can touch the mob and
+     *  {@code /kill} is the only way out. Both the amplifier bounds that reach here allow 9, so the ceiling
+     *  is enforced at the one place every path passes through rather than trusted to each config. */
+    private static final int MAX_RESISTANCE_AMP = 3;
+
     /** Apply an INFINITE-duration effect at {@code amplifier}, hidden (no ambient, no particles) but with its
      *  icon — the shared "buff for the zombie's whole life, invisible to players" idiom used by the special
      *  roller and the per-zombie variation roll. */
     public static void applyInfinite(LivingEntity entity, Holder<MobEffect> effect, int amplifier) {
-        entity.addEffect(new MobEffectInstance(effect, MobEffectInstance.INFINITE_DURATION, amplifier,
+        int amp = effect == MobEffects.RESISTANCE ? Math.min(amplifier, MAX_RESISTANCE_AMP) : amplifier;
+        entity.addEffect(new MobEffectInstance(effect, MobEffectInstance.INFINITE_DURATION, amp,
                 false, false, true));
     }
 
