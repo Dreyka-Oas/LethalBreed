@@ -36,7 +36,11 @@ public final class SpecialTestHarness {
         ServerLevel ow = server.overworld();
         if (tick == 5) {
             SpecialTestArena.build(ow, server, CASES);
-        } else if (tick == 150) {
+        } else if (tick > 5 && tick < 200) {
+            // Some observations cannot wait for tick 200 — see SpecialTestEvaluator.sample.
+            SpecialTestEvaluator.sample(CASES);
+        }
+        if (tick == 150) {
             SpecialTestEvaluator.killSplitters(ow, CASES);
         } else if (tick == 200) {
             SpecialTestEvaluator.evaluate(ow, CASES);

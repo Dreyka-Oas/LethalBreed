@@ -1,11 +1,15 @@
 package com.dreykaoas.lethalbreed.dev.special;
 
 import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
+import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
+import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
+import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import net.minecraft.core.BlockPos;
@@ -30,6 +34,20 @@ public final class SpecialTestArena {
     /** Build the arena and append the created cases to {@code cases}. */
     public static void build(ServerLevel ow, MinecraftServer server, List<SpecialTestCase> cases) {
         server.setDifficulty(Difficulty.HARD, true);
+        // Phase 1, not phase 0. This is the only one of the twelve rigs that never set a phase, so it inherited
+        // whatever the save happened to carry; on a fresh world that is 0, where SpawnFilter culls every
+        // MONSTER at ENTITY_LOAD — the arena then builds ZERO cases and the suite prints "0/0 PASS" plus its
+        // ALL DONE marker, a green gate proving nothing. Phase 1 also leaves SpecialType.available(1) empty
+        // (the earliest unlock is 2), so no Splitter or Nécromancien child can roll a special of its own and
+        // muddy the "children are plain" assertions.
+        PhaseManager.get().setPhase(server, 1);
+        // Silence every other source of the effects the passive checks look for: at phase 14 roughly a third
+        // of zombies carry a pool-rolled Speed/Leap/Resistance, so those checks would pass with the special
+        // roller deleted outright.
+        WorldSpawnConfig.randomEffectEnabled = false;
+        SpecialBehavior.HURL_COUNT.set(0);
+        SpecialBehavior.HEAL_COUNT.set(0);
+        SpecialBehavior.SUMMON_COUNT.set(0);
         ow.setDayTime(18000L);                              // midnight — no sun-burn
         // No natural spawns — else stray monsters give the "lone" test zombies false targets (SPAWN_MOBS was
         // RULE_DOMOBSPAWNING in older mappings).
@@ -65,9 +83,18 @@ public final class SpecialTestArena {
 
             Cow cow = spawnCow(ow, cx, type, z);
             Zombie extra = spawnExtra(ow, cx, type);
+            // A Soigneur only heals what is hurt, so the witness has to be hurt for the aura to be observable
+            // at all. WOUNDED is far below any max health the phase can produce, and nothing else on this
+            // sealed platform can damage it, so any rise above this figure came from the aura.
+            if (type == SpecialType.SOIGNEUR && extra != null) {
+                extra.setHealth(SpecialTestCase.WOUNDED);
+            }
             cases.add(new SpecialTestCase(type, z, cow, extra, pos));
         }
         LethalBreed.LOGGER.info("[SpecialTest] arena built — {} cases", cases.size());
+        // The suite must fail loudly when it builds nothing, instead of reporting a vacuous 0/0 pass.
+        DevVerdict.check(SpecialTestEvaluator.SUITE, "arene-construite", cases.size() == types.length,
+                "cases=" + cases.size() + "/" + types.length + " phase=" + PhaseManager.current());
     }
 
     /** Per-case sheltered platform. GLOWSTONE roof = fully lit → no hostile mobs spawn on it. */

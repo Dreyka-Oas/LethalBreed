@@ -5,6 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 
 import com.dreykaoas.lethalbreed.entity.LODLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
+import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.TargetSelector;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -103,6 +104,14 @@ public final class LODManager {
             sz.pursuit().clearTarget();
             sz.pursuit().clearMemory();
             lod = LODLevel.FROZEN;
+        }
+        // A Bombeur whose fuse is lit has committed to detonating, so it must keep being ticked to get there.
+        // LodBucketPass drops a FROZEN zombie before tick() runs, which would stop the fuse mid-burn and turn
+        // it into a dormant mine — one that goes off the moment a player wanders back within range, since the
+        // deadline it wakes up to is long past. LOW still runs the special, just on the distance throttle, so
+        // detonation can land a few activations late; that is the whole cost of keeping it honest.
+        if (lod == LODLevel.FROZEN && SpecialBehavior.fuseIsLit(sz.entity())) {
+            lod = LODLevel.LOW;
         }
         sz.setLod(lod);
         return lod;

@@ -9,4 +9,6 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 public record SpecialTestCase(SpecialType type, Zombie z, Cow cow, Zombie extra, BlockPos pos) {
     static final int Y = 101;
     static final int SPACING = 60; // > detectRadius (10) so cases don't cross-target
+    /** Health the Soigneur's witness is dropped to at build, so any later rise is attributable to the aura. */
+    public static final float WOUNDED = 4.0f;
 }
