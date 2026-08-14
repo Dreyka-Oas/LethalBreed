@@ -40,6 +40,9 @@ public final class ZombieVariation {
     private static final Identifier PDMG_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_dmg");
     private static final Identifier PSPD_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_spd");
     private static final long PHASE_SALT = 91237L;
+    /** Distinct salt so the special roll no longer consumes the phase RNG — it used to share {@code r} inside
+     *  applyPhase, which coupled a zombie's variant to how many phase rolls happened before it. */
+    private static final long SPECIAL_SALT = 55501L;
 
     public static void apply(Zombie z) {
         SpawnControl.stripEquipment(z); // zombies never carry weapons/tools/armor (also clears vanilla natural gear + pickups)
@@ -56,6 +59,15 @@ public final class ZombieVariation {
         } else {
             applyRandomEffect(z); // legacy flat effect roll when the phase system is off
         }
+        // Outside the branch on purpose. The special roll used to live inside applyPhase, so turning
+        // phaseSystemEnabled off — a legitimate, exposed option — silently disabled every special variant for
+        // the life of the world, while some forty special* options stayed visible and editable in the GUI with
+        // nothing to act on. With the phase system off there is no phase to gate unlocks, so the roll runs at
+        // the floor phase where only the earliest types are available.
+        com.dreykaoas.lethalbreed.special.SpecialRoller.roll(z, seeded(z, SPECIAL_SALT),
+                ProgressionConfig.phaseSystemEnabled
+                        ? PhaseManager.current()
+                        : com.dreykaoas.lethalbreed.special.SpecialType.maxUnlockPhase());
     }
 
     /**
@@ -72,7 +84,6 @@ public final class ZombieVariation {
         applyMultiplier(z, Attributes.MOVEMENT_SPEED, PSPD_ID, roll(r, p.spdMin(), p.spdMax()));
         z.setHealth(z.getMaxHealth());
         applyPhaseEffects(z, r, p);
-        com.dreykaoas.lethalbreed.special.SpecialRoller.roll(z, r, PhaseManager.current());
     }
 
     /** Apply {@code effCount} beneficial effects (chance-gated) from the pool, amplifier up to the phase max.
@@ -118,11 +129,16 @@ public final class ZombieVariation {
     }
 
     /** Beneficial effects useful to a hunting zombie (chase / damage / tank / dig) + custom LEAP. No
-     *  FIRE_RESISTANCE: every zombie must burn in daylight, so a sun-immunity buff is excluded on purpose. */
+     *  FIRE_RESISTANCE: every zombie must burn in daylight, so a sun-immunity buff is excluded on purpose.
+     *
+     *  <p>No REGENERATION either, and not as a balance call: vanilla's {@code canBeAffected} rejects it for
+     *  everything tagged {@code ignores_poison_and_regen}, which covers {@code #undead}. Leaving it in the
+     *  pool meant roughly one buff roll in nine silently did nothing — and since the roll is seeded on the
+     *  zombie's UUID, the same zombie drew the same blank every time its chunk reloaded. */
     @SuppressWarnings("unchecked")
     private static Holder<MobEffect>[] effectPool() {
         return new Holder[] {
-                MobEffects.SPEED, MobEffects.STRENGTH, MobEffects.RESISTANCE, MobEffects.REGENERATION,
+                MobEffects.SPEED, MobEffects.STRENGTH, MobEffects.RESISTANCE,
                 MobEffects.JUMP_BOOST, MobEffects.HASTE, MobEffects.HEALTH_BOOST,
                 MobEffects.ABSORPTION, LethalBreedEffects.LEAP,
         };

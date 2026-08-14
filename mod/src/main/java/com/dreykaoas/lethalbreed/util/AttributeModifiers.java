@@ -30,4 +30,12 @@ public final class AttributeModifiers {
         inst.addOrReplacePermanentModifier(
                 new AttributeModifier(id, factor - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
     }
+
+    /** Drop a modifier this class stamped earlier. No-op if the entity lacks {@code attr} or never carried it. */
+    public static void remove(LivingEntity entity, Holder<Attribute> attr, String idPath) {
+        AttributeInstance inst = entity.getAttribute(attr);
+        if (inst != null) {
+            inst.removeModifier(Identifier.fromNamespaceAndPath("lethalbreed", idPath));
+        }
+    }
 }

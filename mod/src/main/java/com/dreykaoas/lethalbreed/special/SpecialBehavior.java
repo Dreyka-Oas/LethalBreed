@@ -21,6 +21,19 @@ public final class SpecialBehavior {
     public static final AtomicInteger HURL_COUNT = new AtomicInteger();
     public static final AtomicInteger HEAL_COUNT = new AtomicInteger();
 
+    /**
+     * True while a Bombeur's fuse is burning — it has armed and is committed to detonating.
+     *
+     * <p>Read by {@code LODManager} to refuse FROZEN for such a zombie. {@code LodBucketPass} skips a FROZEN
+     * zombie BEFORE it ever reaches {@code tick()}, so freezing a lit Bombeur stops its fuse mid-burn: the
+     * belly stops swelling client-side and it becomes a dormant mine that detonates the instant a player
+     * wanders back into range, however many minutes later. The deadline is absolute, so the fix is simply to
+     * keep the zombie ticking until it goes off.
+     */
+    public static boolean fuseIsLit(Zombie z) {
+        return z.getAttachedOrElse(SpecialAttachment.BOMBEUR_FUSE, 0) > 0;
+    }
+
     /** Called every activation from {@code SmartZombie.tick}; each case self-gates on target + cooldown. */
     public static void tick(SmartZombie sz, ServerLevel level, WorldAIContext ctx) {
         SpecialType t = sz.pursuit().special();

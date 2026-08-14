@@ -7,12 +7,14 @@ import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
+import com.dreykaoas.lethalbreed.util.Players;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -42,9 +44,14 @@ public final class SpecialAbilities {
 
         // Gather BEFORE the explosion: it kills and flings victims, and anyone it launched out of the ring
         // was still standing in the gore at the moment it burst.
+        // Players.isTargetable gates every other way the mod touches a player (targeting, sound, flow field,
+        // mood, damage events). The splatter must respect it too: vanilla already shields a spectator from the
+        // blast, and without this a spectator flying past would eat Nausea, Poison, Slowness and — past
+        // intensity 0.75 — a black screen. It is also the only infection path that needs no damage event.
         List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(cx - splatR, cy - splatR, cz - splatR, cx + splatR, cy + splatR, cz + splatR),
-                e -> e != z && e.isAlive() && !(e instanceof Zombie));
+                e -> e != z && e.isAlive() && !(e instanceof Zombie)
+                        && !(e instanceof Player p && !Players.isTargetable(p)));
         RandomSource rng = z.getRandom();
 
         level.explode(z, cx, cy, cz, (float) power, Level.ExplosionInteraction.NONE);
@@ -90,15 +97,42 @@ public final class SpecialAbilities {
         }
     }
 
-    /** SOIGNEUR: grant regeneration to nearby living smart zombies. */
+    /**
+     * SOIGNEUR: restore health to nearby living smart zombies.
+     *
+     * <p>This used to apply {@link MobEffects#REGENERATION} — and healed nothing at all. Vanilla's
+     * {@code canBeAffected} rejects Regeneration for everything tagged {@code ignores_poison_and_regen},
+     * which covers {@code #undead} and therefore every zombie; {@code addEffect} bails out before writing,
+     * and {@code forceAddEffect} runs the same check first, so neither route works. The aura was a no-op for
+     * its whole existence, hidden because the dev counter incremented regardless of the return value.
+     *
+     * <p>Forcing the effect through would mean a mixin exempting Regeneration globally, which would also let
+     * every vanilla regeneration potion, beacon and lingering cloud heal zombies — far outside this variant's
+     * remit. Healing directly is the mechanic that was actually meant.
+     *
+     * <p>{@code specialSoigneurRegenTicks} and {@code specialSoigneurRegenAmp} keep their names and their
+     * arithmetic: the heal is what that Regeneration WOULD have delivered over its full duration, i.e.
+     * {@code ticks / (50 >> amp)} health, so tuning either option still moves the number the same way.
+     */
+    /** Health one activation restores: what the configured Regeneration would have healed over its duration.
+     *  Vanilla regen heals 1 HP every {@code max(50 >> amp, 1)} ticks, hence the shift. */
+    static float healAmount() {
+        int period = Math.max(50 >> Math.max(0, SpecialVariantConfig.specialSoigneurRegenAmp), 1);
+        return Math.max(0, SpecialVariantConfig.specialSoigneurRegenTicks) / (float) period;
+    }
+
     public static void heal(SmartZombie sz, Zombie z, WorldAIContext ctx) {
+        float amount = healAmount();
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialSoigneurRadius)) {
             if (o != sz && o.entity().isAlive()) {
-                o.entity().addEffect(new MobEffectInstance(MobEffects.REGENERATION,
-                        SpecialVariantConfig.specialSoigneurRegenTicks, SpecialVariantConfig.specialSoigneurRegenAmp,
-                        false, false, true));
-                SpecialBehavior.HEAL_COUNT.incrementAndGet();
+                Zombie other = o.entity();
+                // Count only healing that actually landed. A counter that ticks up on a full-health zombie is
+                // exactly what let the no-op hide for so long, and the dev suite reads this counter.
+                if (other.getHealth() < other.getMaxHealth() && amount > 0.0f) {
+                    other.heal(amount);
+                    SpecialBehavior.HEAL_COUNT.incrementAndGet();
+                }
             }
         }
     }

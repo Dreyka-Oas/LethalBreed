@@ -86,6 +86,19 @@ public enum SpecialType {
         return NONE;
     }
 
+    /** The highest unlock phase any type asks for — i.e. the phase at which every type is available.
+     *  Used when the phase system is switched off: with no progression there is no reason to keep content
+     *  permanently locked, so the roll behaves as though everything had been unlocked. */
+    public static int maxUnlockPhase() {
+        int max = 0;
+        for (SpecialType t : values()) {
+            if (t != NONE) {
+                max = Math.max(max, t.unlockPhase());
+            }
+        }
+        return max;
+    }
+
     /** Types unlocked at or below the given phase (excludes NONE). */
     public static List<SpecialType> available(int phase) {
         List<SpecialType> out = new ArrayList<>();
