@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
@@ -20,12 +21,18 @@ public final class SpecialDeath {
         }
         int count = SpecialVariantConfig.specialSplitterChildren;
         int spread = SpecialVariantConfig.specialSplitterSpread;
-        double scale = SpecialVariantConfig.specialSplitterChildScale;
+        // Floored like every other SCALE factor: the bound allows 0.05, and nothing should be able to shrink a
+        // zombie to an invisible speck.
+        double scale = Math.max(ExpertConfig.expertAttributeFloor,
+                SpecialVariantConfig.specialSplitterChildScale);
         for (int i = 0; i < count; i++) {
             Zombie child = ChildSpawner.spawnNear(level, z, spread);
             if (child != null) {
                 SpecialRoller.assign(child, SpecialType.NONE); // no chain-splitting
-                AttributeModifiers.multiplyBase(child, Attributes.SCALE, "split_small", scale);
+                // multiplyTotal, not multiplyBase: the child already carries its own rand_scale roll, and
+                // summing the deltas made the real shrink drift between 0.53 and 0.68 instead of the flat 0.6
+                // the option advertises. Composing gives exactly that fraction of whatever size it rolled.
+                AttributeModifiers.multiplyTotal(child, Attributes.SCALE, "split_small", scale);
             }
         }
     }

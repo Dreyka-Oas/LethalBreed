@@ -103,6 +103,12 @@ public final class LODManager {
         } else {
             sz.pursuit().clearTarget();
             sz.pursuit().clearMemory();
+            // Cut the vanilla target too, as the memory and pack branches above already do. Without it the
+            // mod declares the zombie frozen and target-less while vanilla's ZombieAttackGoal — never
+            // stripped — keeps driving it at whatever it last locked on, with no flow field, no breach, no
+            // pillaring and no tick() of ours. That divergence is what caps a Hurleur's rally: the zombies it
+            // hands a target to are re-frozen here on their next classify, yet keep walking.
+            sz.entity().setTarget(null);
             lod = LODLevel.FROZEN;
         }
         // A Bombeur whose fuse is lit has committed to detonating, so it must keep being ticked to get there.

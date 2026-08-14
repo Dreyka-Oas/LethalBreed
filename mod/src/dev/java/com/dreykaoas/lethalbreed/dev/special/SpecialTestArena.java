@@ -21,6 +21,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
@@ -72,6 +73,14 @@ public final class SpecialTestArena {
             BlockPos pos = new BlockPos(cx, Y, 0);
             ArenaBuilder.forceChunks(ow, cx);
             buildPlatform(ow, cx);
+            // Sweep the platform before using it. Summoned and split children are setPersistenceRequired and
+            // this mod never despawns anything, so each run leaves its offspring standing exactly where the
+            // next run needs the space. That debris is not cosmetic: with 37 zombies left over, the
+            // Nécromancien's density cap refused to summon at all and the check failed on a world state its
+            // own previous runs had created.
+            for (Zombie stale : ow.getEntitiesOfClass(Zombie.class, new AABB(pos).inflate(24))) {
+                stale.discard();
+            }
 
             Zombie z = ArenaBuilder.spawnZombie(ow, pos);
             if (z == null) {

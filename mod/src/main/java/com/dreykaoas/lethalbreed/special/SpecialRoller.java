@@ -1,11 +1,14 @@
 package com.dreykaoas.lethalbreed.special;
 
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -68,7 +71,14 @@ public final class SpecialRoller {
         for (SpecialType t : pool) {
             total += t.weight();
         }
-        int pick = r.nextInt(Math.max(1, total));
+        // Every unlocked type is weighted 0, so the player has switched them all off. The old code clamped the
+        // bound to 1 and then fell through to pool.get(size-1), handing back a type whose weight explicitly
+        // said "never" — most visible at phase 2, where the pool is SPRINTEUR alone and zeroing its weight
+        // produced 100 % Sprinteurs.
+        if (total <= 0) {
+            return SpecialType.NONE;
+        }
+        int pick = r.nextInt(total);
         for (SpecialType t : pool) {
             pick -= t.weight();
             if (pick < 0) {
@@ -111,7 +121,15 @@ public final class SpecialRoller {
             case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialBondisseurLeapAmp);
             case JUGGERNAUT -> {
                 // Bulky tank via size/HP/resistance only — no armor (zombies never wear gear).
-                mul(z, Attributes.SCALE, "spc_scale", SpecialVariantConfig.specialJuggernautScale);
+                // The scale-up is skipped where the ceiling is too low. This runs at the TAIL of
+                // finalizeSpawn, i.e. AFTER vanilla accepted the spot using the UNSCALED silhouette, so
+                // growing regardless pushed the zombie's head into the ceiling of any two-block mine gallery:
+                // isInWall then deals IN_WALL damage every tick and the rarest variant quietly kills itself
+                // underground. A Juggernaut that cannot grow keeps its health and resistance, which is a
+                // better outcome than one that suffocates.
+                if (hasHeadroom(z, SpecialVariantConfig.specialJuggernautScale)) {
+                    mul(z, Attributes.SCALE, "spc_scale", SpecialVariantConfig.specialJuggernautScale);
+                }
                 mul(z, Attributes.MAX_HEALTH, "spc_hp", SpecialVariantConfig.specialJuggernautHealthMul);
                 z.setHealth(z.getMaxHealth());
                 infinite(z, MobEffects.RESISTANCE, SpecialVariantConfig.specialJuggernautResistanceAmp);
@@ -120,11 +138,34 @@ public final class SpecialRoller {
         }
     }
 
+    /** Whether the column above {@code z} can hold it once grown by {@code scale}. */
+    private static boolean hasHeadroom(Zombie z, double scale) {
+        if (scale <= 1.0) {
+            return true;
+        }
+        int needed = Mth.ceil(z.getBbHeight() * scale);
+        BlockPos foot = z.blockPosition();
+        for (int dy = 0; dy < needed; dy++) {
+            BlockPos at = foot.above(dy);
+            if (!z.level().getBlockState(at).getCollisionShape(z.level(), at).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static void infinite(Zombie z, Holder<MobEffect> effect, int amp) {
         LethalBreedEffects.applyInfinite(z, effect, amp);
     }
 
     private static void mul(Zombie z, Holder<Attribute> attr, String idPath, double factor) {
+        // Same floor ZombieVariation.applyMultiplier imposes on these two attributes, and for the same reason.
+        // The bounds allow 0, and the deltas of every ADD_MULTIPLIED_BASE modifier on an attribute SUM: a
+        // specialSprinteurSpeedMul of 0 contributes -1.0, which drags the total negative and clamps the value
+        // to zero. The Sprinteur then spawns completely immobile, wearing Speed II and its own nametag.
+        if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
+            factor = Math.max(ExpertConfig.expertAttributeFloor, factor);
+        }
         AttributeModifiers.multiplyBase(z, attr, idPath, factor);
     }
 }

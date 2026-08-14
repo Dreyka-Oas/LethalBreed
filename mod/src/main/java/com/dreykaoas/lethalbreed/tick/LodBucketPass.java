@@ -60,6 +60,9 @@ final class LodBucketPass {
             if (np == null) {
                 sz.pursuit().clearTarget();
                 sz.pursuit().clearMemory();
+                // Same reason as LODManager's terminal branch: clearing only OUR target leaves vanilla's
+                // never-stripped attack goal steering a zombie we have declared frozen.
+                sz.entity().setTarget(null);
                 sz.setLod(LODLevel.FROZEN);
                 return true;
             }

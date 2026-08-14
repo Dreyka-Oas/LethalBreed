@@ -31,6 +31,25 @@ public final class AttributeModifiers {
                 new AttributeModifier(id, factor - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
     }
 
+    /**
+     * Scale {@code attr}'s running TOTAL by {@code factor}, so this modifier composes with the others instead
+     * of summing against them.
+     *
+     * <p>{@link #multiplyBase} deltas all add together before being applied to the base once, which is right
+     * for independent rolls but wrong for "take whatever this ended up as, and halve it". A -0.40 delta next
+     * to a +0.25 variation roll yields 0.85 of base, not 0.60 of the varied size — and next to a +0.40 it
+     * yields exactly the original size, cancelling outright.
+     */
+    public static void multiplyTotal(LivingEntity entity, Holder<Attribute> attr, String idPath, double factor) {
+        AttributeInstance inst = entity.getAttribute(attr);
+        if (inst == null) {
+            return;
+        }
+        inst.addOrReplacePermanentModifier(new AttributeModifier(
+                Identifier.fromNamespaceAndPath("lethalbreed", idPath), factor - 1.0,
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+    }
+
     /** Drop a modifier this class stamped earlier. No-op if the entity lacks {@code attr} or never carried it. */
     public static void remove(LivingEntity entity, Holder<Attribute> attr, String idPath) {
         AttributeInstance inst = entity.getAttribute(attr);

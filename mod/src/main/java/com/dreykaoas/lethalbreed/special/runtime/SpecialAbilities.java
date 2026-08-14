@@ -2,11 +2,14 @@ package com.dreykaoas.lethalbreed.special.runtime;
 
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
+import com.dreykaoas.lethalbreed.special.SpecialRoller;
+import com.dreykaoas.lethalbreed.special.SpecialType;
 import com.dreykaoas.lethalbreed.util.Players;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -85,13 +88,37 @@ public final class SpecialAbilities {
         }
     }
 
-    /** HURLEUR: hand the caller's target to nearby target-less smart zombies. */
+    /**
+     * Health one activation restores: what the configured Regeneration would have healed over its duration.
+     * Vanilla regen heals 1 HP every {@code max(50 >> amp, 1)} ticks, hence the shift.
+     */
+    static float healAmount() {
+        int period = Math.max(50 >> Math.max(0, SpecialVariantConfig.specialSoigneurRegenAmp), 1);
+        return Math.max(0, SpecialVariantConfig.specialSoigneurRegenTicks) / (float) period;
+    }
+
+    /**
+     * HURLEUR: hand the caller's target to nearby target-less smart zombies.
+     *
+     * <p>The rally also plants a memory, exactly as {@code SoundEventBus} does for a heard noise. Without it
+     * the handover survived only until the recruit's next classify: {@code LODManager} re-runs its own
+     * detection, finds the prey outside that zombie's {@code targetDetectRadius}, and — with no memory to
+     * fall back on — drops straight to the terminal branch that clears everything and freezes. The rally
+     * would then be undone within a couple of activations, which is why a Hurleur never seemed to recruit
+     * more than one or two.
+     */
     public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAIContext ctx) {
+        long expire = z.level().getGameTime() + TargetingConfig.targetMemoryTicks;
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialHurleurRadius)) {
-            if (o != sz && !o.hasTarget()) {
+            // isAlive mirrors heal(): the grid can still hold a zombie for up to tickBuckets ticks after it
+            // dies, and retargeting a corpse is pure waste that also inflates the dev counter.
+            if (o != sz && o.entity().isAlive() && !o.hasTarget()) {
                 o.entity().setTarget(tgt);
                 o.pursuit().setTarget(tgt, tgt.getX(), tgt.getY(), tgt.getZ());
+                if (TargetingConfig.targetMemoryTicks > 0) {
+                    o.pursuit().rememberTarget(tgt.getX(), tgt.getY(), tgt.getZ(), expire);
+                }
                 SpecialBehavior.HURL_COUNT.incrementAndGet();
             }
         }
@@ -114,13 +141,6 @@ public final class SpecialAbilities {
      * arithmetic: the heal is what that Regeneration WOULD have delivered over its full duration, i.e.
      * {@code ticks / (50 >> amp)} health, so tuning either option still moves the number the same way.
      */
-    /** Health one activation restores: what the configured Regeneration would have healed over its duration.
-     *  Vanilla regen heals 1 HP every {@code max(50 >> amp, 1)} ticks, hence the shift. */
-    static float healAmount() {
-        int period = Math.max(50 >> Math.max(0, SpecialVariantConfig.specialSoigneurRegenAmp), 1);
-        return Math.max(0, SpecialVariantConfig.specialSoigneurRegenTicks) / (float) period;
-    }
-
     public static void heal(SmartZombie sz, Zombie z, WorldAIContext ctx) {
         float amount = healAmount();
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
@@ -157,7 +177,14 @@ public final class SpecialAbilities {
         int n = min + level.getRandom().nextInt(max - min + 1);
         int spread = SpecialVariantConfig.specialNecromancienSpread;
         for (int i = 0; i < n; i++) {
-            if (ChildSpawner.spawnNear(level, z, spread) != null) {
+            Zombie child = ChildSpawner.spawnNear(level, z, spread);
+            if (child != null) {
+                // No chain-summoning, mirroring SpecialDeath's rule for Splitter children. A child rolls its
+                // own special inside finalizeSpawn, and from the phase where this type exists that is a real
+                // chance of drawing NECROMANCIEN — each second-generation summoner then wanders into its own
+                // bubble where neither the density cap (a 12-block radius) nor the pack cap can see it, and
+                // nothing in this mod ever despawns.
+                SpecialRoller.assign(child, SpecialType.NONE);
                 SpecialBehavior.SUMMON_COUNT.incrementAndGet();
             }
         }
