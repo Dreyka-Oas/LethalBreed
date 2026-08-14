@@ -30,6 +30,23 @@ public final class SpecialAttachment {
                     .initializer(() -> 0.0f)
                     .syncWith(ByteBufCodecs.FLOAT, AttachmentSyncPredicate.all()));
 
+    /**
+     * BOMBEUR fuse length in GAME TICKS, rolled once when it arms; 0 means not armed yet. Transient and
+     * NOT synced — only the derived {@link #BOMBEUR_CHARGE} needs to reach clients.
+     */
+    public static final AttachmentType<Integer> BOMBEUR_FUSE = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "bombeur_fuse"),
+            builder -> builder.initializer(() -> 0));
+
+    /**
+     * Game time at which the BOMBEUR armed. With {@link #BOMBEUR_FUSE} this makes the detonation an absolute
+     * deadline rather than a per-activation accumulation — so the fuse lasts the same real time whatever
+     * {@code tickBuckets} is set to, and a skipped activation cannot stretch it.
+     */
+    public static final AttachmentType<Long> BOMBEUR_ARMED_AT = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "bombeur_armed_at"),
+            builder -> builder.initializer(() -> 0L));
+
     /** Force class-load so the attachments register during mod init. */
     public static void init() {}
 }

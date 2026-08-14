@@ -2,16 +2,21 @@ package com.dreykaoas.lethalbreed.special.runtime;
 
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+
+import java.util.List;
 
 /**
  * Per-activation behaviours for ACTIVE specials. Each method self-contains one ability; the dispatch in
@@ -20,11 +25,57 @@ import net.minecraft.world.level.Level;
 public final class SpecialAbilities {
     private SpecialAbilities() {}
 
-    /** BOMBEUR: explode and remove self when close to the target. */
-    public static void bomb(ServerLevel level, Zombie z) {
-        level.explode(z, z.getX(), z.getY() + 0.5, z.getZ(),
-                (float) SpecialVariantConfig.specialBombeurPower, Level.ExplosionInteraction.NONE);
+    /**
+     * BOMBEUR: burst, then splatter everything in the wider gore ring with infectious status effects.
+     *
+     * <p>The blast is only half of it. The splatter ring reaches {@code specialBombeurSplatterMul} times
+     * further, so retreating out of lethal range still leaves a victim inside the gore — distance buys
+     * hit points, not a clean escape.
+     *
+     * @param fuseTicks how long this Bombeur swelled; drives both the power and the splatter intensity
+     */
+    public static void bomb(ServerLevel level, Zombie z, int fuseTicks) {
+        double ratio = BombeurBlast.ratioOf(fuseTicks);
+        double power = BombeurBlast.powerFor(ratio);
+        double splatR = BombeurBlast.splatterRadius(power);
+        double cx = z.getX(), cy = z.getY() + 0.5, cz = z.getZ();
+
+        // Gather BEFORE the explosion: it kills and flings victims, and anyone it launched out of the ring
+        // was still standing in the gore at the moment it burst.
+        List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(cx - splatR, cy - splatR, cz - splatR, cx + splatR, cy + splatR, cz + splatR),
+                e -> e != z && e.isAlive() && !(e instanceof Zombie));
+        RandomSource rng = z.getRandom();
+
+        level.explode(z, cx, cy, cz, (float) power, Level.ExplosionInteraction.NONE);
         z.discard();
+
+        for (LivingEntity victim : caught) {
+            // The AABB is a box; the ring is a sphere. Re-measure so corners don't get splattered.
+            double intensity = BombeurBlast.intensity(ratio, Math.sqrt(victim.distanceToSqr(cx, cy, cz)), splatR);
+            if (intensity > 0.0) {
+                splatter(victim, intensity, rng);
+            }
+        }
+    }
+
+    /**
+     * Apply one victim's share of the gore. Zombies are filtered out by the caller: they are the vector, not
+     * the victim — and {@code contaminate()} refuses them anyway.
+     */
+    private static void splatter(LivingEntity victim, double intensity, RandomSource rng) {
+        victim.addEffect(new MobEffectInstance(MobEffects.NAUSEA, BombeurBlast.nauseaTicks(intensity), 0));
+        victim.addEffect(new MobEffectInstance(MobEffects.POISON,
+                BombeurBlast.poisonTicks(intensity), BombeurBlast.poisonAmp(intensity)));
+        victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
+                BombeurBlast.slowTicks(intensity), BombeurBlast.slowAmp(intensity)));
+        int blind = BombeurBlast.blindTicks(intensity);
+        if (blind > 0) {
+            victim.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, blind, 0));
+        }
+        if (rng.nextDouble() < BombeurBlast.infectChance(intensity)) {
+            ContaminationManager.contaminate(victim);
+        }
     }
 
     /** HURLEUR: hand the caller's target to nearby target-less smart zombies. */

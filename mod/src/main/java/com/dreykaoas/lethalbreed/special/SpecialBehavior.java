@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.special;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
+import com.dreykaoas.lethalbreed.special.runtime.BombeurBlast;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialAbilities;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialDeath;
 import net.minecraft.server.level.ServerLevel;
@@ -33,19 +34,28 @@ public final class SpecialBehavior {
         }
         switch (t) {
             case BOMBEUR -> {
-                // Belly-swell fuse: once the target is within 3 blocks the zombie commits — the belly
-                // charge ramps (synced to clients for the render-side inflation) and it explodes at full.
-                float charge = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_CHARGE, 0.0f);
-                boolean armed = charge > 0.0f;
-                double armRange = SpecialVariantConfig.specialBombeurArmRange;
-                boolean inRange = tgt != null && z.distanceToSqr(tgt) <= armRange * armRange;
-                if (armed || inRange) {
-                    charge += (float) SpecialVariantConfig.specialBombeurFusePerTick;
-                    if (charge >= 1.0f) {
-                        SpecialAbilities.bomb(level, z);
-                    } else {
-                        z.setAttached(SpecialAttachment.BOMBEUR_CHARGE, charge);
+                // Absolute deadline, not per-activation accumulation: this method only runs once every
+                // `tickBuckets` ticks, so counting activations tied a gameplay tempo to a performance knob —
+                // raising tickBuckets silently doubled the time before detonation.
+                int fuse = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_FUSE, 0);
+                long now = level.getGameTime();
+                if (fuse <= 0) {
+                    double armRange = SpecialVariantConfig.specialBombeurArmRange;
+                    boolean inRange = tgt != null && z.distanceToSqr(tgt) <= armRange * armRange;
+                    if (!inRange) {
+                        break;
                     }
+                    fuse = BombeurBlast.fuseTicksFor(z.getRandom().nextDouble());
+                    z.setAttached(SpecialAttachment.BOMBEUR_FUSE, fuse);
+                    z.setAttached(SpecialAttachment.BOMBEUR_ARMED_AT, now);
+                }
+                long elapsed = now - z.getAttachedOrElse(SpecialAttachment.BOMBEUR_ARMED_AT, now);
+                if (elapsed >= fuse) {
+                    SpecialAbilities.bomb(level, z, fuse);
+                } else {
+                    // Derived, not accumulated — the belly swells linearly in real time, so a slowly
+                    // inflating Bombeur reads as "long fuse", which is exactly "big explosion".
+                    z.setAttached(SpecialAttachment.BOMBEUR_CHARGE, (float) elapsed / fuse);
                 }
             }
             case HURLEUR -> {

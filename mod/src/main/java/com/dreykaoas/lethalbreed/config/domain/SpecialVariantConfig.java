@@ -47,13 +47,24 @@ public final class SpecialVariantConfig {
 
     // Per special type: behaviour magnitudes. Defaults reproduce the built-in behaviour exactly, so leaving
     // them untouched changes nothing. All read live at spawn/activation, so edits apply without a restart.
-    // -- Bombeur (ACTIVE): explosion + belly fuse.
-    /** Explosion power of a Bombeur detonation (vanilla TNT ≈ 4.0). */
-    public static double specialBombeurPower = 3.0;
+    // -- Bombeur (ACTIVE): timed fuse + explosion + infectious splatter.
     /** Distance (blocks) to the target at which a Bombeur arms and commits to detonating. */
     public static double specialBombeurArmRange = 3.0;
-    /** Belly charge added per activation; the Bombeur detonates once it reaches 1.0 (0.06 ≈ 17 activations). */
-    public static double specialBombeurFusePerTick = 0.06;
+    /** Shortest fuse, in GAME TICKS (not activations): the floor of the random roll made when it arms. */
+    public static int specialBombeurFuseMinTicks = 30;
+    /** Longest fuse, in GAME TICKS. A long fuse gives the victim time, and detonates harder for it. */
+    public static int specialBombeurFuseMaxTicks = 120;
+    /** Explosion power of the shortest fuse (vanilla TNT ≈ 4.0). */
+    public static double specialBombeurPowerMin = 2.0;
+    /** Explosion power of the longest fuse — the payoff for having swelled the whole time. */
+    public static double specialBombeurPowerMax = 5.0;
+    /** Splatter radius as a multiple of the blast radius. Above 1.0, backing out of lethal range still
+     *  leaves you inside the gore — which is the whole point of the ring. */
+    public static double specialBombeurSplatterMul = 1.5;
+    /** Contamination chance at intensity 1.0; scales down linearly with intensity. */
+    public static double specialBombeurInfectChance = 0.5;
+    /** Splatter intensity from which Blindness is applied. 1.0 disables Blindness entirely. */
+    public static double specialBombeurBlindThreshold = 0.75;
     // -- Hurleur (ACTIVE): rally.
     /** Radius (blocks) within which a Hurleur hands its target to nearby idle zombies. */
     public static double specialHurleurRadius = 24.0;
