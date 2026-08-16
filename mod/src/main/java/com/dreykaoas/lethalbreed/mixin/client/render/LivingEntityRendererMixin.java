@@ -1,8 +1,10 @@
 package com.dreykaoas.lethalbreed.mixin.client.render;
 
+import com.dreykaoas.lethalbreed.client.BombeurBellySmoothing;
 import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import com.dreykaoas.lethalbreed.entity.ZombieStateAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
+import com.dreykaoas.lethalbreed.special.runtime.BombeurBellySmoothingMath;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -33,34 +35,34 @@ public class LivingEntityRendererMixin {
                 : 0.0f;
         ZombieRenderFlags flags = (ZombieRenderFlags) state;
         flags.lethalbreed$bellyCharge(charge);
-        flags.lethalbreed$bellyChargeDisplayed(smoothedBellyCharge(flags, charge));
+        // The smoothing STATE (previous displayed value + timestamp) is read/written on the entity, not on
+        // `state`: LivingEntityRenderState is a brand-new object every frame (createRenderState() calls
+        // `new ZombieRenderState()` before extractRenderState runs), so anything stored there can never
+        // persist across frames. The client Zombie entity does persist, which is why BombeurBellySmoothing
+        // lives there — see that interface's javadoc. `state` keeps its existing role as the final value
+        // handed to the model, written once per frame below.
+        flags.lethalbreed$bellyChargeDisplayed(smoothedBellyCharge(entity, charge));
 
         boolean sleeping = entity instanceof Zombie
                 && entity.getAttachedOrElse(ZombieStateAttachment.SLEEPING, false);
         ((ZombieRenderFlags) state).lethalbreed$sleeping(sleeping);
     }
 
-    /** Characteristic smoothing time (seconds): smaller = catches up faster. 0.15 closes a server-update gap
-     *  (~0.25s at LOD HIGH) while staying imperceptible on a 1.5s fuse. */
-    private static final float SMOOTH_TIME_CONSTANT = 0.15f;
-
-    /** Pulls the displayed value toward the synced target by a factor depending on the real time elapsed
-     *  since the last call — independent of framerate and of the server update rate, so it stays smooth
-     *  regardless of either. Drops instantly if the target falls (the belly must never stay inflated on a
-     *  zombie that just respawned). */
-    private static float smoothedBellyCharge(ZombieRenderFlags flags, float target) {
+    /** Pulls the displayed belly charge toward {@code target}, using the previous value + timestamp
+     *  persisted on {@code entity} (see {@link BombeurBellySmoothing}). Non-zombies have no such state to
+     *  read and don't need smoothing — the target is already 0 for them. The actual maths live in
+     *  {@link BombeurBellySmoothingMath}, pure and unit-tested independently of Minecraft. */
+    private static float smoothedBellyCharge(LivingEntity entity, float target) {
+        if (!(entity instanceof BombeurBellySmoothing smoothing)) {
+            return target;
+        }
         long now = System.nanoTime();
-        long last = flags.lethalbreed$bellyChargeLastNanos();
-        float displayed = flags.lethalbreed$bellyChargeDisplayed();
-        flags.lethalbreed$bellyChargeLastNanos(now);
-        if (target <= 0.0f) {
-            return 0.0f; // no residual trail on a fresh / unarmed zombie
-        }
-        if (last == 0L || target < displayed) {
-            return target; // first call, or the target dropped (new fuse): no backward trail
-        }
-        float dt = (now - last) / 1_000_000_000.0f;
-        float t = Math.min(1.0f, dt / SMOOTH_TIME_CONSTANT);
-        return displayed + (target - displayed) * t;
+        long last = smoothing.lethalbreed$smoothedBellyChargeLastNanos();
+        float displayed = smoothing.lethalbreed$smoothedBellyCharge();
+        float dt = last == 0L ? 0.0f : (now - last) / 1_000_000_000.0f;
+        float result = BombeurBellySmoothingMath.smooth(last != 0L, displayed, target, dt);
+        smoothing.lethalbreed$smoothedBellyCharge(result);
+        smoothing.lethalbreed$smoothedBellyChargeLastNanos(now);
+        return result;
     }
 }
