@@ -37,7 +37,6 @@ final class PackSetup {
         PhaseManager.get().setPhase(server, 1);
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
-        cfg.set("forceDayTime", false);
         ow.setDayTime(NIGHT);
         cfg.set("packEnabled", true);
         cfg.set("packMigrationEnabled", true);

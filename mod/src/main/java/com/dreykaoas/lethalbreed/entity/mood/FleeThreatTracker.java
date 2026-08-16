@@ -11,9 +11,12 @@ public final class FleeThreatTracker {
     private double lastThreatDistSq = -1.0;
     private int stuckActivations = 0;
 
-    /** Record the current distance² to the threat; returns true if ground was gained since the last call. */
+    /** Record the current distance² to the threat; returns true if ground was gained since the last call. The
+     *  gain has to clear {@link ZombieMoodConfig#fleeGroundGainThreshold} so ordinary jitter (a step sideways,
+     *  a shove) doesn't read as progress and keep a cornered fleer retreating forever. */
     public boolean track(double distSq) {
-        boolean gaining = lastThreatDistSq < 0.0 || distSq > lastThreatDistSq + 0.25;
+        boolean gaining = lastThreatDistSq < 0.0
+                || distSq > lastThreatDistSq + ZombieMoodConfig.fleeGroundGainThreshold;
         stuckActivations = gaining ? 0 : stuckActivations + 1;
         lastThreatDistSq = distSq;
         return gaining;

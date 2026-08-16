@@ -5,8 +5,6 @@ import com.dreykaoas.lethalbreed.config.schema.ConfigType;
 
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
 
-import com.dreykaoas.lethalbreed.LethalBreed;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;

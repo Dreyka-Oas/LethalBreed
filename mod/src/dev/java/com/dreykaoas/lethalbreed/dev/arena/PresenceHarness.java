@@ -81,7 +81,6 @@ public final class PresenceHarness extends TickPhasedHarness {
         server.setDifficulty(Difficulty.HARD, true);
         // Hold night with mob spawning off: the only zombies in this arena must be the ones we placed, and a
         // roofed-but-night arena removes sun-burn as a confounder entirely.
-        cfg.set("forceDayTime", false);
         ow.setDayTime(18000L);
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server);

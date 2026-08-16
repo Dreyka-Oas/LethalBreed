@@ -13,7 +13,6 @@ public final class WorldSpawnBounds {
     private WorldSpawnBounds() {}
 
     public static void register(BoundsRegistrar r) {
-        r.b("forcedDayTime", 0, 24_000);
         r.b("varScaleMin", 0.05, 10);
         r.b("varScaleMax", 0.05, 10);
         r.b("varSpeedMin", 0.05, 10);

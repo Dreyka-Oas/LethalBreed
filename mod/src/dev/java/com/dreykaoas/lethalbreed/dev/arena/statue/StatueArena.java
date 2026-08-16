@@ -2,7 +2,6 @@ package com.dreykaoas.lethalbreed.dev.arena.statue;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
-import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.mood.sleep.DaySleep;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
@@ -33,7 +32,6 @@ final class StatueArena {
     static void worldRules(ServerLevel ow, MinecraftServer server) {
         // peaceful (the dev server.properties default) removes every monster on the next tick.
         server.setDifficulty(Difficulty.HARD, true);
-        WorldSpawnConfig.forceDayTime = false;
         ow.setDayTime(1000L);                                        // morning: isBrightOutside() == true
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server); // doDaylightCycle off — day stays day
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);   // the only zombie here is our probe

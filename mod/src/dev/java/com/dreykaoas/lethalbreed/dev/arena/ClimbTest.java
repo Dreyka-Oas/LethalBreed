@@ -4,7 +4,6 @@ import com.dreykaoas.lethalbreed.dev.DevFakePlayer;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
-import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
@@ -75,9 +74,9 @@ public final class ClimbTest {
     private static double[] minDist = new double[0];
 
     public static void onTick(MinecraftServer server) {
-        // Dev-env gate: this force-loads chunks, builds a wall, spawns mobs AND flips
-        // WorldSpawnConfig.forceDayTime at runtime. Far too destructive for a real world, so it runs ONLY
-        // under gradle runServer even if the GUI toggle is left on.
+        // Dev-env gate: this force-loads chunks, builds a wall, spawns mobs AND rewrites the world's time of
+        // day at runtime. Far too destructive for a real world, so it runs ONLY under gradle runServer even if
+        // the GUI toggle is left on.
         if (!DevTestConfig.devClimbTest || !FabricLoader.getInstance().isDevelopmentEnvironment() || done) {
             return;
         }
@@ -106,13 +105,12 @@ public final class ClimbTest {
         level.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
 
         // Force-load the arena chunks so entities tick even with no player online, and stop the zombies
-        // burning (mod forces noon by default) by holding night + disabling the day-time rule.
+        // burning by holding night + disabling the day-time rule.
         for (int dcx = -1; dcx <= 2; dcx++) {
             for (int dcz = -1; dcz <= 1; dcz++) {
                 level.setChunkForced((cx >> 4) + dcx, (cz >> 4) + dcz, true);
             }
         }
-        WorldSpawnConfig.forceDayTime = false;
         level.setDayTime(18000L);
 
         gy = level.getHeight(Heightmap.Types.WORLD_SURFACE, cx, cz); // floor level of the test platform

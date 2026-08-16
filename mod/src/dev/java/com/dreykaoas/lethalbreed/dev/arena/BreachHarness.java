@@ -7,7 +7,6 @@ import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
-import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
@@ -130,7 +129,6 @@ public final class BreachHarness {
 
     private static void worldRules(ServerLevel ow, MinecraftServer server) {
         server.setDifficulty(Difficulty.HARD, true); // peaceful (dev default) deletes every monster
-        WorldSpawnConfig.forceDayTime = false;
         ow.setDayTime(18000L);                                       // night: no sun-burn, no day-doze
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);

@@ -43,7 +43,6 @@ flowDiagonalCost
 targetCreativePlayers
 climbThreshold
 climbHorizRadius
-maxClimbHeight
 climbGiveUpCooldown
 pillarMaxHeight
 pillarJumpPower
@@ -61,8 +60,6 @@ soundBaseRadius
 soundLoudMultiplier
 soundMoveThreshold
 soundArriveDistance
-forceDayTime
-forcedDayTime
 clearWeather
 enableVariation
 varScaleMin

@@ -34,11 +34,14 @@ import net.minecraft.world.entity.LivingEntity;
  * its own row in the Contamination tab, so the command was a second, dev-only way to set something the GUI
  * already sets. {@code status} still reports its current value.
  *
- * <p>Subcommands added here (all operate on the entity the player is looking at, else the player itself):
+ * <p>Subcommands added here. The first three operate on the entity the player is looking at, else the player
+ * itself; {@code phase} is server-global:
  * <ul>
  *   <li>{@code contaminate} — infect now (starts the latent stage).</li>
  *   <li>{@code symptoms} — force the symptomatic stage now (skips the 5–10 in-game-day roll).</li>
  *   <li>{@code status} — report the plague stage of the target.</li>
+ *   <li>{@code phase &lt;n&gt;} — set the difficulty phase, so high-phase behaviour can be observed without
+ *       waiting the configured 30 minutes per step. The shipped {@code /lethalphase} only reads it.</li>
  * </ul>
  * Op-gated (level 2) as a defence-in-depth alongside the dev-env-only registration.
  */

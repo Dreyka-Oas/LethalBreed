@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
-import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffect;

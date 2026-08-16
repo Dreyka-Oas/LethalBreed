@@ -137,7 +137,6 @@ public final class ShadeHarness {
 
     private static void worldRules(ServerLevel ow, MinecraftServer server) {
         server.setDifficulty(Difficulty.HARD, true); // peaceful (dev default) deletes every monster
-        WorldSpawnConfig.forceDayTime = false;
         ow.setDayTime(1000L);                                        // day: the sun-shelter path is live
         ow.getGameRules().set(GameRules.ADVANCE_TIME, false, server); // and stays day for the whole run
         ow.getGameRules().set(GameRules.SPAWN_MOBS, false, server);
