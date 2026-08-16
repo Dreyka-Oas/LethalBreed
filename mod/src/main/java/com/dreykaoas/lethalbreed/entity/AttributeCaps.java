@@ -33,6 +33,10 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 public final class AttributeCaps {
     private AttributeCaps() {}
 
+    /** Bound on the convergence loop below. Two passes suffice in practice; this only exists so a pathological
+     *  configuration cannot spin. */
+    private static final int MAX_CONVERGE_PASSES = 8;
+
     /**
      * Factor that brings {@code actual} down to {@code cap}, or 1.0 when nothing needs doing.
      *
@@ -89,11 +93,29 @@ public final class AttributeCaps {
         // pushed it over (vanilla's leader bonus, a reinforcement bonus) has to be measured alongside
         // everything else, not on top of a factor derived before it existed.
         AttributeModifiers.remove(z, attr, idPath);
-        double factor = capFactor(z.getAttributeValue(attr), cap);
-        if (factor >= 1.0) {
-            return false;
+
+        // Converge instead of solving in one division, because the reading lies. AttributeInstance
+        // .calculateValue ends with attribute.sanitizeValue(...), which CLAMPS to the attribute's own maximum
+        // — 1024 for MAX_HEALTH. Once the raw product passes that, every read returns 1024 no matter how far
+        // past it the true product is, so cap/1024 under-corrects and the attribute settles above its
+        // ceiling. That is measurable: a zombie was caught at 217.99 against a 200 cap with the correction
+        // attached. Each pass multiplies the running factor by cap/observed, which shrinks the product below
+        // the sanity clamp and makes the next reading honest; it lands in two passes.
+        double factor = 1.0;
+        boolean stamped = false;
+        for (int pass = 0; pass < MAX_CONVERGE_PASSES; pass++) {
+            double observed = z.getAttributeValue(attr);
+            if (observed <= cap) {
+                break;
+            }
+            double step = capFactor(observed, cap);
+            if (step >= 1.0) {
+                break;
+            }
+            factor *= step;
+            AttributeModifiers.multiplyTotal(z, attr, idPath, factor);
+            stamped = true;
         }
-        AttributeModifiers.multiplyTotal(z, attr, idPath, factor);
-        return true;
+        return stamped;
     }
 }
