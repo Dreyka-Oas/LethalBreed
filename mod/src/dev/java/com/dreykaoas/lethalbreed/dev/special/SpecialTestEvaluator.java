@@ -40,6 +40,12 @@ public final class SpecialTestEvaluator {
      */
     private static double bombeurMaxDriftXZ;
     private static double bombeurMaxDriftY;
+    /** The gore cocktail's pool, mirrored here so the witness check does not depend on which effects the
+     *  Bombeur happened to roll. Kept in sync with {@code GoreCocktail.POOL} by hand — a dev-only harness is
+     *  not worth opening that pool up for. */
+    private static final List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> GORE_POOL =
+            List.of(MobEffects.NAUSEA, MobEffects.POISON, MobEffects.SLOWNESS, MobEffects.WEAKNESS,
+                    MobEffects.MINING_FATIGUE, MobEffects.HUNGER, MobEffects.BLINDNESS);
 
     /**
      * Sampled every tick between build and evaluation.
@@ -48,12 +54,16 @@ public final class SpecialTestEvaluator {
      * intensity, and the witness sits far enough out that a short fuse gives it about 139 ticks of Nausea
      * from a blast at tick ~35 — expiring before the tick-200 evaluation about one run in five. Reading the
      * end state measured the fuse roll, not the splatter.
+     *
+     * <p>The splatter check asks for ANY effect from the gore pool, not for two named ones. Each Bombeur now
+     * rolls its own cocktail, and at the arena's phase 1 that cocktail is a single effect — demanding both
+     * Nausea AND Slowness could never pass again. What is being verified is that the gore reached a witness
+     * standing outside the blast, which any one pool effect proves.
      */
     public static void sample(List<SpecialTestCase> cases) {
         for (SpecialTestCase c : cases) {
             if (c.type() == SpecialType.BOMBEUR && c.cow() != null && c.cow().isAlive()
-                    && c.cow().getEffect(MobEffects.NAUSEA) != null
-                    && c.cow().getEffect(MobEffects.SLOWNESS) != null) {
+                    && GORE_POOL.stream().anyMatch(e -> c.cow().getEffect(e) != null)) {
                 bombeurSplattered = true;
             }
             if (c.type() == SpecialType.BOMBEUR && !c.z().isRemoved()

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -25,6 +26,10 @@ class BombeurBlastTest {
         SpecialVariantConfig.specialBombeurSplatterMul = 1.5;
         SpecialVariantConfig.specialBombeurInfectChance = 0.5;
         SpecialVariantConfig.specialBombeurBlindThreshold = 0.75;
+        SpecialVariantConfig.specialBombeurEffectCountCeiling = 4;
+        SpecialVariantConfig.specialBombeurEffectCountDecay = 0.90;
+        SpecialVariantConfig.specialBombeurEffectAmpCeiling = 2;
+        SpecialVariantConfig.specialBombeurEffectAmpDecay = 0.92;
     }
 
     @Test
@@ -102,27 +107,57 @@ class BombeurBlastTest {
     }
 
     @Test
-    void effectShapesMatchTheSpecTable() {
-        // Spec §6, intensity 1.0: Nausea 15 s, Poison 12 s A1, Slowness 12 s A2, Blindness 5 s, 50 %.
-        assertEquals(300, BombeurBlast.nauseaTicks(1.0));
-        assertEquals(240, BombeurBlast.poisonTicks(1.0));
-        assertEquals(1, BombeurBlast.poisonAmp(1.0));
-        assertEquals(240, BombeurBlast.slowTicks(1.0));
-        assertEquals(2, BombeurBlast.slowAmp(1.0));
-        assertEquals(100, BombeurBlast.blindTicks(1.0));
-        assertEquals(0.5, BombeurBlast.infectChance(1.0), 1e-9);
+    void durationStillScalesWithIntensity() {
+        // The effect SET became random, but distance and fuse length must still decide how long it lasts.
+        assertEquals(60, BombeurBlast.effectTicks(3.0, 9.0, 0.0));
+        assertEquals(240, BombeurBlast.effectTicks(3.0, 9.0, 1.0));
+        assertTrue(BombeurBlast.effectTicks(3.0, 9.0, 0.5) > BombeurBlast.effectTicks(3.0, 9.0, 0.25));
     }
 
     @Test
-    void poisonAmplifierStepsUpAtItsThreshold() {
-        assertEquals(0, BombeurBlast.poisonAmp(0.59));
-        assertEquals(1, BombeurBlast.poisonAmp(0.61));
+    void intensityOutsideZeroToOneCannotStretchADuration() {
+        assertEquals(240, BombeurBlast.effectTicks(3.0, 9.0, 5.0));
+        assertEquals(60, BombeurBlast.effectTicks(3.0, 9.0, -5.0));
     }
 
     @Test
-    void blindnessOnlyAppearsAboveTheThreshold() {
-        assertEquals(0, BombeurBlast.blindTicks(0.74));
-        assertTrue(BombeurBlast.blindTicks(0.76) > 0);
+    void cocktailGrowsWithThePhaseAndStopsAtItsCeiling() {
+        assertEquals(1, BombeurBlast.cocktailSize(0));
+        assertTrue(BombeurBlast.cocktailSize(15) > BombeurBlast.cocktailSize(4));
+        for (int phase : new int[] {30, 100, 1_000, 1_000_000}) {
+            assertTrue(BombeurBlast.cocktailSize(phase)
+                    <= SpecialVariantConfig.specialBombeurEffectCountCeiling, "escaped at phase " + phase);
+        }
+    }
+
+    @Test
+    void cocktailActuallyReachesItsCeiling() {
+        // Rounding rather than flooring is the whole reason: floor() would leave it one short forever.
+        assertEquals(SpecialVariantConfig.specialBombeurEffectCountCeiling, BombeurBlast.cocktailSize(1_000));
+    }
+
+    @Test
+    void aBombeurAlwaysCarriesAtLeastOneEffect() {
+        SpecialVariantConfig.specialBombeurEffectCountCeiling = 0; // below its own configured bound
+        assertTrue(BombeurBlast.cocktailSize(0) >= 1);
+        assertTrue(BombeurBlast.cocktailSize(1_000) >= 1);
+    }
+
+    @Test
+    void amplifierCeilingGrowsWithThePhaseAndIsBounded() {
+        assertEquals(0, BombeurBlast.cocktailMaxAmp(0));
+        assertTrue(BombeurBlast.cocktailMaxAmp(30) > BombeurBlast.cocktailMaxAmp(4));
+        for (int phase : new int[] {30, 100, 1_000, 1_000_000}) {
+            assertTrue(BombeurBlast.cocktailMaxAmp(phase)
+                    <= SpecialVariantConfig.specialBombeurEffectAmpCeiling, "escaped at phase " + phase);
+        }
+    }
+
+    @Test
+    void aDecayOfOneWouldNeverSaturateSoItIsClamped() {
+        SpecialVariantConfig.specialBombeurEffectCountDecay = 1.0;
+        // Clamped to 0.999, so it still climbs — just slowly — instead of freezing at the floor forever.
+        assertTrue(BombeurBlast.cocktailSize(10_000) > 1);
     }
 
     @Test
@@ -170,10 +205,16 @@ class BombeurBlastTest {
     }
 
     @Test
+    void blindnessOnlyBecomesEligibleAboveItsThreshold() {
+        assertFalse(BombeurBlast.blindnessEligible(0.74));
+        assertTrue(BombeurBlast.blindnessEligible(0.76));
+    }
+
+    @Test
     void blindnessIsDisabledWhenTheThresholdIsOne() {
-        // 1.0 is a legal bound, and it is also the divisor that would blow up — one guard covers both.
+        // 1.0 is a legal bound and no intensity can exceed it, so this must switch Blindness off entirely.
         SpecialVariantConfig.specialBombeurBlindThreshold = 1.0;
-        assertEquals(0, BombeurBlast.blindTicks(1.0));
-        assertEquals(0, BombeurBlast.blindTicks(0.99));
+        assertFalse(BombeurBlast.blindnessEligible(1.0));
+        assertFalse(BombeurBlast.blindnessEligible(0.99));
     }
 }

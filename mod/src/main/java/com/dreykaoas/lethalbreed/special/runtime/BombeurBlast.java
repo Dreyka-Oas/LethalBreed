@@ -33,14 +33,7 @@ public final class BombeurBlast {
      */
     public static final int SPLATTER_COLOR_ARGB = 0xFF8A2E7A;
 
-    /** Intensity at or above which Poison steps from amplifier 0 to 1. */
-    static final double POISON_AMP_STEP = 0.6;
-    /** Slowness amplifier ceiling — Slowness III would make escape hopeless rather than hard. */
-    static final int SLOW_AMP_MAX = 2;
 
-    private static final double NAUSEA_BASE_S = 4.0, NAUSEA_SPAN_S = 11.0;
-    private static final double DOT_BASE_S = 3.0, DOT_SPAN_S = 9.0;
-    private static final double BLIND_BASE_S = 1.0, BLIND_SPAN_S = 4.0;
     /** Weight of the fuse in the intensity blend; proximity always keeps the remaining share, so distance
      *  can never stop mattering however long the Bombeur swelled. */
     private static final double FUSE_WEIGHT = 0.6;
@@ -117,7 +110,7 @@ public final class BombeurBlast {
 
     /** How long the gore puddle lingers, in ticks. A long fuse leaves more of a mess behind. */
     public static int puddleDurationTicks(double ratio) {
-        return seconds(PUDDLE_BASE_S, PUDDLE_SPAN_S, ratio);
+        return effectTicks(PUDDLE_BASE_S, PUDDLE_SPAN_S, ratio);
     }
 
     /** The puddle's radius at the moment it forms. */
@@ -146,38 +139,60 @@ public final class BombeurBlast {
         return intensity(ratio, dist, puddleRadius) * PUDDLE_POTENCY;
     }
 
-    private static int seconds(double base, double span, double intensity) {
+    /**
+     * How many distinct effects this Bombeur's gore cocktail carries, given the phase.
+     *
+     * <p>Always at least one — a Bombeur that splatters nothing is a firework — rising toward
+     * {@code specialBombeurEffectCountCeiling} on the same saturating shape the rest of the phase system
+     * uses. Rounded rather than floored so the ceiling is actually reachable: {@code (C-1)·(1-decay^p)}
+     * approaches {@code C-1} from below and would floor to {@code C-2} forever.
+     */
+    public static int cocktailSize(int phase) {
+        int ceiling = Math.max(1, SpecialVariantConfig.specialBombeurEffectCountCeiling);
+        double grown = (ceiling - 1) * saturation(SpecialVariantConfig.specialBombeurEffectCountDecay, phase);
+        return 1 + (int) Math.round(grown);
+    }
+
+    /**
+     * Highest amplifier the cocktail may roll at this phase. The caller draws uniformly in {@code [0, this]},
+     * so the amplifier is random per effect while the ceiling itself is a function of the phase.
+     */
+    public static int cocktailMaxAmp(int phase) {
+        int ceiling = Math.max(0, SpecialVariantConfig.specialBombeurEffectAmpCeiling);
+        return (int) Math.round(ceiling * saturation(SpecialVariantConfig.specialBombeurEffectAmpDecay, phase));
+    }
+
+    /** {@code 1 - decay^phase}: 0 at phase 0, approaching 1. A decay outside (0,1) would not saturate, so it
+     *  is clamped into the range the config bounds already advertise. */
+    private static double saturation(double decay, int phase) {
+        double d = Math.clamp(decay, 0.0, 0.999);
+        return 1.0 - Math.pow(d, Math.max(0, phase));
+    }
+
+    /**
+     * Duration in ticks for one affliction: {@code base + span * intensity} seconds.
+     *
+     * <p>Public and generic because the effect set is now rolled per Bombeur — each pool entry in
+     * {@code GoreCocktail} brings its own base/span pair, instead of every effect owning a bespoke named
+     * shaper here. Distance and fuse length still set the intensity and therefore still set the duration;
+     * only WHICH effects land became random.
+     */
+    public static int effectTicks(double base, double span, double intensity) {
         return (int) Math.round((base + span * Math.clamp(intensity, 0.0, 1.0)) * TPS);
     }
 
-    public static int nauseaTicks(double i) {
-        return seconds(NAUSEA_BASE_S, NAUSEA_SPAN_S, i);
-    }
-
-    public static int poisonTicks(double i) {
-        return seconds(DOT_BASE_S, DOT_SPAN_S, i);
-    }
-
-    public static int poisonAmp(double i) {
-        return i < POISON_AMP_STEP ? 0 : 1;
-    }
-
-    public static int slowTicks(double i) {
-        return seconds(DOT_BASE_S, DOT_SPAN_S, i);
-    }
-
-    public static int slowAmp(double i) {
-        return Math.min(SLOW_AMP_MAX, (int) Math.floor(Math.clamp(i, 0.0, 1.0) * 3.0));
-    }
-
-    /** Blindness ticks, or 0 below the configured threshold. A threshold of 1.0 disables it outright — no
-     *  intensity can exceed 1 — and that same guard keeps the span division safe. */
-    public static int blindTicks(double i) {
+    /**
+     * Whether Blindness is eligible for this blast's cocktail at all.
+     *
+     * <p>Kept here rather than inline in {@code GoreCocktail} so the meaning of
+     * {@code specialBombeurBlindThreshold} — "intensity from which Blindness is applied, 1.0 disables it" —
+     * stays testable without booting a server. Blindness is the one entry in the pool that removes
+     * information rather than capability, which is why it alone is gated.
+     */
+    public static boolean blindnessEligible(double intensity) {
         double t = Math.clamp(SpecialVariantConfig.specialBombeurBlindThreshold, 0.0, 1.0);
-        if (t >= 1.0 || i < t) {
-            return 0;
-        }
-        return seconds(BLIND_BASE_S, BLIND_SPAN_S, (i - t) / (1.0 - t));
+        // No intensity can exceed 1, so a threshold of 1.0 disables Blindness outright.
+        return t < 1.0 && intensity >= t;
     }
 
     public static double infectChance(double i) {

@@ -160,6 +160,14 @@ phaseColorThresholds
 phaseMaxEnabled
 phaseMax
 phaseLoopEnabled
+phaseDmgCeiling
+phaseHpCeiling
+phaseSpdCeiling
+phaseMobcapCeiling
+phaseFrequencyCeiling
+phaseDamageCap
+phaseHealthCap
+phaseSpeedCap
 specialEnabled
 specialBaseChance
 specialPhaseScale
@@ -190,6 +198,11 @@ specialBombeurPowerMax
 specialBombeurSplatterMul
 specialBombeurInfectChance
 specialBombeurBlindThreshold
+specialBombeurEffectCountCeiling
+specialBombeurEffectCountDecay
+specialBombeurEffectAmpCeiling
+specialBombeurEffectAmpDecay
+specialBombeurPuddleInfect
 specialHurleurRadius
 specialSoigneurRadius
 specialSoigneurRegenTicks

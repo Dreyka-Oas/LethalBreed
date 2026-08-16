@@ -58,6 +58,7 @@ public final class DevTestSelector {
         // Foundation self-test: proves the synthetic-player presence every arena suite above relies on.
         SUITES.put("presence", new Flag(() -> DevTestConfig.devPresenceTest, v -> DevTestConfig.devPresenceTest = v));
         SUITES.put("pack", new Flag(() -> DevTestConfig.devPackTest, v -> DevTestConfig.devPackTest = v));
+        SUITES.put("caps", new Flag(() -> DevTestConfig.devCapsTest, v -> DevTestConfig.devCapsTest = v));
     }
 
     /** Every suite whose flag is currently on, in registry order. The overlap warning used to enumerate

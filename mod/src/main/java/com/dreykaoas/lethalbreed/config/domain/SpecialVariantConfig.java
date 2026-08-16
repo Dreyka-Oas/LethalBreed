@@ -65,6 +65,16 @@ public final class SpecialVariantConfig {
     public static double specialBombeurInfectChance = 0.5;
     /** Splatter intensity from which Blindness is applied. 1.0 disables Blindness entirely. */
     public static double specialBombeurBlindThreshold = 0.75;
+    /** Most distinct effects one Bombeur's gore cocktail can carry. */
+    public static int specialBombeurEffectCountCeiling = 4;
+    /** How fast the cocktail grows toward its ceiling with the phase. Lower = reaches the ceiling sooner. */
+    public static double specialBombeurEffectCountDecay = 0.90;
+    /** Highest amplifier the cocktail may roll (2 = level III). Each effect draws uniformly in [0, this]. */
+    public static int specialBombeurEffectAmpCeiling = 2;
+    /** How fast the amplifier ceiling grows toward its maximum with the phase. */
+    public static double specialBombeurEffectAmpDecay = 0.92;
+    /** Whether the lingering gore puddle can also transmit the contamination, once per victim per puddle. */
+    public static boolean specialBombeurPuddleInfect = true;
     // -- Hurleur (ACTIVE): rally.
     /** Radius (blocks) within which a Hurleur hands its target to nearby idle zombies. */
     public static double specialHurleurRadius = 24.0;

@@ -1,11 +1,16 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
+import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
+import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * The gore a Bombeur leaves on the ground: a shrinking puddle that keeps dosing whoever stands in it after
@@ -39,9 +44,20 @@ public final class GorePuddles {
         final double radius0;
         final double ratio;
         final int durationTicks;
+        /** The cocktail the Bombeur rolled as it burst — inherited, never re-rolled. */
+        final List<GoreCocktail.Dose> cocktail;
+        /**
+         * Who this puddle has already rolled infection against. The puddle re-doses every
+         * {@code PUDDLE_REAPPLY_TICKS}, so rolling per dose would turn a few seconds of standing in one into
+         * a certainty; one roll per victim per puddle keeps infection a risk rather than a formality.
+         * Keyed by UUID, not by entity, so a victim who leaves and returns is still remembered without this
+         * set pinning a dead entity for the puddle's lifetime.
+         */
+        final Set<UUID> infectionRolled = new HashSet<>();
         int age;
 
-        Puddle(ServerLevel level, double x, double y, double z, double radius0, double ratio, int durationTicks) {
+        Puddle(ServerLevel level, double x, double y, double z, double radius0, double ratio, int durationTicks,
+               List<GoreCocktail.Dose> cocktail) {
             this.level = level;
             this.x = x;
             this.y = y;
@@ -49,6 +65,7 @@ public final class GorePuddles {
             this.radius0 = radius0;
             this.ratio = ratio;
             this.durationTicks = durationTicks;
+            this.cocktail = cocktail;
         }
     }
 
@@ -61,13 +78,14 @@ public final class GorePuddles {
      * Leave a puddle where a Bombeur burst. No-op for a degenerate radius or duration, so a server that has
      * configured the splatter away does not accumulate invisible zero-size entries.
      */
-    public static void spawn(ServerLevel level, double x, double y, double z, double ratio, double splatterRadius) {
+    public static void spawn(ServerLevel level, double x, double y, double z, double ratio, double splatterRadius,
+                             List<GoreCocktail.Dose> cocktail) {
         double radius0 = BombeurBlast.puddleRadius(splatterRadius);
         int duration = BombeurBlast.puddleDurationTicks(ratio);
-        if (radius0 <= 0.0 || duration <= 0) {
+        if (radius0 <= 0.0 || duration <= 0 || cocktail.isEmpty()) {
             return;
         }
-        ACTIVE.add(new Puddle(level, x, y, z, radius0, ratio, duration));
+        ACTIVE.add(new Puddle(level, x, y, z, radius0, ratio, duration, cocktail));
     }
 
     /** END_SERVER_TICK: age every puddle, dose whoever is standing in one, and drop the expired. */
@@ -101,11 +119,16 @@ public final class GorePuddles {
         for (LivingEntity victim : SpecialAbilities.splatterVictims(p.level, p.x, p.y, p.z, radius, null)) {
             double dist = Math.sqrt(victim.distanceToSqr(p.x, p.y, p.z));
             double intensity = BombeurBlast.puddleIntensity(p.ratio, dist, radius);
-            if (intensity > 0.0) {
-                // Effects only, no contamination roll. The puddle re-doses every PUDDLE_REAPPLY_TICKS, so
-                // rolling infection each round would make standing in one for a few seconds a near-certain
-                // infection — infection stays the explosion's signature, the puddle stays lingering poison.
-                SpecialAbilities.applyGore(victim, intensity);
+            if (intensity <= 0.0) {
+                continue;
+            }
+            GoreCocktail.apply(victim, p.cocktail, intensity);
+            if (SpecialVariantConfig.specialBombeurPuddleInfect && p.infectionRolled.add(victim.getUUID())
+                    && victim.getRandom().nextDouble() < BombeurBlast.infectChance(intensity)) {
+                // add() returning true is the whole gate: it means this is the first time this puddle has
+                // considered this victim. Placed before the chance roll on purpose — a victim who fails the
+                // roll has had their chance and must not get another every second.
+                ContaminationManager.contaminate(victim);
             }
         }
     }

@@ -51,12 +51,12 @@ public final class ProgressionConfig {
      *  {@link WorldSpawnConfig#randomEffectMaxAmplifier}). */
     public static int phaseEffAmpCeiling = 3;
 
-    // ---- Phase mobcap/frequency formula: value(phase) = growth * phase^exponent, unbounded ----
-    /** Growth rate for the night-spawn mob-cap multiplier. No ceiling — grows forever with phase. */
+    // ---- Phase mobcap/frequency formula: value(phase) = growth * phase^exponent, bent onto a ceiling ----
+    /** Growth rate for the night-spawn mob-cap multiplier. Bounded by {@link #phaseMobcapCeiling}. */
     public static double phaseMobcapGrowth = 0.9153;
     /** Exponent for the mob-cap curve. */
     public static double phaseMobcapExponent = 1.1;
-    /** Growth rate for the night-spawn frequency multiplier. No ceiling — grows forever with phase. */
+    /** Growth rate for the night-spawn frequency multiplier. Bounded by {@link #phaseFrequencyCeiling}. */
     public static double phaseFrequencyGrowth = 1.0667;
     /** Exponent for the frequency curve. */
     public static double phaseFrequencyExponent = 1.0;
@@ -76,4 +76,31 @@ public final class ProgressionConfig {
      *  {@link #phaseMaxEnabled} is false. Only the auto-advance timer respects this — the dev-only
      *  {@code /lethalphase} command can still force any phase manually. */
     public static boolean phaseLoopEnabled = false;
+
+    // ---- Ceilings on the phase curves: value approaches the ceiling from phase 15 up, never reaching it ----
+    // Appended at the end of the class on purpose: ConfigWriter keeps schema order within a category, so
+    // inserting these next to the curves they bound would rewrite every existing player's config file.
+    /** Ceiling on the damage multiplier curve. With the shipped base of 3.0 and the widest variation roll,
+     *  6.0 is what puts an un-buffed zombie exactly at the 18.9 raw damage a netherite player survives 3 of. */
+    public static double phaseDmgCeiling = 6.0;
+    /** Ceiling on the max-HP multiplier curve. 8.0 leaves a top-phase zombie around 25 netherite sword hits. */
+    public static double phaseHpCeiling = 8.0;
+    /** Ceiling on the movement-speed multiplier curve. */
+    public static double phaseSpdCeiling = 2.2;
+    /** Ceiling on the night-spawn mob-cap multiplier. This one is a performance bound as much as a balance
+     *  one: nothing in this mod despawns, and the raw curve reaches 144x vanilla by phase 100. */
+    public static double phaseMobcapCeiling = 30.0;
+    /** Ceiling on the night-spawn frequency multiplier. */
+    public static double phaseFrequencyCeiling = 24.0;
+
+    // ---- Hard caps on the FINAL attribute value, enforced after every effect and special has been stamped.
+    // The curve ceilings above bound the multiplier only; a rolled Strength/Health Boost is an ADD_VALUE that
+    // lands in the base that multiplier scales, so it re-crosses them. These are the actual guarantee. ----
+    /** Hardest a zombie may ever hit, raw. 18.9 = three hits through un-enchanted full netherite. */
+    public static double phaseDamageCap = 18.9;
+    /** Most health a zombie may ever have. */
+    public static double phaseHealthCap = 200.0;
+    /** Fastest a zombie may ever move. 0.45 preserves today's phase-15 feel (0.414) while stopping the
+     *  runaway that reaches 0.66 with a rolled Speed III — a sprinting player moves at roughly 0.28. */
+    public static double phaseSpeedCap = 0.45;
 }
