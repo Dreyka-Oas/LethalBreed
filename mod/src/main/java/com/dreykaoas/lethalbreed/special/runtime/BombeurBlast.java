@@ -21,6 +21,18 @@ import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 public final class BombeurBlast {
     private BombeurBlast() {}
 
+    /**
+     * Colour of the splatter particle cloud, packed <b>ARGB</b> — toxic purple-green, distinct from any
+     * vanilla potion colour so the burst reads as this mod's own effect rather than as a thrown potion.
+     *
+     * <p>The {@code 0xFF} alpha is load-bearing, not decoration. {@code ENTITY_EFFECT} carries a packed ARGB
+     * int and {@code SpellParticle.MobEffectProvider} feeds its alpha byte straight into {@code setAlpha}, so
+     * a bare {@code 0xRRGGBB} literal yields alpha 0 and the cloud renders perfectly invisible: the particles
+     * spawn, tick and expire without ever drawing a pixel. That is exactly how this shipped the first time,
+     * and it is why the constant lives here, where a unit test can hold it to being opaque.
+     */
+    public static final int SPLATTER_COLOR_ARGB = 0xFF8A2E7A;
+
     /** Intensity at or above which Poison steps from amplifier 0 to 1. */
     static final double POISON_AMP_STEP = 0.6;
     /** Slowness amplifier ceiling — Slowness III would make escape hopeless rather than hard. */

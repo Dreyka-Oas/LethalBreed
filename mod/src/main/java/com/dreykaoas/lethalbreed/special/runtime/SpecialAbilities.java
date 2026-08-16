@@ -72,20 +72,25 @@ public final class SpecialAbilities {
         }
     }
 
-    /** Toxic purple-green, distinct from any vanilla potion colour so the burst reads as this mod's own
-     *  effect rather than as a thrown potion. */
-    private static final int SPLATTER_COLOR = 0x8A2E7A;
+    /**
+     * Particles must not drift: {@code sendParticles}' speed argument is a per-axis gaussian VELOCITY
+     * multiplier, so any non-zero value scatters the cloud within a tick or two instead of leaving it
+     * hanging over the gore. Position spread comes from the xyz offsets, not from here.
+     */
+    private static final double SPLATTER_PARTICLE_SPEED = 0.0;
 
     /**
      * Purely cosmetic: a burst of coloured particles at the blast centre, the same visual family vanilla uses
      * for splash-potion impact, so the infectious ring the explosion just applied invisibly to victims reads
      * as one. Scales with the splatter radius — a long-fused Bombeur's bigger gore ring looks bigger too.
-     * Carries no gameplay: nothing here touches damage, effects or targeting.
+     * Carries no gameplay: nothing here touches damage, effects or targeting. The alpha that makes the cloud
+     * visible at all is baked into {@link BombeurBlast#SPLATTER_COLOR_ARGB} — see that constant.
      */
     private static void splatterCloud(ServerLevel level, double cx, double cy, double cz, double splatR) {
         int count = (int) Math.round(20 * Math.max(1.0, splatR / 3.0));
-        level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, SPLATTER_COLOR),
-                cx, cy, cz, count, splatR * 0.6, splatR * 0.3, splatR * 0.6, 1.0);
+        level.sendParticles(
+                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BombeurBlast.SPLATTER_COLOR_ARGB),
+                cx, cy, cz, count, splatR * 0.6, splatR * 0.3, splatR * 0.6, SPLATTER_PARTICLE_SPEED);
     }
 
     /**
