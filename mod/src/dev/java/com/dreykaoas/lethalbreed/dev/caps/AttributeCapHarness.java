@@ -11,6 +11,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -44,15 +45,25 @@ public final class AttributeCapHarness extends TickPhasedHarness {
     private static final int Y = 101;
 
     private static final int[] PHASES = {15, 100, 1_000};
+    /** Index of the stage that lands real bites on an armoured victim rather than reading attributes. */
+    private static final int BITE_STAGE = 3;
+    /** How many separate bites to land. Damage varies per zombie, so the worst of a batch is the figure
+     *  that matters — a single bite could easily sample a weak roll and look safe. */
+    private static final int BITES = 24;
 
     private final List<Zombie> spawned = new ArrayList<>();
+    private final List<Cow> victims = new ArrayList<>();
     private int phaseForStage;
+    /** Worst health loss from a single real bite through full-netherite protection. */
+    private double worstBite;
+    private int biteSamples;
 
     private AttributeCapHarness() {
         super("caps",
                 new Stage("phase-15", 20, 40),
                 new Stage("phase-100", 60, 80),
-                new Stage("phase-1000", 100, 120));
+                new Stage("phase-1000", 100, 120),
+                new Stage("morsure-reelle", 140, 170));
     }
 
     @Override
@@ -62,6 +73,10 @@ public final class AttributeCapHarness extends TickPhasedHarness {
 
     @Override
     protected void build(int stage, ServerLevel ow, MinecraftServer server, ConfigOverride cfg) {
+        if (stage == BITE_STAGE) {
+            buildBiteTest(ow, server);
+            return;
+        }
         phaseForStage = PHASES[stage];
         PhaseManager.get().setPhase(server, phaseForStage);
         spawned.clear();
@@ -81,6 +96,69 @@ public final class AttributeCapHarness extends TickPhasedHarness {
         }
     }
 
+    /**
+     * The end-to-end check the attribute readings cannot give: a real zombie landing a real bite on a victim
+     * wearing full-netherite protection, measured in health actually lost.
+     *
+     * <p>Everything above reads {@code ATTACK_DAMAGE} and then computes what armour would do to it. That is a
+     * mirror of vanilla's formula, and a mirror can be wrong — which is exactly the class of mistake that
+     * produced the original report. This lands the hit instead and reads the health bar.
+     *
+     * <p>Armour is granted as ATTRIBUTES, not equipment. Handing a mob armour pieces leaves its armour value
+     * at zero, so equipping a victim would have quietly measured an unarmoured one and reported a much worse
+     * number as if it were the netherite case.
+     */
+    private void buildBiteTest(ServerLevel ow, MinecraftServer server) {
+        phaseForStage = 1_000;
+        PhaseManager.get().setPhase(server, phaseForStage);
+        worstBite = 0.0;
+        biteSamples = 0;
+
+        for (int i = 0; i < BITES; i++) {
+            Cow victim = EntityType.COW.create(ow, EntitySpawnReason.COMMAND);
+            Zombie biter = EntityType.ZOMBIE.create(ow, EntitySpawnReason.NATURAL);
+            if (victim == null || biter == null) {
+                continue;
+            }
+            victim.snapTo(X + i * 3, Y, Z + 40, 0f, 0f);
+            armour(victim);
+            victim.setHealth(victim.getMaxHealth());
+            ow.addFreshEntity(victim);
+
+            biter.snapTo(X + i * 3, Y, Z + 41, 0f, 0f);
+            biter.finalizeSpawn(ow, ow.getCurrentDifficultyAt(BlockPos.containing(biter.position())),
+                    EntitySpawnReason.NATURAL, null);
+            biter.setPersistenceRequired();
+            ow.addFreshEntity(biter);
+
+            double before = victim.getHealth();
+            // The real attack path: attribute lookup, damage source, armour absorption, enchantment hooks.
+            if (biter.doHurtTarget(ow, victim)) {
+                worstBite = Math.max(worstBite, before - victim.getHealth());
+                biteSamples++;
+            }
+            spawned.add(biter);
+            victims.add(victim);
+        }
+    }
+
+    /** Full netherite, expressed as attributes: armour 20, toughness 12, and a player's 20 health so that
+     *  "hits to kill" means the same thing it means for the person who reported this. */
+    private static void armour(Cow victim) {
+        var armor = victim.getAttribute(Attributes.ARMOR);
+        var tough = victim.getAttribute(Attributes.ARMOR_TOUGHNESS);
+        var health = victim.getAttribute(Attributes.MAX_HEALTH);
+        if (armor != null) {
+            armor.setBaseValue(20.0);
+        }
+        if (tough != null) {
+            tough.setBaseValue(12.0);
+        }
+        if (health != null) {
+            health.setBaseValue(20.0);
+        }
+    }
+
     @Override
     protected void observe(int stage, ServerLevel ow, int tick) {
         // Nothing to watch: every attribute this harness measures is stamped once at finalizeSpawn and never
@@ -89,6 +167,10 @@ public final class AttributeCapHarness extends TickPhasedHarness {
 
     @Override
     protected void evaluate(int stage, ServerLevel ow, MinecraftServer server) {
+        if (stage == BITE_STAGE) {
+            evaluateBiteTest();
+            return;
+        }
         double maxDmg = 0.0, maxHp = 0.0, maxSpd = 0.0;
         for (Zombie z : spawned) {
             maxDmg = Math.max(maxDmg, z.getAttributeValue(Attributes.ATTACK_DAMAGE));
@@ -110,10 +192,62 @@ public final class AttributeCapHarness extends TickPhasedHarness {
         DevVerdict.check("caps", p + "/pas-de-one-shot", hitsToKillInNetherite(maxDmg) >= 3,
                 "il faut " + hitsToKillInNetherite(maxDmg) + " coups pour tuer en netherite complete");
 
+        // Enforcing twice must be a no-op, not an undo. A pass that reads the already-corrected value would
+        // conclude the attribute is within its cap, drop its own correction, and let the raw value spring
+        // back — a self-defeating cap that only fails on whichever zombies get enforced twice.
+        double reDmg = 0.0, reHp = 0.0, reSpd = 0.0;
+        for (Zombie z : spawned) {
+            com.dreykaoas.lethalbreed.entity.AttributeCaps.enforce(z);
+            reDmg = Math.max(reDmg, z.getAttributeValue(Attributes.ATTACK_DAMAGE));
+            reHp = Math.max(reHp, z.getAttributeValue(Attributes.MAX_HEALTH));
+            reSpd = Math.max(reSpd, z.getAttributeValue(Attributes.MOVEMENT_SPEED));
+        }
+        // Diagnostic: name the offender and every modifier on its health, so a failure is evidence rather
+        // than a number. Only fires when something actually escaped.
+        for (Zombie z : spawned) {
+            double hp = z.getAttributeValue(Attributes.MAX_HEALTH);
+            if (hp > ProgressionConfig.phaseHealthCap + eps) {
+                var inst = z.getAttribute(Attributes.MAX_HEALTH);
+                StringBuilder sb = new StringBuilder();
+                sb.append("hp=").append(DevVerdict.fmt(hp)).append(" base=")
+                        .append(DevVerdict.fmt(inst == null ? -1 : inst.getBaseValue()))
+                        .append(" special=").append(com.dreykaoas.lethalbreed.special.SpecialType.fromId(z.getAttached(com.dreykaoas.lethalbreed.special.SpecialAttachment.SPECIAL)));
+                if (inst != null) {
+                    for (var m : inst.getModifiers()) {
+                        sb.append(" | ").append(m.id().getPath()).append('=').append(DevVerdict.fmt(m.amount()))
+                                .append('/').append(m.operation());
+                    }
+                }
+                com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info("[LB-Verify] caps/DIAG {}", sb);
+            }
+        }
+        DevVerdict.check("caps", p + "/idempotent",
+                reDmg <= ProgressionConfig.phaseDamageCap + eps
+                        && reHp <= ProgressionConfig.phaseHealthCap + eps
+                        && reSpd <= ProgressionConfig.phaseSpeedCap + eps,
+                "apres 2e passe degats=" + DevVerdict.fmt(reDmg) + " pv=" + DevVerdict.fmt(reHp)
+                        + " vitesse=" + DevVerdict.fmt(reSpd));
+
         for (Zombie z : spawned) {
             z.discard();
         }
         spawned.clear();
+    }
+
+    private void evaluateBiteTest() {
+        int hits = worstBite <= 0.0 ? Integer.MAX_VALUE : (int) Math.ceil(20.0 / worstBite);
+        DevVerdict.check("caps", "morsure-reelle/echantillons", biteSamples >= BITES / 2,
+                "morsures atterries=" + biteSamples + "/" + BITES);
+        DevVerdict.check("caps", "morsure-reelle/pas-de-one-shot", biteSamples > 0 && hits >= 3,
+                "pire morsure=" + DevVerdict.fmt(worstBite) + " PV sur 20 -> " + hits + " coups");
+        for (Zombie z : spawned) {
+            z.discard();
+        }
+        for (Cow c : victims) {
+            c.discard();
+        }
+        spawned.clear();
+        victims.clear();
     }
 
     /**

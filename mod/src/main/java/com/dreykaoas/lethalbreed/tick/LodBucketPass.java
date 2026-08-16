@@ -89,6 +89,11 @@ final class LodBucketPass {
         // a frozen zombie looking for company is the nominal case for forming a pack, not an edge one.
         PackPass.decide(sz, ctx);
         t = mark(DevProbe.PACK, prof, t);
+        // Re-assert the attribute ceilings. Spawn-time enforcement alone is not enough: vanilla stamps its
+        // zombie-leader bonus AFTER finalizeSpawn, and stamps another one at runtime when a zombie summons
+        // reinforcements — both multiply straight through a correction derived before they existed. Runs even
+        // for FROZEN zombies (whose full tick() below is skipped), because a frozen zombie still bites.
+        com.dreykaoas.lethalbreed.entity.AttributeCaps.enforce(sz.entity());
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
         t = mark(DevProbe.SUNBURN, prof, t);
