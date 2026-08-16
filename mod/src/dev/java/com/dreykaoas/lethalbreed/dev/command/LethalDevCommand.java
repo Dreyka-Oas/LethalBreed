@@ -5,10 +5,12 @@ import com.dreykaoas.lethalbreed.dev.contam.DevContam;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import com.dreykaoas.lethalbreed.command.LookTarget;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
@@ -48,7 +50,19 @@ public final class LethalDevCommand {
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("contaminate").executes(LethalDevCommand::contaminate))
                 .then(Commands.literal("symptoms").executes(LethalDevCommand::symptoms))
-                .then(Commands.literal("status").executes(LethalDevCommand::status)));
+                .then(Commands.literal("status").executes(LethalDevCommand::status))
+                // Forcing the phase is the only way to observe high-phase behaviour without waiting the
+                // configured 30 minutes per step. Dev-only, like everything else on this command.
+                .then(Commands.literal("phase")
+                        .then(Commands.argument("n", IntegerArgumentType.integer(0, 1_000_000))
+                                .executes(LethalDevCommand::phase))));
+    }
+
+    private static int phase(CommandContext<CommandSourceStack> ctx) {
+        int n = IntegerArgumentType.getInteger(ctx, "n");
+        PhaseManager.get().setPhase(ctx.getSource().getServer(), n);
+        reply(ctx, ChatFormatting.AQUA, "phase forcee a " + PhaseManager.current());
+        return PhaseManager.current();
     }
 
     private static int contaminate(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
