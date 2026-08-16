@@ -61,6 +61,9 @@ public final class ZombieBrain {
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LODLevel.FROZEN) return;
+        // Armed Bombeur: fuse is lit, so it stops dead and swells in place until the explosion — checked
+        // before sleep/shelter/flee since none of those should ever interrupt a committed detonation.
+        if (handleArmed()) return;
         // Daytime sleep: a dozing zombie holds still. It is normally FROZEN (so this isn't even reached); this is
         // a defensive stop in case it is momentarily active. The walk-to-shade is NOT here — that's a normal
         // memory-target pursuit (NORMAL state) so the full breaking/pillaring nav carries it to the shade.
@@ -152,6 +155,30 @@ public final class ZombieBrain {
         MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz, breaking);
         // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
         breaking = owner.state() == ZombieState.BREAKING;
+    }
+
+    /** BOMBEUR with a lit fuse: frozen in place, swelling toward detonation. Distinct from FROZEN (which
+     *  means "no target, not simulated") — an armed Bombeur is very much simulated, just deliberately not
+     *  moving, exactly like a Creeper mid-hiss. */
+    private boolean handleArmed() {
+        if (!SpecialBehavior.fuseIsLit(entity)) {
+            return false;
+        }
+        pillar.cancel();
+        entity.getNavigation().stop();
+        // Kill horizontal momentum only — falling still falls, so an armed Bombeur mid-leap lands normally
+        // rather than freezing in the air.
+        entity.setDeltaMovement(0.0, entity.getDeltaMovement().y, 0.0);
+        // Also null the VANILLA melee target: LODManager.classify() re-asserts it every activation
+        // (independently of our pursuit target below), and vanilla's own ZombieAttackGoal steers off that
+        // target on every real game tick regardless of our LOD-bucketed activation cadence — same reason
+        // LodBucketPass nulls it for a FROZEN zombie. Without this, an armed Bombeur still creeps toward its
+        // target between our activations even with navigation stopped and deltaMovement zeroed here. Fuse
+        // logic no longer reads this once armed (SpecialBehavior only consults tgt while fuse <= 0), so
+        // clearing it is safe.
+        entity.setTarget(null);
+        owner.setState(ZombieState.ARMED);
+        return true;
     }
 
     private boolean handleSleeping() {
