@@ -11,6 +11,8 @@ import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import com.dreykaoas.lethalbreed.util.Players;
+import net.minecraft.core.particles.ColorParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -59,6 +61,7 @@ public final class SpecialAbilities {
 
         level.explode(z, cx, cy, cz, (float) power, Level.ExplosionInteraction.NONE);
         z.discard();
+        splatterCloud(level, cx, cy, cz, splatR);
 
         for (LivingEntity victim : caught) {
             // The AABB is a box; the ring is a sphere. Re-measure so corners don't get splattered.
@@ -67,6 +70,22 @@ public final class SpecialAbilities {
                 splatter(victim, intensity, rng);
             }
         }
+    }
+
+    /** Toxic purple-green, distinct from any vanilla potion colour so the burst reads as this mod's own
+     *  effect rather than as a thrown potion. */
+    private static final int SPLATTER_COLOR = 0x8A2E7A;
+
+    /**
+     * Purely cosmetic: a burst of coloured particles at the blast centre, the same visual family vanilla uses
+     * for splash-potion impact, so the infectious ring the explosion just applied invisibly to victims reads
+     * as one. Scales with the splatter radius — a long-fused Bombeur's bigger gore ring looks bigger too.
+     * Carries no gameplay: nothing here touches damage, effects or targeting.
+     */
+    private static void splatterCloud(ServerLevel level, double cx, double cy, double cz, double splatR) {
+        int count = (int) Math.round(20 * Math.max(1.0, splatR / 3.0));
+        level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, SPLATTER_COLOR),
+                cx, cy, cz, count, splatR * 0.6, splatR * 0.3, splatR * 0.6, 1.0);
     }
 
     /**
