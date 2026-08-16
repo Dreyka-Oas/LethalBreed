@@ -68,6 +68,10 @@ public final class ZombieVariation {
                 ProgressionConfig.phaseSystemEnabled
                         ? PhaseManager.current()
                         : com.dreykaoas.lethalbreed.special.SpecialType.maxUnlockPhase());
+        // LAST, and it has to stay last: it reads finished attribute values, so every modifier and effect
+        // above — including the Juggernaut's health multiplier and the Sprinteur's speed — must already be
+        // stamped. Moving this call earlier would let exactly those escape the cap.
+        AttributeCaps.enforce(z);
     }
 
     /**
