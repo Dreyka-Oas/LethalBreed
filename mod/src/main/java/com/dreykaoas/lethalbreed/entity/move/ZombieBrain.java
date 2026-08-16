@@ -165,6 +165,10 @@ public final class ZombieBrain {
             return false;
         }
         pillar.cancel();
+        // A Bombeur that arms mid-swim must stop swimming too: EveryTickPass.processSwimmers keeps calling
+        // swimStep() every server tick (outside the normal LOD-throttled cadence) for as long as
+        // isSwimming() answers true, which would keep dragging it toward its target through the whole fuse.
+        swimming = false;
         entity.getNavigation().stop();
         // Kill horizontal momentum only — falling still falls, so an armed Bombeur mid-leap lands normally
         // rather than freezing in the air.

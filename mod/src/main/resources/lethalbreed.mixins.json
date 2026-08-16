@@ -27,6 +27,7 @@
     "client.GuiContaminationHudMixin",
     "client.render.LivingEntityRenderStateMixin",
     "client.render.LivingEntityRendererMixin",
+    "client.ZombieBellySmoothingMixin",
     "client.model.ZombieBellyModelMixin",
     "client.model.ZombieSleepArmsMixin"
   ],
