@@ -10,13 +10,12 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
 import com.dreykaoas.lethalbreed.special.SpecialType;
+import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.util.Players;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.player.Player;
@@ -52,18 +51,30 @@ public final class SpecialAbilities {
         List<LivingEntity> caught = splatterVictims(level, cx, cy, cz, splatR, z);
         RandomSource rng = z.getRandom();
 
+        // Rolled ONCE, for the blast and the puddle alike. A cocktail re-rolled per victim would mean two
+        // players standing side by side reporting different symptoms from the same explosion, and a puddle
+        // that contradicts the burst that created it. One Bombeur, one poison.
+        // Blindness eligibility is judged at the centre — the harshest point — so whether it is in the mix at
+        // all is a property of the Bombeur, while who is close enough to get a long dose stays a property of
+        // distance.
+        List<GoreCocktail.Dose> cocktail = GoreCocktail.roll(
+                PhaseManager.current(), BombeurBlast.intensity(ratio, 0.0, splatR), rng);
+
         level.explode(z, cx, cy, cz, (float) power, Level.ExplosionInteraction.NONE);
         z.discard();
         splatterCloud(level, cx, cy, cz, splatR);
         // The blast is over in a tick; the mess it made is not. Whoever walks back through the gore keeps
         // paying for it until the residue drains.
-        GorePuddles.spawn(level, cx, cy, cz, ratio, splatR);
+        GorePuddles.spawn(level, cx, cy, cz, ratio, splatR, cocktail);
 
         for (LivingEntity victim : caught) {
             // The AABB is a box; the ring is a sphere. Re-measure so corners don't get splattered.
             double intensity = BombeurBlast.intensity(ratio, Math.sqrt(victim.distanceToSqr(cx, cy, cz)), splatR);
             if (intensity > 0.0) {
-                splatter(victim, intensity, rng);
+                GoreCocktail.apply(victim, cocktail, intensity);
+                if (rng.nextDouble() < BombeurBlast.infectChance(intensity)) {
+                    ContaminationManager.contaminate(victim);
+                }
             }
         }
     }
@@ -132,30 +143,6 @@ public final class SpecialAbilities {
      * Apply one victim's share of the gore. Zombies are filtered out by the caller: they are the vector, not
      * the victim — and {@code contaminate()} refuses them anyway.
      */
-    private static void splatter(LivingEntity victim, double intensity, RandomSource rng) {
-        applyGore(victim, intensity);
-        if (rng.nextDouble() < BombeurBlast.infectChance(intensity)) {
-            ContaminationManager.contaminate(victim);
-        }
-    }
-
-    /**
-     * The status-effect half of the gore, without the infection roll. {@link GorePuddles} re-doses on a timer,
-     * so it uses this directly: rolling contamination once per round would turn a few seconds of standing in
-     * a puddle into a near-certain infection. Infection stays the explosion's signature.
-     */
-    static void applyGore(LivingEntity victim, double intensity) {
-        victim.addEffect(new MobEffectInstance(MobEffects.NAUSEA, BombeurBlast.nauseaTicks(intensity), 0));
-        victim.addEffect(new MobEffectInstance(MobEffects.POISON,
-                BombeurBlast.poisonTicks(intensity), BombeurBlast.poisonAmp(intensity)));
-        victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
-                BombeurBlast.slowTicks(intensity), BombeurBlast.slowAmp(intensity)));
-        int blind = BombeurBlast.blindTicks(intensity);
-        if (blind > 0) {
-            victim.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, blind, 0));
-        }
-    }
-
     /**
      * Health one activation restores: what the configured Regeneration would have healed over its duration.
      * Vanilla regen heals 1 HP every {@code max(50 >> amp, 1)} ticks, hence the shift.
