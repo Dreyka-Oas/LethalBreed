@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.special;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
@@ -9,6 +10,7 @@ import com.dreykaoas.lethalbreed.special.runtime.SpecialDeath;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -61,6 +63,12 @@ public final class SpecialBehavior {
                     fuse = BombeurBlast.fuseTicksFor(z.getRandom().nextDouble());
                     z.setAttached(SpecialAttachment.BOMBEUR_FUSE, fuse);
                     z.setAttached(SpecialAttachment.BOMBEUR_ARMED_AT, now);
+                    if (LethalBreed.LOGGER.isDebugEnabled()) {
+                        LethalBreed.LOGGER.debug("[LethalBreed] Bombeur armed at {} ({} blocks away, fuse={} ticks)",
+                                tgt instanceof Player pl ? pl.getName().getString()
+                                        : tgt.getClass().getSimpleName(),
+                                Math.sqrt(z.distanceToSqr(tgt)), fuse);
+                    }
                 }
                 long elapsed = now - z.getAttachedOrElse(SpecialAttachment.BOMBEUR_ARMED_AT, now);
                 if (elapsed >= fuse) {
