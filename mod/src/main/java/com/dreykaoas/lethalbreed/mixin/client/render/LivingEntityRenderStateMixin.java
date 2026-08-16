@@ -18,6 +18,12 @@ public class LivingEntityRenderStateMixin implements ZombieRenderFlags {
     private float lethalbreed$bellyCharge;
 
     @Unique
+    private float lethalbreed$bellyChargeDisplayed;
+
+    @Unique
+    private long lethalbreed$bellyChargeLastNanos;
+
+    @Unique
     private boolean lethalbreed$hallucinateZombie;
 
     @Unique
@@ -31,6 +37,26 @@ public class LivingEntityRenderStateMixin implements ZombieRenderFlags {
     @Override
     public void lethalbreed$bellyCharge(float charge) {
         this.lethalbreed$bellyCharge = charge;
+    }
+
+    @Override
+    public float lethalbreed$bellyChargeDisplayed() {
+        return lethalbreed$bellyChargeDisplayed;
+    }
+
+    @Override
+    public void lethalbreed$bellyChargeDisplayed(float charge) {
+        this.lethalbreed$bellyChargeDisplayed = charge;
+    }
+
+    @Override
+    public long lethalbreed$bellyChargeLastNanos() {
+        return lethalbreed$bellyChargeLastNanos;
+    }
+
+    @Override
+    public void lethalbreed$bellyChargeLastNanos(long nanos) {
+        this.lethalbreed$bellyChargeLastNanos = nanos;
     }
 
     @Override

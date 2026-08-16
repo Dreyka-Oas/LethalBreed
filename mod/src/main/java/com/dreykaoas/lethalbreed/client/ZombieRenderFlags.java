@@ -19,6 +19,19 @@ public interface ZombieRenderFlags {
 
     void lethalbreed$bellyCharge(float charge);
 
+    /** {@link #lethalbreed$bellyCharge()} smoothed in real time client-side — this is the value the model
+     *  must read. The raw value is only rewritten by the server once per zombie activation (roughly 4x/s at
+     *  LOD HIGH), which caused visible inflation jumps on a short fuse; this fills the gap between updates. */
+    float lethalbreed$bellyChargeDisplayed();
+
+    void lethalbreed$bellyChargeDisplayed(float charge);
+
+    /** Timestamp ({@code System.nanoTime()}) of the last smoothing computation — 0 until a computation has
+     *  happened for this render state. */
+    long lethalbreed$bellyChargeLastNanos();
+
+    void lethalbreed$bellyChargeLastNanos(long nanos);
+
     /** True when this render state belongs to a player the local (symptomatic) viewer is hallucinating as a
      *  zombie — swap texture + arm pose. Set in the AvatarRenderer extract hook, read in texture/model hooks. */
     boolean lethalbreed$hallucinateZombie();

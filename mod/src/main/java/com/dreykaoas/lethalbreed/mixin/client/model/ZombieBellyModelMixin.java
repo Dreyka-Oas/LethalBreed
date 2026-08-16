@@ -30,7 +30,7 @@ public class ZombieBellyModelMixin {
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$swellBelly(ZombieRenderState state, CallbackInfo ci) {
-        float charge = ((ZombieRenderFlags) state).lethalbreed$bellyCharge();
+        float charge = ((ZombieRenderFlags) state).lethalbreed$bellyChargeDisplayed();
         ModelPart body = ((HumanoidModel<?>) (Object) this).body;
         float girth = 1.0f + charge * GIRTH_XZ_SCALE;
         body.xScale = girth;
