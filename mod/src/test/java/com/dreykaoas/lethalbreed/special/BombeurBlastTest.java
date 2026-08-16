@@ -126,6 +126,15 @@ class BombeurBlastTest {
     }
 
     @Test
+    void splatterColourIsFullyOpaque() {
+        // ENTITY_EFFECT reads this as packed ARGB and hands the alpha byte to SpellParticle.setAlpha, so an
+        // alpha of 0 renders the whole cloud invisible while everything else still looks correct: the
+        // particles spawn, travel and expire, and nothing logs a warning. This shipped once already.
+        int alpha = (BombeurBlast.SPLATTER_COLOR_ARGB >>> 24) & 0xFF;
+        assertEquals(0xFF, alpha);
+    }
+
+    @Test
     void blindnessIsDisabledWhenTheThresholdIsOne() {
         // 1.0 is a legal bound, and it is also the divisor that would blow up — one guard covers both.
         SpecialVariantConfig.specialBombeurBlindThreshold = 1.0;
