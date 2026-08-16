@@ -28,6 +28,10 @@ public final class SpecialTestEvaluator {
     private static boolean bombeurSplattered;
     /** Zombie ids present around the Splitter's platform just before it is killed. */
     private static final Set<Integer> BEFORE_SPLIT = new HashSet<>();
+    /** Position of the Bombeur on the first tick its fuse is lit. Null until it has armed. */
+    private static net.minecraft.world.phys.Vec3 bombeurArmedPos;
+    /** Largest distance measured from that position while the fuse is burning. */
+    private static double bombeurMaxDrift;
 
     /**
      * Sampled every tick between build and evaluation.
@@ -43,6 +47,14 @@ public final class SpecialTestEvaluator {
                     && c.cow().getEffect(MobEffects.NAUSEA) != null
                     && c.cow().getEffect(MobEffects.SLOWNESS) != null) {
                 bombeurSplattered = true;
+            }
+            if (c.type() == SpecialType.BOMBEUR && !c.z().isRemoved()
+                    && SpecialBehavior.fuseIsLit(c.z())) {
+                if (bombeurArmedPos == null) {
+                    bombeurArmedPos = c.z().position();
+                } else {
+                    bombeurMaxDrift = Math.max(bombeurMaxDrift, bombeurArmedPos.distanceTo(c.z().position()));
+                }
             }
         }
     }
@@ -76,8 +88,12 @@ public final class SpecialTestEvaluator {
                     // bombeurSplattered is latched by sample(), not read here: the effect durations scale with
                     // intensity and a short fuse lets them lapse before this runs. A dead witness proves the
                     // blast reached it but says nothing about the wider ring, so it is excused.
-                    pass = gone && (!alive || bombeurSplattered);
-                    detail = "explosé=" + gone + " témoinVivant=" + alive + " éclaboussé=" + bombeurSplattered;
+                    // 0.25 block margin: collision nudges, not real movement. A Bombeur that resumes running
+                    // would drift several blocks over the fuse's 1.5-6s window.
+                    boolean immobile = bombeurMaxDrift < 0.25;
+                    pass = gone && (!alive || bombeurSplattered) && immobile;
+                    detail = "explosé=" + gone + " témoinVivant=" + alive + " éclaboussé=" + bombeurSplattered
+                            + " dérive=" + String.format("%.2f", bombeurMaxDrift);
                 }
                 case HURLEUR -> {
                     pass = SpecialBehavior.HURL_COUNT.get() > 0;
