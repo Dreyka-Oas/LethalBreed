@@ -55,6 +55,10 @@ public final class TickScheduler {
         world.enforceWorldRules(server);
         com.dreykaoas.lethalbreed.phase.PhaseManager.get().tick(server);
         com.dreykaoas.lethalbreed.effect.ContaminationManager.tick(server);
+        // Every tick, not bucketed: a puddle shrinks and re-doses on wall-clock cadence, so routing it through
+        // the LOD buckets would tie its lifetime to a performance knob — the exact coupling the Bombeur's fuse
+        // had to be rescued from.
+        com.dreykaoas.lethalbreed.special.runtime.GorePuddles.tick(server);
         world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
         world.processSound(server);
         // Before the bucket pass, for the same reason processSound is: the waypoint it plants is read by

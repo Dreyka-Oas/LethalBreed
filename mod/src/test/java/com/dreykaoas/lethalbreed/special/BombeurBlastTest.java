@@ -135,6 +135,41 @@ class BombeurBlastTest {
     }
 
     @Test
+    void puddleLingersLongerForALongerFuse() {
+        assertTrue(BombeurBlast.puddleDurationTicks(1.0) > BombeurBlast.puddleDurationTicks(0.0));
+        assertTrue(BombeurBlast.puddleDurationTicks(0.0) > 0);
+    }
+
+    @Test
+    void puddlePoolsTighterThanTheRingThatFedIt() {
+        assertTrue(BombeurBlast.puddleRadius(10.0) < 10.0);
+        assertEquals(0.0, BombeurBlast.puddleRadius(0.0), 1e-9);
+    }
+
+    @Test
+    void puddleShrinksToNothingExactlyAsItExpires() {
+        assertEquals(8.0, BombeurBlast.puddleRadiusAt(8.0, 0, 100), 1e-9);
+        assertEquals(4.0, BombeurBlast.puddleRadiusAt(8.0, 50, 100), 1e-9);
+        // At and beyond expiry the hazard is gone, so nobody is clipped by a puddle they can't see.
+        assertEquals(0.0, BombeurBlast.puddleRadiusAt(8.0, 100, 100), 1e-9);
+        assertEquals(0.0, BombeurBlast.puddleRadiusAt(8.0, 300, 100), 1e-9);
+    }
+
+    @Test
+    void puddleDurationOfZeroCannotDivideByZero() {
+        assertEquals(0.0, BombeurBlast.puddleRadiusAt(8.0, 0, 0), 1e-9);
+    }
+
+    @Test
+    void puddleDosesSofterThanTheBurstButFallsOffTheSameWay() {
+        // Residue is a hazard to linger in, not a second explosion.
+        assertTrue(BombeurBlast.puddleIntensity(1.0, 0.0, 5.0) < BombeurBlast.intensity(1.0, 0.0, 5.0));
+        // Same curve underneath: nothing at the edge, more at the centre.
+        assertEquals(0.0, BombeurBlast.puddleIntensity(1.0, 5.0, 5.0), 1e-9);
+        assertTrue(BombeurBlast.puddleIntensity(1.0, 1.0, 5.0) > BombeurBlast.puddleIntensity(1.0, 4.0, 5.0));
+    }
+
+    @Test
     void blindnessIsDisabledWhenTheThresholdIsOne() {
         // 1.0 is a legal bound, and it is also the divisor that would blow up — one guard covers both.
         SpecialVariantConfig.specialBombeurBlindThreshold = 1.0;

@@ -45,6 +45,16 @@ public final class BombeurBlast {
      *  can never stop mattering however long the Bombeur swelled. */
     private static final double FUSE_WEIGHT = 0.6;
 
+    /** Lingering gore puddle: how long the residue stays on the ground, floor and fuse-driven span. */
+    private static final double PUDDLE_BASE_S = 3.0, PUDDLE_SPAN_S = 9.0;
+    /** The puddle pools tighter than the airborne ring — gore falls inward, it does not hang where it flew. */
+    private static final double PUDDLE_RADIUS_MUL = 0.6;
+    /** Residue bites softer than the burst that threw it. Halving keeps the puddle a hazard to linger in
+     *  rather than a second explosion. */
+    private static final double PUDDLE_POTENCY = 0.5;
+    /** How often the puddle re-doses whoever is standing in it — the cadence vanilla lingering clouds use. */
+    public static final int PUDDLE_REAPPLY_TICKS = 20;
+
     private static final int TPS = 20;
 
     private static double lo(double a, double b) { return Math.min(a, b); }
@@ -103,6 +113,37 @@ public final class BombeurBlast {
         }
         double prox = Math.max(0.0, 1.0 - dist / splatterRadius);
         return Math.clamp(prox * ((1.0 - FUSE_WEIGHT) + FUSE_WEIGHT * Math.clamp(ratio, 0.0, 1.0)), 0.0, 1.0);
+    }
+
+    /** How long the gore puddle lingers, in ticks. A long fuse leaves more of a mess behind. */
+    public static int puddleDurationTicks(double ratio) {
+        return seconds(PUDDLE_BASE_S, PUDDLE_SPAN_S, ratio);
+    }
+
+    /** The puddle's radius at the moment it forms. */
+    public static double puddleRadius(double splatterRadius) {
+        return Math.max(0.0, splatterRadius) * PUDDLE_RADIUS_MUL;
+    }
+
+    /**
+     * The puddle's radius after {@code age} ticks, shrinking linearly so it reaches exactly 0 as it expires —
+     * the visual and the hazard drain together, and nobody gets clipped by a puddle they can no longer see.
+     */
+    public static double puddleRadiusAt(double radius0, int age, int durationTicks) {
+        if (durationTicks <= 0 || age >= durationTicks) {
+            return 0.0;
+        }
+        return Math.max(0.0, radius0) * (1.0 - (double) Math.max(0, age) / durationTicks);
+    }
+
+    /**
+     * Dose delivered by standing in the puddle: the same proximity-and-fuse curve as the burst, scaled down by
+     * {@link #PUDDLE_POTENCY}. Reusing {@link #intensity} is deliberate — the residue should fall off toward
+     * its own edge exactly the way the ring does, so one rule governs both and there is no second curve to
+     * keep in sync.
+     */
+    public static double puddleIntensity(double ratio, double dist, double puddleRadius) {
+        return intensity(ratio, dist, puddleRadius) * PUDDLE_POTENCY;
     }
 
     private static int seconds(double base, double span, double intensity) {
