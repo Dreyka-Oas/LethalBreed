@@ -74,13 +74,10 @@ public final class FlowConfig {
     public static boolean targetCreativePlayers = false;
     /** Build a staircase up when the target is at least this many blocks above the zombie. */
     public static double climbThreshold = 2.0;
-    /** Climb ZONE: only start a climb (wall-scale or pillar) toward an overhead target while within this
-     *  horizontal distance of it. Generous on purpose — the climb tops out then walks to the target, so it no
-     *  longer needs to be perfectly lined up. Too tight and zombies stall below a target they can't reach. */
+    /** Climb ZONE: only start a climb toward an overhead target while within this horizontal distance of it.
+     *  Generous on purpose — the climb tops out then walks to the target, so it no longer needs to be perfectly
+     *  lined up. Too tight and zombies stall below a target they can't reach. */
     public static double climbHorizRadius = 5.0;
-    /** Safety cap: give up an ascent after rising this many blocks without topping out / reaching the target
-     *  (guards against chasing an unreachable sky target). On give-up the zombie falls back to a dirt pillar. */
-    public static int maxClimbHeight = 24;
     /** Activations a zombie waits before re-attempting a climb it just gave up on (too tall / no progress) —
      *  stops it jittering up-and-down the same unreachable wall or column forever. */
     public static int climbGiveUpCooldown = 15;

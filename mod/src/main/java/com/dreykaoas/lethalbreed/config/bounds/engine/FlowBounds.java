@@ -31,7 +31,6 @@ public final class FlowBounds {
         r.b("flowDiagonalCost", 1, 1000);
         r.b("climbThreshold", 0, 64);
         r.b("climbHorizRadius", 0, 64);
-        r.b("maxClimbHeight", 1, 256);
         r.b("climbGiveUpCooldown", 0, 1000);
         r.b("pillarMaxHeight", 1, 256);
         r.b("pillarJumpPower", 0, 2);

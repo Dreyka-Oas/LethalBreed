@@ -13,10 +13,12 @@ base {
 // Development-only source set. It now holds everything that used to live scattered across main behind
 // isDevelopmentEnvironment() checks: the headless verification harnesses, every profiler/counter/debug-trace
 // consumer, the dev config holder (DevTestConfig/DevBounds/ConfigOverride) and its "Dev / Debug" config tab,
-// and all four dev commands (/lethaldev, /lethalspawn, /lethalphase, /lethalspecial). It compiles against
-// main but is NEVER packaged into the shipped/remapped jar (see below), so a production jar contains zero
-// dev code and stays as light as possible. It is added to the runClient/runServer classpath so all of the
-// above runs under `gradlew runServer` / start.bat only.
+// and the three dev commands (/lethaldev, /lethalspawn, /lethalspecial — /lethalphase is a MAIN command, see
+// command/PhaseCommand). It compiles against main but is never packaged into the shipped/remapped jar, and
+// nothing here enforces that: Gradle's `jar` task packages sourceSets.main.output only, and no line in this
+// file adds devSourceSet.output to it. Exclusion by omission, verified by
+// `unzip -l build/libs/*.jar | grep lethalbreed/dev/` → nothing. It is added to the runClient/runServer
+// classpath, so all of the above runs under `gradlew runServer` / `gradlew runClient` only.
 //
 // main keeps exactly one seam back into this source set: com.dreykaoas.lethalbreed.probe.DevProbe. Timings,
 // counters and traces measure things that happen INSIDE main-source code (a tick, a stage, a hit), so they
@@ -177,7 +179,7 @@ loom {
         }
         named("server") {
             runDir("run/server") // dedicated server gets its own run dir under run/ — no lock war with the clients
-            source(devSourceSet) // dev harnesses on the dedicated-server run classpath (start.bat / runServer)
+            source(devSourceSet) // dev harnesses on the dedicated-server run classpath (gradlew runServer)
             vmArgs(
                 "-Xms2G",
                 "-Xmx6G",

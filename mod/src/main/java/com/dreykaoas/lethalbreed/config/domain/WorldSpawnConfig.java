@@ -8,10 +8,6 @@ public final class WorldSpawnConfig {
     private WorldSpawnConfig() {}
 
     // ---- World rules ----
-    /** Force the overworld to stay daytime. */
-    public static boolean forceDayTime = false;
-    /** Time of day to hold (6000 = noon). */
-    public static long forcedDayTime = 6000L;
     /** Keep the weather clear (no rain/thunder). */
     public static boolean clearWeather = true;
 
