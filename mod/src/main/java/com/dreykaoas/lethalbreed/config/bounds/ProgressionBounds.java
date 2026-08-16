@@ -34,6 +34,18 @@ public final class ProgressionBounds {
         r.b("phaseFrequencyGrowth", 0, 100);
         r.b("phaseFrequencyExponent", 0.5, 3.0);
         r.b("phaseMax", 1, 1_000_000);
+        // Curve ceilings. Lower bound 1.0: these bound a MULTIPLIER, and below 1.0 a zombie would end up
+        // weaker than a vanilla one the higher the phase climbed.
+        r.b("phaseDmgCeiling", 1.0, 1000.0);
+        r.b("phaseHpCeiling", 1.0, 1000.0);
+        r.b("phaseSpdCeiling", 1.0, 100.0);
+        r.b("phaseMobcapCeiling", 1.0, 1000.0);
+        r.b("phaseFrequencyCeiling", 1.0, 1000.0);
+        // Final attribute caps. Floors are deliberately non-zero: a cap of 0 would make zombies harmless
+        // rather than merely fair, and a 0 health cap would kill every zombie the instant it spawned.
+        r.b("phaseDamageCap", 0.5, 1000.0);
+        r.b("phaseHealthCap", 1.0, 100_000.0);
+        r.b("phaseSpeedCap", 0.05, 10.0);
         r.b("specialBaseChance", 0, 1);
         r.b("specialPhaseScale", 0, 1);
         r.b("specialMaxChance", 0, 1);
@@ -64,6 +76,12 @@ public final class ProgressionBounds {
         r.b("specialBombeurSplatterMul", 0, 10);
         r.b("specialBombeurInfectChance", 0, 1);
         r.b("specialBombeurBlindThreshold", 0, 1);
+        // Cocktail: at least one effect (a Bombeur that splatters nothing is just a firework), and the
+        // decays share the 0.5..0.999 window the other phase decays use.
+        r.b("specialBombeurEffectCountCeiling", 1, 7);
+        r.b("specialBombeurEffectCountDecay", 0.5, 0.999);
+        r.b("specialBombeurEffectAmpCeiling", 0, 4);
+        r.b("specialBombeurEffectAmpDecay", 0.5, 0.999);
         r.b("specialHurleurRadius", 0, 128);
         r.b("specialSoigneurRadius", 0, 128);
         r.b("specialSoigneurRegenTicks", 1, 72_000);

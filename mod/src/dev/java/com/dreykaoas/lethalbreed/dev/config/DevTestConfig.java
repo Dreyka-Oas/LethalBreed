@@ -44,6 +44,8 @@ public final class DevTestConfig {
     public static boolean devPresenceTest = false;
     /** Pack instinct and migration arena. Off for shipping, like every other dev flag here. */
     public static boolean devPackTest = false;
+    /** Attribute-ceiling suite: spawns zombies at extreme phases and checks nothing can one-shot a player. */
+    public static boolean devCapsTest = false;
     /** Dev: halt the server as soon as a harness prints its {@code [LB-Verify] ALL DONE} verdict, so a scripted
      *  {@code runServer} exits on its own instead of hanging until the driver's timeout. Off for shipping. */
     public static boolean devAutoHalt = false;
