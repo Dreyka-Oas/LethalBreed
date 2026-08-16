@@ -147,6 +147,7 @@ public final class LifecycleInit {
             // world isn't pinned into the next session (audit #2, #20).
             scheduler.reset();
             ContaminationManager.onServerStopped();
+            com.dreykaoas.lethalbreed.special.runtime.GorePuddles.onServerStopped();
         });
     }
 }

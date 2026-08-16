@@ -49,19 +49,15 @@ public final class SpecialAbilities {
 
         // Gather BEFORE the explosion: it kills and flings victims, and anyone it launched out of the ring
         // was still standing in the gore at the moment it burst.
-        // Players.isTargetable gates every other way the mod touches a player (targeting, sound, flow field,
-        // mood, damage events). The splatter must respect it too: vanilla already shields a spectator from the
-        // blast, and without this a spectator flying past would eat Nausea, Poison, Slowness and — past
-        // intensity 0.75 — a black screen. It is also the only infection path that needs no damage event.
-        List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class,
-                new AABB(cx - splatR, cy - splatR, cz - splatR, cx + splatR, cy + splatR, cz + splatR),
-                e -> e != z && e.isAlive() && !(e instanceof Zombie)
-                        && !(e instanceof Player p && !Players.isTargetable(p)));
+        List<LivingEntity> caught = splatterVictims(level, cx, cy, cz, splatR, z);
         RandomSource rng = z.getRandom();
 
         level.explode(z, cx, cy, cz, (float) power, Level.ExplosionInteraction.NONE);
         z.discard();
         splatterCloud(level, cx, cy, cz, splatR);
+        // The blast is over in a tick; the mess it made is not. Whoever walks back through the gore keeps
+        // paying for it until the residue drains.
+        GorePuddles.spawn(level, cx, cy, cz, ratio, splatR);
 
         for (LivingEntity victim : caught) {
             // The AABB is a box; the ring is a sphere. Re-measure so corners don't get splattered.
@@ -70,6 +66,31 @@ public final class SpecialAbilities {
                 splatter(victim, intensity, rng);
             }
         }
+    }
+
+    /**
+     * Everyone a gore radius may legitimately touch — shared by the burst and by {@link GorePuddles}, so the
+     * puddle can never splatter someone the explosion would have spared.
+     *
+     * <p>Zombies are excluded because they are the vector, not the victim; without that a Bombeur bursting
+     * inside its own pack would blanket that pack in Slowness. {@code Players.isTargetable} gates every other
+     * way the mod touches a player (targeting, sound, flow field, mood, damage events) and must gate this too:
+     * vanilla already shields a spectator from the blast, and without it a spectator flying past would eat
+     * Nausea, Poison, Slowness and — past the blindness threshold — a black screen. It is also the only
+     * infection path that needs no damage event.
+     *
+     * <p>The returned box is the radius' bounding cube, not the sphere: callers re-measure the real distance,
+     * which they need anyway to scale the dose.
+     *
+     * @param source the bursting zombie to exclude, or {@code null} when there is none (a lingering puddle
+     *               outlives the Bombeur that left it)
+     */
+    static List<LivingEntity> splatterVictims(ServerLevel level, double cx, double cy, double cz, double radius,
+                                              Zombie source) {
+        return level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(cx - radius, cy - radius, cz - radius, cx + radius, cy + radius, cz + radius),
+                e -> e != source && e.isAlive() && !(e instanceof Zombie)
+                        && !(e instanceof Player p && !Players.isTargetable(p)));
     }
 
     /**
@@ -94,10 +115,36 @@ public final class SpecialAbilities {
     }
 
     /**
+     * The lingering puddle's haze, emitted repeatedly by {@link GorePuddles} as the residue shrinks. Spread
+     * flat — the vertical spread is a tenth of the horizontal — so it reads as gore pooled on the ground
+     * rather than as a second airborne burst, and so its edge shows a player exactly where it is still unsafe
+     * to step. Density is tied to area, not radius, so a shrinking puddle thins out instead of concentrating
+     * into an ever-brighter dot.
+     */
+    static void gorePuddleParticles(ServerLevel level, double cx, double cy, double cz, double radius) {
+        int count = Math.max(1, (int) Math.round(3.0 * radius * radius));
+        level.sendParticles(
+                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BombeurBlast.SPLATTER_COLOR_ARGB),
+                cx, cy, cz, count, radius * 0.5, 0.05 * radius, radius * 0.5, SPLATTER_PARTICLE_SPEED);
+    }
+
+    /**
      * Apply one victim's share of the gore. Zombies are filtered out by the caller: they are the vector, not
      * the victim — and {@code contaminate()} refuses them anyway.
      */
     private static void splatter(LivingEntity victim, double intensity, RandomSource rng) {
+        applyGore(victim, intensity);
+        if (rng.nextDouble() < BombeurBlast.infectChance(intensity)) {
+            ContaminationManager.contaminate(victim);
+        }
+    }
+
+    /**
+     * The status-effect half of the gore, without the infection roll. {@link GorePuddles} re-doses on a timer,
+     * so it uses this directly: rolling contamination once per round would turn a few seconds of standing in
+     * a puddle into a near-certain infection. Infection stays the explosion's signature.
+     */
+    static void applyGore(LivingEntity victim, double intensity) {
         victim.addEffect(new MobEffectInstance(MobEffects.NAUSEA, BombeurBlast.nauseaTicks(intensity), 0));
         victim.addEffect(new MobEffectInstance(MobEffects.POISON,
                 BombeurBlast.poisonTicks(intensity), BombeurBlast.poisonAmp(intensity)));
@@ -106,9 +153,6 @@ public final class SpecialAbilities {
         int blind = BombeurBlast.blindTicks(intensity);
         if (blind > 0) {
             victim.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, blind, 0));
-        }
-        if (rng.nextDouble() < BombeurBlast.infectChance(intensity)) {
-            ContaminationManager.contaminate(victim);
         }
     }
 
