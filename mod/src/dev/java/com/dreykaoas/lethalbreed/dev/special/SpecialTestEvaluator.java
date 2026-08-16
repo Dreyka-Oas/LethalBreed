@@ -32,6 +32,14 @@ public final class SpecialTestEvaluator {
     private static net.minecraft.world.phys.Vec3 bombeurArmedPos;
     /** Largest distance measured from that position while the fuse is burning. */
     private static double bombeurMaxDrift;
+    /**
+     * The same drift split into its horizontal and vertical parts. A combined figure cannot distinguish "the
+     * Bombeur kept walking" — the behaviour this check exists to catch — from "the Bombeur settled onto the
+     * ground it was spawned above", which is a harmless artefact of how the arena places it. Reporting both
+     * turns an unexplained intermittent failure into evidence.
+     */
+    private static double bombeurMaxDriftXZ;
+    private static double bombeurMaxDriftY;
 
     /**
      * Sampled every tick between build and evaluation.
@@ -53,7 +61,11 @@ public final class SpecialTestEvaluator {
                 if (bombeurArmedPos == null) {
                     bombeurArmedPos = c.z().position();
                 } else {
-                    bombeurMaxDrift = Math.max(bombeurMaxDrift, bombeurArmedPos.distanceTo(c.z().position()));
+                    net.minecraft.world.phys.Vec3 now = c.z().position();
+                    bombeurMaxDrift = Math.max(bombeurMaxDrift, bombeurArmedPos.distanceTo(now));
+                    bombeurMaxDriftXZ = Math.max(bombeurMaxDriftXZ,
+                            Math.hypot(now.x - bombeurArmedPos.x, now.z - bombeurArmedPos.z));
+                    bombeurMaxDriftY = Math.max(bombeurMaxDriftY, Math.abs(now.y - bombeurArmedPos.y));
                 }
             }
         }
@@ -93,7 +105,9 @@ public final class SpecialTestEvaluator {
                     boolean immobile = bombeurMaxDrift < 0.25;
                     pass = gone && (!alive || bombeurSplattered) && immobile;
                     detail = "explosé=" + gone + " témoinVivant=" + alive + " éclaboussé=" + bombeurSplattered
-                            + " dérive=" + String.format("%.2f", bombeurMaxDrift);
+                            + " dérive=" + String.format("%.2f", bombeurMaxDrift)
+                            + " (xz=" + String.format("%.2f", bombeurMaxDriftXZ)
+                            + " y=" + String.format("%.2f", bombeurMaxDriftY) + ")";
                 }
                 case HURLEUR -> {
                     pass = SpecialBehavior.HURL_COUNT.get() > 0;
