@@ -208,7 +208,16 @@ loom {
     }
 }
 
+// The licence has to travel with the jar, for two independent reasons: section 2 of LICENSE makes it a
+// condition of redistribution, and the bundled JOCL is MIT, whose notice clause obliges the same for any
+// copy. `../` because the Gradle root is mod/ while both files sit at the repository root, next to the
+// README. Added to `jar`, not `remapJar` — remapJar copies the jar output, so it inherits them.
+tasks.jar {
+    from("../LICENSE", "../THIRD-PARTY.md")
+}
+
 // `gradlew build` produces exactly one artifact: build/libs/lethalbreed-<version>.jar, the player jar.
 // build/devlibs holds Loom's unmapped intermediate — an implementation detail of remapJar, never shipped.
 // No sources jar, no javadoc jar, no dev flavour: dev tooling lives in src/dev and runs under runClient/
-// runServer only. Source is MIT in a private repo, so the jar is unobfuscated by choice.
+// runServer only. The jar is unobfuscated by choice: the source is public and readable anyway, so
+// obfuscating it would only cost crash-report legibility. Reading it is not licence to reuse it.
