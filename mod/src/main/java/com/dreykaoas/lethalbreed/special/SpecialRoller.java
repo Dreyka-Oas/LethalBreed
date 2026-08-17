@@ -115,10 +115,10 @@ public final class SpecialRoller {
     private static void applyPassive(Zombie z, SpecialType type) {
         switch (type) {
             case SPRINTER -> {
-                infinite(z, MobEffects.SPEED, SpecialVariantConfig.specialSprinteurSpeedAmp);
-                mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", SpecialVariantConfig.specialSprinteurSpeedMul);
+                infinite(z, MobEffects.SPEED, SpecialVariantConfig.specialSprinterSpeedAmp);
+                mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", SpecialVariantConfig.specialSprinterSpeedMul);
             }
-            case LEAPER -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialBondisseurLeapAmp);
+            case LEAPER -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialLeaperLeapAmp);
             case JUGGERNAUT -> {
                 // Bulky tank via size/HP/resistance only — no armor (zombies never wear gear).
                 // The scale-up is skipped where the ceiling is too low. This runs at the TAIL of
@@ -161,7 +161,7 @@ public final class SpecialRoller {
     private static void mul(Zombie z, Holder<Attribute> attr, String idPath, double factor) {
         // Same floor ZombieVariation.applyMultiplier imposes on these two attributes, and for the same reason.
         // The bounds allow 0, and the deltas of every ADD_MULTIPLIED_BASE modifier on an attribute SUM: a
-        // specialSprinteurSpeedMul of 0 contributes -1.0, which drags the total negative and clamps the value
+        // specialSprinterSpeedMul of 0 contributes -1.0, which drags the total negative and clamps the value
         // to zero. The Sprinteur then spawns completely immobile, wearing Speed II and its own nametag.
         if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
             factor = Math.max(ExpertConfig.expertAttributeFloor, factor);

@@ -19,17 +19,17 @@ class BombeurBlastTest {
     void resetConfig() {
         // Config is static state shared across tests; restore the shipped defaults so a case that edits a
         // bound cannot leak into the next one.
-        SpecialVariantConfig.specialBombeurFuseMinTicks = 30;
-        SpecialVariantConfig.specialBombeurFuseMaxTicks = 120;
-        SpecialVariantConfig.specialBombeurPowerMin = 2.0;
-        SpecialVariantConfig.specialBombeurPowerMax = 5.0;
-        SpecialVariantConfig.specialBombeurSplatterMul = 1.5;
-        SpecialVariantConfig.specialBombeurInfectChance = 0.5;
-        SpecialVariantConfig.specialBombeurBlindThreshold = 0.75;
-        SpecialVariantConfig.specialBombeurEffectCountCeiling = 4;
-        SpecialVariantConfig.specialBombeurEffectCountDecay = 0.90;
-        SpecialVariantConfig.specialBombeurEffectAmpCeiling = 2;
-        SpecialVariantConfig.specialBombeurEffectAmpDecay = 0.92;
+        SpecialVariantConfig.specialBomberFuseMinTicks = 30;
+        SpecialVariantConfig.specialBomberFuseMaxTicks = 120;
+        SpecialVariantConfig.specialBomberPowerMin = 2.0;
+        SpecialVariantConfig.specialBomberPowerMax = 5.0;
+        SpecialVariantConfig.specialBomberSplatterMul = 1.5;
+        SpecialVariantConfig.specialBomberInfectChance = 0.5;
+        SpecialVariantConfig.specialBomberBlindThreshold = 0.75;
+        SpecialVariantConfig.specialBomberEffectCountCeiling = 4;
+        SpecialVariantConfig.specialBomberEffectCountDecay = 0.90;
+        SpecialVariantConfig.specialBomberEffectAmpCeiling = 2;
+        SpecialVariantConfig.specialBomberEffectAmpDecay = 0.92;
     }
 
     @Test
@@ -41,8 +41,8 @@ class BombeurBlastTest {
 
     @Test
     void fuseRangeIsReorderedWhenInverted() {
-        SpecialVariantConfig.specialBombeurFuseMinTicks = 120;
-        SpecialVariantConfig.specialBombeurFuseMaxTicks = 30;
+        SpecialVariantConfig.specialBomberFuseMinTicks = 120;
+        SpecialVariantConfig.specialBomberFuseMaxTicks = 30;
         assertEquals(30, BombeurBlast.fuseTicksFor(0.0));
         assertEquals(120, BombeurBlast.fuseTicksFor(1.0));
     }
@@ -56,8 +56,8 @@ class BombeurBlastTest {
 
     @Test
     void ratioIsZeroWhenTheRangeIsDegenerate() {
-        SpecialVariantConfig.specialBombeurFuseMinTicks = 60;
-        SpecialVariantConfig.specialBombeurFuseMaxTicks = 60;
+        SpecialVariantConfig.specialBomberFuseMinTicks = 60;
+        SpecialVariantConfig.specialBomberFuseMaxTicks = 60;
         assertEquals(0.0, BombeurBlast.ratioOf(60), 1e-9);
     }
 
@@ -70,8 +70,8 @@ class BombeurBlastTest {
 
     @Test
     void powerRangeIsReorderedWhenInverted() {
-        SpecialVariantConfig.specialBombeurPowerMin = 5.0;
-        SpecialVariantConfig.specialBombeurPowerMax = 2.0;
+        SpecialVariantConfig.specialBomberPowerMin = 5.0;
+        SpecialVariantConfig.specialBomberPowerMax = 2.0;
         assertEquals(2.0, BombeurBlast.powerFor(0.0), 1e-9);
         assertEquals(5.0, BombeurBlast.powerFor(1.0), 1e-9);
     }
@@ -126,19 +126,19 @@ class BombeurBlastTest {
         assertTrue(BombeurBlast.cocktailSize(15) > BombeurBlast.cocktailSize(4));
         for (int phase : new int[] {30, 100, 1_000, 1_000_000}) {
             assertTrue(BombeurBlast.cocktailSize(phase)
-                    <= SpecialVariantConfig.specialBombeurEffectCountCeiling, "escaped at phase " + phase);
+                    <= SpecialVariantConfig.specialBomberEffectCountCeiling, "escaped at phase " + phase);
         }
     }
 
     @Test
     void cocktailActuallyReachesItsCeiling() {
         // Rounding rather than flooring is the whole reason: floor() would leave it one short forever.
-        assertEquals(SpecialVariantConfig.specialBombeurEffectCountCeiling, BombeurBlast.cocktailSize(1_000));
+        assertEquals(SpecialVariantConfig.specialBomberEffectCountCeiling, BombeurBlast.cocktailSize(1_000));
     }
 
     @Test
     void aBombeurAlwaysCarriesAtLeastOneEffect() {
-        SpecialVariantConfig.specialBombeurEffectCountCeiling = 0; // below its own configured bound
+        SpecialVariantConfig.specialBomberEffectCountCeiling = 0; // below its own configured bound
         assertTrue(BombeurBlast.cocktailSize(0) >= 1);
         assertTrue(BombeurBlast.cocktailSize(1_000) >= 1);
     }
@@ -149,13 +149,13 @@ class BombeurBlastTest {
         assertTrue(BombeurBlast.cocktailMaxAmp(30) > BombeurBlast.cocktailMaxAmp(4));
         for (int phase : new int[] {30, 100, 1_000, 1_000_000}) {
             assertTrue(BombeurBlast.cocktailMaxAmp(phase)
-                    <= SpecialVariantConfig.specialBombeurEffectAmpCeiling, "escaped at phase " + phase);
+                    <= SpecialVariantConfig.specialBomberEffectAmpCeiling, "escaped at phase " + phase);
         }
     }
 
     @Test
     void aDecayOfOneWouldNeverSaturateSoItIsClamped() {
-        SpecialVariantConfig.specialBombeurEffectCountDecay = 1.0;
+        SpecialVariantConfig.specialBomberEffectCountDecay = 1.0;
         // Clamped to 0.999, so it still climbs — just slowly — instead of freezing at the floor forever.
         assertTrue(BombeurBlast.cocktailSize(10_000) > 1);
     }
@@ -213,7 +213,7 @@ class BombeurBlastTest {
     @Test
     void blindnessIsDisabledWhenTheThresholdIsOne() {
         // 1.0 is a legal bound and no intensity can exceed it, so this must switch Blindness off entirely.
-        SpecialVariantConfig.specialBombeurBlindThreshold = 1.0;
+        SpecialVariantConfig.specialBomberBlindThreshold = 1.0;
         assertFalse(BombeurBlast.blindnessEligible(1.0));
         assertFalse(BombeurBlast.blindnessEligible(0.99));
     }

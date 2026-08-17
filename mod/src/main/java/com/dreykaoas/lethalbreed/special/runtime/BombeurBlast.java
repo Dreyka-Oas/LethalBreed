@@ -63,8 +63,8 @@ public final class BombeurBlast {
      * absolute deadline, which is what makes the duration independent of activation cadence.
      */
     public static int fuseTicksFor(double rand01) {
-        double a = SpecialVariantConfig.specialBombeurFuseMinTicks;
-        double b = SpecialVariantConfig.specialBombeurFuseMaxTicks;
+        double a = SpecialVariantConfig.specialBomberFuseMinTicks;
+        double b = SpecialVariantConfig.specialBomberFuseMaxTicks;
         double min = lo(a, b), max = hi(a, b);
         return (int) Math.round(min + (max - min) * Math.clamp(rand01, 0.0, 1.0));
     }
@@ -72,8 +72,8 @@ public final class BombeurBlast {
     /** Where a fuse length sits in its configured range. A degenerate range yields 0 — the mildest blast,
      *  which is the safe way to fail. */
     public static double ratioOf(int fuseTicks) {
-        double a = SpecialVariantConfig.specialBombeurFuseMinTicks;
-        double b = SpecialVariantConfig.specialBombeurFuseMaxTicks;
+        double a = SpecialVariantConfig.specialBomberFuseMinTicks;
+        double b = SpecialVariantConfig.specialBomberFuseMaxTicks;
         double min = lo(a, b), max = hi(a, b);
         if (max - min <= 0.0) {
             return 0.0;
@@ -83,8 +83,8 @@ public final class BombeurBlast {
 
     /** Explosion power for a fuse ratio: the longer it swelled, the bigger it bursts. */
     public static double powerFor(double ratio) {
-        double a = SpecialVariantConfig.specialBombeurPowerMin;
-        double b = SpecialVariantConfig.specialBombeurPowerMax;
+        double a = SpecialVariantConfig.specialBomberPowerMin;
+        double b = SpecialVariantConfig.specialBomberPowerMax;
         double min = lo(a, b), max = hi(a, b);
         return min + (max - min) * Math.clamp(ratio, 0.0, 1.0);
     }
@@ -96,7 +96,7 @@ public final class BombeurBlast {
 
     /** The gore ring — wider than the blast, so backing out of lethal range still gets you splattered. */
     public static double splatterRadius(double power) {
-        return blastRadius(power) * Math.max(0.0, SpecialVariantConfig.specialBombeurSplatterMul);
+        return blastRadius(power) * Math.max(0.0, SpecialVariantConfig.specialBomberSplatterMul);
     }
 
     /** How hard the splatter lands: proximity dominates, fuse length amplifies. 0 at the ring's edge. */
@@ -143,13 +143,13 @@ public final class BombeurBlast {
      * How many distinct effects this Bombeur's gore cocktail carries, given the phase.
      *
      * <p>Always at least one — a Bombeur that splatters nothing is a firework — rising toward
-     * {@code specialBombeurEffectCountCeiling} on the same saturating shape the rest of the phase system
+     * {@code specialBomberEffectCountCeiling} on the same saturating shape the rest of the phase system
      * uses. Rounded rather than floored so the ceiling is actually reachable: {@code (C-1)·(1-decay^p)}
      * approaches {@code C-1} from below and would floor to {@code C-2} forever.
      */
     public static int cocktailSize(int phase) {
-        int ceiling = Math.max(1, SpecialVariantConfig.specialBombeurEffectCountCeiling);
-        double grown = (ceiling - 1) * saturation(SpecialVariantConfig.specialBombeurEffectCountDecay, phase);
+        int ceiling = Math.max(1, SpecialVariantConfig.specialBomberEffectCountCeiling);
+        double grown = (ceiling - 1) * saturation(SpecialVariantConfig.specialBomberEffectCountDecay, phase);
         return 1 + (int) Math.round(grown);
     }
 
@@ -158,8 +158,8 @@ public final class BombeurBlast {
      * so the amplifier is random per effect while the ceiling itself is a function of the phase.
      */
     public static int cocktailMaxAmp(int phase) {
-        int ceiling = Math.max(0, SpecialVariantConfig.specialBombeurEffectAmpCeiling);
-        return (int) Math.round(ceiling * saturation(SpecialVariantConfig.specialBombeurEffectAmpDecay, phase));
+        int ceiling = Math.max(0, SpecialVariantConfig.specialBomberEffectAmpCeiling);
+        return (int) Math.round(ceiling * saturation(SpecialVariantConfig.specialBomberEffectAmpDecay, phase));
     }
 
     /** {@code 1 - decay^phase}: 0 at phase 0, approaching 1. A decay outside (0,1) would not saturate, so it
@@ -185,18 +185,18 @@ public final class BombeurBlast {
      * Whether Blindness is eligible for this blast's cocktail at all.
      *
      * <p>Kept here rather than inline in {@code GoreCocktail} so the meaning of
-     * {@code specialBombeurBlindThreshold} — "intensity from which Blindness is applied, 1.0 disables it" —
+     * {@code specialBomberBlindThreshold} — "intensity from which Blindness is applied, 1.0 disables it" —
      * stays testable without booting a server. Blindness is the one entry in the pool that removes
      * information rather than capability, which is why it alone is gated.
      */
     public static boolean blindnessEligible(double intensity) {
-        double t = Math.clamp(SpecialVariantConfig.specialBombeurBlindThreshold, 0.0, 1.0);
+        double t = Math.clamp(SpecialVariantConfig.specialBomberBlindThreshold, 0.0, 1.0);
         // No intensity can exceed 1, so a threshold of 1.0 disables Blindness outright.
         return t < 1.0 && intensity >= t;
     }
 
     public static double infectChance(double i) {
         return Math.clamp(i, 0.0, 1.0)
-                * Math.clamp(SpecialVariantConfig.specialBombeurInfectChance, 0.0, 1.0);
+                * Math.clamp(SpecialVariantConfig.specialBomberInfectChance, 0.0, 1.0);
     }
 }
