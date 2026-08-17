@@ -70,13 +70,13 @@ public enum SpecialType {
     /** Phase from which this type can appear — configurable via {@link ProgressionConfig}. */
     public int unlockPhase() {
         return switch (this) {
-            case SPRINTER -> SpecialVariantConfig.specialSprinteurPhase;
-            case LEAPER -> SpecialVariantConfig.specialBondisseurPhase;
-            case BOMBER -> SpecialVariantConfig.specialBombeurPhase;
-            case SCREAMER -> SpecialVariantConfig.specialHurleurPhase;
-            case HEALER -> SpecialVariantConfig.specialSoigneurPhase;
+            case SPRINTER -> SpecialVariantConfig.specialSprinterPhase;
+            case LEAPER -> SpecialVariantConfig.specialLeaperPhase;
+            case BOMBER -> SpecialVariantConfig.specialBomberPhase;
+            case SCREAMER -> SpecialVariantConfig.specialScreamerPhase;
+            case HEALER -> SpecialVariantConfig.specialHealerPhase;
             case JUGGERNAUT -> SpecialVariantConfig.specialJuggernautPhase;
-            case NECROMANCER -> SpecialVariantConfig.specialNecromancienPhase;
+            case NECROMANCER -> SpecialVariantConfig.specialNecromancerPhase;
             case SPLITTER -> SpecialVariantConfig.specialSplitterPhase;
             case NONE -> 0;
         };
@@ -85,13 +85,13 @@ public enum SpecialType {
     /** Relative selection weight (higher = more frequent; 0 = never picked) — configurable via {@link ProgressionConfig}. */
     public int weight() {
         return switch (this) {
-            case SPRINTER -> SpecialVariantConfig.specialSprinteurWeight;
-            case LEAPER -> SpecialVariantConfig.specialBondisseurWeight;
-            case BOMBER -> SpecialVariantConfig.specialBombeurWeight;
-            case SCREAMER -> SpecialVariantConfig.specialHurleurWeight;
-            case HEALER -> SpecialVariantConfig.specialSoigneurWeight;
+            case SPRINTER -> SpecialVariantConfig.specialSprinterWeight;
+            case LEAPER -> SpecialVariantConfig.specialLeaperWeight;
+            case BOMBER -> SpecialVariantConfig.specialBomberWeight;
+            case SCREAMER -> SpecialVariantConfig.specialScreamerWeight;
+            case HEALER -> SpecialVariantConfig.specialHealerWeight;
             case JUGGERNAUT -> SpecialVariantConfig.specialJuggernautWeight;
-            case NECROMANCER -> SpecialVariantConfig.specialNecromancienWeight;
+            case NECROMANCER -> SpecialVariantConfig.specialNecromancerWeight;
             case SPLITTER -> SpecialVariantConfig.specialSplitterWeight;
             case NONE -> 0;
         };

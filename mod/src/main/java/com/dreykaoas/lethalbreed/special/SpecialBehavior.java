@@ -55,7 +55,7 @@ public final class SpecialBehavior {
                 int fuse = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_FUSE, 0);
                 long now = level.getGameTime();
                 if (fuse <= 0) {
-                    double armRange = SpecialVariantConfig.specialBombeurArmRange;
+                    double armRange = SpecialVariantConfig.specialBomberArmRange;
                     boolean inRange = tgt != null && z.distanceToSqr(tgt) <= armRange * armRange;
                     if (!inRange) {
                         break;

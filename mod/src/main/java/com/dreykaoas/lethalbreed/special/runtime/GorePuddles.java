@@ -123,7 +123,7 @@ public final class GorePuddles {
                 continue;
             }
             GoreCocktail.apply(victim, p.cocktail, intensity);
-            if (SpecialVariantConfig.specialBombeurPuddleInfect && p.infectionRolled.add(victim.getUUID())
+            if (SpecialVariantConfig.specialBomberPuddleInfect && p.infectionRolled.add(victim.getUUID())
                     && victim.getRandom().nextDouble() < BombeurBlast.infectChance(intensity)) {
                 // add() returning true is the whole gate: it means this is the first time this puddle has
                 // considered this victim. Placed before the chance roll on purpose — a victim who fails the

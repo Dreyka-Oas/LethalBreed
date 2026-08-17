@@ -28,20 +28,20 @@ public final class SpecialVariantConfig {
     // Per special type: from which phase it can appear (…Phase) and its relative selection weight
     // (…Weight, higher = more frequent; 0 = never picked). Defaults match the built-in table, so leaving
     // them untouched changes nothing. Read live by SpecialType, so edits apply without a restart.
-    public static int specialSprinteurPhase = 2;
-    public static int specialSprinteurWeight = 10;
-    public static int specialBondisseurPhase = 3;
-    public static int specialBondisseurWeight = 9;
-    public static int specialBombeurPhase = 4;
-    public static int specialBombeurWeight = 7;
-    public static int specialHurleurPhase = 5;
-    public static int specialHurleurWeight = 7;
-    public static int specialSoigneurPhase = 6;
-    public static int specialSoigneurWeight = 6;
+    public static int specialSprinterPhase = 2;
+    public static int specialSprinterWeight = 10;
+    public static int specialLeaperPhase = 3;
+    public static int specialLeaperWeight = 9;
+    public static int specialBomberPhase = 4;
+    public static int specialBomberWeight = 7;
+    public static int specialScreamerPhase = 5;
+    public static int specialScreamerWeight = 7;
+    public static int specialHealerPhase = 6;
+    public static int specialHealerWeight = 6;
     public static int specialJuggernautPhase = 6;
     public static int specialJuggernautWeight = 6;
-    public static int specialNecromancienPhase = 9;
-    public static int specialNecromancienWeight = 4;
+    public static int specialNecromancerPhase = 9;
+    public static int specialNecromancerWeight = 4;
     public static int specialSplitterPhase = 11;
     public static int specialSplitterWeight = 4;
 
@@ -49,53 +49,53 @@ public final class SpecialVariantConfig {
     // them untouched changes nothing. All read live at spawn/activation, so edits apply without a restart.
     // -- Bombeur (ACTIVE): timed fuse + explosion + infectious splatter.
     /** Distance (blocks) to the target at which a Bombeur arms and commits to detonating. */
-    public static double specialBombeurArmRange = 3.0;
+    public static double specialBomberArmRange = 3.0;
     /** Shortest fuse, in GAME TICKS (not activations): the floor of the random roll made when it arms. */
-    public static int specialBombeurFuseMinTicks = 30;
+    public static int specialBomberFuseMinTicks = 30;
     /** Longest fuse, in GAME TICKS. A long fuse gives the victim time, and detonates harder for it. */
-    public static int specialBombeurFuseMaxTicks = 120;
+    public static int specialBomberFuseMaxTicks = 120;
     /** Explosion power of the shortest fuse (vanilla TNT ≈ 4.0). */
-    public static double specialBombeurPowerMin = 2.0;
+    public static double specialBomberPowerMin = 2.0;
     /** Explosion power of the longest fuse — the payoff for having swelled the whole time. */
-    public static double specialBombeurPowerMax = 5.0;
+    public static double specialBomberPowerMax = 5.0;
     /** Splatter radius as a multiple of the blast radius. Above 1.0, backing out of lethal range still
      *  leaves you inside the gore — which is the whole point of the ring. */
-    public static double specialBombeurSplatterMul = 1.5;
+    public static double specialBomberSplatterMul = 1.5;
     /** Contamination chance at intensity 1.0; scales down linearly with intensity. */
-    public static double specialBombeurInfectChance = 0.5;
+    public static double specialBomberInfectChance = 0.5;
     /** Splatter intensity from which Blindness is applied. 1.0 disables Blindness entirely. */
-    public static double specialBombeurBlindThreshold = 0.75;
+    public static double specialBomberBlindThreshold = 0.75;
     /** Most distinct effects one Bombeur's gore cocktail can carry. */
-    public static int specialBombeurEffectCountCeiling = 4;
+    public static int specialBomberEffectCountCeiling = 4;
     /** How fast the cocktail grows toward its ceiling with the phase. Lower = reaches the ceiling sooner. */
-    public static double specialBombeurEffectCountDecay = 0.90;
+    public static double specialBomberEffectCountDecay = 0.90;
     /** Highest amplifier the cocktail may roll (2 = level III). Each effect draws uniformly in [0, this]. */
-    public static int specialBombeurEffectAmpCeiling = 2;
+    public static int specialBomberEffectAmpCeiling = 2;
     /** How fast the amplifier ceiling grows toward its maximum with the phase. */
-    public static double specialBombeurEffectAmpDecay = 0.92;
+    public static double specialBomberEffectAmpDecay = 0.92;
     /** Whether the lingering gore puddle can also transmit the contamination, once per victim per puddle. */
-    public static boolean specialBombeurPuddleInfect = true;
+    public static boolean specialBomberPuddleInfect = true;
     // -- Hurleur (ACTIVE): rally.
     /** Radius (blocks) within which a Hurleur hands its target to nearby idle zombies. */
-    public static double specialHurleurRadius = 24.0;
+    public static double specialScreamerRadius = 24.0;
     // -- Soigneur (ACTIVE): heal aura.
     /** Radius (blocks) of the Soigneur's regeneration aura. */
-    public static double specialSoigneurRadius = 8.0;
+    public static double specialHealerRadius = 8.0;
     /** Duration (ticks) of the Regeneration granted by a Soigneur. */
-    public static int specialSoigneurRegenTicks = 100;
+    public static int specialHealerRegenTicks = 100;
     /** Amplifier of the Regeneration granted by a Soigneur (0 = Regeneration I). */
-    public static int specialSoigneurRegenAmp = 0;
+    public static int specialHealerRegenAmp = 0;
     // -- Nécromancien (ACTIVE): summon.
     /** Minimum children a Nécromancien summons per activation. */
-    public static int specialNecromancienMinChildren = 1;
+    public static int specialNecromancerMinChildren = 1;
     /** Maximum children a Nécromancien summons per activation. */
-    public static int specialNecromancienMaxChildren = 2;
+    public static int specialNecromancerMaxChildren = 2;
     /** Skip the summon if more than this many zombies are already within the density radius. */
-    public static int specialNecromancienDensityCap = 40;
+    public static int specialNecromancerDensityCap = 40;
     /** Radius (blocks) of the local-density check that gates a Nécromancien summon. */
-    public static double specialNecromancienDensityRadius = 12.0;
+    public static double specialNecromancerDensityRadius = 12.0;
     /** Scatter (blocks) of summoned children around the Nécromancien. */
-    public static int specialNecromancienSpread = 2;
+    public static int specialNecromancerSpread = 2;
     // -- Splitter (DEATH): split on death.
     /** Number of small children a Splitter spawns when it dies. */
     public static int specialSplitterChildren = 2;
@@ -105,12 +105,12 @@ public final class SpecialVariantConfig {
     public static int specialSplitterSpread = 1;
     // -- Sprinteur (PASSIVE): speed.
     /** Speed effect amplifier on a Sprinteur (1 = Speed II). */
-    public static int specialSprinteurSpeedAmp = 1;
+    public static int specialSprinterSpeedAmp = 1;
     /** Movement-speed attribute multiplier on a Sprinteur. */
-    public static double specialSprinteurSpeedMul = 1.35;
+    public static double specialSprinterSpeedMul = 1.35;
     // -- Bondisseur (PASSIVE): leap.
     /** LEAP effect amplifier on a Bondisseur (2 = LEAP III). */
-    public static int specialBondisseurLeapAmp = 2;
+    public static int specialLeaperLeapAmp = 2;
     // -- Juggernaut (PASSIVE): tank.
     /** Size multiplier on a Juggernaut. */
     public static double specialJuggernautScale = 1.4;

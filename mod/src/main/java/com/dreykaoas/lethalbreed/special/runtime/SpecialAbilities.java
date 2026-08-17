@@ -34,7 +34,7 @@ public final class SpecialAbilities {
     /**
      * BOMBEUR: burst, then splatter everything in the wider gore ring with infectious status effects.
      *
-     * <p>The blast is only half of it. The splatter ring reaches {@code specialBombeurSplatterMul} times
+     * <p>The blast is only half of it. The splatter ring reaches {@code specialBomberSplatterMul} times
      * further, so retreating out of lethal range still leaves a victim inside the gore — distance buys
      * hit points, not a clean escape.
      *
@@ -148,8 +148,8 @@ public final class SpecialAbilities {
      * Vanilla regen heals 1 HP every {@code max(50 >> amp, 1)} ticks, hence the shift.
      */
     static float healAmount() {
-        int period = Math.max(50 >> Math.max(0, SpecialVariantConfig.specialSoigneurRegenAmp), 1);
-        return Math.max(0, SpecialVariantConfig.specialSoigneurRegenTicks) / (float) period;
+        int period = Math.max(50 >> Math.max(0, SpecialVariantConfig.specialHealerRegenAmp), 1);
+        return Math.max(0, SpecialVariantConfig.specialHealerRegenTicks) / (float) period;
     }
 
     /**
@@ -165,7 +165,7 @@ public final class SpecialAbilities {
     public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAIContext ctx) {
         long expire = z.level().getGameTime() + TargetingConfig.targetMemoryTicks;
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
-                SpecialVariantConfig.specialHurleurRadius)) {
+                SpecialVariantConfig.specialScreamerRadius)) {
             // isAlive mirrors heal(): the grid can still hold a zombie for up to tickBuckets ticks after it
             // dies, and retargeting a corpse is pure waste that also inflates the dev counter.
             if (o != sz && o.entity().isAlive() && !o.hasTarget()) {
@@ -192,14 +192,14 @@ public final class SpecialAbilities {
      * every vanilla regeneration potion, beacon and lingering cloud heal zombies — far outside this variant's
      * remit. Healing directly is the mechanic that was actually meant.
      *
-     * <p>{@code specialSoigneurRegenTicks} and {@code specialSoigneurRegenAmp} keep their names and their
+     * <p>{@code specialHealerRegenTicks} and {@code specialHealerRegenAmp} keep their names and their
      * arithmetic: the heal is what that Regeneration WOULD have delivered over its full duration, i.e.
      * {@code ticks / (50 >> amp)} health, so tuning either option still moves the number the same way.
      */
     public static void heal(SmartZombie sz, Zombie z, WorldAIContext ctx) {
         float amount = healAmount();
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
-                SpecialVariantConfig.specialSoigneurRadius)) {
+                SpecialVariantConfig.specialHealerRadius)) {
             if (o != sz && o.entity().isAlive()) {
                 Zombie other = o.entity();
                 // Count only healing that actually landed. A counter that ticks up on a full-health zombie is
@@ -215,8 +215,8 @@ public final class SpecialAbilities {
     /** NECROMANCIEN: summon child zombies, capped against an already-dense local pack. */
     public static void summon(SmartZombie sz, ServerLevel level, Zombie z, WorldAIContext ctx) {
         if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
-                SpecialVariantConfig.specialNecromancienDensityRadius).size()
-                > SpecialVariantConfig.specialNecromancienDensityCap) {
+                SpecialVariantConfig.specialNecromancerDensityRadius).size()
+                > SpecialVariantConfig.specialNecromancerDensityCap) {
             return;
         }
         // A summoner inside a pack is also capped by that pack's size. The density cap alone counts a radius,
@@ -227,10 +227,10 @@ public final class SpecialAbilities {
         if (pack != null && pack.totalMembers() >= PackConfig.packMaxSize) {
             return;
         }
-        int min = SpecialVariantConfig.specialNecromancienMinChildren;
-        int max = Math.max(min, SpecialVariantConfig.specialNecromancienMaxChildren);
+        int min = SpecialVariantConfig.specialNecromancerMinChildren;
+        int max = Math.max(min, SpecialVariantConfig.specialNecromancerMaxChildren);
         int n = min + level.getRandom().nextInt(max - min + 1);
-        int spread = SpecialVariantConfig.specialNecromancienSpread;
+        int spread = SpecialVariantConfig.specialNecromancerSpread;
         for (int i = 0; i < n; i++) {
             Zombie child = ChildSpawner.spawnNear(level, z, spread);
             if (child != null) {

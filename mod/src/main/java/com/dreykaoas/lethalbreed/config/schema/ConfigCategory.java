@@ -28,12 +28,17 @@ public final class ConfigCategory {
         // Pack MUST come before nearly everything else: packBreakRadius would be captured by "break" →
         // Breaking, packStuckActivations by "stuck" → Climb, packDwellTicks by "day"-adjacent rules. It sits
         // AFTER the dev/debug rule so a dev-only pack option would still land in the Dev tab.
-        if (n.startsWith("pack")) return "Meute";
+        if (n.startsWith("pack")) return "Pack";
+        // Specials MUST come before Contamination and Mood, for the same reason Pack comes before Breaking:
+        // an ability word inside the name would otherwise win. specialScreamerRadius would be captured by
+        // "scream" → Mood, and specialHealerRegenTicks/RegenAmp by "regen" → Mood — which is where those
+        // two already sat, silently, back when they were still named specialSoigneurRegen*. Every special*
+        // option is a Specials option, whatever ability word it happens to spell.
+        if (n.startsWith("special")) return "Specials";
         if (n.contains("contam")) return "Contamination";
         if (n.contains("flee") || n.contains("regen") || n.contains("regain") || n.contains("distress")
                 || n.contains("celebrat") || n.contains("mood") || n.contains("scream")
                 || n.contains("victory") || n.contains("sleep") || n.contains("dayawake")) return "Mood";
-        if (n.startsWith("special")) return "Specials";
         if (n.startsWith("phase")) return "Phases";
         if (n.contains("sound")) return "Sound";
         if (n.contains("water") || n.contains("float")) return "Water";

@@ -36,7 +36,7 @@ public final class GoreCocktail {
      * @param ampCap     highest amplifier this effect may reach, regardless of the phase. 0 for effects whose
      *                   amplifier does nothing in vanilla — showing the player "Nausea III" would promise a
      *                   severity the game does not implement.
-     * @param blindGated whether this entry is subject to {@code specialBombeurBlindThreshold}
+     * @param blindGated whether this entry is subject to {@code specialBomberBlindThreshold}
      */
     private record Entry(Holder<MobEffect> effect, double baseS, double spanS, int ampCap, boolean blindGated) {}
 
@@ -50,7 +50,7 @@ public final class GoreCocktail {
             new Entry(MobEffects.WEAKNESS, 3.0, 9.0, 2, false),
             new Entry(MobEffects.MINING_FATIGUE, 3.0, 9.0, 2, false),
             new Entry(MobEffects.HUNGER, 4.0, 11.0, 2, false),
-            // Blindness stays behind its threshold, keeping specialBombeurBlindThreshold's documented meaning
+            // Blindness stays behind its threshold, keeping specialBomberBlindThreshold's documented meaning
             // ("intensity from which Blindness is applied", 1.0 disables it). It is also the only entry that
             // takes away information rather than capability, which is why it is the one that is gated.
             new Entry(MobEffects.BLINDNESS, 1.0, 4.0, 0, true));
