@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.block.MaterialRegistry;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
@@ -31,7 +31,7 @@ public final class MoveMath {
     /** Clear one body-space cell for a step: if a breakable solid stands at {@code pos}, request its progressive
      *  break, set the zombie to {@code busyState} and return true (the caller should hold/wait this tick). Returns
      *  false when the cell is already clear or unbreakable — the single place the descent steps clear their path. */
-    public static boolean requestBreakBodyBlock(SmartZombie owner, ServerLevel level, WorldAIContext ctx,
+    public static boolean requestBreakBodyBlock(SmartZombie owner, ServerLevel level, WorldAiContext ctx,
             BlockPos pos, BlockState state, ZombieState busyState) {
         if (state.blocksMotion() && breakableSolid(level, pos)) {
             ctx.breakManager().request(pos, owner.entity());

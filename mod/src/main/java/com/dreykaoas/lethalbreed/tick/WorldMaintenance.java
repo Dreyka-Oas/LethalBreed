@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.tick;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.pack.PackState;
 import com.dreykaoas.lethalbreed.pack.runtime.PackMaterializer;
@@ -48,7 +48,7 @@ final class WorldMaintenance {
     }
 
     /** Advance every pack in every loaded dimension: lifecycle first, then the march that plants the shared
-     *  waypoint. Must run BEFORE the bucket pass — LODManager reads that waypoint in the same activation, so
+     *  waypoint. Must run BEFORE the bucket pass — LodManager reads that waypoint in the same activation, so
      *  planting it afterwards would leave marching members frozen for one whole cycle. */
     void tickPacks(MinecraftServer server, long gameTime) {
         forEachLoadedContext(server, (level, ctx) -> {
@@ -91,7 +91,7 @@ final class WorldMaintenance {
     /** Run {@code action} for every dimension context whose {@link ServerLevel} is currently loaded, skipping
      *  the unloaded ones. The single place the per-dimension iterate-and-null-check lives. */
     private void forEachLoadedContext(MinecraftServer server, LoadedContextAction action) {
-        for (Map.Entry<ResourceKey<Level>, WorldAIContext> e : dimensions.contexts().entrySet()) {
+        for (Map.Entry<ResourceKey<Level>, WorldAiContext> e : dimensions.contexts().entrySet()) {
             ServerLevel level = server.getLevel(e.getKey());
             if (level == null) {
                 continue;
@@ -102,6 +102,6 @@ final class WorldMaintenance {
 
     @FunctionalInterface
     private interface LoadedContextAction {
-        void run(ServerLevel level, WorldAIContext ctx);
+        void run(ServerLevel level, WorldAiContext ctx);
     }
 }

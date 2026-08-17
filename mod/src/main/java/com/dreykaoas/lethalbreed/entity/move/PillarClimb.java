@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import com.dreykaoas.lethalbreed.probe.DevProbe;
@@ -87,7 +87,7 @@ public final class PillarClimb {
      * support is dropped into that cell so it lands one block higher. Repeats until it reaches the target's
      * height, the height cap, or a ceiling.
      */
-    public void step(ServerLevel level, WorldAIContext ctx) {
+    public void step(ServerLevel level, WorldAiContext ctx) {
         if (!beginStep()) {
             return;
         }

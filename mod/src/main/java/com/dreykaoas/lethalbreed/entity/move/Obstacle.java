@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import com.dreykaoas.lethalbreed.block.BlockOperationQueue;
 import com.dreykaoas.lethalbreed.block.BreachCoordinator;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import net.minecraft.core.BlockPos;
@@ -18,7 +18,7 @@ public final class Obstacle {
     private Obstacle() {
     }
 
-    public static void handleToward(SmartZombie owner, ServerLevel level, WorldAIContext ctx,
+    public static void handleToward(SmartZombie owner, ServerLevel level, WorldAiContext ctx,
                                     int bx, int bz, int sdx, int sdz, BlockPos target, boolean committed) {
         if (sdx == 0 && sdz == 0) {
             return;

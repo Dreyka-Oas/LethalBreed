@@ -7,7 +7,7 @@ import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.spawn.SpawnControl;
@@ -156,7 +156,7 @@ public final class EntityEventsInit {
     private static void registerSound(DimensionManager dimensions) {
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             if (TargetingConfig.soundEnabled && Players.isTargetable(player) && world instanceof ServerLevel sl) {
-                WorldAIContext ctx = dimensions.get(sl.dimension());
+                WorldAiContext ctx = dimensions.get(sl.dimension());
                 double radius = TargetingConfig.soundBaseRadius * TargetingConfig.soundLoudMultiplier;
                 ctx.soundBus().emit(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, radius);
             }

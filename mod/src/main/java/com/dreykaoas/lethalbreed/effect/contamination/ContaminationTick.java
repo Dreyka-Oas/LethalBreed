@@ -40,11 +40,11 @@ public final class ContaminationTick {
         SNAPSHOT.clear();
 
         boolean enabled = refreshEnabledState();
-        if (!enabled || ContaminationState.tracked.isEmpty()) {
+        if (!enabled || ContaminationState.TRACKED.isEmpty()) {
             return;
         }
         long t = server.getTickCount();
-        SNAPSHOT.addAll(ContaminationState.tracked);
+        SNAPSHOT.addAll(ContaminationState.TRACKED);
         for (int i = 0; i < SNAPSHOT.size(); i++) {
             LivingEntity e = SNAPSHOT.get(i);
             if (e == null || e.isRemoved() || !e.isAlive() || !(e.level() instanceof ServerLevel level)) {
@@ -128,9 +128,9 @@ public final class ContaminationTick {
         // Slow plague pulse: every 5–10 real seconds (random per pulse) shave a small chip off BOTH health and
         // (players) food. Higher level → bigger chip (×mult). Zombies are never tracked, so it can't chip its
         // own kind. Only the final, fatal chip goes through the vanilla damage pipeline (death/reanimation).
-        Long due = ContaminationState.nextPulse.get(e);
+        Long due = ContaminationState.NEXT_PULSE_TICK.get(e);
         if (due == null) {
-            ContaminationState.nextPulse.put(e, t + rollIntervalTicks());
+            ContaminationState.NEXT_PULSE_TICK.put(e, t + rollIntervalTicks());
         } else if (t >= due) {
             float dmg = (float) (ContaminationRoll.uniform(ContaminationState.RNG,
                     ContaminationConfig.contamDamageMin, ContaminationConfig.contamDamageMax) * mult);
@@ -144,7 +144,7 @@ public final class ContaminationTick {
                 // Exhaustion drains food gradually: 4.0 exhaustion = 1 food point, so this removes ~dmg food.
                 p.getFoodData().addExhaustion(dmg * (float) ContaminationConfig.contamFoodExhaustionMult);
             }
-            ContaminationState.nextPulse.put(e, t + rollIntervalTicks());
+            ContaminationState.NEXT_PULSE_TICK.put(e, t + rollIntervalTicks());
         }
 
         // Random episodic afflictions (slow / no-jump / weak-strike) — each on its own timer, scaled by mult.

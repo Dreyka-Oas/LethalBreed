@@ -1,8 +1,8 @@
 package com.dreykaoas.lethalbreed.entity.mood;
 
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
-import com.dreykaoas.lethalbreed.entity.LODLevel;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
+import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.util.Players;
 import com.dreykaoas.lethalbreed.util.TargetSelector;
@@ -32,13 +32,13 @@ public final class MoodStateDispatch {
     /** Returns true if the distress scream fired this call (caller bumps its own counter + latch). No-op for
      *  {@code NORMAL}. */
     public static boolean apply(State active, Zombie entity, ServerLevel level, SmartZombie owner,
-            WorldAIContext ctx, LivingEntity threat, boolean alreadyScreamed) {
+            WorldAiContext ctx, LivingEntity threat, boolean alreadyScreamed) {
         if (active == State.SHELTERING) {
             dropHunt(entity, owner);
-            owner.setLod(LODLevel.HIGH);
+            owner.setLod(LodLevel.HIGH);
         } else if (active == State.FLEEING) {
             dropHunt(entity, owner);
-            owner.setLod(LODLevel.HIGH); // keep AI active so driveFlee runs (would be FROZEN with no target)
+            owner.setLod(LodLevel.HIGH); // keep AI active so driveFlee runs (would be FROZEN with no target)
             if (!alreadyScreamed && threat != null
                     && entity.distanceToSqr(threat) >= sq(ZombieMoodConfig.distressDistance)) {
                 ZombieMoodSounds.scream(entity, level, ZombieMoodConfig.screamVolume, ZombieMoodConfig.distressPitch);
@@ -47,7 +47,7 @@ public final class MoodStateDispatch {
                 return true;
             }
         } else if (active == State.CELEBRATING) {
-            owner.setLod(LODLevel.HIGH); // keep the pose + countdown alive even with no target
+            owner.setLod(LodLevel.HIGH); // keep the pose + countdown alive even with no target
         }
         return false;
     }

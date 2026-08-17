@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Every pack in one dimension. One instance per {@code WorldAIContext}, exactly like
+ * Every pack in one dimension. One instance per {@code WorldAiContext}, exactly like
  * {@code BreachCoordinator} — same shape, same lifetime, same server-thread-only contract.
  *
  * <p><b>The membership invariant, which everything else rests on.</b> A member is in exactly one of three

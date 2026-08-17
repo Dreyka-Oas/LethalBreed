@@ -2,8 +2,8 @@ package com.dreykaoas.lethalbreed.entity.move.dispatch;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
-import com.dreykaoas.lethalbreed.entity.LODLevel;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
+import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.move.Descend;
 import com.dreykaoas.lethalbreed.entity.move.MoveMath;
@@ -22,7 +22,7 @@ public final class MoveDispatch {
     private MoveDispatch() {
     }
 
-    public static void choose(SmartZombie owner, ServerLevel level, WorldAIContext ctx, PillarClimb pillar,
+    public static void choose(SmartZombie owner, ServerLevel level, WorldAiContext ctx, PillarClimb pillar,
                               LivingEntity te, double dx, double dz, double dy, double horizSq,
                               boolean stuck, int bx, int bz, boolean breaking) {
         // Arrived (in range + line of sight) → let vanilla melee finish it; do no block ops.
@@ -35,7 +35,7 @@ public final class MoveDispatch {
         }
 
         // HIGH/MEDIUM climb/descend to reach an elevated/lower target; LOW/FROZEN stay ground-only.
-        boolean canClimbLod = owner.lod() == LODLevel.HIGH || owner.lod() == LODLevel.MEDIUM;
+        boolean canClimbLod = owner.lod() == LodLevel.HIGH || owner.lod() == LodLevel.MEDIUM;
         if (!canClimbLod) {
             return;
         }

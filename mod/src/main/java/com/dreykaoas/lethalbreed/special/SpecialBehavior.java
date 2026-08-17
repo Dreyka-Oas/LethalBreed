@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.special;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialAbilities;
@@ -26,7 +26,7 @@ public final class SpecialBehavior {
     /**
      * True while a Bomber's fuse is burning — it has armed and is committed to detonating.
      *
-     * <p>Read by {@code LODManager} to refuse FROZEN for such a zombie. {@code LodBucketPass} skips a FROZEN
+     * <p>Read by {@code LodManager} to refuse FROZEN for such a zombie. {@code LodBucketPass} skips a FROZEN
      * zombie BEFORE it ever reaches {@code tick()}, so freezing a lit Bomber stops its fuse mid-burn: the
      * belly stops swelling client-side and it becomes a dormant mine that detonates the instant a player
      * wanders back into range, however many minutes later. The deadline is absolute, so the fix is simply to
@@ -37,7 +37,7 @@ public final class SpecialBehavior {
     }
 
     /** Called every activation from {@code SmartZombie.tick}; each case self-gates on target + cooldown. */
-    public static void tick(SmartZombie sz, ServerLevel level, WorldAIContext ctx) {
+    public static void tick(SmartZombie sz, ServerLevel level, WorldAiContext ctx) {
         SpecialType t = sz.pursuit().special();
         if (t.kind() != SpecialType.Kind.ACTIVE) {
             return;

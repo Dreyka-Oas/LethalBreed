@@ -58,15 +58,15 @@ public final class ContaminationEpisodes {
     }
 
     /** episode timers keyed by victim then episode; transient (reseeded on load, cleared on cure/death). */
-    private static final java.util.Map<LivingEntity, java.util.EnumMap<Episode, EpisodeTimers>> episodes =
+    private static final java.util.Map<LivingEntity, java.util.EnumMap<Episode, EpisodeTimers>> EPISODES =
             new java.util.HashMap<>();
 
-    /** Drive the three independent symptomatic episodes for one victim. Higher intensity (mult) makes flares
+    /** Drive the three independent symptomatic EPISODES for one victim. Higher intensity (mult) makes flares
      *  stronger and longer and the gaps between them shorter. Seeded lazily so a freshly-symptomatic victim gets
      *  its first flare after a normal gap rather than instantly. */
     public static void tickEpisodes(LivingEntity e, long t, double mult) {
         java.util.EnumMap<Episode, EpisodeTimers> map =
-                episodes.computeIfAbsent(e, k -> new java.util.EnumMap<>(Episode.class));
+                EPISODES.computeIfAbsent(e, k -> new java.util.EnumMap<>(Episode.class));
         for (Episode ep : Episode.values()) {
             EpisodeTimers st = map.computeIfAbsent(ep, k -> {
                 EpisodeTimers s = new EpisodeTimers();
@@ -122,7 +122,7 @@ public final class ContaminationEpisodes {
 
     /** Strip any active episode modifiers and forget a victim's episode timers (on cure/death). */
     public static void clearEpisodes(LivingEntity e) {
-        if (episodes.remove(e) != null) {
+        if (EPISODES.remove(e) != null) {
             for (Episode ep : Episode.values()) {
                 removeEpisode(e, ep);
             }
@@ -132,6 +132,6 @@ public final class ContaminationEpisodes {
     /** Drop all victims' episode timers at once (server stop). The world is going away, so the transient
      *  attribute modifiers go with it — this only releases the map's references to dead entities. */
     public static void clearAllVictims() {
-        episodes.clear();
+        EPISODES.clear();
     }
 }

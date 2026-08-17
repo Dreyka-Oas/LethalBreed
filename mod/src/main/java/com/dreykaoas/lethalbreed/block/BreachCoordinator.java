@@ -14,7 +14,7 @@ import java.util.Map;
  * break consults {@link #resolve}: if a compatible breach already exists nearby it ADOPTS it (and the caller
  * steers the zombie toward that breach's approach side so the whole cluster funnels to one hole); otherwise it
  * registers its own front column as a new breach, capped at {@code maxConcurrentBreaches} per cluster. One
- * instance per dimension (held by {@code WorldAIContext}); {@link #tick} drops finished/abandoned breaches.
+ * instance per dimension (held by {@code WorldAiContext}); {@link #tick} drops finished/abandoned breaches.
  */
 public final class BreachCoordinator {
 

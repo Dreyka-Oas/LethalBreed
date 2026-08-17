@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.entity;
 
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.entity.move.ZombieBrain;
 import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
@@ -23,7 +23,7 @@ public final class SmartZombie {
     private final ResourceKey<Level> dimension;
 
     private ZombieState state = ZombieState.IDLE;
-    private LODLevel lod = LODLevel.HIGH;
+    private LodLevel lod = LodLevel.HIGH;
 
     private final ZombiePursuit pursuit;
     private final ZombieBrain brain;
@@ -78,8 +78,8 @@ public final class SmartZombie {
             entity.setAttached(ZombieStateAttachment.SLEEPING, state == ZombieState.SLEEPING);
         }
     }
-    public LODLevel lod() { return lod; }
-    public void setLod(LODLevel lod) { this.lod = lod; }
+    public LodLevel lod() { return lod; }
+    public void setLod(LodLevel lod) { this.lod = lod; }
 
     // --- target accessors read by the movement leaf units (delegate to pursuit) ---
     public boolean hasTarget() { return pursuit.hasTarget(); }
@@ -89,12 +89,12 @@ public final class SmartZombie {
     public double tgtZ() { return pursuit.tgtZ(); }
 
     // --- per-tick behaviour (delegate to brain / mood) ---
-    public void tick(ServerLevel level, WorldAIContext ctx) { brain.tick(level, ctx); }
-    public void updateMood(ServerLevel level, WorldAIContext ctx) { mood.update(level, ctx); }
-    public void climbStep(ServerLevel level, WorldAIContext ctx) { brain.climbStep(level, ctx); }
+    public void tick(ServerLevel level, WorldAiContext ctx) { brain.tick(level, ctx); }
+    public void updateMood(ServerLevel level, WorldAiContext ctx) { mood.update(level, ctx); }
+    public void climbStep(ServerLevel level, WorldAiContext ctx) { brain.climbStep(level, ctx); }
     public boolean isClimbing() { return brain.isClimbing(); }
     public void cancelClimb() { brain.cancelClimb(); }
-    public void swimStep(ServerLevel level, WorldAIContext ctx) { brain.swimStep(level, ctx); }
+    public void swimStep(ServerLevel level, WorldAiContext ctx) { brain.swimStep(level, ctx); }
     public boolean isSwimming() { return brain.isSwimming(); }
     public boolean dueThisActivation(int divisor) { return brain.dueThisActivation(divisor); }
 

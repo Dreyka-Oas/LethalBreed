@@ -14,7 +14,7 @@ import com.dreykaoas.lethalbreed.spatial.TargetIndex;
  * Per-dimension AI state container: a spatial grid for neighbour/sound queries and a flow-field
  * manager for navigation. One independent instance per dimension.
  */
-public final class WorldAIContext {
+public final class WorldAiContext {
     private final SpatialGrid spatialGrid;
     private final FlowFieldManager flowFieldManager;
     private final BlockOperationQueue blockOps;
@@ -25,7 +25,7 @@ public final class WorldAIContext {
     private final TargetIndex targetIndex;
     private final PackManager packManager;
 
-    public WorldAIContext() {
+    public WorldAiContext() {
         this.spatialGrid = new SpatialGrid();
         this.flowFieldManager = new FlowFieldManager();
         this.blockOps = new BlockOperationQueue();

@@ -16,7 +16,7 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * The plague's persistent attachments, the {@code tracked} victim set, the transient per-victim timer maps, the
+ * The plague's persistent attachments, the {@code TRACKED} victim set, the transient per-victim timer maps, the
  * shared RNG, and the age/symptomatic/level/intensity accessors. The single source of truth other contamination
  * classes (and {@link com.dreykaoas.lethalbreed.effect.ContaminationManager}, which re-exports the attachments
  * for external callers) build on — this class has no dependency of its own outside this package.
@@ -39,15 +39,15 @@ public final class ContaminationState {
     public static final AttachmentType<Double> INTENSITY = AttachmentRegistry.createPersistent(
             Identifier.fromNamespaceAndPath("lethalbreed", "contam_intensity"), Codec.DOUBLE);
 
-    public static final Set<LivingEntity> tracked = new HashSet<>();
+    public static final Set<LivingEntity> TRACKED = new HashSet<>();
     /** Server-tick of the next plague pulse per victim (transient; reseeded on load). */
-    public static final java.util.Map<LivingEntity, Long> nextPulse = new java.util.HashMap<>();
+    public static final java.util.Map<LivingEntity, Long> NEXT_PULSE_TICK = new java.util.HashMap<>();
     /** Server-tick of the next latent symptom-trigger roll per victim (transient; reseeded on load). */
-    public static final java.util.Map<LivingEntity, Long> nextSymptomRoll = new java.util.HashMap<>();
+    public static final java.util.Map<LivingEntity, Long> NEXT_SYMPTOM_ROLL_TICK = new java.util.HashMap<>();
     /** Server-tick at which the latent slow modifier should be removed per victim (transient). */
-    public static final java.util.Map<LivingEntity, Long> latentSlowUntil = new java.util.HashMap<>();
+    public static final java.util.Map<LivingEntity, Long> LATENT_SLOW_UNTIL_TICK = new java.util.HashMap<>();
     /** Server-tick of the next level-up roll per victim (transient; reseeded on load). */
-    public static final java.util.Map<LivingEntity, Long> nextEvolveRoll = new java.util.HashMap<>();
+    public static final java.util.Map<LivingEntity, Long> NEXT_EVOLVE_ROLL_TICK = new java.util.HashMap<>();
     public static final Random RNG = new Random();
 
     public static int age(LivingEntity e) {
@@ -94,21 +94,21 @@ public final class ContaminationState {
      *  Covers only THIS class's collections; the two sibling maps (episodes, hallucination) are purged by
      *  {@link ContaminationLifecycle#forgetAllTransient} — use that, not this, to fully drop a victim. */
     public static void forgetTimers(LivingEntity e) {
-        tracked.remove(e);
-        nextPulse.remove(e);
-        nextSymptomRoll.remove(e);
-        latentSlowUntil.remove(e);
-        nextEvolveRoll.remove(e);
+        TRACKED.remove(e);
+        NEXT_PULSE_TICK.remove(e);
+        NEXT_SYMPTOM_ROLL_TICK.remove(e);
+        LATENT_SLOW_UNTIL_TICK.remove(e);
+        NEXT_EVOLVE_ROLL_TICK.remove(e);
     }
 
     /** Drop every victim from this class's in-memory collections at once (server stop). Persistent
      *  attachments are untouched — they live in entity NBT and re-track via {@link ContaminationLifecycle#onLoad}. */
     public static void clearAllTransient() {
-        tracked.clear();
-        nextPulse.clear();
-        nextSymptomRoll.clear();
-        latentSlowUntil.clear();
-        nextEvolveRoll.clear();
+        TRACKED.clear();
+        NEXT_PULSE_TICK.clear();
+        NEXT_SYMPTOM_ROLL_TICK.clear();
+        LATENT_SLOW_UNTIL_TICK.clear();
+        NEXT_EVOLVE_ROLL_TICK.clear();
     }
 
     /** Positive plague time-compression factor (dev command sets it; clamped to ≥ 1e-3 to avoid div-by-zero). */

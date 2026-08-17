@@ -15,9 +15,9 @@ public final class ContaminationEvolve {
         if (ContaminationState.level(e) >= Math.max(1, ContaminationConfig.contamMaxLevel)) {
             return;
         }
-        Long roll = ContaminationState.nextEvolveRoll.get(e);
+        Long roll = ContaminationState.NEXT_EVOLVE_ROLL_TICK.get(e);
         if (roll == null) {
-            ContaminationState.nextEvolveRoll.put(e, t + rollEvolveIntervalTicks());
+            ContaminationState.NEXT_EVOLVE_ROLL_TICK.put(e, t + rollEvolveIntervalTicks());
             return;
         }
         if (t >= roll) {
@@ -25,7 +25,7 @@ public final class ContaminationEvolve {
                     ContaminationConfig.contamEvolveMinPct, ContaminationConfig.contamEvolveMaxPct)) {
                 ContaminationState.setLevel(e, ContaminationState.level(e) + 1);
             }
-            ContaminationState.nextEvolveRoll.put(e, t + rollEvolveIntervalTicks());
+            ContaminationState.NEXT_EVOLVE_ROLL_TICK.put(e, t + rollEvolveIntervalTicks());
         }
     }
 

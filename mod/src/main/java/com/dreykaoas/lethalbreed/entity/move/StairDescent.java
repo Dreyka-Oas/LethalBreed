@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import net.minecraft.core.BlockPos;
@@ -21,7 +21,7 @@ final class StairDescent {
     private StairDescent() {
     }
 
-    static void build(SmartZombie owner, ServerLevel level, WorldAIContext ctx,
+    static void build(SmartZombie owner, ServerLevel level, WorldAiContext ctx,
                       int bx, int by, int bz, int sdx, int sdz) {
         Zombie entity = owner.entity();
         int dirx = sdx;

@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.mixin;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
@@ -51,7 +51,7 @@ public abstract class WorldSoundEventMixin {
             return; // zombies never hunt their own kind's noise
         }
         ServerLevel level = (ServerLevel) (Object) this;
-        WorldAIContext ctx = GameState.DIMENSIONS.get(level.dimension());
+        WorldAiContext ctx = GameState.DIMENSIONS.get(level.dimension());
         // Interactions are a normal-volume sound (same tier as footsteps), not a loud break.
         ctx.soundBus().emit(pos.x, pos.y, pos.z, TargetingConfig.soundBaseRadius);
     }

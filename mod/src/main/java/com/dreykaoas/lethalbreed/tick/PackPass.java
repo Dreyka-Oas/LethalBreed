@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.tick;
 
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.pack.PackJoinRule;
 import com.dreykaoas.lethalbreed.pack.PackManager;
@@ -35,7 +35,7 @@ public final class PackPass {
     private static int[] entityIds = new int[32];
     private static double[] distSq = new double[32];
 
-    public static void decide(SmartZombie sz, WorldAIContext ctx) {
+    public static void decide(SmartZombie sz, WorldAiContext ctx) {
         if (!PackConfig.packEnabled) {
             return;
         }
@@ -90,7 +90,7 @@ public final class PackPass {
     }
 
     /** Fill the parallel arrays with up to {@code packScanCap} neighbours; returns how many. */
-    private static int collectNeighbours(SmartZombie sz, WorldAIContext ctx) {
+    private static int collectNeighbours(SmartZombie sz, WorldAiContext ctx) {
         NEIGHBOURS.clear();
         ctx.spatialGrid().queryRadiusInto(NEIGHBOURS, sz.x(), sz.y(), sz.z(), PackConfig.packCohesionRadius);
         int cap = Math.max(1, PackConfig.packScanCap);
