@@ -12,32 +12,13 @@
 
 </div>
 
-LethalBreed is a Fabric mod that turns Minecraft's zombies into a **systemic, escalating threat**: flow-field
-pathfinding that pillars, digs, bridges and swims, hunting by sight **and** sound, endless phase escalation, a
-contamination plague and 8 special variants — built to scale toward ~1000 active zombies.
+A Fabric mod that turns Minecraft's zombies into a **systemic, escalating threat**: flow-field pathfinding
+that pillars, digs, bridges and swims, hunting by sight **and** sound, endless phase escalation, a
+contamination plague and 8 special variants — built to scale toward ~1000 active zombies. Every mechanic and
+parameter is documented on the site, in French and English.
 
-> **Every mechanic, parameter and command is documented on the site →
-> [lethalbreed.pages.dev](https://lethalbreed.pages.dev)** · FR / EN
-
-## 📁 Repository
-
-| Directory | What it is |
-|-----------|-----------|
-| **[`mod/`](mod/)** | the Fabric mod — Java 21, Minecraft 1.21.11 ([`mod/README`](mod/README.md)) |
-| `web/` | the showcase + wiki site — **a separate repository**, see below |
-
-**`web/` is not part of this repository.** The site lives in its own repo,
+The mod is in [`mod/`](mod/). The site is **not** part of this repository — it lives in
 [LethalBreed-web](https://github.com/Dreyka-Oas/LethalBreed-web), checked out at `web/` for convenience and
-deliberately excluded here (`/web/` in [`.gitignore`](.gitignore)). It is static with no build step and
-deploys to Cloudflare Pages on its own. Clone it separately if you want it:
+gitignored here.
 
-```bash
-git clone https://github.com/Dreyka-Oas/LethalBreed-web.git web
-```
-
-**GitHub:** <https://github.com/Dreyka-Oas/LethalBreed>
-
-<div align="center">
-<br>
-<sub>☠ Built for servers that want their zombies to actually hunt.</sub>
-</div>
+MIT — © Dreyka Oas.
