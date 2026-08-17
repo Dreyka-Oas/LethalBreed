@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.client;
 
-import com.dreykaoas.lethalbreed.client.BombeurBellySmoothing;
+import com.dreykaoas.lethalbreed.client.BomberBellySmoothing;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -8,13 +8,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * Adds the BOMBEUR belly-smoothing state (last displayed value + timestamp) to every client-side
- * {@code Zombie}. See {@link BombeurBellySmoothing} for why this must live here rather than on the
+ * Adds the BOMBER belly-smoothing state (last displayed value + timestamp) to every client-side
+ * {@code Zombie}. See {@link BomberBellySmoothing} for why this must live here rather than on the
  * per-frame render state.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(Zombie.class)
-public class ZombieBellySmoothingMixin implements BombeurBellySmoothing {
+public class ZombieBellySmoothingMixin implements BomberBellySmoothing {
 
     @Unique
     private float lethalbreed$smoothedBellyCharge;

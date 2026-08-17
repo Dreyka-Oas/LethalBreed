@@ -29,7 +29,7 @@ import java.util.List;
  * <p>Operator-gated, for the same reason {@link LethalSpawnCommand} is: it spawns entities that the
  * mod marks persistent, so they never despawn on their own. The 200 cap is per invocation and there is no
  * global counter, which makes an ungated version an unbounded entity accumulator — and, in the
- * {@code bombeur} variant, a PvP weapon.
+ * {@code bomber} variant, a PvP weapon.
  */
 public final class LethalSpecialCommand {
     private LethalSpecialCommand() {}

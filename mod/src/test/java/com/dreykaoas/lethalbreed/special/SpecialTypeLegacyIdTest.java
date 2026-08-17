@@ -26,7 +26,7 @@ class SpecialTypeLegacyIdTest {
     void stillResolvesTheFrenchIdsWrittenIntoExistingSaves() {
         assertSame(SpecialType.SPRINTER, SpecialType.fromId("sprinteur"));
         assertSame(SpecialType.LEAPER, SpecialType.fromId("bondisseur"));
-        assertSame(SpecialType.BOMBER, SpecialType.fromId("bombeur"));
+        assertSame(SpecialType.BOMBER, SpecialType.fromId("bomber"));
         assertSame(SpecialType.SCREAMER, SpecialType.fromId("hurleur"));
         assertSame(SpecialType.HEALER, SpecialType.fromId("soigneur"));
         assertSame(SpecialType.NECROMANCER, SpecialType.fromId("necromancien"));

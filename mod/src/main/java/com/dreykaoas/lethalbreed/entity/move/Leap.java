@@ -71,7 +71,7 @@ public final class Leap {
     /**
      * True if there is solid ground near where a leap would land (so we don't jump into a gap).
      *
-     * <p>The probe follows {@code ldf}. The launch velocity below is multiplied by it — a Bondisseur carrying
+     * <p>The probe follows {@code ldf}. The launch velocity below is multiplied by it — a Leaper carrying
      * LEAP flies roughly twice as far — while this scan used a flat {@code leapLandingScanDist}, so the
      * invariant "never leap into a gap" was checked at 3 blocks for a jump landing at 7 or more. Scaling the
      * probe by the same factor keeps the check aimed where the zombie will actually come down.

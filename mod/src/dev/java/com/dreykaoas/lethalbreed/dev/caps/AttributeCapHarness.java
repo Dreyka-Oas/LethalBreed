@@ -181,12 +181,12 @@ public final class AttributeCapHarness extends TickPhasedHarness {
         // landing on 18.900000000000002 is correct behaviour and must not read as an escape.
         double eps = 1e-6;
         String p = "phase-" + phaseForStage;
-        DevVerdict.check("caps", p + "/degats", maxDmg <= ProgressionConfig.phaseDamageCap + eps,
+        DevVerdict.check("caps", p + "/damage", maxDmg <= ProgressionConfig.phaseDamageCap + eps,
                 "max=" + DevVerdict.fmt(maxDmg) + " plafond=" + DevVerdict.fmt(ProgressionConfig.phaseDamageCap)
                         + " coupsNetherite=" + hitsToKillInNetherite(maxDmg));
         DevVerdict.check("caps", p + "/pv", maxHp <= ProgressionConfig.phaseHealthCap + eps,
                 "max=" + DevVerdict.fmt(maxHp) + " plafond=" + DevVerdict.fmt(ProgressionConfig.phaseHealthCap));
-        DevVerdict.check("caps", p + "/vitesse", maxSpd <= ProgressionConfig.phaseSpeedCap + eps,
+        DevVerdict.check("caps", p + "/speed", maxSpd <= ProgressionConfig.phaseSpeedCap + eps,
                 "max=" + DevVerdict.fmt(maxSpd) + " plafond=" + DevVerdict.fmt(ProgressionConfig.phaseSpeedCap));
         // The promise the player actually made this request about, stated in the unit they care about.
         DevVerdict.check("caps", p + "/pas-de-one-shot", hitsToKillInNetherite(maxDmg) >= 3,

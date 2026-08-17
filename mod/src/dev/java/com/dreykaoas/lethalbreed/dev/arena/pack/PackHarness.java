@@ -82,7 +82,7 @@ public final class PackHarness extends TickPhasedHarness {
     private PackHarness() {
         super("pack",
                 new Stage("formation", FORM_BUILD, FORM_EVAL),
-                new Stage("isolement", LONE_BUILD, LONE_EVAL),
+                new Stage("isolation", LONE_BUILD, LONE_EVAL),
                 new Stage("marche", MARCH_BUILD, MARCH_EVAL),
                 new Stage("pas-de-casse", WALL_BUILD, WALL_EVAL),
                 new Stage("rejoin", REJOIN_BUILD, REJOIN_EVAL));
@@ -147,7 +147,7 @@ public final class PackHarness extends TickPhasedHarness {
                         "au mieux " + (formMinDistinct == Integer.MAX_VALUE ? "aucune" : formMinDistinct)
                                 + " meute(s) distincte(s) pour une grappe de 12");
             }
-            case 1 -> check("isolement-aucune-meute", loneMaxPacked == 0,
+            case 1 -> check("isolation-no-pack", loneMaxPacked == 0,
                     "un zombie seul : " + loneMaxPacked + " adhésion(s) — 0 attendu");
             case 2 -> evaluateMarch();
             case 3 -> check("pas-de-casse", wallMinStanding >= wallPlaced,

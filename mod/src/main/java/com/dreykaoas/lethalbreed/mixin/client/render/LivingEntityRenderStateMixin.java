@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * Adds the BOMBEUR belly-charge field to every living render state. See {@link ZombieRenderFlags}.
+ * Adds the BOMBER belly-charge field to every living render state. See {@link ZombieRenderFlags}.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(LivingEntityRenderState.class)

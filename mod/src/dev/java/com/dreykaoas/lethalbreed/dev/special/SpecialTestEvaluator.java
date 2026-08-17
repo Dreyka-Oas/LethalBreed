@@ -23,24 +23,24 @@ public final class SpecialTestEvaluator {
     public static final String SUITE = "special";
     private SpecialTestEvaluator() {}
 
-    /** Latched once the Bombeur's witness has been seen carrying the splatter. */
+    /** Latched once the Bomber's witness has been seen carrying the splatter. */
     private static boolean bombeurSplattered;
     /** Zombie ids present around the Splitter's platform just before it is killed. */
     private static final Set<Integer> BEFORE_SPLIT = new HashSet<>();
-    /** Position of the Bombeur on the first tick its fuse is lit. Null until it has armed. */
+    /** Position of the Bomber on the first tick its fuse is lit. Null until it has armed. */
     private static net.minecraft.world.phys.Vec3 bombeurArmedPos;
     /** Largest distance measured from that position while the fuse is burning. */
     private static double bombeurMaxDrift;
     /**
      * The same drift split into its horizontal and vertical parts. A combined figure cannot distinguish "the
-     * Bombeur kept walking" — the behaviour this check exists to catch — from "the Bombeur settled onto the
+     * Bomber kept walking" — the behaviour this check exists to catch — from "the Bomber settled onto the
      * ground it was spawned above", which is a harmless artefact of how the arena places it. Reporting both
      * turns an unexplained intermittent failure into evidence.
      */
     private static double bombeurMaxDriftXZ;
     private static double bombeurMaxDriftY;
     /** The gore cocktail's pool, mirrored here so the witness check does not depend on which effects the
-     *  Bombeur happened to roll. Kept in sync with {@code GoreCocktail.POOL} by hand — a dev-only harness is
+     *  Bomber happened to roll. Kept in sync with {@code GoreCocktail.POOL} by hand — a dev-only harness is
      *  not worth opening that pool up for. */
     private static final List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> GORE_POOL =
             List.of(MobEffects.NAUSEA, MobEffects.POISON, MobEffects.SLOWNESS, MobEffects.WEAKNESS,
@@ -54,7 +54,7 @@ public final class SpecialTestEvaluator {
      * from a blast at tick ~35 — expiring before the tick-200 evaluation about one run in five. Reading the
      * end state measured the fuse roll, not the splatter.
      *
-     * <p>The splatter check asks for ANY effect from the gore pool, not for two named ones. Each Bombeur now
+     * <p>The splatter check asks for ANY effect from the gore pool, not for two named ones. Each Bomber now
      * rolls its own cocktail, and at the arena's phase 1 that cocktail is a single effect — demanding both
      * Nausea AND Slowness could never pass again. What is being verified is that the gore reached a witness
      * standing outside the blast, which any one pool effect proves.
@@ -109,7 +109,7 @@ public final class SpecialTestEvaluator {
                     // bombeurSplattered is latched by sample(), not read here: the effect durations scale with
                     // intensity and a short fuse lets them lapse before this runs. A dead witness proves the
                     // blast reached it but says nothing about the wider ring, so it is excused.
-                    // 0.25 block margin: collision nudges, not real movement. A Bombeur that resumes running
+                    // 0.25 block margin: collision nudges, not real movement. A Bomber that resumes running
                     // would drift several blocks over the fuse's 1.5-6s window.
                     boolean immobile = bombeurMaxDrift < 0.25;
                     pass = gone && (!alive || bombeurSplattered) && immobile;

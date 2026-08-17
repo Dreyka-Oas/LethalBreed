@@ -11,17 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The random cocktail of afflictions one Bombeur carries. Rolled once when it bursts and then reused for
- * every victim of that blast and for the puddle it leaves, so a given Bombeur has a recognisable poison
+ * The random cocktail of afflictions one Bomber carries. Rolled once when it bursts and then reused for
+ * every victim of that blast and for the puddle it leaves, so a given Bomber has a recognisable poison
  * rather than a new surprise per victim.
  *
  * <p>Every effect in the pool is a hindrance that cannot kill on its own — Poison famously stops at half a
- * heart, and the rest only slow, blind, weaken or starve. That is a deliberate boundary: the Bombeur is meant
+ * heart, and the rest only slow, blind, weaken or starve. That is a deliberate boundary: the Bomber is meant
  * to make the horde around you lethal, not to be lethal itself, and it keeps the cocktail from interacting
  * with the no-one-shot guarantee that {@code AttributeCaps} enforces on the zombies.
  *
- * <p>The pool lives here rather than in {@link BombeurBlast} because {@code Holder<MobEffect>} is a Minecraft
- * type, and BombeurBlast's freedom from those imports is what lets its maths be unit-tested without booting a
+ * <p>The pool lives here rather than in {@link BomberBlast} because {@code Holder<MobEffect>} is a Minecraft
+ * type, and BomberBlast's freedom from those imports is what lets its maths be unit-tested without booting a
  * server. Only the counts and amplifiers — the parts worth testing — live there.
  */
 public final class GoreCocktail {
@@ -40,7 +40,7 @@ public final class GoreCocktail {
      */
     private record Entry(Holder<MobEffect> effect, double baseS, double spanS, int ampCap, boolean blindGated) {}
 
-    /** One rolled affliction: an effect and the amplifier this Bombeur drew for it. */
+    /** One rolled affliction: an effect and the amplifier this Bomber drew for it. */
     public record Dose(Holder<MobEffect> effect, int amplifier, double baseS, double spanS) {}
 
     private static final List<Entry> POOL = List.of(
@@ -56,7 +56,7 @@ public final class GoreCocktail {
             new Entry(MobEffects.BLINDNESS, 1.0, 4.0, 0, true));
 
     /**
-     * Roll this Bombeur's cocktail.
+     * Roll this Bomber's cocktail.
      *
      * <p>Drawn WITHOUT replacement. Drawing with replacement — the pattern {@code ZombieVariation} uses for
      * beneficial buffs — would routinely collapse "four effects" into one or two, since a repeat draw only
@@ -67,14 +67,14 @@ public final class GoreCocktail {
      */
     public static List<Dose> roll(int phase, double intensity, RandomSource rng) {
         List<Entry> eligible = new ArrayList<>(POOL.size());
-        boolean blindOk = BombeurBlast.blindnessEligible(intensity);
+        boolean blindOk = BomberBlast.blindnessEligible(intensity);
         for (Entry e : POOL) {
             if (!e.blindGated() || blindOk) {
                 eligible.add(e);
             }
         }
-        int want = Math.min(BombeurBlast.cocktailSize(phase), eligible.size());
-        int maxAmp = BombeurBlast.cocktailMaxAmp(phase);
+        int want = Math.min(BomberBlast.cocktailSize(phase), eligible.size());
+        int maxAmp = BomberBlast.cocktailMaxAmp(phase);
 
         List<Dose> out = new ArrayList<>(want);
         for (int i = 0; i < want; i++) {
@@ -92,7 +92,7 @@ public final class GoreCocktail {
      */
     public static void apply(LivingEntity victim, List<Dose> cocktail, double intensity) {
         for (Dose d : cocktail) {
-            int ticks = BombeurBlast.effectTicks(d.baseS(), d.spanS(), intensity);
+            int ticks = BomberBlast.effectTicks(d.baseS(), d.spanS(), intensity);
             if (ticks > 0) {
                 victim.addEffect(new MobEffectInstance(d.effect(), ticks, d.amplifier()));
             }

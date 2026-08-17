@@ -24,8 +24,8 @@ public final class SchedulerConfig {
     public static int spatialCellSize = 8;
 
     /** Max vertical distance (blocks) for spatial neighbour/sound queries. The grid is flat XZ, so without
-     *  this a zombie 100 blocks above/below still counts as "near" (a surface Soigneur healing a zombie deep
-     *  in a cave). 24 ≈ the widest query radius (Hurleur), so it never splits a legit pack but drops absurd
+     *  this a zombie 100 blocks above/below still counts as "near" (a surface Healer healing a zombie deep
+     *  in a cave). 24 ≈ the widest query radius (Screamer), so it never splits a legit pack but drops absurd
      *  cross-Y matches. 0 = ignore Y (legacy behaviour). */
     public static double spatialVerticalLimit = 24.0;
 

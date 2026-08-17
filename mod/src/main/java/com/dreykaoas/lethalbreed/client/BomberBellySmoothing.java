@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.client;
 
 /**
  * Duck interface mixed into the client-side {@code Zombie} entity, carrying the state needed to smooth the
- * BOMBEUR belly charge across frames: the last displayed (smoothed) value, and the timestamp of the last
+ * BOMBER belly charge across frames: the last displayed (smoothed) value, and the timestamp of the last
  * smoothing computation.
  *
  * <p>This must live on the ENTITY, not on {@code LivingEntityRenderState} ({@link ZombieRenderFlags}): the
@@ -14,7 +14,7 @@ package com.dreykaoas.lethalbreed.client;
  * <p>Lives OUTSIDE the {@code mixin} package on purpose: a type inside a declared mixin package cannot be
  * referenced directly by transformed code (Mixin throws {@code IllegalClassLoadError}).
  */
-public interface BombeurBellySmoothing {
+public interface BomberBellySmoothing {
     /** Last smoothed (displayed) belly charge computed for this entity. 0 until the first computation. */
     float lethalbreed$smoothedBellyCharge();
 

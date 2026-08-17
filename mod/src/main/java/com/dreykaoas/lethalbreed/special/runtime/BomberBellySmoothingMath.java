@@ -1,18 +1,18 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
 /**
- * Pure maths behind the client-side smoothing of the BOMBEUR belly charge: pulls the displayed value toward
+ * Pure maths behind the client-side smoothing of the BOMBER belly charge: pulls the displayed value toward
  * a target by a factor depending on the real time elapsed since the last call, so the belly swells
  * continuously between the server's infrequent charge updates instead of visibly stepping.
  *
  * <p>Deliberately free of every {@code net.minecraft} type and of {@code System.nanoTime()} — {@code dt} is
  * passed in rather than measured internally — which is what lets this be unit-tested without booting a
- * client. Same separation as {@link BombeurBlast}; the caller ({@code LivingEntityRendererMixin}) owns the
+ * client. Same separation as {@link BomberBlast}; the caller ({@code LivingEntityRendererMixin}) owns the
  * actual clock and the persistent storage (the render state is recreated every frame, so the previous
- * displayed value and timestamp must live on the entity instead — see {@code BombeurBellySmoothing}).
+ * displayed value and timestamp must live on the entity instead — see {@code BomberBellySmoothing}).
  */
-public final class BombeurBellySmoothingMath {
-    private BombeurBellySmoothingMath() {}
+public final class BomberBellySmoothingMath {
+    private BomberBellySmoothingMath() {}
 
     /** Characteristic smoothing time (seconds): smaller = catches up faster. 0.15 closes a server-update gap
      *  (~0.25s at LOD HIGH) while staying imperceptible on a 1.5s fuse. */

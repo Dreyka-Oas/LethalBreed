@@ -56,7 +56,7 @@ public final class EntityEventsInit {
                 // path (LodBucketPass.untrack) is driven by iterating the registry, so a zombie removed
                 // here was never visited again and its cell slot stayed for the rest of the session —
                 // every death and every chunk unload leaked one, pinning entity -> level -> server, and
-                // neighbour queries (sound, Hurleur rally, Soigneur heal) kept matching those ghosts.
+                // neighbour queries (sound, Screamer rally, Healer heal) kept matching those ghosts.
                 if (sz != null && sz.pursuit().pack().inPack()) {
                     // The chunk beat the materialiser to it. The zombie is on its way to disk WITH its pack
                     // attachment, so it will re-join on the way back: count it detached and write no ghost.

@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.client;
 /**
  * Duck interface mixed into {@code LivingEntityRenderState}, carrying every mod-specific render flag from
  * the entity (read in an {@code extractRenderState} hook) to the client models and layers, which have no
- * access to the entity itself post render-state refactor. Currently three unrelated flags: the BOMBEUR belly
+ * access to the entity itself post render-state refactor. Currently three unrelated flags: the BOMBER belly
  * charge, the hallucinate-as-zombie swap and the day-sleeping pose. Non-zombies leave them all at their
  * neutral value.
  *
@@ -13,7 +13,7 @@ package com.dreykaoas.lethalbreed.client;
  * referenced directly by transformed code (Mixin throws {@code IllegalClassLoadError}).
  */
 public interface ZombieRenderFlags {
-    /** RAW, unsmoothed BOMBEUR belly charge in {@code [0, 1]} as synced from the server, read in
+    /** RAW, unsmoothed BOMBER belly charge in {@code [0, 1]} as synced from the server, read in
      *  {@code LivingEntityRendererMixin.extractRenderState}. This is the source the client-side smoothing
      *  (see {@link #lethalbreed$bellyChargeDisplayed()}) is computed from; the model does NOT read this
      *  directly. 0 for everything that is not charging. */
@@ -27,7 +27,7 @@ public interface ZombieRenderFlags {
      *  fuse; this fills the gap between updates. Written once per frame with the already-computed result —
      *  the smoothing computation itself (previous value + timestamp) is NOT stored here, since this render
      *  state is a brand-new object every frame and could never carry state across frames; it lives on the
-     *  client {@code Zombie} entity instead, see {@code BombeurBellySmoothing}. */
+     *  client {@code Zombie} entity instead, see {@code BomberBellySmoothing}. */
     float lethalbreed$bellyChargeDisplayed();
 
     void lethalbreed$bellyChargeDisplayed(float charge);

@@ -39,7 +39,7 @@ public final class SpecialTestArena {
         // whatever the save happened to carry; on a fresh world that is 0, where SpawnFilter culls every
         // MONSTER at ENTITY_LOAD — the arena then builds ZERO cases and the suite prints "0/0 PASS" plus its
         // ALL DONE marker, a green gate proving nothing. Phase 1 also leaves SpecialType.available(1) empty
-        // (the earliest unlock is 2), so no Splitter or Nécromancien child can roll a special of its own and
+        // (the earliest unlock is 2), so no Splitter or Necromancer child can roll a special of its own and
         // muddy the "children are plain" assertions.
         PhaseManager.get().setPhase(server, 1);
         // Silence every other source of the effects the passive checks look for: at phase 14 roughly a third
@@ -76,7 +76,7 @@ public final class SpecialTestArena {
             // Sweep the platform before using it. Summoned and split children are setPersistenceRequired and
             // this mod never despawns anything, so each run leaves its offspring standing exactly where the
             // next run needs the space. That debris is not cosmetic: with 37 zombies left over, the
-            // Nécromancien's density cap refused to summon at all and the check failed on a world state its
+            // Necromancer's density cap refused to summon at all and the check failed on a world state its
             // own previous runs had created.
             for (Zombie stale : ow.getEntitiesOfClass(Zombie.class, new AABB(pos).inflate(24))) {
                 stale.discard();
@@ -92,7 +92,7 @@ public final class SpecialTestArena {
 
             Cow cow = spawnCow(ow, cx, type, z);
             Zombie extra = spawnExtra(ow, cx, type);
-            // A Soigneur only heals what is hurt, so the witness has to be hurt for the aura to be observable
+            // A Healer only heals what is hurt, so the witness has to be hurt for the aura to be observable
             // at all. WOUNDED is far below any max health the phase can produce, and nothing else on this
             // sealed platform can damage it, so any rise above this figure came from the aura.
             if (type == SpecialType.HEALER && extra != null) {
