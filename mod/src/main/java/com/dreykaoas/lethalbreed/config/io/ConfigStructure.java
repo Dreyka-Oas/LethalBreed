@@ -196,6 +196,20 @@ public final class ConfigStructure {
     private static void collect(String name, Set<String> knownNames, Set<String> present,
                                 List<Unknown> candidates, List<String> targets,
                                 Map<String, Integer> claims) {
+        // An explicit rename beats a guess, so it is checked first: a deliberate vocabulary change carries
+        // the user's value across even when the two names share almost no letters — exactly the case edit
+        // distance cannot serve, and exactly where a fuzzy hit would be a coin flip rather than an answer.
+        String renamedTo = ConfigLegacyNames.newNameOf(name);
+        if (renamedTo != null && knownNames.contains(renamedTo)) {
+            candidates.add(new Unknown(name, renamedTo));
+            String target = present.contains(renamedTo) ? null : renamedTo;
+            targets.add(target);
+            if (target != null) {
+                claims.merge(target, 1, Integer::sum);
+            }
+            return;
+        }
+
         candidates.add(new Unknown(name, NameSuggest.suggest(name, knownNames)));
         String target = NameSuggest.suggestUnique(name, knownNames);
         if (target != null && present.contains(target)) {
