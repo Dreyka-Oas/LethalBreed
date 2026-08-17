@@ -1,6 +1,7 @@
 {
 
   "effect.lethalbreed.leap": "Leap",
+  "effect.lethalbreed.zombie_vision": "Zombie Vision",
   "effect.lethalbreed.super_contamination": "The End?",
 
   "item.minecraft.potion.effect.super_contamination": "Potion of The End?",
