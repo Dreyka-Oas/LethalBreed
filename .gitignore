@@ -1,15 +1,15 @@
 # ---- Gradle / Loom ----
 .gradle/
 build/
-# Répertoire d'exécution Loom : cartes, mods, packs, journaux — jamais versionné
+# Loom run directory: maps, mods, packs, logs — never versioned
 run/
-# Session Kotlin DSL : Gradle la crée à côté de build.gradle.kts à chaque configuration
+# Kotlin DSL session: Gradle creates it next to build.gradle.kts on every configuration
 .kotlin/
 gradle-app.setting
 .gradletasknamecache
-# NB : gradle/wrapper/gradle-wrapper.jar est SUIVI volontairement (il fait tourner ./gradlew)
+# NB: gradle/wrapper/gradle-wrapper.jar is TRACKED on purpose (it is what runs ./gradlew)
 
-# ---- Sorties de compilation hors build/ ----
+# ---- Compiler output outside build/ ----
 *.class
 bin/
 out/
@@ -22,46 +22,46 @@ out/
 .classpath
 .project
 
-# ---- Journaux et vidages de plantage JVM ----
-# *.log couvre hs_err_pid*.log et replay_pid*.log ; les vidages mémoire, eux, pèsent
-# plusieurs Go et ne portent aucune extension .log
+# ---- Logs and JVM crash dumps ----
+# *.log already covers hs_err_pid*.log and replay_pid*.log; heap dumps, by contrast, weigh
+# several GB and carry no .log extension
 *.log
 *.hprof
 core.[0-9]*
 .attach_pid*
-# Journaux serveur régénérés à chaque lancement (Gradle/Minecraft)
+# Server logs, regenerated on every launch (Gradle/Minecraft)
 /mod/logs/
-# Captures de sortie des lancements de dev
+# Captured output from dev launches
 rc.txt
 rs.txt
 
 # ---- Secrets ----
-# Le site se déploie sur Cloudflare : aucun jeton ne doit pouvoir partir par accident
+# The site deploys to Cloudflare: no token must ever be able to leave by accident
 .env
 .env.*
 !.env.example
 *.pem
 *.key
 
-# ---- Restes d'édition, de fusion et de correctif ----
+# ---- Editor, merge and patch leftovers ----
 *.orig
 *.rej
 *.swp
 *.swo
 *~
 
-# ---- Outils locaux, non poussés ----
+# ---- Local tooling, never pushed ----
 .skills/
 .claude/
 opencode.json
-# Cache local Cloudflare Wrangler
+# Local Cloudflare Wrangler cache
 .wrangler/
-# Worktrees git locaux (exécutions multi-agents)
+# Local git worktrees (multi-agent runs)
 /.worktrees/
 
-# ---- Déchets système ----
+# ---- OS junk ----
 .DS_Store
 Thumbs.db
 
-# ---- Dépôt LethalBreed-web imbriqué (dépôt git distinct et privé — ne pas suivre ni embarquer) ----
+# ---- Nested LethalBreed-web repo (separate, private git repo — do not track or embed) ----
 /web/
