@@ -4,8 +4,8 @@ import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
-import com.dreykaoas.lethalbreed.entity.LODLevel;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
+import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import net.fabricmc.loader.api.FabricLoader;
@@ -52,12 +52,12 @@ public final class PerfRecap {
                 case LOW -> low++;
                 case FROZEN -> frozen++;
             }
-            if (sz.lod() == LODLevel.HIGH && sz.hasTarget()) {
+            if (sz.lod() == LodLevel.HIGH && sz.hasTarget()) {
                 highWithTarget++;
             }
         }
         int pendingOps = 0, placed = 0;
-        for (WorldAIContext ctx : dimensions.contexts().values()) {
+        for (WorldAiContext ctx : dimensions.contexts().values()) {
             pendingOps += ctx.blockOps().pendingCount();
             placed += ctx.placedBlocks().trackedCount();
         }

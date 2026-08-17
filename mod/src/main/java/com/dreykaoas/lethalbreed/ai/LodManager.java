@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.ai;
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 
-import com.dreykaoas.lethalbreed.entity.LODLevel;
+import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.TargetSelector;
@@ -19,10 +19,10 @@ import static com.dreykaoas.lethalbreed.util.Scalars.sq;
  * Acquires each zombie's nearest valid target (any living entity except bosses/other zombies) and
  * classifies its LOD from the distance to that target. No target in range → FROZEN.
  */
-public final class LODManager {
-    private LODManager() {}
+public final class LodManager {
+    private LodManager() {}
 
-    public static LODLevel classify(SmartZombie sz, ServerLevel level,
+    public static LodLevel classify(SmartZombie sz, ServerLevel level,
                                     com.dreykaoas.lethalbreed.spatial.TargetIndex index) {
         // Apply forceNearestTarget live (strip/restore vanilla target goals) before acquiring our own pick.
         sz.reconcileTargetingGoals();
@@ -32,8 +32,8 @@ public final class LODManager {
         LivingEntity target = TargetSelector.findNearest(level, sz.entity(),
                 TargetingConfig.targetDetectRadius, current, index);
 
-        LODLevel prev = sz.lod();
-        LODLevel lod;
+        LodLevel prev = sz.lod();
+        LodLevel lod;
         if (target != null) {
             // Live detection (seen or heard) → the nearest DETECTED entity always wins, overriding memory.
             sz.pursuit().setTarget(target, target.getX(), target.getY(), target.getZ());
@@ -81,7 +81,7 @@ public final class LODManager {
             if (arrived) {
                 sz.pursuit().clearTarget();
                 sz.pursuit().clearMemory();
-                lod = LODLevel.FROZEN;
+                lod = LodLevel.FROZEN;
             } else {
                 lod = lodFromDistSq(d, prev);
             }
@@ -109,15 +109,15 @@ public final class LODManager {
             // pillaring and no tick() of ours. That divergence is what caps a Screamer's rally: the zombies it
             // hands a target to are re-frozen here on their next classify, yet keep walking.
             sz.entity().setTarget(null);
-            lod = LODLevel.FROZEN;
+            lod = LodLevel.FROZEN;
         }
         // A Bomber whose fuse is lit has committed to detonating, so it must keep being ticked to get there.
         // LodBucketPass drops a FROZEN zombie before tick() runs, which would stop the fuse mid-burn and turn
         // it into a dormant mine — one that goes off the moment a player wanders back within range, since the
         // deadline it wakes up to is long past. LOW still runs the special, just on the distance throttle, so
         // detonation can land a few activations late; that is the whole cost of keeping it honest.
-        if (lod == LODLevel.FROZEN && SpecialBehavior.fuseIsLit(sz.entity())) {
-            lod = LODLevel.LOW;
+        if (lod == LodLevel.FROZEN && SpecialBehavior.fuseIsLit(sz.entity())) {
+            lod = LodLevel.LOW;
         }
         sz.setLod(lod);
         return lod;
@@ -132,7 +132,7 @@ public final class LODManager {
         return hit.getType() == HitResult.Type.MISS || hit.getLocation().distanceToSqr(to) <= 1.0;
     }
 
-    private static LODLevel lodFromDistSq(double d, LODLevel prev) {
+    private static LodLevel lodFromDistSq(double d, LodLevel prev) {
         // Enforce monotonic tier radii (high <= medium <= low). The three are independent config knobs, so a
         // misordered value (e.g. lodMedium <= lodHigh) would otherwise let an earlier branch swallow a whole
         // tier silently. Clamping each tier up to the previous keeps classification predictable.
@@ -143,16 +143,16 @@ public final class LODManager {
         // edge by more than lodHysteresis blocks. Upgrades (moving inward) snap at the plain boundary; only
         // downgrades get the slack — so a zombie idling on a boundary stops flip-flopping tier + re-pathing.
         double h = Math.max(0.0, SchedulerConfig.lodHysteresis);
-        double high = sq(highR + (prev == LODLevel.HIGH ? h : 0.0));
-        double med = sq(medR + (prev == LODLevel.HIGH || prev == LODLevel.MEDIUM ? h : 0.0));
-        double low = sq(lowR + (prev != LODLevel.FROZEN ? h : 0.0));
+        double high = sq(highR + (prev == LodLevel.HIGH ? h : 0.0));
+        double med = sq(medR + (prev == LodLevel.HIGH || prev == LodLevel.MEDIUM ? h : 0.0));
+        double low = sq(lowR + (prev != LodLevel.FROZEN ? h : 0.0));
         if (d <= high) {
-            return LODLevel.HIGH;
+            return LodLevel.HIGH;
         } else if (d <= med) {
-            return LODLevel.MEDIUM;
+            return LodLevel.MEDIUM;
         } else if (d <= low) {
-            return LODLevel.LOW;
+            return LodLevel.LOW;
         }
-        return LODLevel.FROZEN;
+        return LodLevel.FROZEN;
     }
 }

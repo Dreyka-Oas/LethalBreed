@@ -46,11 +46,11 @@ public final class PlagueCollections {
     public static Sizes sizes() {
         return new Sizes(
                 snapshotSize(),
-                ContaminationState.tracked.size(),
-                ContaminationState.nextPulse.size(),
-                ContaminationState.nextSymptomRoll.size(),
-                ContaminationState.latentSlowUntil.size(),
-                ContaminationState.nextEvolveRoll.size(),
+                ContaminationState.TRACKED.size(),
+                ContaminationState.NEXT_PULSE_TICK.size(),
+                ContaminationState.NEXT_SYMPTOM_ROLL_TICK.size(),
+                ContaminationState.LATENT_SLOW_UNTIL_TICK.size(),
+                ContaminationState.NEXT_EVOLVE_ROLL_TICK.size(),
                 privateSize(EPISODES_CLASS, "episodes"),
                 privateSize(HALLUC_CLASS, "hallucTimers"));
     }

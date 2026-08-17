@@ -33,7 +33,7 @@ public final class ContaminationLifecycle {
         }
         e.setAttached(ContaminationState.CONTAM, 1);
         e.setAttached(ContaminationState.SYMPTOMATIC, false);
-        ContaminationState.tracked.add(e);
+        ContaminationState.TRACKED.add(e);
         ContaminationSymptoms.applyLatentSlow(e);
         if (DevProbe.on()) {
             DevProbe.sink.count(DevProbe.INFECT, DevProbe.GLOBAL);
@@ -62,7 +62,7 @@ public final class ContaminationLifecycle {
         }
         if (!ContaminationState.symptomatic(e)) {
             e.setAttached(ContaminationState.SYMPTOMATIC, true);
-            ContaminationState.nextSymptomRoll.remove(e);
+            ContaminationState.NEXT_SYMPTOM_ROLL_TICK.remove(e);
         }
         ContaminationState.setLevel(e, lvl);
     }
@@ -79,7 +79,7 @@ public final class ContaminationLifecycle {
             return;
         }
         if (e instanceof LivingEntity le && ContaminationState.age(le) > 0) {
-            ContaminationState.tracked.add(le);
+            ContaminationState.TRACKED.add(le);
             if (ContaminationState.symptomatic(le)) {
                 ContaminationSymptoms.applyIcon(le, ContaminationState.level(le) - 1);
             }

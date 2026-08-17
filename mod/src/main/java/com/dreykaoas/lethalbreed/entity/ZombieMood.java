@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.entity;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.mood.sleep.DaySleep;
 import com.dreykaoas.lethalbreed.entity.mood.FleeHysteresis;
 import com.dreykaoas.lethalbreed.entity.mood.FleeThreatTracker;
@@ -91,7 +91,7 @@ public final class ZombieMood {
     }
 
     /** True while walking to a shade block for a day-doze (the current memory target IS that shade). Read by the
-     *  brain (to keep the walk calm — no leaping) and by LODManager (a shade-seek only "arrives" once the
+     *  brain (to keep the walk calm — no leaping) and by LodManager (a shade-seek only "arrives" once the
      *  zombie's own feet are out of the sky, not merely near the shade column). */
     public boolean isSeekingShade() {
         return sleepSeekingShade;
@@ -157,7 +157,7 @@ public final class ZombieMood {
     }
 
     /** Once-per-activation mood step: state transitions, distress scream, and self-heal. */
-    public void update(ServerLevel level, WorldAIContext ctx) {
+    public void update(ServerLevel level, WorldAiContext ctx) {
         if (guardUpdate(level)) {
             return;
         }
@@ -416,11 +416,11 @@ public final class ZombieMood {
             noAiFrozen = true;
         }
         owner.setState(ZombieState.SLEEPING);
-        owner.setLod(LODLevel.FROZEN);
+        owner.setLod(LodLevel.FROZEN);
     }
 
     /** Leave the SLEEPING state. When {@code investigate}, seed short-term memory with the last heard noise so
-     *  the normal hunt (LODManager → brain) walks the zombie over to check it out. */
+     *  the normal hunt (LodManager → brain) walks the zombie over to check it out. */
     private void wake(long now, boolean investigate) {
         alertUntil = now + ZombieMoodConfig.daySleepAlertTicks; // just roused → stay awake & hunt for a while
         if (investigate && hasWakePos && TargetingConfig.targetMemoryTicks > 0) {
@@ -428,7 +428,7 @@ public final class ZombieMood {
         }
         state = State.NORMAL;
         clearSleepState();
-        owner.setLod(LODLevel.HIGH); // re-activate immediately so it starts moving this activation
+        owner.setLod(LodLevel.HIGH); // re-activate immediately so it starts moving this activation
     }
 
     /** Reset the wake TIMERS + release any NoAi we held. Called on wake and whenever the mood step notices we're

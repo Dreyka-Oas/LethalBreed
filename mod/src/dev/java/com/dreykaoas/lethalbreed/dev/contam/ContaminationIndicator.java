@@ -27,7 +27,7 @@ public final class ContaminationIndicator {
         if (!DevProbe.tracing(DevProbe.CONTAM)) {
             return;
         }
-        for (LivingEntity e : ContaminationState.tracked) {
+        for (LivingEntity e : ContaminationState.TRACKED) {
             showDevIndicator(e);
         }
     }

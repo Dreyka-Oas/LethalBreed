@@ -85,7 +85,7 @@ public final class LeakProbeHarness extends TickPhasedHarness {
         // past run infected comes back tracked at chunk load. Killing them off in the world is not the
         // answer either — this harness must own its precondition rather than assume the world grants it.
         // Same defect as PackMarchProbe taking "the first pack": exclusivity assumed, never established.
-        for (LivingEntity stale : List.copyOf(ContaminationState.tracked)) {
+        for (LivingEntity stale : List.copyOf(ContaminationState.TRACKED)) {
             if (stale != victim) {
                 ContaminationManager.clearPlague(stale);
             }
@@ -112,7 +112,7 @@ public final class LeakProbeHarness extends TickPhasedHarness {
             int n = PlagueCollections.snapshotSize();
             check("snapshot-drained", n == 0,
                     "ContaminationTick.SNAPSHOT.size()=" + n + " one tick after the last victim was cured "
-                            + "(tracked=" + ContaminationState.tracked.size() + ", i.e. the early-return path)");
+                            + "(tracked=" + ContaminationState.TRACKED.size() + ", i.e. the early-return path)");
         } else if (tick == DISCARD_TICK) {
             if (victim != null) {
                 victim.discard();

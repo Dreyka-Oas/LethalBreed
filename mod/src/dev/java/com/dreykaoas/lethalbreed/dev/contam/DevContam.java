@@ -26,7 +26,7 @@ public final class DevContam {
         }
         e.setAttached(ContaminationState.SYMPTOMATIC, true);
         ContaminationState.setLevel(e, 1);
-        ContaminationState.nextSymptomRoll.remove(e);
+        ContaminationState.NEXT_SYMPTOM_ROLL_TICK.remove(e);
     }
 
 }

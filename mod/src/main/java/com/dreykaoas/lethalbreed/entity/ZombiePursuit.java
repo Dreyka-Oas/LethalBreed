@@ -15,7 +15,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 public final class ZombiePursuit {
     private final Zombie entity;
 
-    // Current hunt target (any living entity; set by LODManager). Null during memory/sound pursuit.
+    // Current hunt target (any living entity; set by LodManager). Null during memory/sound pursuit.
     private LivingEntity targetEntity;
     private double tgtX, tgtY, tgtZ;
     private boolean hasTarget = false;
@@ -109,7 +109,7 @@ public final class ZombiePursuit {
 
     /** Walk to the pack's rendezvous — no live entity, so no melee, like {@link #setMemoryTarget()}. The
      *  waypoint is short-range by construction (packMarchLead), which is what keeps the member out of
-     *  FROZEN: LODManager grades on the distance to whatever is being walked to. */
+     *  FROZEN: LodManager grades on the distance to whatever is being walked to. */
     public void setPackTarget() {
         this.targetEntity = null;
         this.tgtX = pack.wpX();

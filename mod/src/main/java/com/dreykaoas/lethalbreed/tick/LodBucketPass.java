@@ -2,10 +2,10 @@ package com.dreykaoas.lethalbreed.tick;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 
-import com.dreykaoas.lethalbreed.ai.LODManager;
+import com.dreykaoas.lethalbreed.ai.LodManager;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
-import com.dreykaoas.lethalbreed.entity.LODLevel;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
+import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.probe.DevProbe;
@@ -60,10 +60,10 @@ final class LodBucketPass {
             if (np == null) {
                 sz.pursuit().clearTarget();
                 sz.pursuit().clearMemory();
-                // Same reason as LODManager's terminal branch: clearing only OUR target leaves vanilla's
+                // Same reason as LodManager's terminal branch: clearing only OUR target leaves vanilla's
                 // never-stripped attack goal steering a zombie we have declared frozen.
                 sz.entity().setTarget(null);
-                sz.setLod(LODLevel.FROZEN);
+                sz.setLod(LodLevel.FROZEN);
                 return true;
             }
         }
@@ -72,14 +72,14 @@ final class LodBucketPass {
 
     /** Runs the classify → grid → pack → sun-burn → mood phase for one zombie activation and returns the
      *  LOD tier after mood processing (mood can un-freeze a zombie, so the tier must be re-read afterward). */
-    private LODLevel classifyAndUpdate(SmartZombie sz, ServerLevel level, WorldAIContext classifyCtx,
-                                        WorldAIContext ctx, boolean prof) {
+    private LodLevel classifyAndUpdate(SmartZombie sz, ServerLevel level, WorldAiContext classifyCtx,
+                                        WorldAiContext ctx, boolean prof) {
         long t = prof ? System.nanoTime() : 0L;
         // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
         // ALL buckets — a global tick%interval would only ever align with bucket 0.
-        LODManager.classify(sz, level, classifyCtx.targetIndex());
+        LodManager.classify(sz, level, classifyCtx.targetIndex());
         t = mark(DevProbe.CLASSIFY, prof, t);
-        LODLevel lod = sz.lod();
+        LodLevel lod = sz.lod();
         // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
         // so neighbour queries still find them: a Screamer rallying idle zombies, a Healer healing them,
         // and sound propagation all target exactly these.
@@ -106,7 +106,7 @@ final class LodBucketPass {
 
     /** Distance-tier throttle divisor: distant zombies run their AI less often. Under server lag (stress=2)
      *  every tier — HIGH included — is throttled extra to shed load. */
-    private static int divisorFor(LODLevel lod, int stress) {
+    private static int divisorFor(LodLevel lod, int stress) {
         int divisor = switch (lod) {
             case MEDIUM -> SchedulerConfig.lodMediumTickDivisor;
             case LOW -> SchedulerConfig.lodLowTickDivisor;
@@ -115,7 +115,7 @@ final class LodBucketPass {
         return divisor * stress;
     }
 
-    private void tickAndCollect(SmartZombie sz, ServerLevel level, WorldAIContext ctx, boolean prof,
+    private void tickAndCollect(SmartZombie sz, ServerLevel level, WorldAiContext ctx, boolean prof,
                                  Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
         long tt = prof ? System.nanoTime() : 0L;
         sz.tick(level, ctx);
@@ -165,7 +165,7 @@ final class LodBucketPass {
             // reaches this line once every `buckets` ticks, so using raw round would step the residue by
             // buckets per activation and, when gcd(buckets,frozenDiv)>1, strand a fixed subset FROZEN forever.
             // round/buckets advances by exactly 1 per activation, cycling all residues regardless of buckets.
-            if (frozenDiv > 1 && sz.lod() == LODLevel.FROZEN
+            if (frozenDiv > 1 && sz.lod() == LodLevel.FROZEN
                     && Math.floorMod(sz.id() + round / buckets, frozenDiv) != 0L) {
                 continue;
             }
@@ -174,10 +174,10 @@ final class LodBucketPass {
                 continue;
             }
 
-            WorldAIContext classifyCtx = dimensions.get(sz.dimension());
-            WorldAIContext ctx = dimensions.get(sz.dimension());
-            LODLevel lod = classifyAndUpdate(sz, level, classifyCtx, ctx, prof);
-            if (lod == LODLevel.FROZEN) {
+            WorldAiContext classifyCtx = dimensions.get(sz.dimension());
+            WorldAiContext ctx = dimensions.get(sz.dimension());
+            LodLevel lod = classifyAndUpdate(sz, level, classifyCtx, ctx, prof);
+            if (lod == LodLevel.FROZEN) {
                 continue;
             }
             // Distance-tier throttle: distant zombies run their AI less often. Under server lag (stress=2)
@@ -200,7 +200,7 @@ final class LodBucketPass {
     }
 
     private void untrack(SmartZombie sz) {
-        WorldAIContext ctx = dimensions.get(sz.dimension());
+        WorldAiContext ctx = dimensions.get(sz.dimension());
         ctx.spatialGrid().remove(sz);
         registry.remove(sz.id());
     }

@@ -64,7 +64,7 @@ public final class PackConfig {
     /** How close the pack centroid must get to count as arrived. */
     public static double packArriveDistance = 8.0;
     /** Distance ahead of the centroid where the shared march waypoint is planted.
-     *  <p>This is load-bearing, not cosmetic: LODManager classifies on the distance to the point being
+     *  <p>This is load-bearing, not cosmetic: LodManager classifies on the distance to the point being
      *  walked to, so aiming members at a destination hundreds of blocks away would push them past lodLow
      *  and FREEZE them instead of moving them. Keep well under lodHigh/lodMedium. */
     public static double packMarchLead = 24.0;

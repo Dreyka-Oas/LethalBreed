@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.mixin;
 
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.util.Players;
 
 import net.minecraft.server.level.ServerLevel;
@@ -42,7 +42,7 @@ public abstract class PlayerItemDropSoundMixin {
         if (!(self.level() instanceof ServerLevel level)) {
             return; // defensive; a ServerPlayer's level is always a ServerLevel
         }
-        WorldAIContext ctx = GameState.DIMENSIONS.get(level.dimension());
+        WorldAiContext ctx = GameState.DIMENSIONS.get(level.dimension());
         ctx.soundBus().emit(dropped.getX(), dropped.getY(), dropped.getZ(), TargetingConfig.soundBaseRadius);
     }
 }

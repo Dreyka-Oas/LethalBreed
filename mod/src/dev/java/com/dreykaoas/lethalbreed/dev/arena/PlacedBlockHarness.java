@@ -26,7 +26,7 @@ import java.util.List;
  * <p><b>Why not make zombies bridge.</b> That is {@code BreachHarness}'s job, and a far noisier experiment:
  * which block a zombie chooses, when, and how many all depend on the flow field, the breach coordinator and
  * the stuck detector. None of that is the tracker's contract. Here the tracker's own {@code record()} is
- * called through the real {@code WorldAIContext.placedBlocks()} accessor — the same instance
+ * called through the real {@code WorldAiContext.placedBlocks()} accessor — the same instance
  * {@code WorldMaintenance.drainBlockOps} ticks every server tick — so everything after that call is shipped
  * code, unmocked. The arithmetic (expiry, abandon threshold, crack ramp) is already unit-tested in
  * {@code PlacedBlockPolicyTest}; what CANNOT be unit-tested, and is the entire point of this rig, is the

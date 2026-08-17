@@ -4,7 +4,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
 import net.minecraft.core.BlockPos;
@@ -22,7 +22,7 @@ public final class Descend {
     private Descend() {
     }
 
-    public static void step(SmartZombie owner, ServerLevel level, WorldAIContext ctx, int sdx, int sdz) {
+    public static void step(SmartZombie owner, ServerLevel level, WorldAiContext ctx, int sdx, int sdz) {
         Zombie entity = owner.entity();
         int bx = entity.blockPosition().getX();
         int by = entity.blockPosition().getY();

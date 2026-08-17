@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.special.SpecialRoller;
@@ -156,13 +156,13 @@ public final class SpecialAbilities {
      * SCREAMER: hand the caller's target to nearby target-less smart zombies.
      *
      * <p>The rally also plants a memory, exactly as {@code SoundEventBus} does for a heard noise. Without it
-     * the handover survived only until the recruit's next classify: {@code LODManager} re-runs its own
+     * the handover survived only until the recruit's next classify: {@code LodManager} re-runs its own
      * detection, finds the prey outside that zombie's {@code targetDetectRadius}, and — with no memory to
      * fall back on — drops straight to the terminal branch that clears everything and freezes. The rally
      * would then be undone within a couple of activations, which is why a Screamer never seemed to recruit
      * more than one or two.
      */
-    public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAIContext ctx) {
+    public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAiContext ctx) {
         long expire = z.level().getGameTime() + TargetingConfig.targetMemoryTicks;
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialScreamerRadius)) {
@@ -196,7 +196,7 @@ public final class SpecialAbilities {
      * arithmetic: the heal is what that Regeneration WOULD have delivered over its full duration, i.e.
      * {@code ticks / (50 >> amp)} health, so tuning either option still moves the number the same way.
      */
-    public static void heal(SmartZombie sz, Zombie z, WorldAIContext ctx) {
+    public static void heal(SmartZombie sz, Zombie z, WorldAiContext ctx) {
         float amount = healAmount();
         for (SmartZombie o : ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialHealerRadius)) {
@@ -213,7 +213,7 @@ public final class SpecialAbilities {
     }
 
     /** NECROMANCER: summon child zombies, capped against an already-dense local pack. */
-    public static void summon(SmartZombie sz, ServerLevel level, Zombie z, WorldAIContext ctx) {
+    public static void summon(SmartZombie sz, ServerLevel level, Zombie z, WorldAiContext ctx) {
         if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialNecromancerDensityRadius).size()
                 > SpecialVariantConfig.specialNecromancerDensityCap) {

@@ -22,7 +22,7 @@ import java.util.UUID;
  * immediately, chunk reloads while it is off do not accumulate ghost entries, and turning it back on resumes
  * the disease from its persistent attachments.
  *
- * <p><b>Why reload-accumulation is the interesting case.</b> {@code ContaminationState.tracked} is a
+ * <p><b>Why reload-accumulation is the interesting case.</b> {@code ContaminationState.TRACKED} is a
  * {@code HashSet<LivingEntity>} and {@code Entity.hashCode()} is the monotonic entity id, so a victim that
  * unloads and re-deserialises is NEVER equal to its previous incarnation. With {@code onLoad} ungated, each
  * reload below added a fresh entry to a set the (disabled) sweep could no longer clean — one dead entity pinned
@@ -100,8 +100,8 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
         ContaminationManager.contaminate(c);
         DevContam.forceSymptomatic(c);
         churn = new ChunkChurn("plague-disabled reloads", CX, CZ, ROUNDS, HALF_BUDGET);
-        check("tracked-on-infect", ContaminationState.tracked.size() == 1,
-                "tracked.size()=" + ContaminationState.tracked.size() + " after one contaminate() — "
+        check("tracked-on-infect", ContaminationState.TRACKED.size() == 1,
+                "tracked.size()=" + ContaminationState.TRACKED.size() + " after one contaminate() — "
                         + "the baseline the purge/accumulation checks below are measured against");
     }
 
@@ -110,8 +110,8 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
         switch (tick) {
             case DISABLE_TICK -> cfg.set("contaminationEnabled", false);
             case PURGE_CHECK_TICK -> check("purge-on-disable",
-                    ContaminationState.tracked.isEmpty(),
-                    "tracked.size()=" + ContaminationState.tracked.size() + " two ticks after "
+                    ContaminationState.TRACKED.isEmpty(),
+                    "tracked.size()=" + ContaminationState.TRACKED.size() + " two ticks after "
                             + "contaminationEnabled=false");
             default -> churnStep(ow, tick);
         }
@@ -145,8 +145,8 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
      *  clean bill of health, and it must read as one. */
     private void judgeAccumulation() {
         check("no-accumulation",
-                ContaminationState.tracked.isEmpty() && churn.completed() > 0,
-                "tracked.size()=" + ContaminationState.tracked.size() + " after " + churn.diagnosis()
+                ContaminationState.TRACKED.isEmpty() && churn.completed() > 0,
+                "tracked.size()=" + ContaminationState.TRACKED.size() + " after " + churn.diagnosis()
                         + " with the plague disabled (pre-fix this was one entry per reload, since "
                         + "Entity.hashCode() is the entity id)");
     }
@@ -166,12 +166,12 @@ public final class PlagueDisableHarness extends TickPhasedHarness {
         Entity found = victimId == null ? null : ow.getEntity(victimId);
         LivingEntity le = found instanceof LivingEntity l ? l : null;
         boolean contaminated = le != null && ContaminationManager.isContaminated(le);
-        boolean inSet = le != null && ContaminationState.tracked.contains(le);
+        boolean inSet = le != null && ContaminationState.TRACKED.contains(le);
         boolean symptomatic = le != null && ContaminationManager.isSymptomatic(le);
         check("resumes-after-reenable", contaminated && inSet && symptomatic,
                 "re-found by UUID=" + (le != null) + " contaminated=" + contaminated + " tracked.contains="
                         + inSet + " symptomatic=" + symptomatic + " (tracked.size()="
-                        + ContaminationState.tracked.size() + ", "
+                        + ContaminationState.TRACKED.size() + ", "
                         + (finalTrip == null ? "no post-re-enable reload was attempted" : finalTrip.diagnosis())
                         + ")");
 

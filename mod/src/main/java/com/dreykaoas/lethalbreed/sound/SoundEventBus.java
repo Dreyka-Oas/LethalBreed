@@ -119,7 +119,7 @@ public final class SoundEventBus {
                     continue; // already chasing a player directly
                 }
                 if (useMemory) {
-                    // Remember where the sound came from; LODManager's memory branch then pursues it (digging/
+                    // Remember where the sound came from; LodManager's memory branch then pursues it (digging/
                     // descending toward the spot) and forgets on arrival or expiry. Persists focus past 1 tick.
                     z.pursuit().rememberTarget(e[0], e[1], e[2], gameTime + TargetingConfig.targetMemoryTicks);
                 } else {

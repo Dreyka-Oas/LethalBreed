@@ -34,7 +34,7 @@ class PackTetherTest {
     }
 
     /**
-     * Leaving must drop the waypoint. A stale waypoint is not cosmetic: LODManager keeps a zombie out of
+     * Leaving must drop the waypoint. A stale waypoint is not cosmetic: LodManager keeps a zombie out of
      * FROZEN as long as it has somewhere to walk, so a departed member would tick at full price forever,
      * walking to a rendezvous its former pack has long since left.
      */

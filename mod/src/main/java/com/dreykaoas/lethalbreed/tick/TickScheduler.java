@@ -62,7 +62,7 @@ public final class TickScheduler {
         world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
         world.processSound(server);
         // Before the bucket pass, for the same reason processSound is: the waypoint it plants is read by
-        // LODManager.classify in that very pass.
+        // LodManager.classify in that very pass.
         world.tickPacks(server, server.overworld().getGameTime());
         world.recomputeFlowFields(server, tickCounter);
 

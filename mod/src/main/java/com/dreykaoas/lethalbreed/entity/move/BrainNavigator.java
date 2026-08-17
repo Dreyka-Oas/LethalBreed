@@ -4,7 +4,7 @@ import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombiePursuit;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
@@ -29,7 +29,7 @@ final class BrainNavigator {
     }
 
     /** Walk toward the remembered sound, returning false (and clearing it) once within arrival distance. */
-    boolean navigateToSound(WorldAIContext ctx) {
+    boolean navigateToSound(WorldAiContext ctx) {
         ZombiePursuit p = owner.pursuit();
         double dx = p.soundX() - entity.getX();
         double dz = p.soundZ() - entity.getZ();
@@ -45,7 +45,7 @@ final class BrainNavigator {
     /** Re-path only when the previous path finished or the re-issue interval elapsed. When a flow field
      *  covers the zombie's cell, steer toward the downhill waypoint (so it routes around walls / through
      *  break-and-bridge cells); otherwise fall back to walking straight at the target. */
-    void navTo(WorldAIContext ctx, double x, double y, double z) {
+    void navTo(WorldAiContext ctx, double x, double y, double z) {
         PathNavigation nav = entity.getNavigation();
         // Distant zombies re-path less: a stale path costs little when far, so MEDIUM/LOW stretch the
         // re-issue interval by their multiplier. nav.isDone() still re-paths immediately for any tier.
@@ -70,7 +70,7 @@ final class BrainNavigator {
      *  (caller walks straight at the target instead) when no field is active, the zombie is outside it, or it
      *  already sits on a goal/dead cell. The waypoint Y is the zombie's own Y — vanilla nav resolves the
      *  reachable ground around it; vertical climb/dig stays driven by MoveDispatch from the real target. */
-    private boolean navViaFlow(WorldAIContext ctx, PathNavigation nav) {
+    private boolean navViaFlow(WorldAiContext ctx, PathNavigation nav) {
         FlowField field = ctx.flowFieldManager().active();
         if (field == null) {
             return false;

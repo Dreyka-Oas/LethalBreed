@@ -22,7 +22,7 @@ import java.util.List;
  *
  * <p><b>Per dimension, not overworld-global.</b> {@code PhaseSavedData} — the only precedent in this repo —
  * is global because a difficulty phase is. Packs are not: a {@code PackManager} lives on
- * {@code WorldAIContext}, one per dimension, and a pack never crosses into another. Storing them globally
+ * {@code WorldAiContext}, one per dimension, and a pack never crosses into another. Storing them globally
  * would merge the Nether's packs into the overworld's on the next load.
  *
  * <p>Live members are deliberately <b>not</b> written. They are ordinary entities, saved with their chunk

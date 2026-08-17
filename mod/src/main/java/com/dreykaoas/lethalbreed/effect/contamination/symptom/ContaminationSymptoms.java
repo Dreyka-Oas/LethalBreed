@@ -29,15 +29,15 @@ public final class ContaminationSymptoms {
      *  chance to surface symptoms (which flips the victim into the visible/damaging stage). */
     public static void tickLatent(LivingEntity e, long t) {
         // Retire the brief infection slow once its window is up.
-        Long slowEnd = ContaminationState.latentSlowUntil.get(e);
+        Long slowEnd = ContaminationState.LATENT_SLOW_UNTIL_TICK.get(e);
         if (slowEnd != null && t >= slowEnd) {
             removeLatentSlow(e);
-            ContaminationState.latentSlowUntil.remove(e);
+            ContaminationState.LATENT_SLOW_UNTIL_TICK.remove(e);
         }
 
-        Long roll = ContaminationState.nextSymptomRoll.get(e);
+        Long roll = ContaminationState.NEXT_SYMPTOM_ROLL_TICK.get(e);
         if (roll == null) {
-            ContaminationState.nextSymptomRoll.put(e, t + rollSymptomIntervalTicks());
+            ContaminationState.NEXT_SYMPTOM_ROLL_TICK.put(e, t + rollSymptomIntervalTicks());
             return;
         }
         if (t >= roll) {
@@ -45,9 +45,9 @@ public final class ContaminationSymptoms {
                     ContaminationConfig.contamSymptomMinPct, ContaminationConfig.contamSymptomMaxPct)) {
                 e.setAttached(ContaminationState.SYMPTOMATIC, true);
                 ContaminationState.setLevel(e, 1); // enter symptomatic at level 1 (applies icon + seeds intensity)
-                ContaminationState.nextSymptomRoll.remove(e);
+                ContaminationState.NEXT_SYMPTOM_ROLL_TICK.remove(e);
             } else {
-                ContaminationState.nextSymptomRoll.put(e, t + rollSymptomIntervalTicks());
+                ContaminationState.NEXT_SYMPTOM_ROLL_TICK.put(e, t + rollSymptomIntervalTicks());
             }
         }
     }
@@ -70,7 +70,7 @@ public final class ContaminationSymptoms {
                 LATENT_SLOW_ID, -ContaminationConfig.contamLatentSlowAmount,
                 AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
         long now = level.getServer().getTickCount();
-        ContaminationState.latentSlowUntil.put(e, now + Math.max(1, ContaminationConfig.contamLatentSlowTicks));
+        ContaminationState.LATENT_SLOW_UNTIL_TICK.put(e, now + Math.max(1, ContaminationConfig.contamLatentSlowTicks));
     }
 
     public static void removeLatentSlow(LivingEntity e) {

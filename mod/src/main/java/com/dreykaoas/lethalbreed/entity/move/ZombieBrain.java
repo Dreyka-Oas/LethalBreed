@@ -4,9 +4,9 @@ package com.dreykaoas.lethalbreed.entity.move;
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 import net.minecraft.world.entity.LivingEntity;
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;
-import com.dreykaoas.lethalbreed.entity.LODLevel;
+import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombiePursuit;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
@@ -50,7 +50,7 @@ public final class ZombieBrain {
     /** Distance-tier throttle: true on 1 of every {@code divisor} activations of this zombie. */
     public boolean dueThisActivation(int divisor) { return divisor <= 1 || (activations++ % divisor) == 0; }
 
-    public void tick(ServerLevel level, WorldAIContext ctx) {
+    public void tick(ServerLevel level, WorldAiContext ctx) {
         if (!owner.isValid()) return;
         ZombiePursuit p = owner.pursuit();
         int bx = entity.blockPosition().getX();
@@ -60,7 +60,7 @@ public final class ZombieBrain {
         // that pass, so repeating the update is pure redundant work. bx/bz are kept for MoveDispatch below.
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
-        if (owner.lod() == LODLevel.FROZEN) return;
+        if (owner.lod() == LodLevel.FROZEN) return;
         // Armed Bomber: fuse is lit, so it stops dead and swells in place until the explosion — checked
         // before sleep/shelter/flee since none of those should ever interrupt a committed detonation.
         if (handleArmed()) return;
@@ -78,7 +78,7 @@ public final class ZombieBrain {
         if (pillar.active()) return; // mid climb; the per-tick climbStep finishes it
         if (handleNoTarget(ctx, p)) return;
 
-        // The vanilla attack target (melee) is set authoritatively in LODManager.classify, which runs in the
+        // The vanilla attack target (melee) is set authoritatively in LodManager.classify, which runs in the
         // SAME activation immediately before this tick — so no setTarget re-assert is needed here (was
         // duplicate work). We still read the pursuit target to drive movement dispatch below.
         LivingEntity te = p.targetEntity();
@@ -173,7 +173,7 @@ public final class ZombieBrain {
         // Kill horizontal momentum only — falling still falls, so an armed Bomber mid-leap lands normally
         // rather than freezing in the air.
         entity.setDeltaMovement(0.0, entity.getDeltaMovement().y, 0.0);
-        // Also null the VANILLA melee target: LODManager.classify() re-asserts it every activation
+        // Also null the VANILLA melee target: LodManager.classify() re-asserts it every activation
         // (independently of our pursuit target below), and vanilla's own ZombieAttackGoal steers off that
         // target on every real game tick regardless of our LOD-bucketed activation cadence — same reason
         // LodBucketPass nulls it for a FROZEN zombie. Without this, an armed Bomber still creeps toward its
@@ -209,7 +209,7 @@ public final class ZombieBrain {
         return true;
     }
 
-    private boolean handleNoTarget(WorldAIContext ctx, ZombiePursuit p) {
+    private boolean handleNoTarget(WorldAiContext ctx, ZombiePursuit p) {
         if (p.hasTarget()) return false;
         owner.setState(p.hasSound() && nav.navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
         return true;
@@ -228,12 +228,12 @@ public final class ZombieBrain {
 
     /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the jump-and-place
      *  pillar (places blocks under itself, so it always stands on what it builds). */
-    public void climbStep(ServerLevel level, WorldAIContext ctx) {
+    public void climbStep(ServerLevel level, WorldAiContext ctx) {
         pillar.step(level, ctx);
     }
 
     /** Per-tick while in water. Guards the swim state, then delegates the driving to {@link Swim}. */
-    public void swimStep(ServerLevel level, WorldAIContext ctx) {
+    public void swimStep(ServerLevel level, WorldAiContext ctx) {
         if (!swimming) return;
         if (!owner.isValid() || !entity.isInWater()) {
             swimming = false;

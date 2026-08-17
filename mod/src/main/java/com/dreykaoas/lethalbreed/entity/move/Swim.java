@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 
-import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
+import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +24,7 @@ public final class Swim {
     private static final BlockPos.MutableBlockPos EDGE = new BlockPos.MutableBlockPos();
 
     /** Drive the swim. Called every tick by {@code SmartZombie.swimStep} after its guard has passed. */
-    public static void drive(SmartZombie owner, ServerLevel level, WorldAIContext ctx) {
+    public static void drive(SmartZombie owner, ServerLevel level, WorldAiContext ctx) {
         Zombie entity = owner.entity();
         LivingEntity target = owner.targetEntity();
 
@@ -83,7 +83,7 @@ public final class Swim {
 
     /** Carve solid blocks between the zombie and its target while swimming (water itself isn't solid). When
      *  diving it also opens the floor cell directly below. */
-    private static void breakToward(ServerLevel level, WorldAIContext ctx, Zombie entity,
+    private static void breakToward(ServerLevel level, WorldAiContext ctx, Zombie entity,
                                     int sdx, int sdz, boolean diving) {
         int bx = entity.blockPosition().getX();
         int by = entity.blockPosition().getY();
@@ -97,7 +97,7 @@ public final class Swim {
         }
     }
 
-    private static void tryBreak(ServerLevel level, WorldAIContext ctx, Zombie entity, int x, int y, int z) {
+    private static void tryBreak(ServerLevel level, WorldAiContext ctx, Zombie entity, int x, int y, int z) {
         BlockPos p = new BlockPos(x, y, z);
         if (MoveMath.breakableSolid(level, p)) {
             ctx.breakManager().request(p, entity);

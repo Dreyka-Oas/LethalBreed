@@ -80,7 +80,7 @@ public final class TargetSelector {
      *  primes over sound by design: a live combat target is acquired only by line of sight (opaque blocks block
      *  it; glass/ice/leaves do not). Hearing is handled separately by the sound bus: a heard noise feeds
      *  the zombie's short-term MEMORY so it walks to investigate the SPOT, and this seen target overrides that
-     *  memory in {@code LODManager} the instant something comes into view. So a zombie hears a mob move behind a
+     *  memory in {@code LodManager} the instant something comes into view. So a zombie hears a mob move behind a
      *  wall and commits to the noise location; once it rounds the wall and sees the mob, sight takes over. */
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, TargetIndex index) {
         boolean prof = DevProbe.on();
