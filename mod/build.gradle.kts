@@ -93,11 +93,17 @@ tasks.named<JavaCompile>("compileJava") {
 // rather than on @Disabled keeps them genuinely runnable: `--tests` selects tests, it does not re-enable a
 // disabled one, and the test JVM is forked so a bare -D on the Gradle command line never reaches it.
 //   ./gradlew test -Plb.bench=true --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"
-val benchEnabled = providers.gradleProperty("lb.bench").orElse("false")
+// A Provider<String> of "true"/"false", not a Boolean — hence "flag" rather than "enabled", which would
+// invite `if (benchFlag)` and read as already-resolved.
+val benchFlag = providers.gradleProperty("lb.bench").orElse("false")
 
 tasks.test {
     useJUnitPlatform()
-    systemProperty("lb.bench", benchEnabled.get())
+    // .get() is REQUIRED, not an eager-evaluation slip to tidy away. systemProperty takes an Object and
+    // stringifies it at fork time, so handing it the Provider itself sets
+    // -Dlb.bench=or(provider(?), fixed(false)) — a value that never equals "true", silently making the
+    // benchmark unrunnable rather than failing.
+    systemProperty("lb.bench", benchFlag.get())
 }
 
 // ---- Kernel packaging: copy the OpenCL source to the .clx resource name expected by GpuContext ----

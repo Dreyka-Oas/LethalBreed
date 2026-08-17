@@ -25,8 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * holder, reordering {@code ConfigSchema.HOLDERS} or moving a field therefore rewrites every user's config
  * file. This pins all of them so such a change cannot happen by accident.
  *
- * <p>The expected list lives in {@code src/test/resources/config-option-order.txt} rather than inline: 305
- * names is data, not code, and a data file keeps this class readable and regenerable.
+ * <p>The expected list lives in {@code src/test/resources/config-option-order.txt} rather than inline: a list
+ * of names is data, not code, and a data file keeps this class readable and regenerable. Deliberately no
+ * count is quoted here — the last one said 305 while the file held 336.
  */
 class ConfigSchemaOrderTest {
 

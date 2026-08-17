@@ -22,28 +22,28 @@
 set -euo pipefail
 
 SUITE="${1:-compute}"
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SHIM="$HERE/build/opencl-shim"
+MOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SHIM_DIR="$MOD_DIR/build/opencl-shim"
 
-loader=""
+OPENCL_LOADER=""
 for candidate in /usr/lib64/libOpenCL.so.1 /usr/lib/x86_64-linux-gnu/libOpenCL.so.1; do
-  [ -e "$candidate" ] && { loader="$candidate"; break; }
+  [ -e "$candidate" ] && { OPENCL_LOADER="$candidate"; break; }
 done
-if [ -z "$loader" ]; then
-  echo "Aucun loader OpenCL (libOpenCL.so.1) trouvé. Installe mesa-libOpenCL, puis relance." >&2
+if [ -z "$OPENCL_LOADER" ]; then
+  echo "No OpenCL loader (libOpenCL.so.1) found. Install mesa-libOpenCL, then re-run." >&2
   exit 1
 fi
 
-mkdir -p "$SHIM"
-ln -sf "$loader" "$SHIM/libOpenCL.so"
+mkdir -p "$SHIM_DIR"
+ln -sf "$OPENCL_LOADER" "$SHIM_DIR/libOpenCL.so"
 
-echo "loader   : $loader"
-echo "shim     : $SHIM/libOpenCL.so"
+echo "loader   : $OPENCL_LOADER"
+echo "shim     : $SHIM_DIR/libOpenCL.so"
 echo "suite    : $SUITE"
 command -v clinfo >/dev/null && RUSTICL_ENABLE=radeonsi clinfo -l 2>/dev/null | sed 's/^/clinfo   : /'
 
 exec env \
   RUSTICL_ENABLE="${RUSTICL_ENABLE:-radeonsi}" \
-  LD_LIBRARY_PATH="$SHIM${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+  LD_LIBRARY_PATH="$SHIM_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
   LB_DEV_TEST="$SUITE" \
-  "$HERE/gradlew" -p "$HERE" runServer --console=plain
+  "$MOD_DIR/gradlew" -p "$MOD_DIR" runServer --console=plain
