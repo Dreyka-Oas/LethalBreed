@@ -38,7 +38,7 @@ class PackAdvanceTest {
     void movesDiagonallyAlongTheStraightLine() {
         double[] pos = {0.0, 0.0};
         PackAdvance.step(pos, 300, 400, 0.5, 100, ARRIVE);
-        // 50 blocs parcourus sur une hypoténuse 3-4-5 : 30 en X, 40 en Z.
+        // 50 blocks travelled along a 3-4-5 hypotenuse: 30 on X, 40 on Z.
         assertEquals(30.0, pos[0], 1e-9);
         assertEquals(40.0, pos[1], 1e-9);
     }
@@ -46,7 +46,7 @@ class PackAdvanceTest {
     @Test
     void neverOvershootsTheDestination() {
         double[] pos = {0.0, 0.0};
-        // Assez de vitesse pour dépasser largement : la meute doit s'arrêter au rayon d'arrivée.
+        // Fast enough to overshoot by a wide margin: the pack must stop at the arrival radius.
         boolean arrived = PackAdvance.step(pos, 100, 0, 10.0, 1000, ARRIVE);
         assertTrue(arrived);
         assertTrue(pos[0] <= 100.0 + 1e-9, "dépassement : " + pos[0]);

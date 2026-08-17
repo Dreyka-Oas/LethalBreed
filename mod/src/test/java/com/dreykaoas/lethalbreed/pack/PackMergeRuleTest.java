@@ -61,7 +61,7 @@ class PackMergeRuleTest {
     void perpendicularHeadingsDoNotMergeAtTheDefaultThreshold() {
         PackConfig.packMergeRadius = 32.0;
         PackConfig.packMergeHeadingDot = 0.5;
-        // dot = 0 pour des caps à 90°, sous le seuil de 0,5.
+        // dot = 0 for headings 90° apart, below the 0.5 threshold.
         assertFalse(mergeAt(4.0, 1, 0));
     }
 
@@ -72,7 +72,7 @@ class PackMergeRuleTest {
         assertTrue(mergeAt(4.0, 0, -1));
     }
 
-    // ---- Qui absorbe qui ----
+    // ---- Which one absorbs which ----
 
     @Test
     void theBiggerPackAbsorbs() {
@@ -107,8 +107,8 @@ class PackMergeRuleTest {
     void anEmptyPackGoesImmediatelyWhateverTheGrace() {
         PackConfig.packMinSize = 2;
         PackConfig.packDissolveGraceTicks = 72_000;
-        // Un objet meute sans un seul membre n'a rien à attendre : le garder en vie
-        // une heure de jeu ne ferait que le faire avancer et re-matérialiser du vide.
+        // A pack object without a single member has nothing left to wait for: keeping it alive
+        // for an hour of play would only advance it and re-materialise nothing.
         assertTrue(PackMergeRule.shouldDissolve(0, 0));
     }
 }

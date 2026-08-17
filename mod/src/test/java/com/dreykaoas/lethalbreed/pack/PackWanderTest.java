@@ -71,7 +71,7 @@ class PackWanderTest {
         PackConfig.packLegMin = 100;
         PackConfig.packLegMax = 100;
         double[] heading = new double[2];
-        // Même avec un tirage extrême, un virage nul ne dévie pas.
+        // Even on an extreme draw, a zero turn does not deviate.
         Destination d = PackWander.next(0, 0, 1, 0, -FAR, -FAR, FAR, FAR, scripted(1.0, 0), heading);
         assertEquals(100, d.x());
         assertEquals(0, d.z());
@@ -87,7 +87,7 @@ class PackWanderTest {
         for (double draw : new double[] {0.0, 0.25, 0.5, 0.75, 1.0}) {
             double[] heading = new double[2];
             PackWander.next(0, 0, 1, 0, -FAR, -FAR, FAR, FAR, scripted(draw, 0), heading);
-            // dot du cap sortant avec le cap entrant (1,0) = cosinus de l'angle parcouru.
+            // dot of the outgoing heading with the incoming one (1,0) = cosine of the angle turned through.
             double cos = heading[0];
             assertTrue(cos >= Math.cos(Math.toRadians(45.0)) - 1e-9,
                     "virage de plus de 45° pour un tirage de " + draw + " (cos=" + cos + ")");
@@ -113,7 +113,7 @@ class PackWanderTest {
         assertTrue(Double.isFinite(d.x()) && Double.isFinite(d.z()));
     }
 
-    // ---- Bordure du monde ----
+    // ---- World border ----
 
     @Test
     void theDestinationIsClampedInsideTheBorder() {
@@ -132,7 +132,7 @@ class PackWanderTest {
         PackConfig.packLegMax = 500;
         double[] heading = new double[2];
         PackWander.next(0, 0, 1, 0, -200, -200, 200, 200, noTurn(0), heading);
-        // Sans rebond, la meute repartirait droit dans la bordure à chaque étape et resterait collée.
+        // Without a bounce the pack would head straight back into the border at every step and stay stuck.
         assertEquals(-1.0, heading[0], 1e-9);
         assertEquals(0.0, heading[1], 1e-9);
     }
@@ -143,13 +143,13 @@ class PackWanderTest {
         PackConfig.packLegMin = 500;
         PackConfig.packLegMax = 500;
         double[] heading = new double[2];
-        // Cap plein est : X tape la bordure, Z ne la touche pas.
+        // Heading due east: X hits the border, Z does not touch it.
         PackWander.next(0, 0, 1, 0, -200, -10_000, 200, 10_000, noTurn(0), heading);
         assertEquals(-1.0, heading[0], 1e-9);
         assertEquals(0.0, heading[1], 1e-9);
     }
 
-    // ---- Reproductibilité ----
+    // ---- Reproducibility ----
 
     @Test
     void theSameSeedAlwaysGivesTheSameDestination() {
@@ -176,13 +176,13 @@ class PackWanderTest {
         assertNotEquals(a, b);
     }
 
-    // ---- Configuration incohérente ----
+    // ---- Inconsistent configuration ----
 
     @Test
     void anInvertedLegRangeIsNormalisedInsteadOfCrashing() {
-        // Les deux bornes sont des options indépendantes ; rien n'empêche un opérateur de les inverser,
-        // et un nextInt(bound <= 0) ferait planter le thread serveur. La plage est remise à l'endroit,
-        // donc l'étape reste dans [100, 400] au lieu de lever.
+        // The two bounds are independent options; nothing stops an operator from swapping them, and a
+        // nextInt(bound <= 0) would crash the server thread. The range is put back the right way round,
+        // so the step stays within [100, 400] instead of throwing.
         PackConfig.packLegMin = 400;
         PackConfig.packLegMax = 100;
         double[] heading = new double[2];

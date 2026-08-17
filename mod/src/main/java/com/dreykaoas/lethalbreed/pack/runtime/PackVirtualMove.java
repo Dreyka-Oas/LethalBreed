@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerLevel;
  * <p>This is the whole point of dematerialising. A pack out of everyone's sight costs one
  * {@link PackAdvance#step} every {@code packMaterializeInterval} ticks instead of N zombies' worth of
  * pathfinding, collision and block queries — and it keeps travelling, which is what "il reste toujours
- * chargé" asks for.
+ * chargé" ("it stays loaded the whole time") asks for.
  *
  * <p><b>No terrain is read, deliberately.</b> Reading a block in an ungenerated chunk forces that chunk to
  * generate, which is the cost trap that kills this kind of system: a pack crossing 2000 blocks would generate

@@ -43,7 +43,7 @@ class PackJoinRuleTest {
         return PackJoinRule.decide(NO_PACK, myEntityId, 0, 0.0, 0, packs, ids, distSq, ids.length);
     }
 
-    // ---- « s'il n'y en a pas autour, ça ne sert à rien » ----
+    // ---- "if there are none around, there is no point" ----
 
     @Test
     void aLoneZombieFormsNothing() {
@@ -64,16 +64,16 @@ class PackJoinRuleTest {
         assertEquals(Kind.NONE, d.kind());
     }
 
-    // ---- Formation, et l'élection qui garantit une seule meute par grappe ----
+    // ---- Formation, and the election that guarantees one pack per cluster ----
 
     @Test
     void aClusterFormsExactlyOnePackElectedByLowestId() {
         PackConfig.packFormMinSize = 3;
         int[] ids = {4, 9, 12};
         long[] packs = {0L, 0L, 0L};
-        // Le plus petit id de la grappe {2,4,9,12} est 2 : lui seul forme.
+        // The lowest id in the cluster {2,4,9,12} is 2: it alone forms.
         assertEquals(Kind.FORM, decideAlone(2, ids, packs).kind());
-        // Tous les autres se taisent — sinon la grappe produirait quatre meutes d'un seul membre.
+        // Every other one stays quiet — otherwise the cluster would produce four one-member packs.
         assertEquals(Kind.NONE, decideAlone(4, new int[] {2, 9, 12}, packs).kind());
         assertEquals(Kind.NONE, decideAlone(9, new int[] {2, 4, 12}, packs).kind());
         assertEquals(Kind.NONE, decideAlone(12, new int[] {2, 4, 9}, packs).kind());
@@ -82,11 +82,11 @@ class PackJoinRuleTest {
     @Test
     void aClusterTooSmallToFormStaysLoose() {
         PackConfig.packFormMinSize = 4;
-        // Trois zombies au total (moi + deux voisins) alors qu'il en faut quatre.
+        // Three zombies in total (me + two neighbours) where four are required.
         assertEquals(Kind.NONE, decideAlone(1, new int[] {2, 3}, new long[] {0L, 0L}).kind());
     }
 
-    // ---- Adhésion ----
+    // ---- Joining ----
 
     @Test
     void joinsTheNeighbourPack() {
@@ -110,7 +110,7 @@ class PackJoinRuleTest {
     void aFullPackIsNotJoined() {
         PackConfig.packMaxSize = 2;
         double[] distSq = new double[] {1.0, 1.0};
-        // Les deux voisins appartiennent à la meute 77, qui est déjà pleine.
+        // Both neighbours belong to pack 77, which is already full.
         Decision d = PackJoinRule.decide(NO_PACK, 1, 2, 0.0, 0,
                 new long[] {77L, 77L}, new int[] {2, 3}, distSq, 2);
         assertEquals(Kind.NONE, d.kind());
@@ -119,12 +119,12 @@ class PackJoinRuleTest {
     @Test
     void anExistingPackWinsOverFormingANewOne() {
         PackConfig.packFormMinSize = 2;
-        // Assez de monde pour former, mais un voisin a déjà une meute : on la rejoint.
+        // Enough bodies to form, but a neighbour already has a pack: that one is joined instead.
         Decision d = decideAlone(1, new int[] {2, 3, 4}, new long[] {0L, 31L, 0L});
         assertEquals(new Decision(Kind.JOIN, 31L), d);
     }
 
-    // ---- Départ, et son hystérésis ----
+    // ---- Leaving, and its hysteresis ----
 
     private static Decision member(double distToCentroidSq, int strayCount) {
         return PackJoinRule.decide(5L, 1, 4, distToCentroidSq, strayCount,
@@ -142,7 +142,7 @@ class PackJoinRuleTest {
         PackConfig.packBreakRadius = 40.0;
         PackConfig.packStrayActivations = 3;
         double far = 50.0 * 50.0;
-        // Un zombie qui contourne un mur sort du rayon deux activations sans quitter sa meute.
+        // A zombie walking around a wall leaves the radius for two activations without leaving its pack.
         assertEquals(Kind.NONE, member(far, 0).kind());
         assertEquals(Kind.NONE, member(far, 1).kind());
         assertEquals(Kind.LEAVE, member(far, 2).kind());
@@ -152,7 +152,7 @@ class PackJoinRuleTest {
     void comingBackInsideResetsTheStrayCounter() {
         PackConfig.packBreakRadius = 40.0;
         PackConfig.packStrayActivations = 3;
-        // Déjà deux activations dehors, mais revenu dans le rayon : la décision ne part pas.
+        // Two activations outside already, but back inside the radius: the decision does not fire.
         assertEquals(Kind.NONE, member(10.0 * 10.0, 2).kind());
     }
 
@@ -165,9 +165,9 @@ class PackJoinRuleTest {
 
     @Test
     void aMemberNeverTriesToJoinAnotherPack() {
-        // Même entouré d'une autre meute, un membre en place ne change pas de camp : seul le départ, puis
-        // une adhésion à l'activation suivante, peuvent le déplacer. Sinon deux meutes voisines se
-        // videraient l'une dans l'autre à chaque passe.
+        // Even when surrounded by another pack, a settled member does not switch sides: only leaving, then
+        // joining on the next activation, can move it. Otherwise two neighbouring packs would empty
+        // into each other on every pass.
         Decision d = PackJoinRule.decide(5L, 1, 4, 0.0, 0,
                 new long[] {99L, 99L}, new int[] {2, 3}, new double[] {1.0, 1.0}, 2);
         assertEquals(Kind.NONE, d.kind());

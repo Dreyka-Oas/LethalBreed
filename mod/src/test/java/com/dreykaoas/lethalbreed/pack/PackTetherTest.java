@@ -55,8 +55,8 @@ class PackTetherTest {
         t.setPackId(1L);
         t.setWaypoint(10, 64, 20);
         t.setPackId(2L);
-        // Toujours armé : le waypoint est réécrit à la passe suivante par la nouvelle meute, et le vider ici
-        // ferait geler le membre pendant l'intervalle.
+        // Always armed: the waypoint is rewritten on the next pass by the new pack, and clearing it here
+        // would freeze the member for the length of the interval.
         assertTrue(t.hasWaypoint());
     }
 

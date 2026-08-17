@@ -30,12 +30,12 @@ public final class FlowConfig {
     /** Measure the CPU↔GPU crossover once at server start (micro-benchmark of both solvers at a range of
      *  grid sizes) and use that as the GPU threshold instead of the fixed {@link #gpuMinCells}. Adds a brief
      *  one-off boot cost on this exact machine; the result is logged. Off = use the manual gpuMinCells.
-     *  <p>(lu au démarrage — redémarrage requis pour prendre effet : a runtime GUI/command toggle is a no-op
+     *  <p>(Read at start-up — a restart is required to take effect: a runtime GUI/command toggle is a no-op
      *  until the next server start, since the crossover is measured once during GPU init.) */
     public static boolean gpuAutoCalibrate = false;
     /** Which OpenCL GPU to use, as an index into the detected-GPU list (logged at boot). -1 = auto (prefer an
      *  AMD/Radeon device, else the first GPU). Out-of-range falls back to auto. Only matters with >1 GPU.
-     *  <p>(lu au démarrage — redémarrage requis pour prendre effet : the device is selected once when the
+     *  <p>(Read at start-up — a restart is required to take effect: the device is selected once when the
      *  GpuContext is built at server start; changing this at runtime has no effect until a restart.) */
     public static int gpuDeviceIndex = -1;
 
