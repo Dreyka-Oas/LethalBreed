@@ -12,17 +12,12 @@
 
 </div>
 
-LethalBreed is a Fabric mod that turns Minecraft's zombies into a **systemic, escalating threat**. They
-navigate with a per-dimension flow field — pillaring up, carving down, breaking and bridging terrain,
-swimming and diving, hunting by **sight and sound**, and remembering where you went — all built to scale
-toward ~1000 active zombies. On top of that: an **endless difficulty escalation** (phases never stop, but
-their stats converge on hard caps — no zombie can ever one-shot a player in full armour), a **wasting
-contamination plague**, **8 special variants**, and celebrate / flee / rally behaviour.
+LethalBreed is a Fabric mod that turns Minecraft's zombies into a **systemic, escalating threat**: flow-field
+pathfinding that pillars, digs, bridges and swims, hunting by sight **and** sound, endless phase escalation, a
+contamination plague and 8 special variants — built to scale toward ~1000 active zombies.
 
-## 🌐 The dossier
-
-The full showcase and wiki — every mechanic with its exact parameters — lives at
-**[lethalbreed.pages.dev](https://lethalbreed.pages.dev)**, in **French** and **English**.
+> **Every mechanic, parameter and command is documented on the site →
+> [lethalbreed.pages.dev](https://lethalbreed.pages.dev)** · FR / EN
 
 ## 📁 Repository
 
