@@ -48,7 +48,7 @@ public final class SpecialBehavior {
             tgt = sz.targetEntity(); // fall back to our own target (vanilla getTarget is set later in the tick)
         }
         switch (t) {
-            case BOMBEUR -> {
+            case BOMBER -> {
                 // Absolute deadline, not per-activation accumulation: this method only runs once every
                 // `tickBuckets` ticks, so counting activations tied a gameplay tempo to a performance knob —
                 // raising tickBuckets silently doubled the time before detonation.
@@ -79,19 +79,19 @@ public final class SpecialBehavior {
                     z.setAttached(SpecialAttachment.BOMBEUR_CHARGE, (float) elapsed / fuse);
                 }
             }
-            case HURLEUR -> {
+            case SCREAMER -> {
                 if (tgt != null && sz.pursuit().specialReady()) {
                     SpecialAbilities.hurl(sz, z, tgt, ctx);
                     sz.pursuit().resetSpecialCd();
                 }
             }
-            case SOIGNEUR -> {
+            case HEALER -> {
                 if (sz.pursuit().specialReady()) {
                     SpecialAbilities.heal(sz, z, ctx);
                     sz.pursuit().resetSpecialCd();
                 }
             }
-            case NECROMANCIEN -> {
+            case NECROMANCER -> {
                 if (tgt != null && sz.pursuit().specialReady()) {
                     SpecialAbilities.summon(sz, level, z, ctx);
                     sz.pursuit().resetSpecialCd();
