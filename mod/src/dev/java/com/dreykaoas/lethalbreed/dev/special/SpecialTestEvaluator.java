@@ -24,21 +24,21 @@ public final class SpecialTestEvaluator {
     private SpecialTestEvaluator() {}
 
     /** Latched once the Bomber's witness has been seen carrying the splatter. */
-    private static boolean bombeurSplattered;
+    private static boolean bomberSplattered;
     /** Zombie ids present around the Splitter's platform just before it is killed. */
     private static final Set<Integer> BEFORE_SPLIT = new HashSet<>();
     /** Position of the Bomber on the first tick its fuse is lit. Null until it has armed. */
-    private static net.minecraft.world.phys.Vec3 bombeurArmedPos;
+    private static net.minecraft.world.phys.Vec3 bomberArmedPos;
     /** Largest distance measured from that position while the fuse is burning. */
-    private static double bombeurMaxDrift;
+    private static double bomberMaxDrift;
     /**
      * The same drift split into its horizontal and vertical parts. A combined figure cannot distinguish "the
      * Bomber kept walking" — the behaviour this check exists to catch — from "the Bomber settled onto the
      * ground it was spawned above", which is a harmless artefact of how the arena places it. Reporting both
      * turns an unexplained intermittent failure into evidence.
      */
-    private static double bombeurMaxDriftXZ;
-    private static double bombeurMaxDriftY;
+    private static double bomberMaxDriftXZ;
+    private static double bomberMaxDriftY;
     /** The gore cocktail's pool, mirrored here so the witness check does not depend on which effects the
      *  Bomber happened to roll. Kept in sync with {@code GoreCocktail.POOL} by hand — a dev-only harness is
      *  not worth opening that pool up for. */
@@ -63,18 +63,18 @@ public final class SpecialTestEvaluator {
         for (SpecialTestCase c : cases) {
             if (c.type() == SpecialType.BOMBER && c.cow() != null && c.cow().isAlive()
                     && GORE_POOL.stream().anyMatch(e -> c.cow().getEffect(e) != null)) {
-                bombeurSplattered = true;
+                bomberSplattered = true;
             }
             if (c.type() == SpecialType.BOMBER && !c.z().isRemoved()
                     && SpecialBehavior.fuseIsLit(c.z())) {
-                if (bombeurArmedPos == null) {
-                    bombeurArmedPos = c.z().position();
+                if (bomberArmedPos == null) {
+                    bomberArmedPos = c.z().position();
                 } else {
                     net.minecraft.world.phys.Vec3 now = c.z().position();
-                    bombeurMaxDrift = Math.max(bombeurMaxDrift, bombeurArmedPos.distanceTo(now));
-                    bombeurMaxDriftXZ = Math.max(bombeurMaxDriftXZ,
-                            Math.hypot(now.x - bombeurArmedPos.x, now.z - bombeurArmedPos.z));
-                    bombeurMaxDriftY = Math.max(bombeurMaxDriftY, Math.abs(now.y - bombeurArmedPos.y));
+                    bomberMaxDrift = Math.max(bomberMaxDrift, bomberArmedPos.distanceTo(now));
+                    bomberMaxDriftXZ = Math.max(bomberMaxDriftXZ,
+                            Math.hypot(now.x - bomberArmedPos.x, now.z - bomberArmedPos.z));
+                    bomberMaxDriftY = Math.max(bomberMaxDriftY, Math.abs(now.y - bomberArmedPos.y));
                 }
             }
         }
@@ -106,17 +106,17 @@ public final class SpecialTestEvaluator {
                 case BOMBER -> {
                     boolean gone = z.isRemoved();
                     boolean alive = c.cow() != null && c.cow().isAlive();
-                    // bombeurSplattered is latched by sample(), not read here: the effect durations scale with
+                    // bomberSplattered is latched by sample(), not read here: the effect durations scale with
                     // intensity and a short fuse lets them lapse before this runs. A dead witness proves the
                     // blast reached it but says nothing about the wider ring, so it is excused.
                     // 0.25 block margin: collision nudges, not real movement. A Bomber that resumes running
                     // would drift several blocks over the fuse's 1.5-6s window.
-                    boolean immobile = bombeurMaxDrift < 0.25;
-                    pass = gone && (!alive || bombeurSplattered) && immobile;
-                    detail = "explosé=" + gone + " témoinVivant=" + alive + " éclaboussé=" + bombeurSplattered
-                            + " dérive=" + String.format("%.2f", bombeurMaxDrift)
-                            + " (xz=" + String.format("%.2f", bombeurMaxDriftXZ)
-                            + " y=" + String.format("%.2f", bombeurMaxDriftY) + ")";
+                    boolean immobile = bomberMaxDrift < 0.25;
+                    pass = gone && (!alive || bomberSplattered) && immobile;
+                    detail = "blown=" + gone + " witnessAlive=" + alive + " splattered=" + bomberSplattered
+                            + " drift=" + String.format("%.2f", bomberMaxDrift)
+                            + " (xz=" + String.format("%.2f", bomberMaxDriftXZ)
+                            + " y=" + String.format("%.2f", bomberMaxDriftY) + ")";
                 }
                 case SCREAMER -> {
                     pass = SpecialBehavior.HURL_COUNT.get() > 0;
@@ -134,7 +134,7 @@ public final class SpecialTestEvaluator {
                     float hp = c.extra() == null ? 0f : c.extra().getHealth();
                     pass = c.extra() != null && c.extra().isAlive() && hp > SpecialTestCase.WOUNDED;
                     detail = "heals x" + SpecialBehavior.HEAL_COUNT.get()
-                            + " extraHp=" + hp + " (blessé à " + SpecialTestCase.WOUNDED + ")";
+                            + " extraHp=" + hp + " (wounded at " + SpecialTestCase.WOUNDED + ")";
                 }
                 case NECROMANCER -> {
                     // The counter increments before anything is placed, so pair it with children that exist.

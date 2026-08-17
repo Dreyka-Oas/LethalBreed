@@ -34,7 +34,7 @@ public final class ContaminationIndicator {
 
     private static void showDevIndicator(LivingEntity e) {
         boolean sym = ContaminationState.symptomatic(e);
-        Component tag = Component.literal(sym ? "[INFECTÉ ✦ symptômes]" : "[INFECTÉ latent]")
+        Component tag = Component.literal(sym ? "[INFECTED ✦ symptomatic]" : "[INFECTED latent]")
                 .withStyle(sym ? ChatFormatting.RED : ChatFormatting.GREEN);
         if (e instanceof ServerPlayer p) {
             p.displayClientMessage(tag, true); // action bar

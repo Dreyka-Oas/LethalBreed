@@ -61,7 +61,7 @@ class PackWanderTest {
             double[] heading = new double[2];
             Destination d = PackWander.next(0, 0, 1, 0, -FAR, -FAR, FAR, FAR, noTurn(draw), heading);
             double len = Math.hypot(d.x(), d.z());
-            assertTrue(len >= 96 - 1 && len <= 384 + 1, "étape hors bornes : " + len);
+            assertTrue(len >= 96 - 1 && len <= 384 + 1, "step out of bounds: " + len);
         }
     }
 

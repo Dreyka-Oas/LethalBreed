@@ -49,7 +49,7 @@ class PackAdvanceTest {
         // Fast enough to overshoot by a wide margin: the pack must stop at the arrival radius.
         boolean arrived = PackAdvance.step(pos, 100, 0, 10.0, 1000, ARRIVE);
         assertTrue(arrived);
-        assertTrue(pos[0] <= 100.0 + 1e-9, "dépassement : " + pos[0]);
+        assertTrue(pos[0] <= 100.0 + 1e-9, "overshoot: " + pos[0]);
         assertEquals(100.0 - ARRIVE, pos[0], 1e-9);
     }
 

@@ -141,17 +141,17 @@ public final class PackHarness extends TickPhasedHarness {
         switch (stage) {
             case 0 -> {
                 check("formation-adhesion", formMaxPacked >= 3,
-                        formMaxPacked + "/12 zombies ont porté un id de meute au pic ; au creux, le mod n'en connaissait plus que "
+                        formMaxPacked + "/12 zombies carried a pack id at the peak; at the trough the mod knew of only "
                                 + (formMinRegistered == Integer.MAX_VALUE ? "?" : formMinRegistered) + "/12");
                 check("formation-une-seule-grappe", formMinDistinct >= 1 && formMinDistinct <= 2,
                         "au mieux " + (formMinDistinct == Integer.MAX_VALUE ? "aucune" : formMinDistinct)
                                 + " meute(s) distincte(s) pour une grappe de 12");
             }
             case 1 -> check("isolation-no-pack", loneMaxPacked == 0,
-                    "un zombie seul : " + loneMaxPacked + " adhésion(s) — 0 attendu");
+                    "a lone zombie: " + loneMaxPacked + " membership(s) — 0 expected");
             case 2 -> evaluateMarch();
             case 3 -> check("pas-de-casse", wallMinStanding >= wallPlaced,
-                    "mur : " + (wallMinStanding == Integer.MAX_VALUE ? "jamais mesuré" : wallMinStanding)
+                    "wall: " + (wallMinStanding == Integer.MAX_VALUE ? "never measured" : wallMinStanding)
                             + "/" + wallPlaced + " blocs debout au minimum");
             default -> evaluateRejoin();
         }
@@ -222,26 +222,26 @@ public final class PackHarness extends TickPhasedHarness {
 
     private void evaluateRejoin() {
         check("rejoin-mesure", rejoinMeasured,
-                rejoinMeasured ? "une meute s'est formée, le test a tourné" : "aucune meute formée dans la fenêtre — rien mesuré");
+                rejoinMeasured ? "a pack formed, the test ran" : "no pack formed within the window — nothing measured");
         check("rejoin-detache-comptabilise", rejoinDetachCounted,
-                "detach() doit retirer le membre de liveIds et incrémenter detached de 1");
+                "detach() must remove the member from liveIds and increment detached by 1");
         check("rejoin-proche-reussi", rejoinNearSucceeded,
-                "un membre revenu sans avoir bougé doit rejoindre : detached restauré, liveIds et tether à jour");
+                "a member that came back without moving must rejoin: detached restored, liveIds and tether updated");
         check("rejoin-loin-refuse", rejoinFarRefused,
-                "un membre revenu alors que la meute a dérivé au-delà de packRejoinRadius ("
-                        + PackConfig.packRejoinRadius + " blocs) doit être refusé et son attachement effacé");
+                "a member that came back after the pack drifted beyond packRejoinRadius ("
+                        + PackConfig.packRejoinRadius + " blocks) must be refused and its attachment cleared");
     }
 
     private void evaluateMarch() {
         check("marche-echantillonnee", march.sampled(),
-                (march.sampled() ? "au moins un tick" : "jamais échantillonné un tick")
+                (march.sampled() ? "at least one tick" : "never sampled a tick")
                         + " avec les " + marchExpected + " membres suivis vivants");
         check("marche-rapprochement", march.sampled() && march.closed() >= PackMarchProbe.MIN_CLOSED,
-                "centre rapproché de " + DevVerdict.fmt(march.closed()) + " blocs (>= "
-                        + (int) PackMarchProbe.MIN_CLOSED + " attendu, départ "
+                "centre closed by " + DevVerdict.fmt(march.closed()) + " blocks (>= "
+                        + (int) PackMarchProbe.MIN_CLOSED + " expected, start "
                         + DevVerdict.fmt(march.startDist()) + ")");
         check("marche-cohesion", march.sampled() && march.maxSpread() <= PackMarchProbe.MAX_SPREAD,
-                "écart max au centre " + DevVerdict.fmt(march.maxSpread()) + " blocs (<= packBreakRadius "
+                "max spread from centre " + DevVerdict.fmt(march.maxSpread()) + " blocks (<= packBreakRadius "
                         + (int) PackMarchProbe.MAX_SPREAD + ")");
     }
 }

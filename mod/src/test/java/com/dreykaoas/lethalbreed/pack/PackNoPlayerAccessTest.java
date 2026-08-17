@@ -68,7 +68,7 @@ class PackNoPlayerAccessTest {
     void theGuardActuallyScannedSomething() throws IOException {
         try (Stream<Path> files = Files.walk(PACK_SRC)) {
             long n = files.filter(p -> p.toString().endsWith(".java")).count();
-            assertTrue(n >= 4, "seulement " + n + " fichier(s) scanné(s) sous " + PACK_SRC);
+            assertTrue(n >= 4, "only " + n + " file(s) scanned under " + PACK_SRC);
         }
     }
 }
