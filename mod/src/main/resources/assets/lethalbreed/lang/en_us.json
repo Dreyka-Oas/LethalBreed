@@ -17,6 +17,17 @@
   "lethalbreed.special.necromancer": "Necromancer",
   "lethalbreed.special.splitter": "Splitter",
 
+  "lethalbreed.command.plague.cannot_infect": "%s cannot be infected (a zombie, or contamination is disabled).",
+  "lethalbreed.command.plague.level": "%s reaches plague level %s",
+  "lethalbreed.command.plague.level_clamped": "%s reaches plague level %s (clamped by contamMaxLevel)",
+  "lethalbreed.command.plague.cured": "plague removed from %s",
+
+  "lethalbreed.notice.config_problems": "%s problem(s) in the structure of config/oas/lethalbreed.json:",
+  "lethalbreed.notice.unknown_ambiguous": "  '%s' — did you mean '%s'? Too ambiguous to repair on its own.",
+  "lethalbreed.notice.unknown_option": "  '%s' matches no option.",
+  "lethalbreed.notice.duplicated": "  '%s' is written in two categories — only one copy is read.",
+  "lethalbreed.notice.more_problems": "  … and %s more — see latest.log",
+
   "lethalbreed.config.search_hint": "Search an option...",
   "lethalbreed.tooltip.meta": "Default: %s    Type: %s",
 

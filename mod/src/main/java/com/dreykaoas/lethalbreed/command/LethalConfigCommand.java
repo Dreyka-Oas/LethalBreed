@@ -57,10 +57,10 @@ public final class LethalConfigCommand {
     private static String gpuInfo() {
         var gpu = com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager.get();
         if (!com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig.useGpu) {
-            return "GPU désactivé (useGpu=false) — CPU multithread";
+            return "GPU disabled (useGpu=false) — CPU multithread";
         }
         if (!gpu.isInitialized()) {
-            return "GPU non initialisé — CPU multithread";
+            return "GPU not initialised — CPU multithread";
         }
         return gpu.isAvailableNonBlocking()
                 ? gpu.deviceName() + " (OpenCL)"
