@@ -19,4 +19,5 @@ parameter is documented on the site, in French and English.
 
 The mod is in [`mod/`](mod/).
 
-MIT — © Dreyka Oas.
+© Dreyka Oas — all rights reserved. Free to play and to share unmodified; not to sell, fork or reuse
+without asking. See [LICENSE](LICENSE).

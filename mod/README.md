@@ -24,4 +24,5 @@ mechanic, parameter and command is documented on the site, in French and English
 ./gradlew runServer  # headless dev server + test harnesses
 ```
 
-MIT — © Dreyka Oas. See [LICENSE](../LICENSE).
+© Dreyka Oas — all rights reserved. Free to play and to share unmodified; not to sell, fork or reuse
+without asking. See [LICENSE](../LICENSE).
