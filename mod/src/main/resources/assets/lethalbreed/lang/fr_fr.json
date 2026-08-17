@@ -17,6 +17,17 @@
   "lethalbreed.special.necromancer": "Nécromancien",
   "lethalbreed.special.splitter": "Splitter",
 
+  "lethalbreed.command.plague.cannot_infect": "%s ne peut pas être infecté (zombie, ou contamination désactivée).",
+  "lethalbreed.command.plague.level": "%s passe au niveau de peste %s",
+  "lethalbreed.command.plague.level_clamped": "%s passe au niveau de peste %s (plafonné par contamMaxLevel)",
+  "lethalbreed.command.plague.cured": "peste retirée de %s",
+
+  "lethalbreed.notice.config_problems": "%s problème(s) dans la structure de config/oas/lethalbreed.json :",
+  "lethalbreed.notice.unknown_ambiguous": "  '%s' — vouliez-vous '%s' ? Trop ambigu pour être corrigé tout seul.",
+  "lethalbreed.notice.unknown_option": "  '%s' ne correspond à aucune option.",
+  "lethalbreed.notice.duplicated": "  '%s' est écrit dans deux catégories — une seule copie est lue.",
+  "lethalbreed.notice.more_problems": "  … et %s autre(s) — voir latest.log",
+
   "lethalbreed.config.search_hint": "Rechercher une option...",
   "lethalbreed.tooltip.meta": "Défaut : %s    Type : %s",
 

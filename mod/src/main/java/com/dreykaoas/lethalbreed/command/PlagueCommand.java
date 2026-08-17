@@ -8,6 +8,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.LivingEntity;
@@ -58,14 +59,17 @@ public final class PlagueCommand {
         ContaminationLifecycle.forceLevel(target, n);
         int got = ContaminationManager.plagueLevel(target);
         if (got <= 0) {
-            CommandFeedback.failure(ctx.getSource(), LookTarget.name(target)
-                    + " ne peut pas être infecté (zombie, ou contamination désactivée).");
+            CommandFeedback.failure(ctx.getSource(),
+                    Component.translatable("lethalbreed.command.plague.cannot_infect",
+                            LookTarget.name(target)));
             return 0;
         }
         // Report what was reached rather than what was asked: contamMaxLevel may have clamped it.
         CommandFeedback.success(ctx.getSource(),
-                LookTarget.name(target) + " passe au niveau de peste " + got
-                        + (got != n ? " (plafonné par contamMaxLevel)" : ""),
+                Component.translatable(got != n
+                                ? "lethalbreed.command.plague.level_clamped"
+                                : "lethalbreed.command.plague.level",
+                        LookTarget.name(target), got),
                 ChatFormatting.RED, false);
         return got;
     }
@@ -76,7 +80,8 @@ public final class PlagueCommand {
         // failure would make the command useless for the one thing it is for — being sure it is gone.
         ContaminationManager.clearPlague(target);
         CommandFeedback.success(ctx.getSource(),
-                "peste retirée de " + LookTarget.name(target), ChatFormatting.AQUA, false);
+                Component.translatable("lethalbreed.command.plague.cured", LookTarget.name(target)),
+                ChatFormatting.AQUA, false);
         return 1;
     }
 }

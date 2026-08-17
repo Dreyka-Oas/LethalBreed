@@ -90,9 +90,9 @@ public final class LifecycleInit {
                 return;
             }
             ServerPlayer op = handler.getPlayer();
-            op.sendSystemMessage(Component.literal(
-                            "[LethalBreed] " + report.problemCount()
-                                    + " problème(s) dans la structure de config/oas/lethalbreed.json :")
+            op.sendSystemMessage(Component.literal("[LethalBreed] ")
+                    .append(Component.translatable("lethalbreed.notice.config_problems",
+                            report.problemCount()))
                     .withStyle(ChatFormatting.GOLD));
 
             int shown = 0;
@@ -101,10 +101,10 @@ public final class LifecycleInit {
                     break;
                 }
                 shown++;
-                op.sendSystemMessage(Component.literal(u.suggestion() != null
-                                ? "  '" + u.name() + "' — vouliez-vous '" + u.suggestion()
-                                        + "' ? Trop ambigu pour être corrigé tout seul."
-                                : "  '" + u.name() + "' ne correspond à aucune option.")
+                op.sendSystemMessage((u.suggestion() != null
+                                ? Component.translatable("lethalbreed.notice.unknown_ambiguous",
+                                        u.name(), u.suggestion())
+                                : Component.translatable("lethalbreed.notice.unknown_option", u.name()))
                         .withStyle(ChatFormatting.RED));
             }
             for (String d : report.duplicated()) {
@@ -112,13 +112,12 @@ public final class LifecycleInit {
                     break;
                 }
                 shown++;
-                op.sendSystemMessage(Component.literal(
-                                "  '" + d + "' est écrit dans deux catégories — une seule copie est lue.")
+                op.sendSystemMessage(Component.translatable("lethalbreed.notice.duplicated", d)
                         .withStyle(ChatFormatting.RED));
             }
             if (report.problemCount() > shown) {
-                op.sendSystemMessage(Component.literal(
-                                "  … et " + (report.problemCount() - shown) + " autre(s) — voir latest.log")
+                op.sendSystemMessage(Component.translatable("lethalbreed.notice.more_problems",
+                                report.problemCount() - shown)
                         .withStyle(ChatFormatting.GRAY));
             }
         });
