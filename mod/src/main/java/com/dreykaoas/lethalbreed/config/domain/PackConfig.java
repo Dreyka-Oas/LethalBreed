@@ -10,7 +10,7 @@ package com.dreykaoas.lethalbreed.config.domain;
 public final class PackConfig {
     private PackConfig() {}
 
-    // ---- Instinct de groupe ----
+    // ---- Pack instinct ----
     /** Master switch. Off → no pack is ever formed and the per-zombie decision returns immediately. */
     public static boolean packEnabled = true;
     /** A loose zombie joins a pack whose centroid is within this many blocks. */
@@ -75,7 +75,7 @@ public final class PackConfig {
      *  night and do not burn under the sun below the immunity phase. */
     public static boolean packMigrateAtDay = false;
 
-    // ---- Virtualisation hors-vue ----
+    // ---- Out-of-sight virtualisation ----
     /** Dematerialise packs nobody can see, and bring them back on approach.
      *  <p>Its own switch rather than a corner of packMigrationEnabled: this is the one part of the system
      *  that creates and destroys entities, so an operator who suspects it must be able to stop it alone

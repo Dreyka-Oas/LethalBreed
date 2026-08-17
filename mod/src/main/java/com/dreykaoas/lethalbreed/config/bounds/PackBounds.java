@@ -13,7 +13,7 @@ public final class PackBounds {
     private PackBounds() {}
 
     public static void register(BoundsRegistrar r) {
-        // ---- Instinct de groupe ----
+        // ---- Pack instinct ----
         r.b("packCohesionRadius", 4, 128);
         r.b("packBreakRadius", 8, 256);
         r.b("packFormMinSize", 2, 32);
