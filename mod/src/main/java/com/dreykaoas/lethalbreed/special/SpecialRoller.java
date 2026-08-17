@@ -74,7 +74,7 @@ public final class SpecialRoller {
         // Every unlocked type is weighted 0, so the player has switched them all off. The old code clamped the
         // bound to 1 and then fell through to pool.get(size-1), handing back a type whose weight explicitly
         // said "never" — most visible at phase 2, where the pool is SPRINTER alone and zeroing its weight
-        // produced 100 % Sprinteurs.
+        // produced 100 % Sprinters.
         if (total <= 0) {
             return SpecialType.NONE;
         }
@@ -162,7 +162,7 @@ public final class SpecialRoller {
         // Same floor ZombieVariation.applyMultiplier imposes on these two attributes, and for the same reason.
         // The bounds allow 0, and the deltas of every ADD_MULTIPLIED_BASE modifier on an attribute SUM: a
         // specialSprinterSpeedMul of 0 contributes -1.0, which drags the total negative and clamps the value
-        // to zero. The Sprinteur then spawns completely immobile, wearing Speed II and its own nametag.
+        // to zero. The Sprinter then spawns completely immobile, wearing Speed II and its own nametag.
         if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
             factor = Math.max(ExpertConfig.expertAttributeFloor, factor);
         }

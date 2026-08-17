@@ -3,12 +3,12 @@ package com.dreykaoas.lethalbreed.special.runtime;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 
 /**
- * Pure maths behind a Bombeur detonation: how long its fuse burns, how hard it blows, how far the gore
+ * Pure maths behind a Bomber detonation: how long its fuse burns, how hard it blows, how far the gore
  * reaches, and what that gore does to whoever it lands on.
  *
  * <p>Deliberately free of every {@code net.minecraft} type. The entity-facing half lives in
  * {@link SpecialAbilities}; keeping the numbers here is what lets them be unit-tested without booting a
- * server, and this is the only part of the Bombeur that carries non-trivial logic.
+ * server, and this is the only part of the Bomber that carries non-trivial logic.
  *
  * <p>The shaping constants below are NOT config options. Only the levers in {@link SpecialVariantConfig}
  * are exposed: the mod already ships hundreds of options, and surfacing every coefficient of a curve would
@@ -18,8 +18,8 @@ import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
  * <p>Every min/max pair is read through {@link #lo}/{@link #hi} rather than trusted in order: a player who
  * types the bounds the wrong way round gets the range they obviously meant, not a negative ratio.
  */
-public final class BombeurBlast {
-    private BombeurBlast() {}
+public final class BomberBlast {
+    private BomberBlast() {}
 
     /**
      * Colour of the splatter particle cloud, packed <b>ARGB</b> — toxic purple-green, distinct from any
@@ -35,7 +35,7 @@ public final class BombeurBlast {
 
 
     /** Weight of the fuse in the intensity blend; proximity always keeps the remaining share, so distance
-     *  can never stop mattering however long the Bombeur swelled. */
+     *  can never stop mattering however long the Bomber swelled. */
     private static final double FUSE_WEIGHT = 0.6;
 
     /** Lingering gore puddle: how long the residue stays on the ground, floor and fuse-driven span. */
@@ -140,9 +140,9 @@ public final class BombeurBlast {
     }
 
     /**
-     * How many distinct effects this Bombeur's gore cocktail carries, given the phase.
+     * How many distinct effects this Bomber's gore cocktail carries, given the phase.
      *
-     * <p>Always at least one — a Bombeur that splatters nothing is a firework — rising toward
+     * <p>Always at least one — a Bomber that splatters nothing is a firework — rising toward
      * {@code specialBomberEffectCountCeiling} on the same saturating shape the rest of the phase system
      * uses. Rounded rather than floored so the ceiling is actually reachable: {@code (C-1)·(1-decay^p)}
      * approaches {@code C-1} from below and would floor to {@code C-2} forever.
@@ -172,7 +172,7 @@ public final class BombeurBlast {
     /**
      * Duration in ticks for one affliction: {@code base + span * intensity} seconds.
      *
-     * <p>Public and generic because the effect set is now rolled per Bombeur — each pool entry in
+     * <p>Public and generic because the effect set is now rolled per Bomber — each pool entry in
      * {@code GoreCocktail} brings its own base/span pair, instead of every effect owning a bespoke named
      * shaper here. Distance and fuse length still set the intensity and therefore still set the duration;
      * only WHICH effects land became random.

@@ -76,7 +76,7 @@ public final class ProgressionBounds {
         r.b("specialBomberSplatterMul", 0, 10);
         r.b("specialBomberInfectChance", 0, 1);
         r.b("specialBomberBlindThreshold", 0, 1);
-        // Cocktail: at least one effect (a Bombeur that splatters nothing is just a firework), and the
+        // Cocktail: at least one effect (a Bomber that splatters nothing is just a firework), and the
         // decays share the 0.5..0.999 window the other phase decays use.
         r.b("specialBomberEffectCountCeiling", 1, 7);
         r.b("specialBomberEffectCountDecay", 0.5, 0.999);

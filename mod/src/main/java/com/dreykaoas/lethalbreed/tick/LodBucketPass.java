@@ -81,7 +81,7 @@ final class LodBucketPass {
         t = mark(DevProbe.CLASSIFY, prof, t);
         LODLevel lod = sz.lod();
         // Keep FROZEN zombies in the spatial grid (their tick() — which inserts them — is skipped below)
-        // so neighbour queries still find them: a Hurleur rallying idle zombies, a Soigneur healing them,
+        // so neighbour queries still find them: a Screamer rallying idle zombies, a Healer healing them,
         // and sound propagation all target exactly these.
         ctx.spatialGrid().update(sz, sz.entity().blockPosition().getX(), sz.entity().blockPosition().getZ());
         t = mark(DevProbe.GRID, prof, t);

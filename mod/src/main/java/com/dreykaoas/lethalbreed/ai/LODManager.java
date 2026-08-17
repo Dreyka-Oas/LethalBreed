@@ -106,12 +106,12 @@ public final class LODManager {
             // Cut the vanilla target too, as the memory and pack branches above already do. Without it the
             // mod declares the zombie frozen and target-less while vanilla's ZombieAttackGoal — never
             // stripped — keeps driving it at whatever it last locked on, with no flow field, no breach, no
-            // pillaring and no tick() of ours. That divergence is what caps a Hurleur's rally: the zombies it
+            // pillaring and no tick() of ours. That divergence is what caps a Screamer's rally: the zombies it
             // hands a target to are re-frozen here on their next classify, yet keep walking.
             sz.entity().setTarget(null);
             lod = LODLevel.FROZEN;
         }
-        // A Bombeur whose fuse is lit has committed to detonating, so it must keep being ticked to get there.
+        // A Bomber whose fuse is lit has committed to detonating, so it must keep being ticked to get there.
         // LodBucketPass drops a FROZEN zombie before tick() runs, which would stop the fuse mid-burn and turn
         // it into a dormant mine — one that goes off the moment a player wanders back within range, since the
         // deadline it wakes up to is long past. LOW still runs the special, just on the distance throttle, so

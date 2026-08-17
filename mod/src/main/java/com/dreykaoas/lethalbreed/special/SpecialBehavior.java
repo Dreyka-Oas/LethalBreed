@@ -4,7 +4,7 @@ import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAIContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.special.runtime.BombeurBlast;
+import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialAbilities;
 import com.dreykaoas.lethalbreed.special.runtime.SpecialDeath;
 import net.minecraft.server.level.ServerLevel;
@@ -24,16 +24,16 @@ public final class SpecialBehavior {
     public static final AtomicInteger HEAL_COUNT = new AtomicInteger();
 
     /**
-     * True while a Bombeur's fuse is burning — it has armed and is committed to detonating.
+     * True while a Bomber's fuse is burning — it has armed and is committed to detonating.
      *
      * <p>Read by {@code LODManager} to refuse FROZEN for such a zombie. {@code LodBucketPass} skips a FROZEN
-     * zombie BEFORE it ever reaches {@code tick()}, so freezing a lit Bombeur stops its fuse mid-burn: the
+     * zombie BEFORE it ever reaches {@code tick()}, so freezing a lit Bomber stops its fuse mid-burn: the
      * belly stops swelling client-side and it becomes a dormant mine that detonates the instant a player
      * wanders back into range, however many minutes later. The deadline is absolute, so the fix is simply to
      * keep the zombie ticking until it goes off.
      */
     public static boolean fuseIsLit(Zombie z) {
-        return z.getAttachedOrElse(SpecialAttachment.BOMBEUR_FUSE, 0) > 0;
+        return z.getAttachedOrElse(SpecialAttachment.BOMBER_FUSE, 0) > 0;
     }
 
     /** Called every activation from {@code SmartZombie.tick}; each case self-gates on target + cooldown. */
@@ -52,7 +52,7 @@ public final class SpecialBehavior {
                 // Absolute deadline, not per-activation accumulation: this method only runs once every
                 // `tickBuckets` ticks, so counting activations tied a gameplay tempo to a performance knob —
                 // raising tickBuckets silently doubled the time before detonation.
-                int fuse = z.getAttachedOrElse(SpecialAttachment.BOMBEUR_FUSE, 0);
+                int fuse = z.getAttachedOrElse(SpecialAttachment.BOMBER_FUSE, 0);
                 long now = level.getGameTime();
                 if (fuse <= 0) {
                     double armRange = SpecialVariantConfig.specialBomberArmRange;
@@ -60,23 +60,23 @@ public final class SpecialBehavior {
                     if (!inRange) {
                         break;
                     }
-                    fuse = BombeurBlast.fuseTicksFor(z.getRandom().nextDouble());
-                    z.setAttached(SpecialAttachment.BOMBEUR_FUSE, fuse);
-                    z.setAttached(SpecialAttachment.BOMBEUR_ARMED_AT, now);
+                    fuse = BomberBlast.fuseTicksFor(z.getRandom().nextDouble());
+                    z.setAttached(SpecialAttachment.BOMBER_FUSE, fuse);
+                    z.setAttached(SpecialAttachment.BOMBER_ARMED_AT, now);
                     if (LethalBreed.LOGGER.isDebugEnabled()) {
-                        LethalBreed.LOGGER.debug("[LethalBreed] Bombeur armed at {} ({} blocks away, fuse={} ticks)",
+                        LethalBreed.LOGGER.debug("[LethalBreed] Bomber armed at {} ({} blocks away, fuse={} ticks)",
                                 tgt instanceof Player pl ? pl.getName().getString()
                                         : tgt.getClass().getSimpleName(),
                                 Math.sqrt(z.distanceToSqr(tgt)), fuse);
                     }
                 }
-                long elapsed = now - z.getAttachedOrElse(SpecialAttachment.BOMBEUR_ARMED_AT, now);
+                long elapsed = now - z.getAttachedOrElse(SpecialAttachment.BOMBER_ARMED_AT, now);
                 if (elapsed >= fuse) {
                     SpecialAbilities.bomb(level, z, fuse);
                 } else {
                     // Derived, not accumulated — the belly swells linearly in real time, so a slowly
-                    // inflating Bombeur reads as "long fuse", which is exactly "big explosion".
-                    z.setAttached(SpecialAttachment.BOMBEUR_CHARGE, (float) elapsed / fuse);
+                    // inflating Bomber reads as "long fuse", which is exactly "big explosion".
+                    z.setAttached(SpecialAttachment.BOMBER_CHARGE, (float) elapsed / fuse);
                 }
             }
             case SCREAMER -> {

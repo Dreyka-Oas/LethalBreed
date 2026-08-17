@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Inflates the BOMBEUR's belly (the {@code body} part) as its fuse burns. The model part is shared across
+ * Inflates the BOMBER's belly (the {@code body} part) as its fuse burns. The model part is shared across
  * all zombies, so the scale is rewritten every frame from the render state's charge — 0 restores the
  * normal shape. Charge 1 → ~2.3x girth on x/z, a touch on y.
  */

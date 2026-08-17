@@ -32,18 +32,18 @@ public final class SpecialAbilities {
     private SpecialAbilities() {}
 
     /**
-     * BOMBEUR: burst, then splatter everything in the wider gore ring with infectious status effects.
+     * BOMBER: burst, then splatter everything in the wider gore ring with infectious status effects.
      *
      * <p>The blast is only half of it. The splatter ring reaches {@code specialBomberSplatterMul} times
      * further, so retreating out of lethal range still leaves a victim inside the gore — distance buys
      * hit points, not a clean escape.
      *
-     * @param fuseTicks how long this Bombeur swelled; drives both the power and the splatter intensity
+     * @param fuseTicks how long this Bomber swelled; drives both the power and the splatter intensity
      */
     public static void bomb(ServerLevel level, Zombie z, int fuseTicks) {
-        double ratio = BombeurBlast.ratioOf(fuseTicks);
-        double power = BombeurBlast.powerFor(ratio);
-        double splatR = BombeurBlast.splatterRadius(power);
+        double ratio = BomberBlast.ratioOf(fuseTicks);
+        double power = BomberBlast.powerFor(ratio);
+        double splatR = BomberBlast.splatterRadius(power);
         double cx = z.getX(), cy = z.getY() + 0.5, cz = z.getZ();
 
         // Gather BEFORE the explosion: it kills and flings victims, and anyone it launched out of the ring
@@ -53,12 +53,12 @@ public final class SpecialAbilities {
 
         // Rolled ONCE, for the blast and the puddle alike. A cocktail re-rolled per victim would mean two
         // players standing side by side reporting different symptoms from the same explosion, and a puddle
-        // that contradicts the burst that created it. One Bombeur, one poison.
+        // that contradicts the burst that created it. One Bomber, one poison.
         // Blindness eligibility is judged at the centre — the harshest point — so whether it is in the mix at
-        // all is a property of the Bombeur, while who is close enough to get a long dose stays a property of
+        // all is a property of the Bomber, while who is close enough to get a long dose stays a property of
         // distance.
         List<GoreCocktail.Dose> cocktail = GoreCocktail.roll(
-                PhaseManager.current(), BombeurBlast.intensity(ratio, 0.0, splatR), rng);
+                PhaseManager.current(), BomberBlast.intensity(ratio, 0.0, splatR), rng);
 
         level.explode(z, cx, cy, cz, (float) power, Level.ExplosionInteraction.NONE);
         z.discard();
@@ -69,10 +69,10 @@ public final class SpecialAbilities {
 
         for (LivingEntity victim : caught) {
             // The AABB is a box; the ring is a sphere. Re-measure so corners don't get splattered.
-            double intensity = BombeurBlast.intensity(ratio, Math.sqrt(victim.distanceToSqr(cx, cy, cz)), splatR);
+            double intensity = BomberBlast.intensity(ratio, Math.sqrt(victim.distanceToSqr(cx, cy, cz)), splatR);
             if (intensity > 0.0) {
                 GoreCocktail.apply(victim, cocktail, intensity);
-                if (rng.nextDouble() < BombeurBlast.infectChance(intensity)) {
+                if (rng.nextDouble() < BomberBlast.infectChance(intensity)) {
                     ContaminationManager.contaminate(victim);
                 }
             }
@@ -83,7 +83,7 @@ public final class SpecialAbilities {
      * Everyone a gore radius may legitimately touch — shared by the burst and by {@link GorePuddles}, so the
      * puddle can never splatter someone the explosion would have spared.
      *
-     * <p>Zombies are excluded because they are the vector, not the victim; without that a Bombeur bursting
+     * <p>Zombies are excluded because they are the vector, not the victim; without that a Bomber bursting
      * inside its own pack would blanket that pack in Slowness. {@code Players.isTargetable} gates every other
      * way the mod touches a player (targeting, sound, flow field, mood, damage events) and must gate this too:
      * vanilla already shields a spectator from the blast, and without it a spectator flying past would eat
@@ -94,7 +94,7 @@ public final class SpecialAbilities {
      * which they need anyway to scale the dose.
      *
      * @param source the bursting zombie to exclude, or {@code null} when there is none (a lingering puddle
-     *               outlives the Bombeur that left it)
+     *               outlives the Bomber that left it)
      */
     static List<LivingEntity> splatterVictims(ServerLevel level, double cx, double cy, double cz, double radius,
                                               Zombie source) {
@@ -114,14 +114,14 @@ public final class SpecialAbilities {
     /**
      * Purely cosmetic: a burst of coloured particles at the blast centre, the same visual family vanilla uses
      * for splash-potion impact, so the infectious ring the explosion just applied invisibly to victims reads
-     * as one. Scales with the splatter radius — a long-fused Bombeur's bigger gore ring looks bigger too.
+     * as one. Scales with the splatter radius — a long-fused Bomber's bigger gore ring looks bigger too.
      * Carries no gameplay: nothing here touches damage, effects or targeting. The alpha that makes the cloud
-     * visible at all is baked into {@link BombeurBlast#SPLATTER_COLOR_ARGB} — see that constant.
+     * visible at all is baked into {@link BomberBlast#SPLATTER_COLOR_ARGB} — see that constant.
      */
     private static void splatterCloud(ServerLevel level, double cx, double cy, double cz, double splatR) {
         int count = (int) Math.round(20 * Math.max(1.0, splatR / 3.0));
         level.sendParticles(
-                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BombeurBlast.SPLATTER_COLOR_ARGB),
+                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BomberBlast.SPLATTER_COLOR_ARGB),
                 cx, cy, cz, count, splatR * 0.6, splatR * 0.3, splatR * 0.6, SPLATTER_PARTICLE_SPEED);
     }
 
@@ -135,7 +135,7 @@ public final class SpecialAbilities {
     static void gorePuddleParticles(ServerLevel level, double cx, double cy, double cz, double radius) {
         int count = Math.max(1, (int) Math.round(3.0 * radius * radius));
         level.sendParticles(
-                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BombeurBlast.SPLATTER_COLOR_ARGB),
+                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BomberBlast.SPLATTER_COLOR_ARGB),
                 cx, cy, cz, count, radius * 0.5, 0.05 * radius, radius * 0.5, SPLATTER_PARTICLE_SPEED);
     }
 
@@ -153,13 +153,13 @@ public final class SpecialAbilities {
     }
 
     /**
-     * HURLEUR: hand the caller's target to nearby target-less smart zombies.
+     * SCREAMER: hand the caller's target to nearby target-less smart zombies.
      *
      * <p>The rally also plants a memory, exactly as {@code SoundEventBus} does for a heard noise. Without it
      * the handover survived only until the recruit's next classify: {@code LODManager} re-runs its own
      * detection, finds the prey outside that zombie's {@code targetDetectRadius}, and — with no memory to
      * fall back on — drops straight to the terminal branch that clears everything and freezes. The rally
-     * would then be undone within a couple of activations, which is why a Hurleur never seemed to recruit
+     * would then be undone within a couple of activations, which is why a Screamer never seemed to recruit
      * more than one or two.
      */
     public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAIContext ctx) {
@@ -180,7 +180,7 @@ public final class SpecialAbilities {
     }
 
     /**
-     * SOIGNEUR: restore health to nearby living smart zombies.
+     * HEALER: restore health to nearby living smart zombies.
      *
      * <p>This used to apply {@link MobEffects#REGENERATION} — and healed nothing at all. Vanilla's
      * {@code canBeAffected} rejects Regeneration for everything tagged {@code ignores_poison_and_regen},
@@ -212,7 +212,7 @@ public final class SpecialAbilities {
         }
     }
 
-    /** NECROMANCIEN: summon child zombies, capped against an already-dense local pack. */
+    /** NECROMANCER: summon child zombies, capped against an already-dense local pack. */
     public static void summon(SmartZombie sz, ServerLevel level, Zombie z, WorldAIContext ctx) {
         if (ctx.spatialGrid().queryRadius(z.getX(), z.getY(), z.getZ(),
                 SpecialVariantConfig.specialNecromancerDensityRadius).size()
@@ -236,7 +236,7 @@ public final class SpecialAbilities {
             if (child != null) {
                 // No chain-summoning, mirroring SpecialDeath's rule for Splitter children. A child rolls its
                 // own special inside finalizeSpawn, and from the phase where this type exists that is a real
-                // chance of drawing NECROMANCIEN — each second-generation summoner then wanders into its own
+                // chance of drawing NECROMANCER — each second-generation summoner then wanders into its own
                 // bubble where neither the density cap (a 12-block radius) nor the pack cap can see it, and
                 // nothing in this mod ever despawns.
                 SpecialRoller.assign(child, SpecialType.NONE);

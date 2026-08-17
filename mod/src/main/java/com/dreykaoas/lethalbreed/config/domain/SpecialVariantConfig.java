@@ -47,8 +47,8 @@ public final class SpecialVariantConfig {
 
     // Per special type: behaviour magnitudes. Defaults reproduce the built-in behaviour exactly, so leaving
     // them untouched changes nothing. All read live at spawn/activation, so edits apply without a restart.
-    // -- Bombeur (ACTIVE): timed fuse + explosion + infectious splatter.
-    /** Distance (blocks) to the target at which a Bombeur arms and commits to detonating. */
+    // -- Bomber (ACTIVE): timed fuse + explosion + infectious splatter.
+    /** Distance (blocks) to the target at which a Bomber arms and commits to detonating. */
     public static double specialBomberArmRange = 3.0;
     /** Shortest fuse, in GAME TICKS (not activations): the floor of the random roll made when it arms. */
     public static int specialBomberFuseMinTicks = 30;
@@ -65,7 +65,7 @@ public final class SpecialVariantConfig {
     public static double specialBomberInfectChance = 0.5;
     /** Splatter intensity from which Blindness is applied. 1.0 disables Blindness entirely. */
     public static double specialBomberBlindThreshold = 0.75;
-    /** Most distinct effects one Bombeur's gore cocktail can carry. */
+    /** Most distinct effects one Bomber's gore cocktail can carry. */
     public static int specialBomberEffectCountCeiling = 4;
     /** How fast the cocktail grows toward its ceiling with the phase. Lower = reaches the ceiling sooner. */
     public static double specialBomberEffectCountDecay = 0.90;
@@ -75,26 +75,26 @@ public final class SpecialVariantConfig {
     public static double specialBomberEffectAmpDecay = 0.92;
     /** Whether the lingering gore puddle can also transmit the contamination, once per victim per puddle. */
     public static boolean specialBomberPuddleInfect = true;
-    // -- Hurleur (ACTIVE): rally.
-    /** Radius (blocks) within which a Hurleur hands its target to nearby idle zombies. */
+    // -- Screamer (ACTIVE): rally.
+    /** Radius (blocks) within which a Screamer hands its target to nearby idle zombies. */
     public static double specialScreamerRadius = 24.0;
-    // -- Soigneur (ACTIVE): heal aura.
-    /** Radius (blocks) of the Soigneur's regeneration aura. */
+    // -- Healer (ACTIVE): heal aura.
+    /** Radius (blocks) of the Healer's regeneration aura. */
     public static double specialHealerRadius = 8.0;
-    /** Duration (ticks) of the Regeneration granted by a Soigneur. */
+    /** Duration (ticks) of the Regeneration granted by a Healer. */
     public static int specialHealerRegenTicks = 100;
-    /** Amplifier of the Regeneration granted by a Soigneur (0 = Regeneration I). */
+    /** Amplifier of the Regeneration granted by a Healer (0 = Regeneration I). */
     public static int specialHealerRegenAmp = 0;
-    // -- Nécromancien (ACTIVE): summon.
-    /** Minimum children a Nécromancien summons per activation. */
+    // -- Necromancer (ACTIVE): summon.
+    /** Minimum children a Necromancer summons per activation. */
     public static int specialNecromancerMinChildren = 1;
-    /** Maximum children a Nécromancien summons per activation. */
+    /** Maximum children a Necromancer summons per activation. */
     public static int specialNecromancerMaxChildren = 2;
     /** Skip the summon if more than this many zombies are already within the density radius. */
     public static int specialNecromancerDensityCap = 40;
-    /** Radius (blocks) of the local-density check that gates a Nécromancien summon. */
+    /** Radius (blocks) of the local-density check that gates a Necromancer summon. */
     public static double specialNecromancerDensityRadius = 12.0;
-    /** Scatter (blocks) of summoned children around the Nécromancien. */
+    /** Scatter (blocks) of summoned children around the Necromancer. */
     public static int specialNecromancerSpread = 2;
     // -- Splitter (DEATH): split on death.
     /** Number of small children a Splitter spawns when it dies. */
@@ -103,13 +103,13 @@ public final class SpecialVariantConfig {
     public static double specialSplitterChildScale = 0.6;
     /** Scatter (blocks) of the children a Splitter spawns on death. */
     public static int specialSplitterSpread = 1;
-    // -- Sprinteur (PASSIVE): speed.
-    /** Speed effect amplifier on a Sprinteur (1 = Speed II). */
+    // -- Sprinter (PASSIVE): speed.
+    /** Speed effect amplifier on a Sprinter (1 = Speed II). */
     public static int specialSprinterSpeedAmp = 1;
-    /** Movement-speed attribute multiplier on a Sprinteur. */
+    /** Movement-speed attribute multiplier on a Sprinter. */
     public static double specialSprinterSpeedMul = 1.35;
-    // -- Bondisseur (PASSIVE): leap.
-    /** LEAP effect amplifier on a Bondisseur (2 = LEAP III). */
+    // -- Leaper (PASSIVE): leap.
+    /** LEAP effect amplifier on a Leaper (2 = LEAP III). */
     public static int specialLeaperLeapAmp = 2;
     // -- Juggernaut (PASSIVE): tank.
     /** Size multiplier on a Juggernaut. */
