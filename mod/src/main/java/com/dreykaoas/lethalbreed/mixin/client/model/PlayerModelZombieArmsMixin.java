@@ -1,7 +1,5 @@
 package com.dreykaoas.lethalbreed.mixin.client.model;
 
-import com.dreykaoas.lethalbreed.mixin.client.render.AvatarRendererHallucinationMixin;
-
 import com.dreykaoas.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

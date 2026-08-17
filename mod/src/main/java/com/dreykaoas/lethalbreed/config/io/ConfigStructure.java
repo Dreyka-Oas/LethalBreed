@@ -2,7 +2,6 @@ package com.dreykaoas.lethalbreed.config.io;
 
 import com.dreykaoas.lethalbreed.config.ConfigBounds;
 import com.dreykaoas.lethalbreed.config.schema.ConfigCategory;
-import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 
 import java.util.ArrayList;
 import java.util.HashMap;
