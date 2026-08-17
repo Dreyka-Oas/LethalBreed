@@ -17,8 +17,6 @@ that pillars, digs, bridges and swims, hunting by sight **and** sound, endless p
 contamination plague and 8 special variants — built to scale toward ~1000 active zombies. Every mechanic and
 parameter is documented on the site, in French and English.
 
-The mod is in [`mod/`](mod/). The site is **not** part of this repository — it lives in
-[LethalBreed-web](https://github.com/Dreyka-Oas/LethalBreed-web), checked out at `web/` for convenience and
-gitignored here.
+The mod is in [`mod/`](mod/).
 
 MIT — © Dreyka Oas.
