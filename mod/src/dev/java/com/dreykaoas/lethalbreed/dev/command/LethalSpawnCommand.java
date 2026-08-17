@@ -1,7 +1,5 @@
 package com.dreykaoas.lethalbreed.dev.command;
 
-import com.dreykaoas.lethalbreed.config.io.ConfigIo;
-
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;

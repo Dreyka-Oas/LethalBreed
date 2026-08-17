@@ -3,16 +3,10 @@ package com.dreykaoas.lethalbreed.dev.arena.shade;
 import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
-import com.dreykaoas.lethalbreed.dev.harness.TickWait;
 
-import com.dreykaoas.lethalbreed.GameState;
-import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.config.domain.ZombieMoodConfig;
-import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.entity.mood.sleep.DaySleep;
-import com.dreykaoas.lethalbreed.entity.mood.sleep.ShelterFinder;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -20,10 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.gamerules.GameRules;
 

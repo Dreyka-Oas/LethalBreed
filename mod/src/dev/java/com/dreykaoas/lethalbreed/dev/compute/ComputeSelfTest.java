@@ -1,7 +1,5 @@
 package com.dreykaoas.lethalbreed.dev.compute;
 
-import com.dreykaoas.lethalbreed.dev.arena.BreachHarness;
-
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.ai.flowfield.CellClassifier;
 import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;

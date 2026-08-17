@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
@@ -21,9 +22,24 @@ import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
  *
  * <p>Total per-tick flow cost ≈ solve + N × sample. The bench measures both so the "is it optimised for
  * 5000 zombies?" question can be answered from real numbers on THIS machine. Run:
- * {@code .\gradlew.bat test --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"}
+ * {@code ./gradlew test -Plb.bench=true --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"}
  * then read the printed tables (gradle: add {@code --info} or check the test stdout).
+ *
+ * <p><b>Why it is gated off by default.</b> This is a measurement rig, not an assertion test: its single
+ * {@code assertTrue} only checks that the warm-up solve produced a field at all, and everything else it
+ * produces is printed tables that no automated run reads. Left on it cost 2.5 s of the suite's 3.2 s — 78 %
+ * of every build's test time — to print numbers into a log nobody opens. Its sibling
+ * {@code RoutingQualityMeasureTest} was deleted outright, because it carried no {@code @Test} and JUnit
+ * therefore never ran it at all; this one does run, and its numbers are worth keeping reachable.
+ *
+ * <p><b>Why a system property and not {@code @Disabled}.</b> {@code @Disabled} would not leave the bench
+ * runnable: Gradle's {@code --tests} selects which tests to run, it does not lift a disable condition, and
+ * lifting one needs {@code junit.jupiter.conditions.deactivate} inside the FORKED test JVM — which a bare
+ * {@code -D} on the Gradle command line never reaches. {@code build.gradle.kts} forwards {@code -Plb.bench}
+ * into that JVM instead, so the command line above genuinely works.
  */
+@EnabledIfSystemProperty(named = "lb.bench", matches = "true",
+        disabledReason = "measurement bench — run with -Plb.bench=true (see the class javadoc)")
 class FlowFieldPerfBench {
 
     private static final int WARMUP = 30;   // JIT + ForkJoinPool warm-up runs (discarded)

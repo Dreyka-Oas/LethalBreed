@@ -2,7 +2,6 @@ package com.dreykaoas.lethalbreed.dev;
 
 import com.dreykaoas.lethalbreed.dev.config.DevTestConfig;
 
-import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.special.SpecialTestArena;
 import com.dreykaoas.lethalbreed.dev.special.SpecialTestCase;
 import com.dreykaoas.lethalbreed.dev.special.SpecialTestEvaluator;

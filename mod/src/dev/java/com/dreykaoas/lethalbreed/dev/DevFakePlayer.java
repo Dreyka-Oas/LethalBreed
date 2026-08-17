@@ -1,7 +1,5 @@
 package com.dreykaoas.lethalbreed.dev;
 
-import com.dreykaoas.lethalbreed.dev.arena.ClimbTest;
-
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.fabric.api.entity.FakePlayer;

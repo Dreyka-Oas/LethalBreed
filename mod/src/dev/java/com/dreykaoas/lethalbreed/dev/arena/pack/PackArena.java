@@ -4,11 +4,8 @@ import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.dev.arena.ArenaBuilder;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.block.Blocks;
 

@@ -88,8 +88,16 @@ tasks.named<JavaCompile>("compileJava") {
     options.debugOptions.debugLevel = "source,lines"
 }
 
+// Measurement benches are opt-in. They are not assertion tests — they print tables that no automated run
+// reads — and FlowFieldPerfBench alone cost 2.5 s of the suite's 3.2 s. Gating them on a system property
+// rather than on @Disabled keeps them genuinely runnable: `--tests` selects tests, it does not re-enable a
+// disabled one, and the test JVM is forked so a bare -D on the Gradle command line never reaches it.
+//   ./gradlew test -Plb.bench=true --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"
+val benchEnabled = providers.gradleProperty("lb.bench").orElse("false")
+
 tasks.test {
     useJUnitPlatform()
+    systemProperty("lb.bench", benchEnabled.get())
 }
 
 // ---- Kernel packaging: copy the OpenCL source to the .clx resource name expected by GpuContext ----

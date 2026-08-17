@@ -1,7 +1,6 @@
 package com.dreykaoas.lethalbreed.dev.special;
 
 import com.dreykaoas.lethalbreed.GameState;
-import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.dev.DevVerdict;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
