@@ -60,7 +60,7 @@ public final class SpecialRoller {
             return;
         }
         if (SpecialVariantConfig.specialShowName) {
-            z.setCustomName(Component.literal(type.frName()));
+            z.setCustomName(Component.translatable(type.translationKey()));
             z.setCustomNameVisible(true);
         }
         applyPassive(z, type);
@@ -73,7 +73,7 @@ public final class SpecialRoller {
         }
         // Every unlocked type is weighted 0, so the player has switched them all off. The old code clamped the
         // bound to 1 and then fell through to pool.get(size-1), handing back a type whose weight explicitly
-        // said "never" — most visible at phase 2, where the pool is SPRINTEUR alone and zeroing its weight
+        // said "never" — most visible at phase 2, where the pool is SPRINTER alone and zeroing its weight
         // produced 100 % Sprinteurs.
         if (total <= 0) {
             return SpecialType.NONE;
@@ -92,11 +92,11 @@ public final class SpecialRoller {
      *  zombie drew from the random effect pool survives being re-labelled. */
     private static void clearPassive(Zombie z, SpecialType type) {
         switch (type) {
-            case SPRINTEUR -> {
+            case SPRINTER -> {
                 z.removeEffect(MobEffects.SPEED);
                 AttributeModifiers.remove(z, Attributes.MOVEMENT_SPEED, "spc_speed");
             }
-            case BONDISSEUR -> z.removeEffect(LethalBreedEffects.LEAP);
+            case LEAPER -> z.removeEffect(LethalBreedEffects.LEAP);
             case JUGGERNAUT -> {
                 AttributeModifiers.remove(z, Attributes.SCALE, "spc_scale");
                 AttributeModifiers.remove(z, Attributes.MAX_HEALTH, "spc_hp");
@@ -114,11 +114,11 @@ public final class SpecialRoller {
 
     private static void applyPassive(Zombie z, SpecialType type) {
         switch (type) {
-            case SPRINTEUR -> {
+            case SPRINTER -> {
                 infinite(z, MobEffects.SPEED, SpecialVariantConfig.specialSprinteurSpeedAmp);
                 mul(z, Attributes.MOVEMENT_SPEED, "spc_speed", SpecialVariantConfig.specialSprinteurSpeedMul);
             }
-            case BONDISSEUR -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialBondisseurLeapAmp);
+            case LEAPER -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialBondisseurLeapAmp);
             case JUGGERNAUT -> {
                 // Bulky tank via size/HP/resistance only — no armor (zombies never wear gear).
                 // The scale-up is skipped where the ceiling is too low. This runs at the TAIL of

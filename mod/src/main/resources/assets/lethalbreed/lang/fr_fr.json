@@ -8,6 +8,15 @@
   "item.minecraft.lingering_potion.effect.super_contamination": "Potion persistante de La Fin ?",
   "item.minecraft.tipped_arrow.effect.super_contamination": "Flèche de La Fin ?",
 
+  "lethalbreed.special.sprinter": "Sprinteur",
+  "lethalbreed.special.leaper": "Bondisseur",
+  "lethalbreed.special.bomber": "Bombeur",
+  "lethalbreed.special.screamer": "Hurleur",
+  "lethalbreed.special.healer": "Soigneur",
+  "lethalbreed.special.juggernaut": "Juggernaut",
+  "lethalbreed.special.necromancer": "Nécromancien",
+  "lethalbreed.special.splitter": "Splitter",
+
   "lethalbreed.config.search_hint": "Rechercher une option...",
   "lethalbreed.tooltip.meta": "Défaut : %s    Type : %s",
 

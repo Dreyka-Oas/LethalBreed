@@ -8,6 +8,15 @@
   "item.minecraft.lingering_potion.effect.super_contamination": "Lingering Potion of The End?",
   "item.minecraft.tipped_arrow.effect.super_contamination": "Arrow of The End?",
 
+  "lethalbreed.special.sprinter": "Sprinter",
+  "lethalbreed.special.leaper": "Leaper",
+  "lethalbreed.special.bomber": "Bomber",
+  "lethalbreed.special.screamer": "Screamer",
+  "lethalbreed.special.healer": "Healer",
+  "lethalbreed.special.juggernaut": "Juggernaut",
+  "lethalbreed.special.necromancer": "Necromancer",
+  "lethalbreed.special.splitter": "Splitter",
+
   "lethalbreed.config.search_hint": "Search an option...",
   "lethalbreed.tooltip.meta": "Default: %s    Type: %s",
 

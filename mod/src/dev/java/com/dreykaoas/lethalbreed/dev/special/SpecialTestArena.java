@@ -57,15 +57,15 @@ public final class SpecialTestArena {
         ContaminationConfig.contaminationEnabled = false;     // keep cows alive for the per-special checks
         TargetingConfig.targetDetectRadius = 10.0;        // tight so a "lone" zombie stays target-less
         // Disable hearing for this arena: a special zombie shoving its invulnerable cow gives the cow a little
-        // horizontal velocity, which makes it AUDIBLE — and the HURLEUR's "lone" extra (11 blocks away, inside
+        // horizontal velocity, which makes it AUDIBLE — and the SCREAMER's "lone" extra (11 blocks away, inside
         // the 24-block hearing range) would then hear+target the cow on its own, so it is no longer target-less
         // and the howler's rally finds nothing to retarget (a flaky false FAIL). Hearing isn't under test here;
         // every case's cow is within the 10-block sight range with clear LOS, so vision alone drives targeting.
         TargetingConfig.soundEnabled = false;
 
         SpecialType[] types = {
-                SpecialType.SPRINTEUR, SpecialType.BONDISSEUR, SpecialType.JUGGERNAUT, SpecialType.BOMBEUR,
-                SpecialType.HURLEUR, SpecialType.SOIGNEUR, SpecialType.NECROMANCIEN, SpecialType.SPLITTER,
+                SpecialType.SPRINTER, SpecialType.LEAPER, SpecialType.JUGGERNAUT, SpecialType.BOMBER,
+                SpecialType.SCREAMER, SpecialType.HEALER, SpecialType.NECROMANCER, SpecialType.SPLITTER,
         };
 
         for (int i = 0; i < types.length; i++) {
@@ -95,7 +95,7 @@ public final class SpecialTestArena {
             // A Soigneur only heals what is hurt, so the witness has to be hurt for the aura to be observable
             // at all. WOUNDED is far below any max health the phase can produce, and nothing else on this
             // sealed platform can damage it, so any rise above this figure came from the aura.
-            if (type == SpecialType.SOIGNEUR && extra != null) {
+            if (type == SpecialType.HEALER && extra != null) {
                 extra.setHealth(SpecialTestCase.WOUNDED);
             }
             cases.add(new SpecialTestCase(type, z, cow, extra, pos));
@@ -118,7 +118,7 @@ public final class SpecialTestArena {
 
     private static Cow spawnCow(ServerLevel ow, int cx, SpecialType type, Zombie z) {
         // Cow target position differs per type so the ability's trigger condition can be met.
-        int cowZ = type == SpecialType.HURLEUR ? -2 : 2;
+        int cowZ = type == SpecialType.SCREAMER ? -2 : 2;
         Cow cow = EntityType.COW.spawn(ow, new BlockPos(cx, Y, cowZ), EntitySpawnReason.COMMAND);
         if (cow != null) {
             cow.setNoAi(true);
@@ -126,8 +126,8 @@ public final class SpecialTestArena {
             cow.setPersistenceRequired();
         }
         z.setTarget(cow);
-        if (type == SpecialType.HURLEUR) {
-            // Keep the special anchored: HURLEUR must not dive into
+        if (type == SpecialType.SCREAMER) {
+            // Keep the special anchored: SCREAMER must not dive into
             // the invulnerable cow and pile up — repeatedly bonking it triggers zombie reinforcements that
             // crowd in, shove the "lone" extra and the cow around, and flake the rally check. noAi specials
             // still run their ability each activation (it keeps its cow target by sight at 2 blocks).
@@ -138,10 +138,10 @@ public final class SpecialTestArena {
 
     private static Zombie spawnExtra(ServerLevel ow, int cx, SpecialType type) {
         Zombie extra = null;
-        if (type == SpecialType.HURLEUR) {
+        if (type == SpecialType.SCREAMER) {
             // 9 blocks from the howler (< its 24 radius) but 11 from the cow (> detect 10) → stays targetless.
             extra = ArenaBuilder.spawnZombie(ow, new BlockPos(cx, Y, 9));
-        } else if (type == SpecialType.SOIGNEUR) {
+        } else if (type == SpecialType.HEALER) {
             extra = ArenaBuilder.spawnZombie(ow, new BlockPos(cx + 1, Y, 0));
             if (extra != null) {
                 extra.setHealth(4.0f); // hurt so Regen is observable

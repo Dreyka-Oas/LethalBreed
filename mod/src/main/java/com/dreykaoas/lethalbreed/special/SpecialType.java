@@ -4,6 +4,7 @@ import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Special zombie variants. Each spawned zombie may roll ONE of these (chance + phase, see
@@ -16,44 +17,66 @@ import java.util.List;
  * from {@link ProgressionConfig} ({@code special<Type>Phase} / {@code special<Type>Weight}), so both are
  * editable through the config JSON / GUI / {@code /lethalconfig}. The switches below are only the routing to
  * those config fields; the field defaults hold the built-in values.
+ *
+ * <p>The names are English, matching what {@code en_us.json} has always displayed; the French names players
+ * used to see are now a translation, not a hard-coded string. See {@link #translationKey()}.
  */
 public enum SpecialType {
-    NONE("none", "", Kind.PASSIVE),
-    SPRINTEUR("sprinteur", "Sprinteur", Kind.PASSIVE),
-    BONDISSEUR("bondisseur", "Bondisseur", Kind.PASSIVE),
-    BOMBEUR("bombeur", "Bombeur", Kind.ACTIVE),
-    HURLEUR("hurleur", "Hurleur", Kind.ACTIVE),
-    SOIGNEUR("soigneur", "Soigneur", Kind.ACTIVE),
-    JUGGERNAUT("juggernaut", "Juggernaut", Kind.PASSIVE),
-    NECROMANCIEN("necromancien", "Nécromancien", Kind.ACTIVE),
-    SPLITTER("splitter", "Splitter", Kind.DEATH);
+    NONE("none", Kind.PASSIVE),
+    SPRINTER("sprinter", Kind.PASSIVE),
+    LEAPER("leaper", Kind.PASSIVE),
+    BOMBER("bomber", Kind.ACTIVE),
+    SCREAMER("screamer", Kind.ACTIVE),
+    HEALER("healer", Kind.ACTIVE),
+    JUGGERNAUT("juggernaut", Kind.PASSIVE),
+    NECROMANCER("necromancer", Kind.ACTIVE),
+    SPLITTER("splitter", Kind.DEATH);
 
     public enum Kind { PASSIVE, ACTIVE, DEATH }
 
+    /** Ids written into saves before the vocabulary was translated to English.
+     *
+     *  <p>Read-only, and permanently so: the {@code lethalbreed:special} attachment is persistent, so every
+     *  special zombie already alive in a saved world carries one of these strings. {@link #fromId} accepts
+     *  them, {@link #id()} never returns one — which means a world quietly re-saves itself onto the English
+     *  ids as its chunks cycle, without a migration pass and without a moment where a Bomber reads back as
+     *  a plain zombie. */
+    private static final Map<String, SpecialType> LEGACY_IDS = Map.of(
+            "sprinteur", SPRINTER,
+            "bondisseur", LEAPER,
+            "bombeur", BOMBER,
+            "hurleur", SCREAMER,
+            "soigneur", HEALER,
+            "necromancien", NECROMANCER);
+
     private final String id;
-    private final String frName;
     private final Kind kind;
 
-    SpecialType(String id, String frName, Kind kind) {
+    SpecialType(String id, Kind kind) {
         this.id = id;
-        this.frName = frName;
         this.kind = kind;
     }
 
     public String id() { return id; }
-    public String frName() { return frName; }
     public Kind kind() { return kind; }
+
+    /** Translation key for the name shown on the entity.
+     *
+     *  <p>Replaces the old {@code frName()}, whose value reached every player through
+     *  {@code Component.literal} — so an English client saw a zombie labelled « Nécromancien ». Both lang
+     *  files carry these keys, so each player now gets the name in their own language. */
+    public String translationKey() { return "lethalbreed.special." + id; }
 
     /** Phase from which this type can appear — configurable via {@link ProgressionConfig}. */
     public int unlockPhase() {
         return switch (this) {
-            case SPRINTEUR -> SpecialVariantConfig.specialSprinteurPhase;
-            case BONDISSEUR -> SpecialVariantConfig.specialBondisseurPhase;
-            case BOMBEUR -> SpecialVariantConfig.specialBombeurPhase;
-            case HURLEUR -> SpecialVariantConfig.specialHurleurPhase;
-            case SOIGNEUR -> SpecialVariantConfig.specialSoigneurPhase;
+            case SPRINTER -> SpecialVariantConfig.specialSprinteurPhase;
+            case LEAPER -> SpecialVariantConfig.specialBondisseurPhase;
+            case BOMBER -> SpecialVariantConfig.specialBombeurPhase;
+            case SCREAMER -> SpecialVariantConfig.specialHurleurPhase;
+            case HEALER -> SpecialVariantConfig.specialSoigneurPhase;
             case JUGGERNAUT -> SpecialVariantConfig.specialJuggernautPhase;
-            case NECROMANCIEN -> SpecialVariantConfig.specialNecromancienPhase;
+            case NECROMANCER -> SpecialVariantConfig.specialNecromancienPhase;
             case SPLITTER -> SpecialVariantConfig.specialSplitterPhase;
             case NONE -> 0;
         };
@@ -62,13 +85,13 @@ public enum SpecialType {
     /** Relative selection weight (higher = more frequent; 0 = never picked) — configurable via {@link ProgressionConfig}. */
     public int weight() {
         return switch (this) {
-            case SPRINTEUR -> SpecialVariantConfig.specialSprinteurWeight;
-            case BONDISSEUR -> SpecialVariantConfig.specialBondisseurWeight;
-            case BOMBEUR -> SpecialVariantConfig.specialBombeurWeight;
-            case HURLEUR -> SpecialVariantConfig.specialHurleurWeight;
-            case SOIGNEUR -> SpecialVariantConfig.specialSoigneurWeight;
+            case SPRINTER -> SpecialVariantConfig.specialSprinteurWeight;
+            case LEAPER -> SpecialVariantConfig.specialBondisseurWeight;
+            case BOMBER -> SpecialVariantConfig.specialBombeurWeight;
+            case SCREAMER -> SpecialVariantConfig.specialHurleurWeight;
+            case HEALER -> SpecialVariantConfig.specialSoigneurWeight;
             case JUGGERNAUT -> SpecialVariantConfig.specialJuggernautWeight;
-            case NECROMANCIEN -> SpecialVariantConfig.specialNecromancienWeight;
+            case NECROMANCER -> SpecialVariantConfig.specialNecromancienWeight;
             case SPLITTER -> SpecialVariantConfig.specialSplitterWeight;
             case NONE -> 0;
         };
@@ -83,7 +106,7 @@ public enum SpecialType {
                 return t;
             }
         }
-        return NONE;
+        return LEGACY_IDS.getOrDefault(id, NONE);
     }
 
     /** The highest unlock phase any type asks for — i.e. the phase at which every type is available.

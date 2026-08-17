@@ -82,7 +82,7 @@ public final class LethalSpecialCommand {
             }
         }
 
-        reply(src, "spawned " + count + " x " + type.frName(), true);
+        reply(src, "spawned " + count + " x " + type.id(), true);
         return count;
     }
 

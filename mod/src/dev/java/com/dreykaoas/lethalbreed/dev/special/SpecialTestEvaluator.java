@@ -61,11 +61,11 @@ public final class SpecialTestEvaluator {
      */
     public static void sample(List<SpecialTestCase> cases) {
         for (SpecialTestCase c : cases) {
-            if (c.type() == SpecialType.BOMBEUR && c.cow() != null && c.cow().isAlive()
+            if (c.type() == SpecialType.BOMBER && c.cow() != null && c.cow().isAlive()
                     && GORE_POOL.stream().anyMatch(e -> c.cow().getEffect(e) != null)) {
                 bombeurSplattered = true;
             }
-            if (c.type() == SpecialType.BOMBEUR && !c.z().isRemoved()
+            if (c.type() == SpecialType.BOMBER && !c.z().isRemoved()
                     && SpecialBehavior.fuseIsLit(c.z())) {
                 if (bombeurArmedPos == null) {
                     bombeurArmedPos = c.z().position();
@@ -100,10 +100,10 @@ public final class SpecialTestEvaluator {
             boolean pass;
             String detail;
             switch (c.type()) {
-                case SPRINTEUR -> { pass = z.getEffect(MobEffects.SPEED) != null; detail = "speed effect"; }
-                case BONDISSEUR -> { pass = z.getEffect(LethalBreedEffects.LEAP) != null; detail = "LEAP effect"; }
+                case SPRINTER -> { pass = z.getEffect(MobEffects.SPEED) != null; detail = "speed effect"; }
+                case LEAPER -> { pass = z.getEffect(LethalBreedEffects.LEAP) != null; detail = "LEAP effect"; }
                 case JUGGERNAUT -> { pass = z.getEffect(MobEffects.RESISTANCE) != null; detail = "resistance effect"; }
-                case BOMBEUR -> {
+                case BOMBER -> {
                     boolean gone = z.isRemoved();
                     boolean alive = c.cow() != null && c.cow().isAlive();
                     // bombeurSplattered is latched by sample(), not read here: the effect durations scale with
@@ -118,7 +118,7 @@ public final class SpecialTestEvaluator {
                             + " (xz=" + String.format("%.2f", bombeurMaxDriftXZ)
                             + " y=" + String.format("%.2f", bombeurMaxDriftY) + ")";
                 }
-                case HURLEUR -> {
+                case SCREAMER -> {
                     pass = SpecialBehavior.HURL_COUNT.get() > 0;
                     boolean hasTgt = z.getTarget() != null;
                     var esz = c.extra() == null ? null : GameState.REGISTRY.get(c.extra().getId());
@@ -127,7 +127,7 @@ public final class SpecialTestEvaluator {
                             + " hurlTgt=" + hasTgt + " extraTgt=" + (esz != null && esz.hasTarget())
                             + " near=" + near;
                 }
-                case SOIGNEUR -> {
+                case HEALER -> {
                     // Health, not a counter. The aura applied Regeneration for its whole existence, which
                     // vanilla silently refuses on undead — the old check passed on an ability that healed
                     // nothing, and printed extraRegen=false in its own success line while doing so.
@@ -136,7 +136,7 @@ public final class SpecialTestEvaluator {
                     detail = "heals x" + SpecialBehavior.HEAL_COUNT.get()
                             + " extraHp=" + hp + " (blessé à " + SpecialTestCase.WOUNDED + ")";
                 }
-                case NECROMANCIEN -> {
+                case NECROMANCER -> {
                     // The counter increments before anything is placed, so pair it with children that exist.
                     long kids = ow.getEntitiesOfClass(Zombie.class, new AABB(c.pos()).inflate(12)).stream()
                             .filter(k -> k != c.z() && k != c.extra() && !k.isRemoved()).count();
