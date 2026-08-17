@@ -1,35 +1,67 @@
-# Gradle
+# ---- Gradle / Loom ----
 .gradle/
 build/
-# Loom / dev runtime
+# Répertoire d'exécution Loom : cartes, mods, packs, journaux — jamais versionné
 run/
-# IDE
+# Session Kotlin DSL : Gradle la crée à côté de build.gradle.kts à chaque configuration
+.kotlin/
+gradle-app.setting
+.gradletasknamecache
+# NB : gradle/wrapper/gradle-wrapper.jar est SUIVI volontairement (il fait tourner ./gradlew)
+
+# ---- Sorties de compilation hors build/ ----
+*.class
+bin/
+out/
+
+# ---- IDE ----
 .idea/
 *.iml
 .vscode/
 .settings/
 .classpath
 .project
-# OS
+
+# ---- Journaux et vidages de plantage JVM ----
+# *.log couvre hs_err_pid*.log et replay_pid*.log ; les vidages mémoire, eux, pèsent
+# plusieurs Go et ne portent aucune extension .log
 *.log
-# Claude Code local skills/config — not pushed
-.skills/
-.claude/
-# opencode local agent config — not pushed
-opencode.json
-# Dev run-output dumps (gradle log captures)
+*.hprof
+core.[0-9]*
+.attach_pid*
+# Journaux serveur régénérés à chaque lancement (Gradle/Minecraft)
+/mod/logs/
+# Captures de sortie des lancements de dev
 rc.txt
 rs.txt
-# Cloudflare Wrangler local cache
+
+# ---- Secrets ----
+# Le site se déploie sur Cloudflare : aucun jeton ne doit pouvoir partir par accident
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Restes d'édition, de fusion et de correctif ----
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+
+# ---- Outils locaux, non poussés ----
+.skills/
+.claude/
+opencode.json
+# Cache local Cloudflare Wrangler
 .wrangler/
-# OS junk
+# Worktrees git locaux (exécutions multi-agents)
+/.worktrees/
+
+# ---- Déchets système ----
 .DS_Store
 Thumbs.db
-# Nested LethalBreed-web repo (separate, private git repo — do not track/embed)
+
+# ---- Dépôt LethalBreed-web imbriqué (dépôt git distinct et privé — ne pas suivre ni embarquer) ----
 /web/
-
-# Logs serveur régénérés à chaque lancement (Gradle/Minecraft)
-/mod/logs/
-
-# Local git worktrees (sdd execution) — never tracked
-/.worktrees/
