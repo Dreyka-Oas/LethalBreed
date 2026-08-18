@@ -16,6 +16,9 @@ The Fabric mod itself. Flow-field pathfinding, endless phase escalation, a conta
 special variants, with an optional AMD GPU (OpenCL) compute path and a multithreaded CPU fallback. Every
 mechanic, parameter and command is documented on the site, in French and English.
 
+> [!TIP]
+> Needs Java 21 on the path. The Gradle wrapper pulls everything else itself.
+
 ## Build
 
 ```bash
@@ -24,5 +27,6 @@ mechanic, parameter and command is documented on the site, in French and English
 ./gradlew runServer  # headless dev server + test harnesses
 ```
 
-© Dreyka Oas — all rights reserved. Free to play and to share unmodified; not to sell, fork or reuse
-without asking. See [LICENSE](../LICENSE).
+> [!IMPORTANT]
+> © Dreyka Oas — all rights reserved. Free to play and to share unmodified; **not** to sell, fork or
+> reuse without asking. See [LICENSE](../LICENSE).
