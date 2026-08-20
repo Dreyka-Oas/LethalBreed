@@ -47,7 +47,7 @@ public final class MoveMath {
      * found within {@code max} below — a genuine pit / unsafe fall it should bridge or stair instead.
      * The scanned column is clear above the landing by construction, so the fall path is unobstructed.
      */
-    static int fallDistanceInto(ServerLevel level, int x, int y, int z, int max) {
+    public static int fallDistanceInto(ServerLevel level, int x, int y, int z, int max) {
         for (int yy = y - 1; yy >= y - 1 - max; yy--) {
             if (level.getBlockState(new BlockPos(x, yy, z)).blocksMotion()) {
                 return (y - 1) - yy;
@@ -61,7 +61,7 @@ public final class MoveMath {
      * mod adding the effect) jumps higher dynamically, exactly like vanilla {@code getJumpPower()} adds
      * {@code 0.1 * (amplifier + 1)}. Never hard-codes the boost; reads the current effect each jump.
      */
-    static double jumpVelocity(LivingEntity entity, double base) {
+    public static double jumpVelocity(LivingEntity entity, double base) {
         MobEffectInstance jump = entity.getEffect(MobEffects.JUMP_BOOST);
         return jump != null ? base + 0.1 * (jump.getAmplifier() + 1) : base;
     }
@@ -71,7 +71,7 @@ public final class MoveMath {
      * horizontal analogue of {@link #jumpVelocity}: each level adds {@code leapEffectPerLevel} to the reach.
      * Returns 1.0 when the zombie doesn't carry the effect. Read live each leap (dynamic, never hard-coded).
      */
-    static double leapDistanceFactor(LivingEntity entity) {
+    public static double leapDistanceFactor(LivingEntity entity) {
         MobEffectInstance e = entity.getEffect(LethalBreedEffects.LEAP);
         return e != null ? 1.0 + WorldSpawnConfig.leapEffectPerLevel * (e.getAmplifier() + 1) : 1.0;
     }
@@ -81,14 +81,14 @@ public final class MoveMath {
      * (`getBbHeight`, which already reflects the per-zombie SCALE), rounded up. Capped by {@code
      * maxBreakHeight} so a giant doesn't bore a huge tunnel, floored at 1.
      */
-    static int breakHeight(LivingEntity entity) {
+    public static int breakHeight(LivingEntity entity) {
         int n = (int) Math.ceil(entity.getBbHeight() - ExpertConfig.expertBreakHeightEpsilon);
         return Math.max(1, Math.min(n, CombatMoveConfig.maxBreakHeight));
     }
 
     /** Turn the entity to face a horizontal heading (yaw from the XZ vector), pitch untouched. No-op on a
      *  degenerate heading (|h| ≤ 1e-2) so a zombie sitting on its target doesn't snap to a junk yaw. */
-    static void faceHeading(LivingEntity entity, double hx, double hz) {
+    public static void faceHeading(LivingEntity entity, double hx, double hz) {
         if (hx * hx + hz * hz <= ExpertConfig.expertHeadingEpsilon) { // (1e-2)^2 — same gate as the callers, no sqrt
             return;
         }
@@ -99,7 +99,7 @@ public final class MoveMath {
     }
 
     /** True if (x,y,z) is a motion-blocking block the configured material rules allow breaking. */
-    static boolean breakableSolid(ServerLevel level, BlockPos p) {
+    public static boolean breakableSolid(ServerLevel level, BlockPos p) {
         BlockState s = level.getBlockState(p);
         return s.blocksMotion() && MaterialRegistry.isBreakable(level, p, s);
     }

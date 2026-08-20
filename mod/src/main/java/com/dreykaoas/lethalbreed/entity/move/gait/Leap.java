@@ -1,4 +1,6 @@
-package com.dreykaoas.lethalbreed.entity.move;
+package com.dreykaoas.lethalbreed.entity.move.gait;
+
+import com.dreykaoas.lethalbreed.entity.move.MoveMath;
 
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;

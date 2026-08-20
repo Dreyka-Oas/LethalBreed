@@ -1,17 +1,14 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 
-import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
-import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
-import net.minecraft.world.entity.LivingEntity;
+import com.dreykaoas.lethalbreed.entity.move.gait.Leap;
+import com.dreykaoas.lethalbreed.entity.move.gait.PillarClimb;
+import com.dreykaoas.lethalbreed.entity.move.gait.Swim;
 import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
-import com.dreykaoas.lethalbreed.entity.move.dispatch.MoveDispatch;
 import com.dreykaoas.lethalbreed.entity.LodLevel;
+import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombiePursuit;
-import com.dreykaoas.lethalbreed.entity.ZombieState;
-import com.dreykaoas.lethalbreed.probe.DevProbe;
-import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -26,11 +23,10 @@ public final class ZombieBrain {
     private final Leap leap;
     private final BrainNavigator nav;
 
+    private final BrainGuards guards;
+    private final PursueStep pursue;
+
     private int activations;
-    private double lastHorizDistSq = -1.0;
-    private int stuckTicks = 0;
-    private boolean swimming = false;
-    private boolean breaking = false; // latched last tick: hold position on the block instead of re-pathing
 
     public ZombieBrain(SmartZombie owner) {
         this.owner = owner;
@@ -38,10 +34,12 @@ public final class ZombieBrain {
         this.pillar = new PillarClimb(owner);
         this.leap = new Leap(owner);
         this.nav = new BrainNavigator(owner);
+        this.guards = new BrainGuards(owner, this.entity, this.pillar, this.nav);
+        this.pursue = new PursueStep(owner, this.entity, this.pillar, this.leap, this.nav);
     }
 
     public boolean isClimbing() { return pillar.active(); }
-    public boolean isSwimming() { return swimming; }
+    public boolean isSwimming() { return guards.swimming(); }
 
     /** Force any in-progress jump-pillar off — used when a day-sleeper dozes so a half-built climb can't leave
      *  it floating (the climb drain evicts it as soon as {@link #isClimbing()} goes false). */
@@ -63,167 +61,22 @@ public final class ZombieBrain {
         if (owner.lod() == LodLevel.FROZEN) return;
         // Armed Bomber: fuse is lit, so it stops dead and swells in place until the explosion — checked
         // before sleep/shelter/flee since none of those should ever interrupt a committed detonation.
-        if (handleArmed()) return;
+        if (guards.handleArmed()) return;
         // Daytime sleep: a dozing zombie holds still. It is normally FROZEN (so this isn't even reached); this is
         // a defensive stop in case it is momentarily active. The walk-to-shade is NOT here — that's a normal
         // memory-target pursuit (NORMAL state) so the full breaking/pillaring nav carries it to the shade.
-        if (handleSleeping()) return;
+        if (guards.handleSleeping()) return;
         // Sun-shelter overrides even the retreat: a burning wounded zombie dashes to shade (mood already found
         // the refuge and dropped the target). Checked before flee so shade-seeking wins over the straight run.
-        if (handleSheltering(level)) return;
+        if (guards.handleSheltering(level)) return;
         // Low-health retreat overrides the hunt: the mood step already dropped the target; here we just steer
         // away from the threat (vanilla nav, so climb/descend still work). No leap/dig/dispatch while fleeing.
-        if (handleFleeing(level)) return;
+        if (guards.handleFleeing(level)) return;
         pillar.tickCooldown();
         if (pillar.active()) return; // mid climb; the per-tick climbStep finishes it
-        if (handleNoTarget(ctx, p)) return;
+        if (guards.handleNoTarget(ctx, p)) return;
 
-        // The vanilla attack target (melee) is set authoritatively in LodManager.classify, which runs in the
-        // SAME activation immediately before this tick — so no setTarget re-assert is needed here (was
-        // duplicate work). We still read the pursuit target to drive movement dispatch below.
-        LivingEntity te = p.targetEntity();
-        // A day-sleeper calmly walking to its shade block (a memory target, so te == null) must NOT use the
-        // combat approach — leaping toward shade reads as a jerky pounce. Plain navigation only; it still digs
-        // if genuinely walled in (stuck-detection below), just no speculative hops.
-        boolean shadeSeek = te == null && owner.mood().isSeekingShade();
-        // A pack MARCHING to its rendezvous navigates and nothing else: no leap, no pillar, no breaching.
-        // A migration must not tear through a base its route happens to cross — destruction is reserved for
-        // an actual aggro. Vanilla pathing walks around whatever it can; when there is no way round at all
-        // the pack stalls, and PackMarch gives up on that destination after packStuckActivations.
-        boolean packMarch = te == null && p.pack().hasWaypoint();
-        double dx = p.tgtX() - entity.getX();
-        double dz = p.tgtZ() - entity.getZ();
-        double dy = p.tgtY() - entity.getY();
-        double horizSq = dx * dx + dz * dz;
-        // Swim mode only when actually floating/submerged (off the ground, or head underwater). A shallow
-        // puddle the zombie is STANDING in (on ground, head clear) must NOT lock it into swim — it still needs
-        // to pillar/jump out, so we fall through to the normal dispatch below. Deep water → swimStep drives it.
-        if (handleSwimEntry()) return;
-        swimming = false;
-
-        // Block ops only when STUCK (no horizontal progress) — else it walks/auto-steps normally. Computed
-        // BEFORE the leap so a stuck zombie (mid-break/pillar) never leaps: a leap would move it off the block
-        // it's breaking, stop renewing the break request, and let the progress lapse (never reaching 100%).
-        boolean progressing = lastHorizDistSq < 0.0 || horizSq < lastHorizDistSq - CombatMoveConfig.stuckProgressEpsilon;
-        stuckTicks = progressing ? 0 : stuckTicks + 1;
-        lastHorizDistSq = horizSq;
-        boolean stuck = stuckTicks >= CombatMoveConfig.stuckActivations;
-
-        // Occasional leap; a successful leap carries the arc this tick. Suppressed while stuck (breaking) and
-        // while calmly walking to shade for a day-doze (no pouncing at a shady spot).
-        leap.tickCooldown();
-        if (!stuck && !shadeSeek && !packMarch && leap.tryLeap(level, dx, dz, dy, horizSq)) {
-            owner.setState(ZombieState.PURSUING_PLAYER);
-            return;
-        }
-
-        if (breaking) {
-            // Was breaking a block last tick — CONCENTRATE: hold position, don't re-path. Re-pathing would let
-            // the flow field drag the zombie sideways around the wall, so it stops renewing the break request
-            // and the progress lapses (block never reaches 100%). Just keep facing the block/target.
-            entity.getNavigation().stop();
-            MoveMath.faceHeading(entity, dx, dz);
-        } else {
-            // Aim at the BASE of an overhead target's column (our own Y) so we walk up and close the gap.
-            double navY = (dy > FlowConfig.navYThreshold) ? entity.getY() : p.tgtY();
-            nav.navTo(ctx, p.tgtX(), navY, p.tgtZ());
-        }
-        owner.setState(ZombieState.PURSUING_PLAYER);
-        // Throttled to ~1-in-4: phase the entity id against the world's tick counter so different zombies
-        // log on different ticks and the per-tick volume stays bounded, without any new per-zombie field
-        // (mirrors the id+round staggering LodBucketPass already uses) and without touching `activations` /
-        // dueThisActivation(...), which LodBucketPass drives for an unrelated LOD cadence.
-        if (DevProbe.tracing(DevProbe.CLIMB)
-                && Math.floorMod(entity.getId() + level.getGameTime(), 4L) == 0L) {
-            DevProbe.sink.trace(DevProbe.CLIMB, "z" + entity.getId()
-                    + " pursue y=" + MoveMath.f1(entity.getY())
-                    + " tgt=(" + MoveMath.f1(p.tgtX()) + ", " + MoveMath.f1(p.tgtY()) + ", " + MoveMath.f1(p.tgtZ()) + ")"
-                    + " horiz=" + MoveMath.f1(Math.sqrt(horizSq)) + " dy=" + MoveMath.f1(dy)
-                    + " stuck=" + stuck + "/" + stuckTicks
-                    + " pillar=" + pillar.active()
-                    + " ground=" + entity.onGround());
-        }
-        if (packMarch) {
-            // Dispatch is the only path to block breaking, pillaring and forced descent — skipping it is
-            // what makes a migration non-destructive. Clear the latch too, so a member that aggroes mid-wall
-            // and then loses its target does not resume a break it is no longer entitled to.
-            breaking = false;
-            return;
-        }
-        // Pass the current breaking-latch (was I breaking last tick?) so a committed zombie stays anchored on
-        // its block instead of being re-steered to another breach mid-break.
-        MoveDispatch.choose(owner, level, ctx, pillar, te, dx, dz, dy, horizSq, stuck, bx, bz, breaking);
-        // Latch for next tick: MoveDispatch sets BREAKING when it requested a block break this tick.
-        breaking = owner.state() == ZombieState.BREAKING;
-    }
-
-    /** BOMBER with a lit fuse: frozen in place, swelling toward detonation. Distinct from FROZEN (which
-     *  means "no target, not simulated") — an armed Bomber is very much simulated, just deliberately not
-     *  moving, exactly like a Creeper mid-hiss. */
-    private boolean handleArmed() {
-        if (!SpecialBehavior.fuseIsLit(entity)) {
-            return false;
-        }
-        pillar.cancel();
-        // A Bomber that arms mid-swim must stop swimming too: EveryTickPass.processSwimmers keeps calling
-        // swimStep() every server tick (outside the normal LOD-throttled cadence) for as long as
-        // isSwimming() answers true, which would keep dragging it toward its target through the whole fuse.
-        swimming = false;
-        entity.getNavigation().stop();
-        // Kill horizontal momentum only — falling still falls, so an armed Bomber mid-leap lands normally
-        // rather than freezing in the air.
-        entity.setDeltaMovement(0.0, entity.getDeltaMovement().y, 0.0);
-        // Also null the VANILLA melee target: LodManager.classify() re-asserts it every activation
-        // (independently of our pursuit target below), and vanilla's own ZombieAttackGoal steers off that
-        // target on every real game tick regardless of our LOD-bucketed activation cadence — same reason
-        // LodBucketPass nulls it for a FROZEN zombie. Without this, an armed Bomber still creeps toward its
-        // target between our activations even with navigation stopped and deltaMovement zeroed here. Fuse
-        // logic no longer reads this once armed (SpecialBehavior only consults tgt while fuse <= 0), so
-        // clearing it is safe.
-        entity.setTarget(null);
-        owner.setState(ZombieState.ARMED);
-        return true;
-    }
-
-    private boolean handleSleeping() {
-        if (!owner.mood().isSleeping()) return false;
-        pillar.cancel();
-        entity.getNavigation().stop();
-        owner.setState(ZombieState.SLEEPING);
-        return true;
-    }
-
-    private boolean handleSheltering(ServerLevel level) {
-        if (!owner.mood().isSheltering()) return false;
-        pillar.cancel();
-        owner.setState(ZombieState.SHELTERING);
-        owner.mood().driveShelter(level);
-        return true;
-    }
-
-    private boolean handleFleeing(ServerLevel level) {
-        if (!owner.mood().isFleeing()) return false;
-        pillar.cancel();
-        owner.setState(ZombieState.FLEEING);
-        owner.mood().driveFlee(level);
-        return true;
-    }
-
-    private boolean handleNoTarget(WorldAiContext ctx, ZombiePursuit p) {
-        if (p.hasTarget()) return false;
-        owner.setState(p.hasSound() && nav.navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
-        return true;
-    }
-
-    private boolean handleSwimEntry() {
-        if (!(CombatMoveConfig.floatInWater && entity.isInWater()
-                && (!entity.onGround() || entity.isUnderWater()))) {
-            return false;
-        }
-        pillar.cancel();
-        swimming = true;
-        owner.setState(ZombieState.PURSUING_PLAYER);
-        return true;
+        pursue.run(level, ctx, p, bx, bz);
     }
 
     /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the jump-and-place
@@ -234,9 +87,9 @@ public final class ZombieBrain {
 
     /** Per-tick while in water. Guards the swim state, then delegates the driving to {@link Swim}. */
     public void swimStep(ServerLevel level, WorldAiContext ctx) {
-        if (!swimming) return;
+        if (!guards.swimming()) return;
         if (!owner.isValid() || !entity.isInWater()) {
-            swimming = false;
+            guards.stopSwimming();
             return;
         }
         pillar.cancel();
