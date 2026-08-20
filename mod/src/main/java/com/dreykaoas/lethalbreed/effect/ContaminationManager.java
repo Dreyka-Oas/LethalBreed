@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.effect;
 
+import com.dreykaoas.lethalbreed.effect.contamination.ContaminationDeath;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationLifecycle;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationTick;
@@ -53,7 +54,7 @@ public final class ContaminationManager {
 
     /** Death of a contaminated victim: clear the plague state, then reanimate as a zombie if it was a humanoid. */
     public static void onDeath(LivingEntity e, ServerLevel level) {
-        ContaminationLifecycle.onDeath(e, level);
+        ContaminationDeath.onDeath(e, level);
     }
 
     public static void tick(MinecraftServer server) {

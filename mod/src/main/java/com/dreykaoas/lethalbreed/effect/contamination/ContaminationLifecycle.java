@@ -11,7 +11,6 @@ import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 
 /**
  * Infection entry/exit points: contaminate, chunk-load re-tracking, death (+ humanoid reanimation), and the
@@ -117,55 +116,6 @@ public final class ContaminationLifecycle {
         ContaminationEpisodes.clearAllVictims();
         ContaminationHallucination.clearAllVictims();
         ContaminationTick.clearSnapshot();
-    }
-
-    /** Death of a contaminated victim: clear the plague state, then reanimate as a zombie if it was a humanoid. */
-    public static void onDeath(LivingEntity e, ServerLevel level) {
-        if (ContaminationState.age(e) <= 0) {
-            return;
-        }
-        forgetAllTransient(e);
-        e.removeEffect(LethalBreedEffects.ZOMBIE_VISION);
-        e.removeAttached(ContaminationState.CONTAM);
-        e.removeAttached(ContaminationState.SYMPTOMATIC);
-        e.removeAttached(ContaminationState.LEVEL);
-        e.removeAttached(ContaminationState.INTENSITY);
-        if (DevProbe.on()) {
-            DevProbe.sink.count(DevProbe.DEATH, DevProbe.GLOBAL);
-        }
-        if (ContaminationConfig.contamReanimateHumanoids && isHumanoid(e)) {
-            reanimate(e, level);
-        }
-    }
-
-    /** Spawn a fresh zombie at the victim's death spot (its "reanimation"). Villagers rise as zombie villagers. */
-    private static void reanimate(LivingEntity e, ServerLevel level) {
-        var type = (e instanceof net.minecraft.world.entity.npc.villager.Villager)
-                ? net.minecraft.world.entity.EntityType.ZOMBIE_VILLAGER
-                : net.minecraft.world.entity.EntityType.ZOMBIE;
-        var z = type.create(level, net.minecraft.world.entity.EntitySpawnReason.CONVERSION);
-        if (z != null) {
-            z.setPos(e.getX(), e.getY(), e.getZ());
-            z.setYRot(e.getYRot());
-            level.addFreshEntity(z);
-        }
-    }
-
-    /** A biped the plague can raise into a zombie. Players always qualify; every other mob is auto-detected from
-     *  its standing hitbox — tall, narrow and clearly upright. This is dynamic (no hardcoded mob list), so it
-     *  covers villagers, piglins, illagers, witches, skeletons, endermen AND modded humanoids alike, while
-     *  excluding creepers (too short), golems/quadrupeds (too wide) and small mobs. */
-    public static boolean isHumanoid(LivingEntity e) {
-        if (e instanceof Player) {
-            return true;
-        }
-        float w = e.getBbWidth();
-        float h = e.getBbHeight();
-        // >= 1.75 tall drops the creeper (1.7); <= 0.7 wide drops iron/snow-golem-width & quadrupeds;
-        // h >= 2.4×w keeps only genuinely upright, biped-shaped hitboxes. All three thresholds are configurable.
-        return h >= (float) ContaminationConfig.contamReanimateMinHeight
-                && w <= (float) ContaminationConfig.contamReanimateMaxWidth
-                && h >= w * (float) ContaminationConfig.contamReanimateAspect;
     }
 
     public static void cure(LivingEntity e) {
