@@ -3,10 +3,10 @@ package com.dreykaoas.lethalbreed.tick;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.pack.PackJoinRule;
+import com.dreykaoas.lethalbreed.pack.rule.PackJoinRule;
 import com.dreykaoas.lethalbreed.pack.PackManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
-import com.dreykaoas.lethalbreed.pack.PackTether;
+import com.dreykaoas.lethalbreed.pack.rule.PackTether;
 import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import java.util.ArrayList;

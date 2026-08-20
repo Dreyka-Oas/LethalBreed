@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.pack;
 
+import com.dreykaoas.lethalbreed.pack.rule.PackJoinRule;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.pack.runtime.PackLifecycle;
@@ -107,23 +108,7 @@ public final class PackManager implements PackLifecycle.Registry {
 
     /** Visit the next {@code packsPerTick} packs: recentroid, dissolve if spent, otherwise try to merge. */
     public void tick(long gameTime) {
-        if (!PackConfig.packEnabled || packs.isEmpty()) {
-            return;
-        }
-        ordered.clear();
-        ordered.addAll(packs.values());
-        ordered.sort((a, b) -> Long.compare(a.id, b.id));
-
-        int visits = Math.min(Math.max(1, PackConfig.packsPerTick), ordered.size());
-        for (int i = 0; i < visits; i++) {
-            PackState pack = ordered.get(cursor++ % ordered.size());
-            PackLifecycle.recentroid(pack);
-            if (PackLifecycle.dissolveIfSpent(pack, gameTime, this)) {
-                continue;
-            }
-            PackLifecycle.merge(pack, ordered, this, this::get);
-        }
-        cursor %= Math.max(1, ordered.size());
+        cursor = PackSweep.tick(this, packs, ordered, cursor, gameTime);
     }
 
     /** The id the next pack will take, so persistence can resume the sequence instead of reusing ids. */

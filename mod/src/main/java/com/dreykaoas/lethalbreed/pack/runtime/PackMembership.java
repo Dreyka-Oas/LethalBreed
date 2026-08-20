@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.pack.runtime;
 
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.pack.PackAttachment;
-import com.dreykaoas.lethalbreed.pack.PackJoinRule;
+import com.dreykaoas.lethalbreed.pack.rule.PackJoinRule;
 import com.dreykaoas.lethalbreed.pack.PackState;
 
 import java.util.function.LongFunction;

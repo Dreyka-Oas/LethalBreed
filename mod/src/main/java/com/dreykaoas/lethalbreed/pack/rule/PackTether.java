@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.pack;
+package com.dreykaoas.lethalbreed.pack.rule;
 
 /**
  * What one zombie knows about its pack: which one, how long it has been straying, and where the pack wants

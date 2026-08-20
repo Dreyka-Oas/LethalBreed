@@ -66,9 +66,8 @@ public final class PhaseManager {
     public void load(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
-        // Clamp on restore, not just on write: a save produced before the ceiling existed (or hand-edited)
-        // would otherwise reinstate an unbounded phase at every boot. The command that could force a
-        // phase is gone, but a hand-edited save can still carry one, and setPhase remains callable.
+        // Clamp on restore, not just on write: a save produced before the ceiling existed, or hand-edited,
+        // would otherwise reinstate an unbounded phase at every boot.
         phase = clampPhase(store.phase);
         lastAdvanceGameTime = store.lastAdvanceGameTime;
         nextIntervalTicks = store.nextIntervalTicks;
@@ -92,25 +91,6 @@ public final class PhaseManager {
             store.nextIntervalTicks = nextIntervalTicks;
             store.setDirty();
         }
-    }
-
-    /** Cyclic color palette for the phase broadcast/command text — only the tier THRESHOLDS
-     *  ({@link ProgressionConfig#phaseColorThresholds}) are configurable, this list is fixed. */
-    private static final ChatFormatting[] COLOR_PALETTE = {
-            ChatFormatting.GRAY, ChatFormatting.GREEN, ChatFormatting.YELLOW, ChatFormatting.GOLD,
-            ChatFormatting.RED, ChatFormatting.DARK_RED, ChatFormatting.LIGHT_PURPLE, ChatFormatting.DARK_PURPLE,
-    };
-
-    /** Color for a given phase, per the configured tier thresholds (largest threshold <= phase wins). */
-    public static ChatFormatting colorFor(int phase) {
-        double[] thresholds = ProgressionConfig.phaseColorThresholds;
-        int tier = 0;
-        for (int i = 0; i < thresholds.length; i++) {
-            if (phase >= thresholds[i]) {
-                tier = i;
-            }
-        }
-        return COLOR_PALETTE[tier % COLOR_PALETTE.length];
     }
 
     /** SERVER THREAD (END_SERVER_TICK): advance the phase when its (jittered) interval has elapsed. */
@@ -163,7 +143,7 @@ public final class PhaseManager {
     }
 
     public void broadcast(MinecraftServer server) {
-        ChatFormatting color = colorFor(phase);
+        ChatFormatting color = PhasePalette.colorFor(phase);
         server.getPlayerList().broadcastSystemMessage(
                 Component.literal("☠ Phase " + phase).withStyle(color, ChatFormatting.BOLD), false);
     }

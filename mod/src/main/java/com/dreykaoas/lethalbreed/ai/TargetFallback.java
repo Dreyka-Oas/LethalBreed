@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.ai;
 
+import com.dreykaoas.lethalbreed.pack.rule.PackTether;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;

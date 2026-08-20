@@ -9,7 +9,7 @@ import com.dreykaoas.lethalbreed.entity.spawn.SpawnControl;
 import com.dreykaoas.lethalbreed.entity.spawn.SpawnFilter;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.pack.PackAttachment;
-import com.dreykaoas.lethalbreed.pack.PackJoinRule;
+import com.dreykaoas.lethalbreed.pack.rule.PackJoinRule;
 import com.dreykaoas.lethalbreed.spatial.TargetIndex;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
 import com.dreykaoas.lethalbreed.util.target.VanillaTargetingGoals;

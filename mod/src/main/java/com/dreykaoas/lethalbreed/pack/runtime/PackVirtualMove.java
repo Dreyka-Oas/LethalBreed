@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.pack.runtime;
 
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
-import com.dreykaoas.lethalbreed.pack.PackAdvance;
+import com.dreykaoas.lethalbreed.pack.rule.PackAdvance;
 import com.dreykaoas.lethalbreed.pack.PackManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
 

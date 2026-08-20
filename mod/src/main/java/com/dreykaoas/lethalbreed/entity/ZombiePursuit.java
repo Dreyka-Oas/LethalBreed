@@ -1,7 +1,7 @@
 package com.dreykaoas.lethalbreed.entity;
 
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
-import com.dreykaoas.lethalbreed.pack.PackTether;
+import com.dreykaoas.lethalbreed.pack.rule.PackTether;
 import com.dreykaoas.lethalbreed.special.SpecialAttachment;
 import com.dreykaoas.lethalbreed.special.SpecialType;
 import net.minecraft.world.entity.LivingEntity;

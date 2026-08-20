@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.pack;
+package com.dreykaoas.lethalbreed.pack.rule;
 
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 

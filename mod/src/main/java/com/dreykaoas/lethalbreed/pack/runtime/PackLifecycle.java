@@ -1,9 +1,10 @@
 package com.dreykaoas.lethalbreed.pack.runtime;
 
+import com.dreykaoas.lethalbreed.pack.rule.PackAdvance;
 import com.dreykaoas.lethalbreed.GameState;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
-import com.dreykaoas.lethalbreed.pack.PackMergeRule;
+import com.dreykaoas.lethalbreed.pack.rule.PackMergeRule;
 import com.dreykaoas.lethalbreed.pack.PackState;
 
 import java.util.List;

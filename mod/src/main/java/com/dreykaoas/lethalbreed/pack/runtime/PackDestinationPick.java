@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.pack.runtime;
 
 import com.dreykaoas.lethalbreed.pack.PackManager;
 import com.dreykaoas.lethalbreed.pack.PackState;
-import com.dreykaoas.lethalbreed.pack.PackWander;
+import com.dreykaoas.lethalbreed.pack.rule.PackWander;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.border.WorldBorder;

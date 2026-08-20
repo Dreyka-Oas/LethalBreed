@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.pack;
+package com.dreykaoas.lethalbreed.pack.rule;
 
 /**
  * How far a coarsely-simulated pack has moved since it was last looked at.
