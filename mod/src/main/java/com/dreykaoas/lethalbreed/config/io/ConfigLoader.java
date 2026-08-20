@@ -104,45 +104,7 @@ public final class ConfigLoader {
                 }
             }
 
-            int applied = 0;
-            int ignored = 0;
-            for (Field f : ConfigFields.all()) {
-                if (!values.containsKey(f.getName())) {
-                    continue;
-                }
-                // One bad field must not cost the user every field after it: getAsString() throws on a
-                // JSON object or null (neither overrides JsonElement.getAsString()), and that exception
-                // used to escape the loop entirely, leaving the rest at code defaults — which save() then
-                // persisted. Guard per field, and account for what was dropped instead of staying silent.
-                try {
-                    JsonElement el = values.get(f.getName());
-                    String raw;
-                    if (el.isJsonArray()) {
-                        // Arrays are stored as a JSON array; primitives as a scalar. Feed apply() the CSV /
-                        // string form it parses back (parse() accepts a bracketed or bare comma list).
-                        raw = el.toString();
-                    } else if (el.isJsonPrimitive()) {
-                        raw = el.getAsString();
-                    } else {
-                        ignored++;
-                        continue;
-                    }
-                    if (ConfigFields.apply(f.getName(), raw, false)) {
-                        applied++;
-                    } else {
-                        ignored++;
-                    }
-                } catch (Exception perField) {
-                    ignored++;
-                }
-            }
-            if (ignored > 0) {
-                LethalBreed.LOGGER.warn(
-                        "[LethalBreed] config loaded ({} options applied, {} IGNORED — bad type or value) from {}",
-                        applied, ignored, path);
-            } else {
-                LethalBreed.LOGGER.info("[LethalBreed] config loaded ({} options) from {}", applied, path);
-            }
+            ConfigApply.applyAll(values, path);
         } catch (Exception e) {
             // The whole file is unreadable/unparseable. NEVER fall through to save() here: the in-memory
             // state is the code defaults, and writing it would destroy the user's settings at the exact

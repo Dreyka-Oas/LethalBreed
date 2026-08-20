@@ -58,58 +58,8 @@ public final class LodManager {
                 }
             }
             lod = lodFromDistSq(sz.entity().distanceToSqr(target), prev);
-        } else if (TargetingConfig.targetMemoryTicks > 0 && sz.pursuit().hasMemory()
-                && level.getGameTime() < sz.pursuit().memoryExpire()) {
-            // Lost sight AND sound, but remember where it was — keep going there briefly (no live entity, so
-            // no melee/vanilla target). Reached the spot with nothing there, or memory ran out → forget.
-            sz.pursuit().setMemoryTarget();
-            sz.entity().setTarget(null);
-            double d = sz.pursuit().distanceToTargetSq();
-            double arrive = TargetingConfig.soundArriveDistance;
-            // Only "arrived, nothing here → forget" when the zombie can actually SEE the remembered spot. If an
-            // opaque wall still stands between it and the spot (e.g. a trapped, noisy mob enclosed in blocks),
-            // it is NOT arrived — keep pursuing so it breaks through instead of giving up at the wall and
-            // letting the half-broken block lapse. Memory still expires on its own timer above.
-            boolean atSpot = d <= arrive * arrive && canSeeSpot(level, sz.entity(),
-                    sz.pursuit().tgtX(), sz.pursuit().tgtY(), sz.pursuit().tgtZ());
-            // A day-sleep SHADE-seek isn't "arrived" until the zombie's OWN foot block is out of the sky: being
-            // 2.5 blocks short with mere line-of-sight to the shade column still leaves it burning under open
-            // sky, so clearing here would strand it (clear → re-find same shade → clear) in a visible stutter.
-            // Ordinary noise memories keep the plain near+line-of-sight arrival.
-            boolean arrived = atSpot
-                    && (!sz.mood().isSeekingShade() || !level.canSeeSky(sz.entity().blockPosition()));
-            if (arrived) {
-                sz.pursuit().clearTarget();
-                sz.pursuit().clearMemory();
-                lod = LodLevel.FROZEN;
-            } else {
-                lod = lodFromDistSq(d, prev);
-            }
-        } else if (sz.pursuit().pack().hasWaypoint()) {
-            // Lowest priority: nothing seen, nothing remembered, but the zombie's pack wants it somewhere.
-            // Deliberately NOT the memory slot — see PackTether — so a pack march cannot be clobbered by a
-            // passing cow or hijacked by a distress rally, and a marching member is not mistaken for one
-            // investigating a noise (which would keep it awake through the day, burning in the sun).
-            sz.pursuit().setPackTarget();
-            sz.entity().setTarget(null);
-            // No canSeeSpot here, unlike the memory branch: that is a level.clip raycast, and paying one per
-            // marching member per activation would make the march the dominant cost of the whole system.
-            // Arrival is PackMarch's business — it replants the waypoint every visit regardless.
-            //
-            // The waypoint is short-range by construction (packMarchLead, capped under lodLow), which is the
-            // whole reason this classifies to HIGH/MEDIUM instead of FROZEN. Aiming a member at the pack's
-            // actual destination hundreds of blocks away would freeze it, not move it.
-            lod = lodFromDistSq(sz.pursuit().distanceToTargetSq(), prev);
         } else {
-            sz.pursuit().clearTarget();
-            sz.pursuit().clearMemory();
-            // Cut the vanilla target too, as the memory and pack branches above already do. Without it the
-            // mod declares the zombie frozen and target-less while vanilla's ZombieAttackGoal — never
-            // stripped — keeps driving it at whatever it last locked on, with no flow field, no breach, no
-            // pillaring and no tick() of ours. That divergence is what caps a Screamer's rally: the zombies it
-            // hands a target to are re-frozen here on their next classify, yet keep walking.
-            sz.entity().setTarget(null);
-            lod = LodLevel.FROZEN;
+            lod = TargetFallback.classify(sz, level, prev);
         }
         // A Bomber whose fuse is lit has committed to detonating, so it must keep being ticked to get there.
         // LodBucketPass drops a FROZEN zombie before tick() runs, which would stop the fuse mid-burn and turn
@@ -125,14 +75,14 @@ public final class LodManager {
 
     /** True if the zombie has a clear line of sight to the spot (no solid block between its eyes and it) — i.e.
      *  it has genuinely reached it, not just gotten close on the far side of a wall it still has to break. */
-    private static boolean canSeeSpot(ServerLevel level, LivingEntity e, double x, double y, double z) {
+    static boolean canSeeSpot(ServerLevel level, LivingEntity e, double x, double y, double z) {
         Vec3 from = e.getEyePosition();
         Vec3 to = new Vec3(x, y + 0.5, z);
         HitResult hit = level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, e));
         return hit.getType() == HitResult.Type.MISS || hit.getLocation().distanceToSqr(to) <= 1.0;
     }
 
-    private static LodLevel lodFromDistSq(double d, LodLevel prev) {
+    static LodLevel lodFromDistSq(double d, LodLevel prev) {
         // Enforce monotonic tier radii (high <= medium <= low). The three are independent config knobs, so a
         // misordered value (e.g. lodMedium <= lodHigh) would otherwise let an earlier branch swallow a whole
         // tier silently. Clamping each tier up to the previous keeps classification predictable.
