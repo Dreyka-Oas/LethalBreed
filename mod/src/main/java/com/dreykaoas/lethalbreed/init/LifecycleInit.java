@@ -1,7 +1,8 @@
 package com.dreykaoas.lethalbreed.init;
 
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigDrift;
 import com.dreykaoas.lethalbreed.config.io.ConfigIo;
-import com.dreykaoas.lethalbreed.config.io.ConfigStructure;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigStructure;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
@@ -81,7 +82,7 @@ public final class LifecycleInit {
         // typo too ambiguous to correct, or an option written twice), so the line budget below is a
         // guard against a pathological file, not an expected path.
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ConfigStructure.Report report = ConfigIo.lastReport();
+            ConfigDrift.Report report = ConfigIo.lastReport();
             if (report == null || report.clean()) {
                 return;
             }
@@ -96,7 +97,7 @@ public final class LifecycleInit {
                     .withStyle(ChatFormatting.GOLD));
 
             int shown = 0;
-            for (ConfigStructure.Unknown u : report.unknown()) {
+            for (ConfigDrift.Unknown u : report.unknown()) {
                 if (shown == JOIN_NOTICE_LINES) {
                     break;
                 }

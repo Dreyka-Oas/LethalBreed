@@ -1,5 +1,6 @@
-package com.dreykaoas.lethalbreed.config.io;
+package com.dreykaoas.lethalbreed.config.io.diag;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigLoader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

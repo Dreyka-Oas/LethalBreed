@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.config.io;
+package com.dreykaoas.lethalbreed.config.io.diag;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
 
@@ -16,14 +16,14 @@ public final class ConfigDriftReport {
 
     /** Say what is wrong with the file's shape, once per problem, naming the offending key. Drift the
      *  loader repairs by itself is stated at INFO — it is a record of what happened, not a warning. */
-    public static void emit(ConfigStructure.Report report, Path path) {
-        for (ConfigStructure.Rename r : report.renamed()) {
+    public static void emit(ConfigDrift.Report report, Path path) {
+        for (ConfigDrift.Rename r : report.renamed()) {
             LethalBreed.LOGGER.info(
                     "[LethalBreed] misspelled option '{}' in {} — reading it as '{}'; your value is kept "
                             + "and the file is corrected on the next write.",
                     r.from(), path.getFileName(), r.to());
         }
-        for (ConfigStructure.Unknown u : report.unknown()) {
+        for (ConfigDrift.Unknown u : report.unknown()) {
             if (u.suggestion() != null) {
                 // Reaching here with a suggestion means the repair was NOT safe to make: either that
                 // option is already set elsewhere in the file, or another name is just as close.

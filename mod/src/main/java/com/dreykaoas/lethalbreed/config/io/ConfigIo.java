@@ -1,5 +1,9 @@
 package com.dreykaoas.lethalbreed.config.io;
 
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigDrift;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigDriftReport;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigQuarantine;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigStructure;
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
 
@@ -31,7 +35,7 @@ public final class ConfigIo {
 
     /** Structure check from the last load. Volatile because load() runs on the main thread at boot but
      *  the operator join notice reads it from the server thread. */
-    private static volatile ConfigStructure.Report lastReport;
+    private static volatile ConfigDrift.Report lastReport;
 
     /** {@code config/oas/lethalbreed.json}. The "oas" folder is the author's namespace. */
     private static Path file() {
@@ -49,7 +53,7 @@ public final class ConfigIo {
     /** The structure check from the most recent {@link #load()}, or null if the config has not been
      *  read yet. Read by the operator join notice — a log line alone is close to worthless to a solo
      *  player, who never opens latest.log. */
-    public static ConfigStructure.Report lastReport() {
+    public static ConfigDrift.Report lastReport() {
         return lastReport;
     }
 }

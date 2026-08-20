@@ -1,5 +1,9 @@
 package com.dreykaoas.lethalbreed.config.io;
 
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigDrift;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigDriftReport;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigQuarantine;
+import com.dreykaoas.lethalbreed.config.io.diag.ConfigStructure;
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 
 import com.dreykaoas.lethalbreed.LethalBreed;
@@ -28,13 +32,13 @@ import java.util.Set;
 public final class ConfigLoader {
     private ConfigLoader() {}
 
-    public static ConfigStructure.Report load(Path path) {
+    public static ConfigDrift.Report load(Path path) {
         if (!Files.exists(path)) {
             LethalBreed.LOGGER.info("[LethalBreed] no config file — writing defaults to {}", path);
             ConfigWriter.save(path);
             return null;
         }
-        ConfigStructure.Report report;
+        ConfigDrift.Report report;
         try {
             String text = Files.readString(path);
             JsonObject json = JsonParser.parseString(text).getAsJsonObject();
@@ -93,7 +97,7 @@ public final class ConfigLoader {
             // user's value is dropped and the write below deletes the line. Moving it onto the real
             // name means the edit takes effect and the file comes out correct — the point being that
             // the file fixes itself rather than asking the user to fix it.
-            for (ConfigStructure.Rename rename : report.renamed()) {
+            for (ConfigDrift.Rename rename : report.renamed()) {
                 JsonElement carried = values.remove(rename.from());
                 if (carried != null) {
                     values.put(rename.to(), carried);

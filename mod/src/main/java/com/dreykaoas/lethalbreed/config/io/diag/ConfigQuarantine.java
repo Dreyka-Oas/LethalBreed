@@ -1,5 +1,7 @@
-package com.dreykaoas.lethalbreed.config.io;
+package com.dreykaoas.lethalbreed.config.io.diag;
 
+import com.dreykaoas.lethalbreed.config.io.ConfigIo;
+import com.dreykaoas.lethalbreed.config.io.ConfigBackup;
 import com.dreykaoas.lethalbreed.LethalBreed;
 
 import java.io.IOException;
