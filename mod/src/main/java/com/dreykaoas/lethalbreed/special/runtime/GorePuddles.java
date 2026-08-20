@@ -105,7 +105,7 @@ public final class GorePuddles {
                 return true;
             }
             if (p.age % PARTICLE_INTERVAL_TICKS == 0) {
-                SpecialAbilities.gorePuddleParticles(p.level, p.x, p.y, p.z, radius);
+                BomberAbility.gorePuddleParticles(p.level, p.x, p.y, p.z, radius);
             }
             if (p.age % BomberBlast.PUDDLE_REAPPLY_TICKS == 0) {
                 dose(p, radius);
@@ -116,7 +116,7 @@ public final class GorePuddles {
 
     /** Apply one round of residue to everyone inside the puddle right now. */
     private static void dose(Puddle p, double radius) {
-        for (LivingEntity victim : SpecialAbilities.splatterVictims(p.level, p.x, p.y, p.z, radius, null)) {
+        for (LivingEntity victim : BomberAbility.splatterVictims(p.level, p.x, p.y, p.z, radius, null)) {
             double dist = Math.sqrt(victim.distanceToSqr(p.x, p.y, p.z));
             double intensity = BomberBlast.puddleIntensity(p.ratio, dist, radius);
             if (intensity <= 0.0) {
