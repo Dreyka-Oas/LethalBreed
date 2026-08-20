@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.util;
+package com.dreykaoas.lethalbreed.util.target;
 
 import com.dreykaoas.lethalbreed.mixin.MobGoalsAccessor;
 

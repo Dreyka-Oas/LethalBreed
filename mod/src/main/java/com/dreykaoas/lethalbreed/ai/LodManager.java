@@ -6,7 +6,7 @@ import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
-import com.dreykaoas.lethalbreed.util.TargetSelector;
+import com.dreykaoas.lethalbreed.util.target.TargetSelector;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;

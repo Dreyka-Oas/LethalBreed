@@ -20,7 +20,7 @@ import com.dreykaoas.lethalbreed.spatial.TargetIndex;
 import com.dreykaoas.lethalbreed.special.SpecialBehavior;
 import com.dreykaoas.lethalbreed.util.AiConflictDetector;
 import com.dreykaoas.lethalbreed.util.Players;
-import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
+import com.dreykaoas.lethalbreed.util.target.VanillaTargetingGoals;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;

@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.LodLevel;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.util.Players;
-import com.dreykaoas.lethalbreed.util.TargetSelector;
+import com.dreykaoas.lethalbreed.util.target.TargetFilter;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -68,7 +68,7 @@ public final class MoodStateDispatch {
     public static boolean preyCleared(Zombie entity, ServerLevel level, double celebrateRadius) {
         AABB box = entity.getBoundingBox().inflate(celebrateRadius);
         List<LivingEntity> prey = level.getEntitiesOfClass(LivingEntity.class, box,
-                e -> TargetSelector.isValid(entity, e));
+                e -> TargetFilter.isValid(entity, e));
         return prey.isEmpty();
     }
 

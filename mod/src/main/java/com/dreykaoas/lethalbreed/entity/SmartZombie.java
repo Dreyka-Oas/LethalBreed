@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.entity.move.ZombieBrain;
-import com.dreykaoas.lethalbreed.util.VanillaTargetingGoals;
+import com.dreykaoas.lethalbreed.util.target.VanillaTargetingGoals;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;

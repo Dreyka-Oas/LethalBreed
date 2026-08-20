@@ -5,7 +5,7 @@ import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.spatial.SpatialGrid;
 import com.dreykaoas.lethalbreed.util.Players;
-import com.dreykaoas.lethalbreed.util.TargetSelector;
+import com.dreykaoas.lethalbreed.util.target.Perception;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -76,7 +76,7 @@ public final class SoundEventBus {
     /** Emit noise for NON-PLAYER living entities that are making sound this tick (walking, acting, hurt), so
      *  zombies hear villagers/animals/mobs move behind walls the same way they hear players. Players are handled
      *  by {@link #tickPlayers} (their server-side delta is unreliable, so that path uses positional delta);
-     *  every other creature has reliable {@code getDeltaMovement}, so {@link TargetSelector#isAudible} is enough.
+     *  every other creature has reliable {@code getDeltaMovement}, so {@link Perception#isAudible} is enough.
      *  A loud action (arm swing) carries {@code ×soundLoudMultiplier}, mirroring the acquisition hearing rule. */
     public void tickEntities(ServerLevel level) {
         if (!TargetingConfig.soundEnabled) {
@@ -92,7 +92,7 @@ public final class SoundEventBus {
             if (!(ent instanceof LivingEntity e) || ent instanceof Player || ent instanceof Zombie) {
                 continue; // players covered by tickPlayers; zombies never hunt their own kind
             }
-            if (TargetSelector.isAudible(e)) {
+            if (Perception.isAudible(e)) {
                 emit(e.getX(), e.getY(), e.getZ(), e.swinging ? loud : base);
             }
         }
