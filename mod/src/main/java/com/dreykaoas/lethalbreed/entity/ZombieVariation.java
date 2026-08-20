@@ -6,7 +6,6 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
 import com.dreykaoas.lethalbreed.entity.spawn.SpawnControl;
-import com.dreykaoas.lethalbreed.phase.PhaseConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.util.AttributeModifiers;
 import net.minecraft.core.Holder;
@@ -36,10 +35,6 @@ public final class ZombieVariation {
     private static final long EFFECT_SALT = 4242L;
     private static final long LEAP_SALT = 777L;
 
-    private static final Identifier HP_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_hp");
-    private static final Identifier PDMG_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_dmg");
-    private static final Identifier PSPD_ID = Identifier.fromNamespaceAndPath("lethalbreed", "phase_spd");
-    private static final long PHASE_SALT = 91237L;
     /** Distinct salt so the special roll no longer consumes the phase RNG — it used to share {@code r} inside
      *  applyPhase, which coupled a zombie's variant to how many phase rolls happened before it. */
     private static final long SPECIAL_SALT = 55501L;
@@ -55,7 +50,7 @@ public final class ZombieVariation {
             z.setHealth(z.getMaxHealth()); // refill so the resized pool isn't left partly empty
         }
         if (ProgressionConfig.phaseSystemEnabled) {
-            applyPhase(z); // phase scaling drives stats/gear/effects
+            PhaseScaling.apply(z); // phase scaling drives stats/gear/effects
         } else {
             applyRandomEffect(z); // legacy flat effect roll when the phase system is off
         }
@@ -72,43 +67,6 @@ public final class ZombieVariation {
         // above — including the Juggernaut's health multiplier and the Sprinter's speed — must already be
         // stamped. Moving this call earlier would let exactly those escape the cap.
         AttributeCaps.enforce(z);
-    }
-
-    /**
-     * Scale a freshly-spawned zombie by the CURRENT difficulty phase: extra HP/damage/speed (rolled from the
-     * phase's widening ranges) and phase-scaled effects. Seeded by UUID (distinct salt)
-     * so a zombie's build is stable. The HP modifier is a permanent attribute modifier; refill to full so the
-     * bigger pool isn't left half-empty.
-     */
-    private static void applyPhase(Zombie z) {
-        PhaseConfig.PhaseDef p = PhaseConfig.def(PhaseManager.current());
-        Random r = seeded(z, PHASE_SALT);
-        applyMultiplier(z, Attributes.MAX_HEALTH, HP_ID, roll(r, p.hpMin(), p.hpMax()));
-        applyMultiplier(z, Attributes.ATTACK_DAMAGE, PDMG_ID, roll(r, p.dmgMin(), p.dmgMax()));
-        applyMultiplier(z, Attributes.MOVEMENT_SPEED, PSPD_ID, roll(r, p.spdMin(), p.spdMax()));
-        z.setHealth(z.getMaxHealth());
-        applyPhaseEffects(z, r, p);
-    }
-
-    /** Apply {@code effCount} beneficial effects (chance-gated) from the pool, amplifier up to the phase max.
-     *  Gated by the master {@link WorldSpawnConfig#randomEffectEnabled} switch (so it disables BOTH paths) and
-     *  hard-capped by the global {@link WorldSpawnConfig#randomEffectMaxAmplifier} ceiling. */
-    private static void applyPhaseEffects(Zombie z, Random r, PhaseConfig.PhaseDef p) {
-        if (!WorldSpawnConfig.randomEffectEnabled) {
-            return;
-        }
-        if (p.effChance() <= 0 || p.effCount() <= 0 || r.nextDouble() >= p.effChance()) {
-            return;
-        }
-        int maxAmp = Math.min(WorldSpawnConfig.randomEffectMaxAmplifier, p.effMaxAmp());
-        Holder<MobEffect>[] pool = effectPool();
-        for (int i = 0; i < p.effCount(); i++) {
-            Holder<MobEffect> pick = pool[r.nextInt(pool.length)];
-            // Math.max(1,..) guards nextInt against a 0/negative bound (mirrors applyRandomEffect): a phase
-            // with effMaxAmp 0 still rolls amp 0, never throws IllegalArgumentException.
-            int amp = r.nextInt(Math.max(1, maxAmp + 1));
-            LethalBreedEffects.applyInfinite(z, pick, amp);
-        }
     }
 
     /**
@@ -140,7 +98,7 @@ public final class ZombieVariation {
      *  pool meant roughly one buff roll in nine silently did nothing — and since the roll is seeded on the
      *  zombie's UUID, the same zombie drew the same blank every time its chunk reloaded. */
     @SuppressWarnings("unchecked")
-    private static Holder<MobEffect>[] effectPool() {
+    static Holder<MobEffect>[] effectPool() {
         return new Holder[] {
                 MobEffects.SPEED, MobEffects.STRENGTH, MobEffects.RESISTANCE,
                 MobEffects.JUMP_BOOST, MobEffects.HASTE, MobEffects.HEALTH_BOOST,
@@ -156,7 +114,7 @@ public final class ZombieVariation {
         return roll(seeded(z, LEAP_SALT), WorldSpawnConfig.varLeapMin, WorldSpawnConfig.varLeapMax);
     }
 
-    private static void applyMultiplier(LivingEntity e, Holder<Attribute> attr, Identifier id, double factor) {
+    static void applyMultiplier(LivingEntity e, Holder<Attribute> attr, Identifier id, double factor) {
         // Floor SCALE/SPEED so an extreme low roll can't make a zombie invisibly tiny or frozen in place.
         if (attr == Attributes.SCALE || attr == Attributes.MOVEMENT_SPEED) {
             factor = Math.max(ExpertConfig.expertAttributeFloor, factor);
@@ -164,11 +122,11 @@ public final class ZombieVariation {
         AttributeModifiers.multiplyBase(e, attr, id, factor);
     }
 
-    private static Random seeded(Zombie z, long salt) {
+    static Random seeded(Zombie z, long salt) {
         return new Random(z.getUUID().getMostSignificantBits() ^ z.getUUID().getLeastSignificantBits() ^ salt);
     }
 
-    private static double roll(Random r, double min, double max) {
+    static double roll(Random r, double min, double max) {
         if (!Double.isFinite(min) || !Double.isFinite(max)) {
             return 1.0; // non-finite range → neutral factor (no resize)
         }
