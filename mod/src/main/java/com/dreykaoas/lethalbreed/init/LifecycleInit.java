@@ -4,7 +4,7 @@ package com.dreykaoas.lethalbreed.init;
 import com.dreykaoas.lethalbreed.special.runtime.gore.GorePuddles;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
-import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;
+import com.dreykaoas.lethalbreed.ai.flowfield.cpu.ComputeCalibration;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;

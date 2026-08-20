@@ -1,6 +1,9 @@
-package com.dreykaoas.lethalbreed.ai.flowfield;
+package com.dreykaoas.lethalbreed.ai.flowfield.cpu;
 
 
+import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
+import com.dreykaoas.lethalbreed.ai.flowfield.Neighbors8;
+import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 

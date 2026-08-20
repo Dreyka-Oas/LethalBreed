@@ -7,7 +7,7 @@ import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieState;
-import com.dreykaoas.lethalbreed.entity.ZombieVariation;
+import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;

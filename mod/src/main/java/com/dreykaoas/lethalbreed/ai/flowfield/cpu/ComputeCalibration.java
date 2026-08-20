@@ -1,6 +1,8 @@
-package com.dreykaoas.lethalbreed.ai.flowfield;
+package com.dreykaoas.lethalbreed.ai.flowfield.cpu;
 
 
+import com.dreykaoas.lethalbreed.ai.flowfield.GpuFlowField;
+import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 

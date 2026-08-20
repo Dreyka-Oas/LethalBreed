@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity;
+package com.dreykaoas.lethalbreed.entity.genes;
 
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;

@@ -1,6 +1,8 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
 
+import com.dreykaoas.lethalbreed.ai.flowfield.cpu.CpuFlowField;
+import com.dreykaoas.lethalbreed.ai.flowfield.cpu.ComputeCalibration;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;

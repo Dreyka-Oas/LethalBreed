@@ -79,7 +79,7 @@ final class ZombieActivation {
         // zombie-leader bonus AFTER finalizeSpawn, and stamps another one at runtime when a zombie summons
         // reinforcements — both multiply straight through a correction derived before they existed. Runs even
         // for FROZEN zombies (whose full tick() below is skipped), because a frozen zombie still bites.
-        com.dreykaoas.lethalbreed.entity.AttributeCaps.enforce(sz.entity());
+        com.dreykaoas.lethalbreed.entity.genes.AttributeCaps.enforce(sz.entity());
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
         t = mark(DevProbe.SUNBURN, prof, t);

@@ -7,13 +7,13 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
  * {@link BellmanFordSolver} (the CPU backup) or the GPU solver — neither of which touch Minecraft.
  */
 public final class Snapshot {
-    final int originX, originZ, width, depth, focusY;
-    final boolean[] passable;
-    final int[] extraCost;
-    final byte[] flags;
-    final int[] seedCells;
+    public final int originX, originZ, width, depth, focusY;
+    public final boolean[] passable;
+    public final int[] extraCost;
+    public final byte[] flags;
+    public final int[] seedCells;
 
-    Snapshot(int originX, int originZ, int width, int depth, int focusY,
+    public Snapshot(int originX, int originZ, int width, int depth, int focusY,
              boolean[] passable, int[] extraCost, byte[] flags, int[] seedCells) {
         this.originX = originX;
         this.originZ = originZ;

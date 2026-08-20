@@ -1,6 +1,9 @@
-package com.dreykaoas.lethalbreed.ai.flowfield;
+package com.dreykaoas.lethalbreed.ai.flowfield.cpu;
 
 
+import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
+import com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldSnapshotBuilder;
+import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 

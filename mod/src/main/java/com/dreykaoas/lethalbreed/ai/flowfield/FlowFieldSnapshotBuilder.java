@@ -17,11 +17,11 @@ import java.util.List;
  * off-thread solve route a path THROUGH a breakable wall or OVER a gap when that beats a long detour
  * — which is what makes zombies break and bridge.
  */
-final class FlowFieldSnapshotBuilder {
+public final class FlowFieldSnapshotBuilder {
     private FlowFieldSnapshotBuilder() {}
 
     /** Classify cells + seeds. {@code players} should already be filtered to targets. */
-    static Snapshot snapshot(ServerLevel level, List<ServerPlayer> players) {
+    public static Snapshot snapshot(ServerLevel level, List<ServerPlayer> players) {
         int margin = FlowConfig.flowMargin;
         int maxGrid = FlowConfig.flowMaxGrid;
         int vtol = FlowConfig.flowVerticalTolerance;

@@ -1,6 +1,6 @@
 package com.dreykaoas.lethalbreed.mixin.spawn;
 
-import com.dreykaoas.lethalbreed.entity.ZombieVariation;
+import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import org.spongepowered.asm.mixin.Mixin;

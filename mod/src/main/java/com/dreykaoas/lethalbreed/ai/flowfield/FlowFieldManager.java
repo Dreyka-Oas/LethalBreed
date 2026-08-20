@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
 
+import com.dreykaoas.lethalbreed.ai.flowfield.cpu.CpuFlowField;
 import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 

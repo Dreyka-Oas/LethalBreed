@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.pack.runtime;
 
+import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
 import com.dreykaoas.lethalbreed.pack.PackState;
 
 import net.minecraft.nbt.CompoundTag;

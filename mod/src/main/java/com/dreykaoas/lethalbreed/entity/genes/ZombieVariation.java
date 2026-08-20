@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity;
+package com.dreykaoas.lethalbreed.entity.genes;
 
 import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
