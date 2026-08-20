@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.init;
 
 
+import com.dreykaoas.lethalbreed.special.runtime.gore.GorePuddles;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
 import com.dreykaoas.lethalbreed.ai.flowfield.ComputeCalibration;
@@ -76,7 +77,7 @@ public final class LifecycleInit {
             // world isn't pinned into the next session (audit #2, #20).
             scheduler.reset();
             ContaminationManager.onServerStopped();
-            com.dreykaoas.lethalbreed.special.runtime.GorePuddles.onServerStopped();
+            GorePuddles.onServerStopped();
         });
     }
 }

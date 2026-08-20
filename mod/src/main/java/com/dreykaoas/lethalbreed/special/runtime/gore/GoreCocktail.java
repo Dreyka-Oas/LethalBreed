@@ -1,5 +1,6 @@
-package com.dreykaoas.lethalbreed.special.runtime;
+package com.dreykaoas.lethalbreed.special.runtime.gore;
 
+import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffect;
@@ -67,14 +68,14 @@ public final class GoreCocktail {
      */
     public static List<Dose> roll(int phase, double intensity, RandomSource rng) {
         List<Entry> eligible = new ArrayList<>(POOL.size());
-        boolean blindOk = BomberBlast.blindnessEligible(intensity);
+        boolean blindOk = GoreCurves.blindnessEligible(intensity);
         for (Entry e : POOL) {
             if (!e.blindGated() || blindOk) {
                 eligible.add(e);
             }
         }
-        int want = Math.min(BomberBlast.cocktailSize(phase), eligible.size());
-        int maxAmp = BomberBlast.cocktailMaxAmp(phase);
+        int want = Math.min(GoreCurves.cocktailSize(phase), eligible.size());
+        int maxAmp = GoreCurves.cocktailMaxAmp(phase);
 
         List<Dose> out = new ArrayList<>(want);
         for (int i = 0; i < want; i++) {
@@ -92,7 +93,7 @@ public final class GoreCocktail {
      */
     public static void apply(LivingEntity victim, List<Dose> cocktail, double intensity) {
         for (Dose d : cocktail) {
-            int ticks = BomberBlast.effectTicks(d.baseS(), d.spanS(), intensity);
+            int ticks = GoreCurves.effectTicks(d.baseS(), d.spanS(), intensity);
             if (ticks > 0) {
                 victim.addEffect(new MobEffectInstance(d.effect(), ticks, d.amplifier()));
             }

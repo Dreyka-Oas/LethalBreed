@@ -1,5 +1,6 @@
-package com.dreykaoas.lethalbreed.special.runtime;
+package com.dreykaoas.lethalbreed.special.runtime.gore;
 
+import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.util.Players;
@@ -22,7 +23,7 @@ import java.util.List;
  * cocktail and one victim rule, and keeping them together is what guarantees the puddle can never touch
  * someone the explosion spared.
  */
-final class BomberAbility {
+public final class BomberAbility {
     private BomberAbility() {}
 
     /**
@@ -41,7 +42,7 @@ final class BomberAbility {
      *
      * @param fuseTicks how long this Bomber swelled; drives both the power and the splatter intensity
      */
-    static void bomb(ServerLevel level, Zombie z, int fuseTicks) {
+    public static void bomb(ServerLevel level, Zombie z, int fuseTicks) {
         double ratio = BomberBlast.ratioOf(fuseTicks);
         double power = BomberBlast.powerFor(ratio);
         double splatR = BomberBlast.splatterRadius(power);
@@ -96,7 +97,7 @@ final class BomberAbility {
      * @param source the bursting zombie to exclude, or {@code null} when there is none (a lingering puddle
      *               outlives the Bomber that left it)
      */
-    static List<LivingEntity> splatterVictims(ServerLevel level, double cx, double cy, double cz, double radius,
+    public static List<LivingEntity> splatterVictims(ServerLevel level, double cx, double cy, double cz, double radius,
                                               Zombie source) {
         return level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(cx - radius, cy - radius, cz - radius, cx + radius, cy + radius, cz + radius),
@@ -125,7 +126,7 @@ final class BomberAbility {
      * Density is tied to area, not radius, so a shrinking puddle thins out instead of concentrating into an
      * ever-brighter dot.
      */
-    static void gorePuddleParticles(ServerLevel level, double cx, double cy, double cz, double radius) {
+    public static void gorePuddleParticles(ServerLevel level, double cx, double cy, double cz, double radius) {
         int count = Math.max(1, (int) Math.round(3.0 * radius * radius));
         level.sendParticles(
                 ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, BomberBlast.SPLATTER_COLOR_ARGB),

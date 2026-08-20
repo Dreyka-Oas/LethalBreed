@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.tick;
 
+import com.dreykaoas.lethalbreed.special.runtime.gore.GorePuddles;
 import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
@@ -58,7 +59,7 @@ public final class TickScheduler {
         // Every tick, not bucketed: a puddle shrinks and re-doses on wall-clock cadence, so routing it through
         // the LOD buckets would tie its lifetime to a performance knob — the exact coupling the Bomber's fuse
         // had to be rescued from.
-        com.dreykaoas.lethalbreed.special.runtime.GorePuddles.tick(server);
+        GorePuddles.tick(server);
         world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
         world.processSound(server);
         // Before the bucket pass, for the same reason processSound is: the waypoint it plants is read by

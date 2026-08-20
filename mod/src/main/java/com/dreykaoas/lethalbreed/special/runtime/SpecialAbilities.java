@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.special.runtime;
 
+import com.dreykaoas.lethalbreed.special.runtime.gore.BomberAbility;
 import com.dreykaoas.lethalbreed.config.domain.PackConfig;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.config.domain.TargetingConfig;

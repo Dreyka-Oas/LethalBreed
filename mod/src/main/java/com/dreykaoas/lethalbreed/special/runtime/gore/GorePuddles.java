@@ -1,5 +1,6 @@
-package com.dreykaoas.lethalbreed.special.runtime;
+package com.dreykaoas.lethalbreed.special.runtime.gore;
 
+import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import net.minecraft.server.MinecraftServer;
@@ -80,8 +81,8 @@ public final class GorePuddles {
      */
     public static void spawn(ServerLevel level, double x, double y, double z, double ratio, double splatterRadius,
                              List<GoreCocktail.Dose> cocktail) {
-        double radius0 = BomberBlast.puddleRadius(splatterRadius);
-        int duration = BomberBlast.puddleDurationTicks(ratio);
+        double radius0 = GoreCurves.puddleRadius(splatterRadius);
+        int duration = GoreCurves.puddleDurationTicks(ratio);
         if (radius0 <= 0.0 || duration <= 0 || cocktail.isEmpty()) {
             return;
         }
@@ -100,14 +101,14 @@ public final class GorePuddles {
             if (p.age >= p.durationTicks) {
                 return true;
             }
-            double radius = BomberBlast.puddleRadiusAt(p.radius0, p.age, p.durationTicks);
+            double radius = GoreCurves.puddleRadiusAt(p.radius0, p.age, p.durationTicks);
             if (radius <= 0.0) {
                 return true;
             }
             if (p.age % PARTICLE_INTERVAL_TICKS == 0) {
                 BomberAbility.gorePuddleParticles(p.level, p.x, p.y, p.z, radius);
             }
-            if (p.age % BomberBlast.PUDDLE_REAPPLY_TICKS == 0) {
+            if (p.age % GoreCurves.PUDDLE_REAPPLY_TICKS == 0) {
                 dose(p, radius);
             }
             return false;
@@ -118,7 +119,7 @@ public final class GorePuddles {
     private static void dose(Puddle p, double radius) {
         for (LivingEntity victim : BomberAbility.splatterVictims(p.level, p.x, p.y, p.z, radius, null)) {
             double dist = Math.sqrt(victim.distanceToSqr(p.x, p.y, p.z));
-            double intensity = BomberBlast.puddleIntensity(p.ratio, dist, radius);
+            double intensity = GoreCurves.puddleIntensity(p.ratio, dist, radius);
             if (intensity <= 0.0) {
                 continue;
             }
