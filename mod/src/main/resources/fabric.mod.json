@@ -7,7 +7,7 @@
   "authors": [
     "Dreyka Oas"
   ],
-  "license": "All rights reserved — see LICENSE",
+  "license": "All rights reserved. See LICENSE",
   "environment": "*",
   "entrypoints": {
     "main": [

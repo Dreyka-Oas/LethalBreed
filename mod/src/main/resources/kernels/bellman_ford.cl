@@ -1,4 +1,4 @@
-// LethalBreed — parallel Bellman-Ford relaxation for the flow field (Phase 6, GPU path).
+// LethalBreed: parallel Bellman-Ford relaxation for the flow field (Phase 6, GPU path).
 //
 // One work-item per grid cell. The host loops the kernel until no cell relaxes (convergence)
 // or a max-iteration cap is hit. Cost grid is seeded with 0 at player/goal cells and a large
