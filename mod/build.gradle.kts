@@ -13,7 +13,7 @@ base {
 // Development-only source set. It now holds everything that used to live scattered across main behind
 // isDevelopmentEnvironment() checks: the headless verification harnesses, every profiler/counter/debug-trace
 // consumer, the dev config holder (DevTestConfig/DevBounds/ConfigOverride) and its "Dev / Debug" config tab,
-// and the three dev commands (/lethaldev, /lethalspawn, /lethalspecial — /lethalphase is a MAIN command, see
+// and the three dev commands (/lethaldev, /lethalspawn, /lethalspecial, while /lethalphase is a MAIN command, see
 // command/PhaseCommand). It compiles against main but is never packaged into the shipped/remapped jar, and
 // nothing here enforces that: Gradle's `jar` task packages sourceSets.main.output only, and no line in this
 // file adds devSourceSet.output to it. Exclusion by omission, verified by
@@ -22,7 +22,7 @@ base {
 //
 // main keeps exactly one seam back into this source set: com.dreykaoas.lethalbreed.probe.DevProbe. Timings,
 // counters and traces measure things that happen INSIDE main-source code (a tick, a stage, a hit), so they
-// cannot be observed purely from dev — main has to call out to record them. DevProbe is that single call-out:
+// cannot be observed purely from dev, so main has to call out to record them. DevProbe is that single call-out:
 // a volatile sink field plus cheap gate checks, wired up by DevBootstrap (in dev) through the existing
 // devHook("install") reflective call, so a player jar pays only an idle volatile read per gated call site and
 // none of the actual measurement code, which never ships.
@@ -37,7 +37,7 @@ val devSourceSet: SourceSet = sourceSets.create("dev") {
 // dev commands), and until now nothing could unit-test any of it: every rule in there (how long to wait for a
 // chunk, when a measurement is vacuous, when a counter or trace gate should fire) was only ever exercised by
 // starting a real dedicated server, which takes minutes and cannot force the interesting timings. Putting
-// dev's output on the test classpath makes its PURE logic — the classes that take no Minecraft type — reachable
+// dev's output on the test classpath makes its PURE logic (the classes that take no Minecraft type) reachable
 // from plain JUnit. It changes nothing about packaging: the shipped jar is still built from `main` alone.
 sourceSets.test {
     compileClasspath += devSourceSet.output
@@ -81,19 +81,19 @@ tasks.withType<JavaCompile>().configureEach {
 
 // Only the MAIN source set ships, so only it is stripped: dev and test keep full -g for IDE debugging.
 // Gradle's default is `debug = true` with a null debugLevel, which hands javac a bare `-g`
-// (= source,lines,vars). Dropping `vars` removes LocalVariableTable/LocalVariableTypeTable — the local
+// (= source,lines,vars). Dropping `vars` removes LocalVariableTable/LocalVariableTypeTable, the local
 // variable names that make a decompiled jar read like the original source. SourceFile and LineNumberTable
 // are kept on purpose: without them every player crash report says "(Unknown Source)".
 tasks.named<JavaCompile>("compileJava") {
     options.debugOptions.debugLevel = "source,lines"
 }
 
-// Measurement benches are opt-in. They are not assertion tests — they print tables that no automated run
-// reads — and FlowFieldPerfBench alone cost 2.5 s of the suite's 3.2 s. Gating them on a system property
+// Measurement benches are opt-in. They are not assertion tests (they print tables that no automated run
+// reads), and FlowFieldPerfBench alone cost 2.5 s of the suite's 3.2 s. Gating them on a system property
 // rather than on @Disabled keeps them genuinely runnable: `--tests` selects tests, it does not re-enable a
 // disabled one, and the test JVM is forked so a bare -D on the Gradle command line never reaches it.
 //   ./gradlew test -Plb.bench=true --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"
-// A Provider<String> of "true"/"false", not a Boolean — hence "flag" rather than "enabled", which would
+// A Provider<String> of "true"/"false", not a Boolean. Hence "flag" rather than "enabled", which would
 // invite `if (benchFlag)` and read as already-resolved.
 val benchFlag = providers.gradleProperty("lb.bench").orElse("false")
 
@@ -101,7 +101,7 @@ tasks.test {
     useJUnitPlatform()
     // .get() is REQUIRED, not an eager-evaluation slip to tidy away. systemProperty takes an Object and
     // stringifies it at fork time, so handing it the Provider itself sets
-    // -Dlb.bench=or(provider(?), fixed(false)) — a value that never equals "true", silently making the
+    // -Dlb.bench=or(provider(?), fixed(false)), a value that never equals "true", silently making the
     // benchmark unrunnable rather than failing.
     systemProperty("lb.bench", benchFlag.get())
 }
@@ -113,10 +113,11 @@ tasks.processResources {
     // Exclude the raw .cl from the output; the .clx copy is written by doLast below.
     exclude("kernels/*.cl")
     doLast {
-        // Truncate each line at its first `//` — the kernel has 23 comment-bearing lines and 10 of them are
+        // Truncate each line at its first `//`: the kernel has 23 comment-bearing lines and 10 of them are
         // TRAILING comments on live code (18-22, 27, 36, 45, 61, 68), so dropping whole lines would delete
         // working kernel code. There are no block comments and no `//` inside any string literal, so
-        // first-`//` truncation is safe. readText/writeText, not readBytes: line 1 holds a U+2014 em dash.
+        // first-`//` truncation is safe. readText/writeText, not readBytes: the explicit UTF-8 charset
+        // keeps any non-ASCII character in the source out of reach of the platform default encoding.
         val raw = file("src/main/resources/kernels/bellman_ford.cl").readText(Charsets.UTF_8)
         val stripped = raw.lineSequence()
                 .map { line -> val i = line.indexOf("//"); if (i >= 0) line.substring(0, i) else line }
@@ -137,7 +138,7 @@ loom {
             runDir("run") // primary client keeps the default run dir
             source(devSourceSet) // dev harnesses on the client run classpath (dev env only)
             // Optimized JVM args for Liberica NIK 23 (GraalVM JIT) + aggressive G1GC (Aikar-style).
-            // Fixed 8G heap (no resize pauses), tight G1 pause target, pretouch + NUMA-aware — tuned for
+            // Fixed 8G heap (no resize pauses), tight G1 pause target, pretouch + NUMA-aware. Tuned for
             // max/steady FPS on a beefy dev box (62G RAM / 16 cores) rather than a small/shared machine.
             vmArgs(
                 "-Xms8G",
@@ -164,7 +165,7 @@ loom {
                 "-XX:+DisableExplicitGC",
                 "-XX:+UseNUMA"
             )
-            // Auto-load the test world on launch (skip menus) — like StormCore.
+            // Auto-load the test world on launch (skip menus), like StormCore.
             // World dir must exist under run/saves/ with this exact name; if absent,
             // MC drops to the menu (no crash). Create it once, then it auto-enters.
             // Greenfield (huge 1:1-scale city, run/saves/Greenfield v0.5.4) makes a good stress test
@@ -192,7 +193,7 @@ loom {
             programArgs("--username", "Tester1", "--quickPlayMultiplayer", "localhost:25565")
         }
         named("server") {
-            runDir("run/server") // dedicated server gets its own run dir under run/ — no lock war with the clients
+            runDir("run/server") // dedicated server gets its own run dir under run/: no lock war with the clients
             source(devSourceSet) // dev harnesses on the dedicated-server run classpath (gradlew runServer)
             vmArgs(
                 "-Xms2G",
@@ -209,15 +210,16 @@ loom {
 }
 
 // The licence has to travel with the jar, for two independent reasons: section 2 of LICENSE makes it a
-// condition of redistribution, and the bundled JOCL is MIT, whose notice clause obliges the same for any
-// copy. `../` because the Gradle root is mod/ while both files sit at the repository root, next to the
-// README. Added to `jar`, not `remapJar` — remapJar copies the jar output, so it inherits them.
+// condition of redistribution, and section 6 carries the MIT notice of the bundled JOCL, whose notice
+// clause obliges the same for any copy. `../` because the Gradle root is mod/ while the file sits at the
+// repository root, next to the README. Added to `jar`, not `remapJar`: remapJar copies the jar output,
+// so it inherits it.
 tasks.jar {
-    from("../LICENSE", "../THIRD-PARTY.md")
+    from("../LICENSE")
 }
 
 // `gradlew build` produces exactly one artifact: build/libs/lethalbreed-<version>.jar, the player jar.
-// build/devlibs holds Loom's unmapped intermediate — an implementation detail of remapJar, never shipped.
+// build/devlibs holds Loom's unmapped intermediate, an implementation detail of remapJar, never shipped.
 // No sources jar, no javadoc jar, no dev flavour: dev tooling lives in src/dev and runs under runClient/
 // runServer only. The jar is unobfuscated by choice: the source is public and readable anyway, so
 // obfuscating it would only cost crash-report legibility. Reading it is not licence to reuse it.
