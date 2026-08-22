@@ -668,7 +668,7 @@
   "lethalbreed.option.packMaxSize": "Maximum Size",
   "lethalbreed.option.packMaxSize.desc": "Hard cap on members. Also caps a Necromancer's summoning while it is in a pack.",
   "lethalbreed.option.packMinNeighbours": "Minimum Neighbours",
-  "lethalbreed.option.packMinNeighbours.desc": "Neighbours needed before a lone zombie even considers a pack. This is the “nobody around, so it is pointless” short-circuit.",
+  "lethalbreed.option.packMinNeighbours.desc": "Neighbours needed before a lone zombie even considers a pack. This is the \"nobody around, so it is pointless\" short-circuit.",
   "lethalbreed.option.packStrayActivations": "Stray Activations Before Leaving",
   "lethalbreed.option.packStrayActivations.desc": "Consecutive out-of-range activations before a member actually leaves. Pure hysteresis.",
   "lethalbreed.option.packDecisionDivisor": "Decision Divisor",
