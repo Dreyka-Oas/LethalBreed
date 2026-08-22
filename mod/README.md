@@ -1,25 +1,17 @@
-<div align="center">
+# LethalBreed
 
-# 🧟 LethalBreed
-
-### Vanilla zombies become a relentless, environment-aware threat.
-
-[![Read the wiki](https://img.shields.io/badge/Read%20the%20wiki-lethalbreed.pages.dev-8b0000?style=for-the-badge&labelColor=1a1a1a)](https://lethalbreed.pages.dev)
-
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-5b8731?style=for-the-badge&logo=minecraft&logoColor=white)](https://www.minecraft.net)
-[![Fabric](https://img.shields.io/badge/Fabric-0.19.3-dbb69b?style=for-the-badge&logo=fabric&logoColor=white)](https://fabricmc.net)
-[![Java](https://img.shields.io/badge/Java-21-b07219?style=for-the-badge&logo=openjdk&logoColor=white)](https://bell-sw.com/)
-
-</div>
+Vanilla zombies become a relentless, environment-aware threat.
 
 The Fabric mod itself. Flow-field pathfinding, endless phase escalation, a contamination plague and 8
 special variants, with an optional AMD GPU (OpenCL) compute path and a multithreaded CPU fallback. Every
-mechanic, parameter and command is documented on the site, in French and English.
+mechanic, parameter and command is documented on the wiki at
+[lethalbreed.pages.dev](https://lethalbreed.pages.dev), in French and English.
 
-> [!TIP]
-> Needs Java 21 on the path. The Gradle wrapper pulls everything else itself.
+Runs on Minecraft 1.21.11 with Fabric Loader 0.19.3, compiled against Java 21.
 
 ## Build
+
+Java 21 has to be on the path. The Gradle wrapper pulls everything else itself.
 
 ```bash
 ./gradlew build      # player jar → build/libs/
@@ -27,6 +19,5 @@ mechanic, parameter and command is documented on the site, in French and English
 ./gradlew runServer  # headless dev server + test harnesses
 ```
 
-> [!IMPORTANT]
-> © Dreyka Oas. All rights reserved. Free to play and to share unmodified; **not** to sell, fork or
-> reuse without asking. See [LICENSE](../LICENSE).
+© Dreyka Oas. All rights reserved. Free to play and to share unmodified. Selling it, forking it or
+reusing it means asking first. See [LICENSE](../LICENSE).
