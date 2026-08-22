@@ -1,7 +1,7 @@
 # ---- Gradle / Loom ----
 .gradle/
 build/
-# Loom run directory: maps, mods, packs, logs — never versioned
+# Loom run directory: maps, mods, packs, logs, never versioned
 run/
 # Kotlin DSL session: Gradle creates it next to build.gradle.kts on every configuration
 .kotlin/
@@ -53,6 +53,7 @@ rs.txt
 # ---- Local tooling, never pushed ----
 .skills/
 .claude/
+.codex/
 opencode.json
 # Local Cloudflare Wrangler cache
 .wrangler/
@@ -63,5 +64,5 @@ opencode.json
 .DS_Store
 Thumbs.db
 
-# ---- Nested LethalBreed-web repo (separate, private git repo — do not track or embed) ----
+# ---- Nested LethalBreed-web repo (separate, private git repo, do not track or embed) ----
 /web/
