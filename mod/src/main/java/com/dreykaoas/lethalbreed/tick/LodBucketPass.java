@@ -47,7 +47,7 @@ final class LodBucketPass {
     void run(MinecraftServer server, int buckets, int currentBucket, Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
         // buckets is supplied by the scheduler (the same value it used to derive currentBucket), so membership
         // stays consistent even when autoScaleBuckets recomputes it from population each tick. Computing the
-        // bucket live (id % buckets) means a count change re-spreads every zombie at once — none stranded.
+        // bucket live (id % buckets) means a count change re-spreads every zombie at once, none stranded.
         int frozenDiv = Math.max(1, SchedulerConfig.frozenReclassifyDivisor);
         double hardFreeze = SchedulerConfig.lodHardFreezeRadius;
         int budget = SchedulerConfig.aiTickBudget; // 0 = unlimited full ticks this server tick
@@ -56,9 +56,9 @@ final class LodBucketPass {
         double mspt = server.getAverageTickTimeNanos() / 1_000_000.0;
         int stress = (SchedulerConfig.msptThrottle && mspt > SchedulerConfig.msptThrottleThreshold) ? 2 : 1;
         long round = frozenRound++;
-        // Per-stage timing: one volatile read per TICK when disabled (hoisted out of the loop — it used to be
+        // Per-stage timing: one volatile read per TICK when disabled (hoisted out of the loop: it used to be
         // re-evaluated per zombie). DevProbe.sink is volatile, so this read is not constant-folded even on a
-        // shipped jar with no sink installed — the real cost is one volatile load here, once per bucket run.
+        // shipped jar with no sink installed. The real cost is one volatile load here, once per bucket run.
         boolean prof = DevProbe.on();
         for (SmartZombie sz : registry.all()) {
             if (Math.floorMod(sz.id(), buckets) != currentBucket) {
@@ -96,15 +96,14 @@ final class LodBucketPass {
             if (lod == LodLevel.FROZEN) {
                 continue;
             }
-            // Distance-tier throttle: distant zombies run their AI less often. Under server lag (stress=2)
-            // every tier — HIGH included — is throttled extra to shed load.
+            // Distance-tier throttle: see ZombieActivation.divisorFor.
             int divisor = SchedulerConfig.throttleByLod ? ZombieActivation.divisorFor(lod, stress) : stress;
             if (!sz.dueThisActivation(divisor)) {
                 continue;
             }
             // Hard per-tick budget: once this server tick has run aiTickBudget full ticks, the rest wait for
             // their next bucket activation. Blunt ceiling against population spikes (fairness is best-effort:
-            // whoever this bucket iterates first — registry hash order, not id order — wins the budget; a bucket
+            // whoever this bucket iterates first (registry hash order, not id order) wins the budget; a bucket
             // permanently over budget starves its tail deterministically). LOD/grid/sun-burn already ran for all.
             if (budget > 0 && spent >= budget) {
                 continue;

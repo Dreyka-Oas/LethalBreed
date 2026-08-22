@@ -12,11 +12,11 @@ import net.minecraft.server.level.ServerLevel;
  *
  * <p>This is the whole point of dematerialising. A pack out of everyone's sight costs one
  * {@link PackAdvance#step} every {@code packMaterializeInterval} ticks instead of N zombies' worth of
- * pathfinding, collision and block queries — and it keeps travelling, which is what "il reste toujours
+ * pathfinding, collision and block queries, and it keeps travelling, which is what "il reste toujours
  * chargé" ("it stays loaded the whole time") asks for.
  *
  * <p><b>No terrain is read, deliberately.</b> Reading a block in an ungenerated chunk forces that chunk to
- * generate, which is the cost trap that kills this kind of system: a pack crossing 2000 blocks would generate
+ * generate, the cost trap that kills this kind of system: a pack crossing 2000 blocks would generate
  * a corridor of world nobody asked for. The virtual pack therefore flies over oceans and mountains alike, and
  * is put back on the real surface only when it materialises. The honest corollary is that a "packAvoidWater"
  * option cannot be built on top of this without giving that up.
@@ -35,8 +35,8 @@ public final class PackVirtualMove {
             return;
         }
         // Prorate by the ticks actually elapsed. Packs are visited round-robin, so without this a pack's
-        // speed would depend on how many other packs happen to exist — the world would slow down as it
-        // filled up, which is exactly the kind of coupling that makes a simulation impossible to reason about.
+        // speed would depend on how many other packs happen to exist: the world would slow down as it
+        // filled up, exactly the kind of coupling that makes a simulation impossible to reason about.
         long elapsed = pack.lastAdvanceTick == 0L ? 1L : Math.max(0L, gameTime - pack.lastAdvanceTick);
         double[] pos = {pack.x, pack.z};
         boolean arrived = PackAdvance.step(pos, pack.destX, pack.destZ,

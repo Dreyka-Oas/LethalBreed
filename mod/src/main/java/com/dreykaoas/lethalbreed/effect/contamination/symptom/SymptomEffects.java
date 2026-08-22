@@ -29,7 +29,7 @@ public final class SymptomEffects {
         // The skull icon is the symptomatic stage's only marker, so losing it means the plague is gone:
         // /effect clear wipes the attachments outright (EffectClearCuresPlagueMixin), and milk puts the
         // icon straight back (MilkKeepsPlagueMixin), so reaching here with no icon means something else
-        // removed it — treat that as a cure rather than leaving a symptomatic victim with no marker.
+        // removed it. Treat that as a cure, so nobody is left symptomatic with no marker.
         int lvl = ContaminationState.level(e);
         int wantAmp = Math.max(0, lvl - 1);
         MobEffectInstance cur = e.getEffect(LethalBreedEffects.SUPER_CONTAMINATION);
@@ -41,19 +41,19 @@ public final class SymptomEffects {
             ContaminationSymptoms.applyIcon(e, wantAmp);
         }
 
-        // A player who can't take normal damage (Creative / Spectator) keeps the plague — icon, level, everything
-        // stays — but none of its active effects fire: no health/food pulse, no episodes, no hallucination, no
+        // A player who can't take normal damage (Creative / Spectator) keeps the plague (icon, level, everything
+        // stays) but none of its active effects fire: no health/food pulse, no episodes, no hallucination, no
         // evolution. The moment they return to Survival/Adventure the symptoms resume from where they were.
         if (e instanceof Player p && (p.isCreative() || p.isSpectator())) {
             return;
         }
 
-        // Level-up roll: every 1–2 in-game days a chance to climb toward maxLevel (recomputes intensity).
+        // Level-up roll: every 1-2 in-game days a chance to climb toward maxLevel (recomputes intensity).
         ContaminationEvolve.tickEvolve(e, t);
 
         double mult = ContaminationState.intensity(e); // per-victim intensity for the current level
 
-        // Slow plague pulse: every 5–10 real seconds (random per pulse) shave a small chip off BOTH health and
+        // Slow plague pulse: every 5-10 real seconds (random per pulse) shave a small chip off BOTH health and
         // (players) food. Higher level → bigger chip (×mult). Zombies are never tracked, so it can't chip its
         // own kind. Only the final, fatal chip goes through the vanilla damage pipeline (death/reanimation).
         Long due = ContaminationState.NEXT_PULSE_TICK.get(e);
@@ -75,15 +75,15 @@ public final class SymptomEffects {
             ContaminationState.NEXT_PULSE_TICK.put(e, t + rollIntervalTicks());
         }
 
-        // Random episodic afflictions (slow / no-jump / weak-strike) — each on its own timer, scaled by mult.
+        // Random episodic afflictions (slow / no-jump / weak-strike), each on a separate timer, scaled by mult.
         ContaminationEpisodes.tickEpisodes(e, t, mult);
 
-        // Zombie-vision hallucination — a fourth episode on its own random timer. Applies/removes the transient
+        // Zombie-vision hallucination: a fourth episode on its own random timer. Applies/removes the transient
         // ZOMBIE_VISION effect; the victim's client reads it to draw other players as zombies.
         ContaminationHallucination.tickHallucination(e, t, mult);
     }
 
-    /** Reset BOTH pieces of this class's static state — despite the name, not just the snapshot: it drops the
+    /** Reset BOTH pieces of this class's static state (despite the name, not just the snapshot): it drops the
      *  scratch buffer's references to the closing world's entities AND re-arms the {@link #wasEnabled}
      *  enabled/disabled transition detector so the next server starts from a known state.
      *

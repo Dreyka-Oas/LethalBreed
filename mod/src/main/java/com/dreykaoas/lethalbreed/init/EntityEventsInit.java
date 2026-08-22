@@ -73,7 +73,7 @@ public final class EntityEventsInit {
             }
             ContaminationManager.onDeath(entity, sl);
             // Victory celebration: if a tracked zombie dealt the direct killing blow on non-kin prey, let it
-            // celebrate — ZombieMood.tryCelebrate no-ops unless the area is now clear of other prey.
+            // celebrate: ZombieMood.tryCelebrate no-ops unless the area is now clear of other prey.
             if (!(entity instanceof Zombie) && source.getEntity() instanceof Zombie killer) {
                 com.dreykaoas.lethalbreed.entity.SmartZombie sz = registry.get(killer.getId());
                 if (sz != null) {

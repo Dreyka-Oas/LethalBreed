@@ -9,8 +9,7 @@ import org.spongepowered.asm.mixin.Unique;
 
 /**
  * Adds the BOMBER belly-smoothing state (last displayed value + timestamp) to every client-side
- * {@code Zombie}. See {@link BomberBellySmoothing} for why this must live here rather than on the
- * per-frame render state.
+ * {@code Zombie}. See {@link BomberBellySmoothing} for why the per-frame render state cannot hold it.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(Zombie.class)

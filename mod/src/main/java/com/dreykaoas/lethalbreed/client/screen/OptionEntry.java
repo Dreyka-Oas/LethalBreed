@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
 /**
  * Base class for one option row: label + description + reset icon. Concrete subclasses
  * ({@link BoolOptionEntry}, {@link NumOptionEntry}) add the value control (toggle / edit field).
- * Auto-save: every edit fires {@code onChange(name, value)} immediately — there is no Save button.
+ * Auto-save: every edit fires {@code onChange(name, value)} immediately (there is no Save button).
  */
 public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<OptionEntry> {
     protected final Font font;
@@ -40,7 +40,7 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
     protected abstract void doReset();
 
     /** The one value-editing widget this row owns (a toggle button, an edit box, ...). Used to build the
-     *  shared focus/narration lists below — the reset button is common to every row, only this differs. */
+     *  shared focus/narration lists below: the reset button is common to every row, only this differs. */
     protected abstract AbstractWidget control();
 
     @Override
@@ -59,7 +59,7 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
     public void flushPending() {
     }
 
-    /** Trim a string from the tail (2 chars at a time) until it fits {@code maxW} pixels — the shared label/desc
+    /** Trim a string from the tail (2 chars at a time) until it fits {@code maxW} pixels: the shared label/desc
      *  ellipsis-free truncation. Keeps at least a few characters so a very narrow row still shows something. */
     private String truncateToWidth(String s, int maxW) {
         while (font.width(s) > maxW && s.length() > 4) {
@@ -101,7 +101,7 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
 
     /** Render a value row: draw the (truncated) label, right-align {@code control} of width {@code controlW}
      *  before the reset icon, then draw the reset button and hover tooltip. The shared body of every subclass's
-     *  {@code renderContent} — only the control widget and its width differ. */
+     *  {@code renderContent} (only the control widget and its width differ). */
     protected void renderRow(GuiGraphics g, AbstractWidget control, int controlW,
             int mouseX, int mouseY, boolean hovering, float partial) {
         drawLabel(g, 16 + 4 + controlW);

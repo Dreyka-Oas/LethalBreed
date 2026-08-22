@@ -7,7 +7,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
  * Sun-shelter override: a wounded zombie (already fleeing/sheltering) that is burning under open sky breaks off
- * the straight retreat and dashes to the nearest shade — burning to death while running in a line is worse than
+ * the straight retreat and dashes to the nearest shade: burning to death while running in a line is worse than
  * a short detour into cover. Symmetric exit: once it's no longer on fire (or reached a shaded block) it drops
  * back to the plain FLEEING recover state.
  */
@@ -27,7 +27,7 @@ public final class SunShelterOverride {
             }
             return new Result(target, true);
         }
-        return new Result(null, false); // safe now (in shade or fire out) — caller resumes plain FLEEING
+        return new Result(null, false); // safe now (in shade or fire out), caller resumes plain FLEEING
     }
 
     /** Whether the caller is currently eligible to be re-evaluated for shelter: the master toggle is on, and
@@ -37,7 +37,7 @@ public final class SunShelterOverride {
      *  <p>{@link ZombieMoodConfig#sunShelterEnabled} is honoured HERE rather than inside
      *  {@link #evaluate}: returning false from the eligibility guard makes the caller take its existing
      *  "not eligible" branch, which clears any stale shelter target and drops SHELTERING back to FLEEING. So
-     *  with the toggle off a burning zombie keeps its straight retreat and simply burns — no shade search runs
+     *  with the toggle off a burning zombie keeps its straight retreat and simply burns. No shade search runs
      *  at all, and no zombie can be left stranded in the SHELTERING state. */
     public static boolean eligible(boolean fleeingOrSheltering, float healthFraction) {
         if (!ZombieMoodConfig.sunShelterEnabled) {

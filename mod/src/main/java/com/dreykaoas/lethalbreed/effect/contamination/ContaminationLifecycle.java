@@ -24,7 +24,7 @@ public final class ContaminationLifecycle {
     private ContaminationLifecycle() {}
 
     /** Infect a victim (called from the zombie-hit hook). No-op if already contaminated or it's a zombie.
-     *  Starts LATENT: nothing visible, no plague damage — only a brief particleless slow right now. */
+     *  Starts LATENT: nothing visible, no plague damage, only a brief particleless slow right now. */
     public static void contaminate(LivingEntity e) {
         if (!ContaminationConfig.contaminationEnabled || e instanceof net.minecraft.world.entity.monster.zombie.Zombie
                 || ContaminationState.age(e) > 0) {
@@ -44,12 +44,12 @@ public final class ContaminationLifecycle {
      * Clamped to {@code [1, contamMaxLevel]} by {@link ContaminationState#setLevel}, which also rerolls the
      * per-victim intensity for the new level.
      *
-     * <p>This does NOT pin the level. The victim rejoins the normal progression immediately: the 1–2
+     * <p>This does NOT pin the level. The victim rejoins the normal progression immediately: the 1-2
      * in-game-day evolve roll keeps climbing it toward the cap, and its pending roll timer is left
-     * untouched. It is a jump, not a lock.
+     * untouched. Nothing about the call holds the level where it was put.
      *
      * <p>It lives in the shipped source set because {@code /lethaldev level} does, unlike the rest of the
-     * plague-forcing tools in {@code dev.contam.DevContam}. Nothing else in {@code src/main} calls it —
+     * plague-forcing tools in {@code dev.contam.DevContam}. Nothing else in {@code src/main} calls it:
      * the ordinary path into a level is {@code ContaminationEvolve}.
      */
     public static void forceLevel(LivingEntity e, int lvl) {
@@ -71,8 +71,8 @@ public final class ContaminationLifecycle {
      *
      *  <p>Gated on {@code contaminationEnabled}: the CONTAM attachment is persistent, so it outlives the
      *  option being switched off, while the tick sweep that would remove entries is itself gated on the same
-     *  flag. Ungated, every chunk reload of a victim added a fresh HashSet entry — Entity.hashCode() is the
-     *  monotonic entity id, so a reloaded victim is never equal to its previous incarnation (audit #9). */
+     *  flag. Ungated, every chunk reload of a victim added a fresh HashSet entry because Entity.hashCode() is
+     *  the monotonic entity id, so a reloaded victim is never equal to its previous incarnation (audit #9). */
     public static void onLoad(Entity e) {
         if (!ContaminationConfig.contaminationEnabled) {
             return;
@@ -109,7 +109,7 @@ public final class ContaminationLifecycle {
      *  so the mid-tick call is recoverable, not destructive.
      *
      *  <p>Every static collection in this package must be purged here. The tick sweep's scratch buffer was
-     *  the one this list originally missed (audit #8) — it lives in a sibling class, so a purge written by
+     *  the one this list originally missed (audit #8): it lives in a sibling class, so a purge written by
      *  reading only THIS file could not see it. When you add a static that holds an entity, add it here. */
     public static void onServerStopped() {
         ContaminationState.clearAllTransient();

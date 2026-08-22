@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
- * Drinking milk must NOT cure the Super Contamination plague — it is a disease, not a status effect a glass
+ * Drinking milk must NOT cure the Super Contamination plague: it is a disease, not a status effect a glass
  * of milk can wash out. {@code /effect clear} must cure it. Both go through the SAME method: vanilla's
  * {@code apply} here is literally {@code return livingEntity.removeAllEffects();}.
  *
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * cannot leave a stale flag that would make the next {@code /effect clear} silently fail to cure.
  *
  * <p>This replaces a {@code @At("TAIL")} handler that could never work: the callee's TAIL fires BEFORE the
- * caller's, so the plague attachments were already wiped by the time it tested {@code isSymptomatic()} —
+ * caller's, so the plague attachments were already wiped by the time it tested {@code isSymptomatic()},
  * making the whole mixin dead code and letting any player cancel the plague with a bucket of milk (audit #1).
  */
 @Mixin(ClearAllStatusEffectsConsumeEffect.class)
@@ -39,7 +39,7 @@ public class MilkKeepsPlagueMixin {
         } finally {
             ClearGuard.disarm();
         }
-        // Milk stripped the skull icon but not the disease — put the icon straight back so the plague,
+        // Milk stripped the skull icon but not the disease. Put the icon straight back so the plague,
         // its level and the hallucination all survive the drink.
         if (ContaminationManager.isSymptomatic(entity)
                 && entity.getEffect(LethalBreedEffects.SUPER_CONTAMINATION) == null) {

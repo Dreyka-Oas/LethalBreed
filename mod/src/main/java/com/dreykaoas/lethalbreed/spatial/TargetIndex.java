@@ -21,7 +21,7 @@ public final class TargetIndex {
     private final List<LivingEntity> stale = new ArrayList<>();
 
     /** True for entities this index is responsible for. Zombies are the horde itself, players are queried
-     *  live — everything else living is prey and gets indexed. */
+     *  live, everything else living is prey and gets indexed. */
     public static boolean indexable(net.minecraft.world.entity.Entity e) {
         return e instanceof LivingEntity && !(e instanceof Zombie) && !(e instanceof Player);
     }
@@ -46,7 +46,7 @@ public final class TargetIndex {
 
     /**
      * Re-bucket everything that moved and drop everything that died. Runs once per server tick, and costs
-     * O(prey) — NOT O(zombies), which is the whole point: the horde never appears here.
+     * O(prey), NOT O(zombies): the horde never appears here.
      */
     public void refresh() {
         if (tracked.isEmpty()) {
@@ -71,7 +71,7 @@ public final class TargetIndex {
 
     /**
      * Append every tracked prey whose horizontal distance to (x,z) is within {@code radius} into
-     * {@code out}. Does NOT clear {@code out} — the caller composes this with its own player scan. The
+     * {@code out}. Does NOT clear {@code out}: the caller composes this with its own player scan. The
      * exact 3D distance and the validity predicate stay with the caller, so this narrows candidates
      * without ever changing which of them is considered a legal target.
      */

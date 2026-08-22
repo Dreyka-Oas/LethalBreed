@@ -33,7 +33,7 @@ public final class Obstacle {
 
         // Clear as many vertical cells as the zombie actually occupies (size-aware, ceil of its height): a
         // 3-tall zombie needs all 3 cells ahead gone to fit through. Request EVERY breakable cell of the column
-        // at once (BreakManager runs concurrent breaks) instead of one-per-activation feet-up — clearing the
+        // at once (BreakManager runs concurrent breaks) instead of one-per-activation feet-up: clearing the
         // bottom first let the zombie shuffle forward before the head cell (y+2) was done, leaving its head
         // stuck in the wall so it never passed. Breaking the whole column together opens a hole it fits through.
         int cells = MoveMath.breakHeight(entity);
@@ -51,7 +51,7 @@ public final class Obstacle {
             // Adjacent to the shared breach (mine, or I've funnelled right up to it) → hammer THAT column, so
             // the few zombies that fit around it pile on (concentration bonus). Otherwise walk to its attack
             // side first. A zombie already committed (breaking last tick) always gets its own column back and
-            // so never steers — it stays put on the block it started, as it should.
+            // so never steers. It stays put on the block it started, as it should.
             boolean withinReach = base.equals(forwardColumn) || entity.blockPosition().distSqr(base) <= 3.0;
             if (!withinReach) {
                 entity.getNavigation().moveTo(bt.approach().getX() + 0.5, bt.approach().getY(),
@@ -74,7 +74,7 @@ public final class Obstacle {
         }
         BlockState fs = level.getBlockState(new BlockPos(ax, y, az));
         if (!fs.blocksMotion()) {
-            // A short, walkable ledge ahead is not a pit — let the zombie step/drop down it for free instead
+            // A short, walkable ledge ahead is not a pit: let the zombie step/drop down it for free instead
             // of filling it with dirt. Only bridge a true gap with no nearby landing.
             if (MoveMath.fallDistanceInto(level, ax, y, az, CombatMoveConfig.safeDropBlocks)
                     <= CombatMoveConfig.safeDropBlocks) {

@@ -4,7 +4,7 @@ package com.dreykaoas.lethalbreed.config.domain;
  * Pack instinct and migration: how loose zombies clump into packs, and how a pack drifts across the world.
  *
  * <p><b>No option here may ever be derived from, or compared against, a player position.</b> A pack picks
- * where to go from its own heading and a seeded random walk — never from where anyone is standing.
+ * where to go from its own heading and a seeded random walk, never from where anyone is standing.
  * {@code PackNoPlayerAccessTest} fails the build if anything under {@code pack/} reaches for a player.
  */
 public final class PackConfig {
@@ -22,11 +22,11 @@ public final class PackConfig {
     public static int packFormMinSize = 3;
     /** Below this total membership a pack dissolves (after the grace period). */
     public static int packMinSize = 2;
-    /** Hard cap on members. Also caps the Necromancer's summon when it is itself in a pack — otherwise a
+    /** Hard cap on members. Also caps the Necromancer's summon when it is itself in a pack, otherwise a
      *  pack with one grows without bound, since nothing in this mod ever despawns. */
     public static int packMaxSize = 24;
     /** Neighbours needed before a lone zombie even considers a pack. 0 would make every zombie a candidate
-     *  every activation for nothing — this is the "if there is nobody around it is pointless" short-circuit. */
+     *  every activation for nothing. This is the "if there is nobody around it is pointless" short-circuit. */
     public static int packMinNeighbours = 1;
     /** Consecutive out-of-range activations before a member actually leaves. Pure hysteresis. */
     public static int packStrayActivations = 3;
@@ -55,7 +55,7 @@ public final class PackConfig {
     /** Longest leg of the random walk, in blocks. */
     public static int packLegMax = 384;
     /** Max heading change per leg. 0 → dead straight forever. Bounding it is what makes the path read as a
-     *  migration rather than as brownian motion. */
+     *  migration. Unbounded, it reads as brownian motion. */
     public static double packTurnDegrees = 45.0;
     /** Pause on arrival before choosing the next destination. */
     public static int packDwellTicks = 200;
@@ -77,9 +77,9 @@ public final class PackConfig {
 
     // ---- Out-of-sight virtualisation ----
     /** Dematerialise packs nobody can see, and bring them back on approach.
-     *  <p>Its own switch rather than a corner of packMigrationEnabled: this is the one part of the system
-     *  that creates and destroys entities, so an operator who suspects it must be able to stop it alone
-     *  without also stopping migration. Off leaves packs fully materialised, which simply costs more. */
+     *  <p>Its own switch, kept out of packMigrationEnabled: nothing else in the system creates and
+     *  destroys entities, so an operator who suspects it must be able to stop it alone without also
+     *  stopping migration. Off leaves packs fully materialised, which simply costs more. */
     public static boolean packVirtualEnabled = true;
     /** Ticks between two materialisation sweeps. The sweep is O(packs), not O(zombies). */
     public static int packMaterializeInterval = 20;

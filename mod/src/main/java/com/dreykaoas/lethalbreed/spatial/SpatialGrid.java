@@ -19,7 +19,7 @@ import java.util.List;
  */
 public final class SpatialGrid {
     // Primitive-keyed: a java.util.HashMap<Long,…> boxes a fresh Long on EVERY probe, and queryRadius probes
-    // ((2*radius/cell)+1)^2 cells whether or not they hold anything — 169 boxed keys for a single loud sound
+    // ((2*radius/cell)+1)^2 cells whether or not they hold anything: 169 boxed keys for a single loud sound
     // event at stock settings. fastutil is already on the classpath (SpawnStateMobcapMixin uses it).
     private final Long2ObjectMap<List<SmartZombie>> cells = new Long2ObjectOpenHashMap<>();
 

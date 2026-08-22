@@ -5,10 +5,10 @@ import com.dreykaoas.lethalbreed.ai.flowfield.FlowField;
 import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 
 /**
- * OpenCL (JOCL) compute backend for the flow field — Phase 6. Initialized lazily only when {@code useGpu}
+ * OpenCL (JOCL) compute backend for the flow field (Phase 6). Initialized lazily only when {@code useGpu}
  * is enabled. Detects an AMD GPU (any model), builds the {@code bellman_ford.cl} kernel, and solves a
  * flow-field snapshot on the GPU. Every failure path degrades to the CPU solver, so enabling the GPU can
- * never break the game — at worst it is no win.
+ * never break the game: at worst it is no win.
  *
  * <p>CPU stays the master path: {@link com.dreykaoas.lethalbreed.ai.flowfield.GpuFlowField} routes a solve
  * to the GPU only when {@code useGpu} is on, a device is available, and the grid is at least
@@ -42,7 +42,7 @@ public final class GpuComputeManager {
      * <p>Deliberately &gt; 1, not a disable-on-first-failure latch: the codebase intentionally tolerates
      * transient GPU faults (see {@code GpuFlowFieldSolver}'s workgroup-size guard, written expressly to avoid
      * a permanent CPU fallback), so a single {@code CL_OUT_OF_RESOURCES} must not kill the GPU. A run of
-     * failures means the device is really gone — and the point is to stop the retry storm (two failing GPU
+     * failures means the device is really gone, and the point is to stop the retry storm (two failing GPU
      * attempts per second per dimension, each re-marshalling a full snapshot), which the old "log once, keep
      * retrying forever" behaviour never did. The context is NOT released here: releasing it from a pool
      * thread while another pool thread is mid-solve is a native use-after-free, and it is a JVM-lived
@@ -83,16 +83,16 @@ public final class GpuComputeManager {
             this.ctx = new GpuContext();
             this.deviceName = ctx.deviceName;
             this.available = true;
-            LethalBreed.LOGGER.info("[LethalBreed] GPU: {} — OpenCL OK", ctx.deviceName);
+            LethalBreed.LOGGER.info("[LethalBreed] GPU: {} (OpenCL OK)", ctx.deviceName);
         } catch (Throwable t) {
             available = false;
-            LethalBreed.LOGGER.warn("[LethalBreed] GPU: unavailable — CPU fallback activated ({})", t.toString());
+            LethalBreed.LOGGER.warn("[LethalBreed] GPU: unavailable, CPU fallback activated ({})", t.toString());
         }
     }
 
     /**
      * Solve a snapshot on the GPU. Serialized (single shared queue). Returns a {@link FlowField} or
-     * throws — callers fall back to CPU on any throwable. A successful solve resets the failure breaker.
+     * throws. Callers fall back to CPU on any throwable. A successful solve resets the failure breaker.
      */
     public synchronized FlowField solve(Snapshot s) {
         FlowField f = GpuFlowFieldSolver.solve(ctx, s);
@@ -114,7 +114,7 @@ public final class GpuComputeManager {
         if (consecutiveFailures >= FAILURE_LIMIT) {
             available = false;
             LethalBreed.LOGGER.warn(
-                    "[LethalBreed] GPU disabled after {} consecutive solve failures — CPU for the rest of "
+                    "[LethalBreed] GPU disabled after {} consecutive solve failures, CPU for the rest of "
                             + "this session (restart to re-probe). Last error: {}",
                     consecutiveFailures, t.toString());
         } else {

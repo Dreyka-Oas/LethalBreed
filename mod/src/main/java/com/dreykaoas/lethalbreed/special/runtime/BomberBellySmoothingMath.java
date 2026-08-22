@@ -5,11 +5,11 @@ package com.dreykaoas.lethalbreed.special.runtime;
  * a target by a factor depending on the real time elapsed since the last call, so the belly swells
  * continuously between the server's infrequent charge updates instead of visibly stepping.
  *
- * <p>Deliberately free of every {@code net.minecraft} type and of {@code System.nanoTime()} — {@code dt} is
- * passed in rather than measured internally — which is what lets this be unit-tested without booting a
+ * <p>Deliberately free of every {@code net.minecraft} type and of {@code System.nanoTime()}: {@code dt} is
+ * passed in rather than measured internally. That is what lets this be unit-tested without booting a
  * client. Same separation as {@link BomberBlast}; the caller ({@code LivingEntityRendererMixin}) owns the
  * actual clock and the persistent storage (the render state is recreated every frame, so the previous
- * displayed value and timestamp must live on the entity instead — see {@code BomberBellySmoothing}).
+ * displayed value and timestamp must live on the entity instead, see {@code BomberBellySmoothing}).
  */
 public final class BomberBellySmoothingMath {
     private BomberBellySmoothingMath() {}
@@ -20,7 +20,7 @@ public final class BomberBellySmoothingMath {
 
     /**
      * Pulls {@code displayed} toward {@code target} by a factor depending on {@code dt} (seconds elapsed
-     * since the last call) — independent of framerate and of the server update rate. Drops instantly to 0
+     * since the last call), independent of framerate and of the server update rate. Drops instantly to 0
      * when the target is 0 (no residual trail on a fresh / unarmed zombie), and jumps straight to the
      * target on the first call ({@code hasPrevious == false}) or when the target falls below the currently
      * displayed value (a new, shorter fuse must not visibly deflate).

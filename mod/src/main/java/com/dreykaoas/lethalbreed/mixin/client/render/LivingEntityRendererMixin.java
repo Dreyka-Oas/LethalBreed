@@ -26,7 +26,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 @Mixin(LivingEntityRenderer.class)
 public class LivingEntityRendererMixin {
 
-    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "extractRenderState", at = @At("TAIL"))
     private void lethalbreed$carryBellyCharge(LivingEntity entity, LivingEntityRenderState state,
                                               float partialTick, CallbackInfo ci) {
@@ -39,7 +39,7 @@ public class LivingEntityRendererMixin {
         // `state`: LivingEntityRenderState is a brand-new object every frame (createRenderState() calls
         // `new ZombieRenderState()` before extractRenderState runs), so anything stored there can never
         // persist across frames. The client Zombie entity does persist, which is why BomberBellySmoothing
-        // lives there — see that interface's javadoc. `state` keeps its existing role as the final value
+        // lives there (see that interface's javadoc). `state` keeps its existing role as the final value
         // handed to the model, written once per frame below.
         flags.lethalbreed$bellyChargeDisplayed(smoothedBellyCharge(entity, charge));
 
@@ -50,7 +50,7 @@ public class LivingEntityRendererMixin {
 
     /** Pulls the displayed belly charge toward {@code target}, using the previous value + timestamp
      *  persisted on {@code entity} (see {@link BomberBellySmoothing}). Non-zombies have no such state to
-     *  read and don't need smoothing — the target is already 0 for them. The actual maths live in
+     *  read and don't need smoothing: the target is already 0 for them. The actual maths live in
      *  {@link BomberBellySmoothingMath}, pure and unit-tested independently of Minecraft. */
     private static float smoothedBellyCharge(LivingEntity entity, float target) {
         if (!(entity instanceof BomberBellySmoothing smoothing)) {

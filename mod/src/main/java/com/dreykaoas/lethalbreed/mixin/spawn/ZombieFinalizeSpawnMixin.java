@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * receives the entity already at its final {@code SCALE}, with no visible grow/shrink animation.
  *
  * <p>Covers every fresh-spawn path that routes through {@code finalizeSpawn}: natural spawning,
- * spawners, spawn eggs and command summons. Chunk-reloaded zombies do not call finalizeSpawn — they
+ * spawners, spawn eggs and command summons. Chunk-reloaded zombies do not call finalizeSpawn. They
  * already carry the persisted permanent modifier in NBT, so they also show no resize.
  */
 @Mixin(Zombie.class)

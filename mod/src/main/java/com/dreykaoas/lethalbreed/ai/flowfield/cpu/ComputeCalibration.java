@@ -9,7 +9,7 @@ import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 /**
  * One-off micro-benchmark of the CPU vs GPU flow-field solver on THIS machine, used to auto-pick the
  * {@code gpuMinCells} crossover when {@code gpuAutoCalibrate} is on. Solves a synthetic open field at a
- * range of sizes on both backends and finds the smallest grid where the GPU is faster than the CPU — below
+ * range of sizes on both backends and finds the smallest grid where the GPU is faster than the CPU: below
  * it the GPU's upload/round-trip overhead loses. Lives in the {@code flowfield} package to build the
  * package-private {@link Snapshot} directly. Pure in-memory, no world/players.
  */
@@ -32,8 +32,8 @@ public final class ComputeCalibration {
     public static synchronized int calibrate() {
         GpuComputeManager gpu = GpuComputeManager.get();
         if (!gpu.isAvailable()) {
-            minCells = 0; // no GPU — threshold irrelevant (CPU always runs anyway)
-            LethalBreed.LOGGER.info("[LethalBreed] GPU calibration skipped (no GPU) — minCells=0");
+            minCells = 0; // no GPU, threshold irrelevant (CPU always runs anyway)
+            LethalBreed.LOGGER.info("[LethalBreed] GPU calibration skipped (no GPU): minCells=0");
             return minCells;
         }
         int crossover = -1;
@@ -56,7 +56,6 @@ public final class ComputeCalibration {
         return minCells;
     }
 
-    /** Flat, fully passable square field with a single corner seed — a clean timing workload. */
     private static Snapshot openField(int side) {
         return Snapshot.openSquare(side);
     }

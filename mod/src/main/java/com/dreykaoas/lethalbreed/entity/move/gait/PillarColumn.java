@@ -103,7 +103,8 @@ final class PillarColumn {
     /**
      * Advance the stall watchdog from the current block-Y: a new rung resets it, otherwise it ages. True once
      * the current rung has made no height gain for longer than {@code climbJumpMaxAge} activations (support
-     * cannot land, a lip overhangs, a ceiling is in the way), so the caller aborts rather than climb in place.
+     * cannot land, a lip overhangs, a ceiling is in the way), so the caller aborts where it would otherwise
+     * climb in place.
      */
     boolean stalled() {
         int curY = entity.blockPosition().getY();

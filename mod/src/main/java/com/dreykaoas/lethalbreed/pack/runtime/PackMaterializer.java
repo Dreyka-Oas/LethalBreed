@@ -21,21 +21,22 @@ import java.util.Random;
  *
  * <p><b>The risk this class exists to manage is duplication, and duplication here is permanent.</b> The mod
  * calls {@code setPersistenceRequired} on every zombie, so nothing ever despawns: a copy created once burns
- * AI budget forever, which slows chunk unloading, which creates more copies. It is a runaway, not a blemish.
- * And the chunk window cannot be raced — this project has measured unload delays of 2, 35, 272 and once over
- * 1200 ticks. So the approach is not to be fast; it is to make each transition atomic and to check, every
- * single time, whether the member is already back in the world before creating it.
+ * AI budget forever, which slows chunk unloading, which creates more copies. The damage compounds, and
+ * nothing about it is cosmetic. The chunk window cannot be raced either. This project has measured unload
+ * delays of 2, 35, 272 and once over 1200 ticks. So the approach is not to be fast; it is to make each
+ * transition atomic and to check, every single time, whether the member is already back in the world
+ * before creating it.
  *
  * <p>Three guards, each covering a failure the others cannot:
  * <ol>
- *   <li>{@link #alreadyPresent} — the world is asked whether that exact UUID exists before any respawn. This
+ *   <li>{@link #alreadyPresent}: the world is asked whether that exact UUID exists before any respawn. This
  *       is the only defence against a stale disk copy coming back on its own.</li>
  *   <li>The {@code ENTITY_UNLOAD} net in {@code EntityEventsInit}: when the chunk beats us to it, the member
- *       is counted as detached and <b>no ghost is written</b>. A pack loses stragglers at chunk borders,
- *       which is repairable; duplicating one is not.</li>
- *   <li>The phase is consulted before restoring — the same condition {@code SpawnFilter.shouldCull}
+ *       is counted as detached and <b>no ghost is written</b>. A pack that loses stragglers at chunk
+ *       borders can be repaired; a pack that duplicates one cannot.</li>
+ *   <li>The phase is consulted before restoring: the same condition {@code SpawnFilter.shouldCull}
  *       applies at ENTITY_LOAD. In phase 0 every hostile is destroyed
- *       at ENTITY_LOAD, silently — the pack would keep marching with members that are deleted on arrival.</li>
+ *       at ENTITY_LOAD, silently. The pack would keep marching with members that are deleted on arrival.</li>
  * </ol>
  */
 public final class PackMaterializer {
@@ -64,8 +65,8 @@ public final class PackMaterializer {
         int chunkX = (int) Math.floor(pack.x) >> 4;
         int chunkZ = (int) Math.floor(pack.z) >> 4;
         // Force the chunk for the duration of the snapshot so capture and discard happen on a loaded
-        // entity, in one go. Releasing it immediately afterwards is what keeps this a saving rather than
-        // a permanent pin.
+        // entity, in one go. Releasing it immediately afterwards is what keeps this a saving; holding the
+        // force open would be a permanent pin.
         boolean forced = level.setChunkForced(chunkX, chunkZ, true);
         try {
             for (int i = 0; i < pack.liveIds.size(); i++) {
@@ -75,7 +76,7 @@ public final class PackMaterializer {
                 }
                 PackState.Ghost ghost = PackSnapshot.capture(level, z);
                 if (ghost == null) {
-                    continue;   // could not serialise: leave it alive rather than delete it
+                    continue;   // could not serialise: skip the discard and leave it alive
                 }
                 pack.ghosts.add(ghost);
                 z.discard();

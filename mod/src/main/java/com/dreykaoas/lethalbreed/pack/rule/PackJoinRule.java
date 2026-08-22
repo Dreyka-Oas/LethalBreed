@@ -6,8 +6,8 @@ import com.dreykaoas.lethalbreed.config.domain.PackConfig;
  * Whether one zombie forms a pack, joins one, or walks away from the one it is in.
  *
  * <p>Takes no Minecraft type on purpose: the caller reduces its world question to a few primitives about the
- * neighbourhood, so every branch — including the degenerate ones a running server would only show by
- * accident — is scriptable in a unit test. Same split as {@code PlacedBlockPolicy} and
+ * neighbourhood, so every branch (including the degenerate ones a running server would only show by
+ * accident) is scriptable in a unit test. Same split as {@code PlacedBlockPolicy} and
  * {@code ContaminationRoll}.
  *
  * <p><b>The lowest-entity-id election is what keeps this cheap.</b> A cluster of loose zombies is visited
@@ -33,8 +33,8 @@ public final class PackJoinRule {
      * Whether a member reloading from disk is too far from its pack's current position to still rejoin it.
      *
      * <p>Squared distance in, so the caller never takes a square root just to compare against a radius. A
-     * pack keeps wandering while one of its members sits on disk — sometimes for well over a thousand ticks,
-     * per this project's own measurements — so "still carries the old pack id" is not by itself proof the
+     * pack keeps wandering while one of its members sits on disk (sometimes for well over a thousand ticks,
+     * per this project's own measurements), so "still carries the old pack id" is not by itself proof the
      * member belongs where the pack is now.
      */
     public static boolean outsideRejoinRadius(double distToPackSq, double radius) {
@@ -46,14 +46,14 @@ public final class PackJoinRule {
      * Decide what this zombie does about pack membership this activation.
      *
      * @param myPackId          its current pack, or {@link #NO_PACK}
-     * @param myEntityId        its entity id — the tiebreaker for the formation election
+     * @param myEntityId        its entity id, the tiebreaker for the formation election
      * @param myPackSize        membership of {@code myPackId} when settled; when loose, the caller's known
      *                          size for the candidate pack, or 0 when it has none to offer
      * @param distToCentroidSq  squared distance to its pack centroid; ignored when loose
      * @param strayCount        consecutive activations already spent outside the break radius
      * @param nPackId           pack of each neighbour, {@link #NO_PACK} when loose
      * @param nEntityId         entity id of each neighbour
-     * @param nDistSq           squared distance to each neighbour — reserved for future weighting, unused
+     * @param nDistSq           squared distance to each neighbour: reserved for future weighting, unused
      *                          today, and kept in the signature so the caller's scratch arrays stay stable
      * @param n                 how many entries of the three arrays are populated (they are reused scratch,
      *                          so their length is a capacity and not a count)
@@ -67,7 +67,7 @@ public final class PackJoinRule {
         if (myPackId != NO_PACK) {
             // A settled member never defects to a neighbouring pack: two adjacent packs would otherwise
             // drain into each other every pass. Leaving first, joining on a later activation, is the only
-            // way across — and the merge rule handles the case where the two should become one anyway.
+            // way across, and the merge rule handles the case where the two should become one anyway.
             return leaves(distToCentroidSq, strayCount) ? new Decision(Kind.LEAVE, NO_PACK) : NOTHING;
         }
         if (n < PackConfig.packMinNeighbours) {
@@ -96,7 +96,7 @@ public final class PackJoinRule {
      * The pack most represented among the neighbours, ties broken by the smallest id.
      *
      * <p>Counted by a plain O(n²) double loop rather than a map: {@code packScanCap} bounds n at 16 by
-     * default, so this is at most 256 long comparisons with zero allocation — cheaper than the map it would
+     * default, so this is at most 256 long comparisons with zero allocation, cheaper than the map it would
      * take to be asymptotically better, and this runs on the server thread.
      */
     private static long bestNeighbourPack(long[] nPackId, int n) {
@@ -122,7 +122,7 @@ public final class PackJoinRule {
     }
 
     /** True when the candidate pack has no room left. Membership is inferred from the neighbours actually
-     *  seen plus the caller's own count, which is a floor, never an overestimate — so a full pack is always
+     *  seen plus the caller's own count, which is a floor, never an overestimate, so a full pack is always
      *  detected and a half-empty one is never wrongly refused. */
     private static boolean isFull(long packId, long[] nPackId, int n, int knownSize) {
         int seen = 0;

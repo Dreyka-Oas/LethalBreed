@@ -3,7 +3,6 @@ package com.dreykaoas.lethalbreed.config.io;
 import com.dreykaoas.lethalbreed.config.io.diag.ConfigDrift;
 import com.dreykaoas.lethalbreed.config.io.diag.ConfigDriftReport;
 import com.dreykaoas.lethalbreed.config.io.diag.ConfigQuarantine;
-import com.dreykaoas.lethalbreed.config.io.diag.ConfigStructure;
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
 import com.dreykaoas.lethalbreed.config.LethalBreedConfig;
 
@@ -25,10 +24,10 @@ import java.nio.file.Path;
  * file is human-editable. Reflection via {@link ConfigFields} means no per-field serialization code.
  *
  * <p>This class is now only the facade plus the one thing its collaborators must not know: WHERE the file
- * lives. Each concern is a leaf — {@link ConfigLoader} (read + apply), {@link ConfigWriter} (atomic write),
+ * lives. Each concern is a leaf: {@link ConfigLoader} (read + apply), {@link ConfigWriter} (atomic write),
  * {@link ConfigQuarantine} (archive an unusable file), {@link ConfigDriftReport} (tell the operator). They
- * take the path as a parameter, which is what lets the writer be tested against a temp directory with no
- * Fabric runtime present.
+ * take the path as a parameter, so the writer can be tested against a temp directory with no Fabric
+ * runtime present.
  */
 public final class ConfigIo {
     private ConfigIo() {}
@@ -51,7 +50,7 @@ public final class ConfigIo {
     }
 
     /** The structure check from the most recent {@link #load()}, or null if the config has not been
-     *  read yet. Read by the operator join notice — a log line alone is close to worthless to a solo
+     *  read yet. Read by the operator join notice, because a log line alone is close to worthless to a solo
      *  player, who never opens latest.log. */
     public static ConfigDrift.Report lastReport() {
         return lastReport;

@@ -14,7 +14,7 @@ import java.util.HashSet;
  * Per-dimension queue of pending block <i>placements</i> (bridge spans / pillar supports). Zombies
  * enqueue place requests during their tick; the scheduler drains them on the server thread under a
  * per-tick budget. A position set deduplicates requests so a crowd targeting one cell enqueues it once.
- * Breaks do NOT go through here — they are progressive and handled by {@link BreakManager}.
+ * Breaks do NOT go through here: they are progressive and handled by {@link BreakManager}.
  *
  * <p>Phase 3 is server-thread only. When zombie ticks move off-thread (Phase 5) this becomes a
  * concurrent queue and the dedup set a {@code ConcurrentHashMap.newKeySet()}.

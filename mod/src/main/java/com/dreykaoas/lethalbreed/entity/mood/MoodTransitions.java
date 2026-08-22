@@ -44,8 +44,8 @@ public final class MoodTransitions {
         return State.CELEBRATING;
     }
 
-    /** The celebration latch expires on its own; if still hurt AND flee is on, roll into FLEEING to
-     *  keep healing rather than dropping straight back to the hunt. */
+    /** The celebration latch expires by itself; if still hurt AND flee is on, roll into FLEEING: the
+     *  healing continues where the hunt would otherwise resume. */
     public State celebrationExpiry(Zombie entity, long now, float frac, State state) {
         if (state != State.CELEBRATING || now < celebrateUntil) {
             return state;

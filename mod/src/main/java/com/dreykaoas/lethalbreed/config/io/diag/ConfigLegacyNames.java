@@ -10,12 +10,12 @@ import java.util.Map;
  * <p>Renaming a config option is an on-disk break: {@link ConfigLoader}'s apply loop is field-driven and
  * never looks at a key the schema does not have, so an un-aliased rename drops the user's value and the
  * write that follows deletes the line. {@link NameSuggest} already repairs <em>typos</em> by edit distance,
- * but a deliberate rename is not a typo — {@code specialScreamerRadius -> specialScreamerRadius} is six
+ * but a deliberate rename is not a typo: {@code specialScreamerRadius -> specialScreamerRadius} is six
  * edits on a budget of four, and a fuzzy match that did happen to fire would be a guess. This table is the
  * exact answer, and {@link ConfigStructure} consults it before falling back to the distance search.
  *
  * <p>Entries are permanent. Dropping one silently resets that option for anyone who has not launched the
- * game since the rename — which is the whole failure this class exists to prevent.
+ * game since the rename, the exact failure this class exists to prevent.
  */
 public final class ConfigLegacyNames {
     private ConfigLegacyNames() {}

@@ -24,7 +24,7 @@ public final class SpecialBehavior {
     public static final AtomicInteger HEAL_COUNT = new AtomicInteger();
 
     /**
-     * True while a Bomber's fuse is burning — it has armed and is committed to detonating.
+     * True while a Bomber's fuse is burning: it has armed and is committed to detonating.
      *
      * <p>Read by {@code LodManager} to refuse FROZEN for such a zombie. {@code LodBucketPass} skips a FROZEN
      * zombie BEFORE it ever reaches {@code tick()}, so freezing a lit Bomber stops its fuse mid-burn: the
@@ -50,8 +50,8 @@ public final class SpecialBehavior {
         switch (t) {
             case BOMBER -> {
                 // Absolute deadline, not per-activation accumulation: this method only runs once every
-                // `tickBuckets` ticks, so counting activations tied a gameplay tempo to a performance knob —
-                // raising tickBuckets silently doubled the time before detonation.
+                // `tickBuckets` ticks, so counting activations tied a gameplay tempo to a performance knob.
+                // Raising tickBuckets silently doubled the time before detonation.
                 int fuse = z.getAttachedOrElse(SpecialAttachment.BOMBER_FUSE, 0);
                 long now = level.getGameTime();
                 if (fuse <= 0) {
@@ -74,8 +74,8 @@ public final class SpecialBehavior {
                 if (elapsed >= fuse) {
                     SpecialAbilities.bomb(level, z, fuse);
                 } else {
-                    // Derived, not accumulated — the belly swells linearly in real time, so a slowly
-                    // inflating Bomber reads as "long fuse", which is exactly "big explosion".
+                    // Derived, not accumulated: the belly swells linearly in real time, so a slowly
+                    // inflating Bomber reads as "long fuse", and "long fuse" reads as "big explosion".
                     z.setAttached(SpecialAttachment.BOMBER_CHARGE, (float) elapsed / fuse);
                 }
             }

@@ -20,8 +20,8 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * hand off to {@link MoveDispatch} for breaking, pillaring and forced descent.
  *
  * <p>Owns the two pieces of per-tick memory the hunt needs across ticks: how far the target was last tick
- * (the stuck detector) and whether a block break was in progress (the breaking latch). Both belong here
- * rather than on the brain because nothing outside this step reads them.
+ * (the stuck detector) and whether a block break was in progress (the breaking latch). Both belong here,
+ * off the brain, because nothing outside this step reads them.
  */
 final class PursueStep {
 

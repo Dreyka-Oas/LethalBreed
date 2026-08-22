@@ -68,7 +68,7 @@ final class BrainNavigator {
     /** Follow the dimension's flow field: from the zombie's cell, step up to {@code flowWaypointStep} cells
      *  downhill (toward the nearest player) and aim the vanilla navigation at that waypoint. Returns false
      *  (caller walks straight at the target instead) when no field is active, the zombie is outside it, or it
-     *  already sits on a goal/dead cell. The waypoint Y is the zombie's own Y — vanilla nav resolves the
+     *  already sits on a goal/dead cell. The waypoint Y is the zombie's own Y: vanilla nav resolves the
      *  reachable ground around it; vertical climb/dig stays driven by MoveDispatch from the real target. */
     private boolean navViaFlow(WorldAiContext ctx, PathNavigation nav) {
         FlowField field = ctx.flowFieldManager().active();
@@ -83,7 +83,7 @@ final class BrainNavigator {
         int steps = Math.max(1, FlowConfig.flowWaypointStep);
         for (int s = 0; s < steps; s++) {
             if (!field.sampleInto(cx, cz, flowDir)) {
-                break; // reached the goal / edge of the field — stop here
+                break; // reached the goal / edge of the field, stop here
             }
             cx += flowDir[0];
             cz += flowDir[1];

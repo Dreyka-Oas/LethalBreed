@@ -20,14 +20,14 @@ import java.util.List;
 /**
  * Per-dimension persistence for packs, in {@code <world>/data/lethalbreed_packs.dat}.
  *
- * <p><b>Per dimension, not overworld-global.</b> {@code PhaseSavedData} — the only precedent in this repo —
+ * <p><b>Per dimension, not overworld-global.</b> {@code PhaseSavedData} (the only precedent in this repo)
  * is global because a difficulty phase is. Packs are not: a {@code PackManager} lives on
  * {@code WorldAiContext}, one per dimension, and a pack never crosses into another. Storing them globally
  * would merge the Nether's packs into the overworld's on the next load.
  *
  * <p>Live members are deliberately <b>not</b> written. They are ordinary entities, saved with their chunk
- * like everything else, and they carry their pack id in a persistent attachment — so they re-join on the way
- * back rather than being restored from here. What must be written is what nothing else owns: the pack's
+ * like everything else, and they carry their pack id in a persistent attachment, so they re-join on the way
+ * back and nothing here restores them. What must be written is what nothing else owns: the pack's
  * route, its random seed, its dematerialised ghosts, and how many members went to disk before we could
  * snapshot them. Dropping that last count would strand every returning member as an orphan, because a pack
  * with no live and no ghost members reads as empty and is dissolved on load.

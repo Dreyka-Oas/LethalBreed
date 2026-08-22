@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 /** Option row for a numeric value: an edit field validated against the row's kind (int/long/double). */
 public final class NumOptionEntry extends OptionEntry {
     /** Quiet period after the last keystroke before the value is sent. {@link EditBox#setResponder} fires on
-     *  every text mutation, not on commit, so typing "36000" used to emit five SetConfig packets — each one
+     *  every text mutation, not on commit, so typing "36000" used to emit five SetConfig packets, each one
      *  costing the server thread two reflective 295-field scans and a blocking full-file write (~10 KB). One
      *  frame of latency is imperceptible when editing a text field; five synchronous disk writes per value
      *  are not. */
@@ -37,7 +37,7 @@ public final class NumOptionEntry extends OptionEntry {
     }
 
     /** Send the held value, if any. Also invoked on screen close, so a value typed and immediately followed by
-     *  Escape is still applied — the debounce must never be able to swallow an edit. */
+     *  Escape is still applied: the debounce must never be able to swallow an edit. */
     @Override
     public void flushPending() {
         if (pending == null) {
@@ -52,7 +52,7 @@ public final class NumOptionEntry extends OptionEntry {
     protected void doReset() {
         value = row.def();
         edit.setValue(value); // fires the responder, which stages the value
-        flushPending();       // an explicit reset click is a commit — send it now, don't wait out the debounce
+        flushPending();       // an explicit reset click is a commit. Send it now, don't wait out the debounce
     }
 
     @Override

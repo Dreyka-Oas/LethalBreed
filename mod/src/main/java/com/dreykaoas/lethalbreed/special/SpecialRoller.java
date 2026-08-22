@@ -37,7 +37,7 @@ public final class SpecialRoller {
     /** Force a specific type (used by the test command and Splitter children = NONE). */
     public static void assign(Zombie z, SpecialType type) {
         // Strip whatever the previous type had already stamped. A Splitter child is spawned, runs the whole
-        // finalizeSpawn chain — including its OWN special roll — and only THEN gets assign(NONE). Returning
+        // finalizeSpawn chain (including its OWN special roll) and only THEN gets assign(NONE). Returning
         // early left those passives in place: a child re-labelled "none" kept Resistance II, double health and
         // a spc_scale of +0.40 that exactly cancels the -0.40 of split_small, so the "small child" came out
         // full size, twice as tough, and (with specialShowName) still wearing a "Juggernaut" nametag.
@@ -63,7 +63,7 @@ public final class SpecialRoller {
         }
         // Every unlocked type is weighted 0, so the player has switched them all off. The old code clamped the
         // bound to 1 and then fell through to pool.get(size-1), handing back a type whose weight explicitly
-        // said "never" — most visible at phase 2, where the pool is SPRINTER alone and zeroing its weight
+        // said "never", most visible at phase 2, where the pool is SPRINTER alone and zeroing its weight
         // produced 100 % Sprinters.
         if (total <= 0) {
             return SpecialType.NONE;

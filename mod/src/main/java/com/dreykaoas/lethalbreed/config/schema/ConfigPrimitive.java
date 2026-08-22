@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.config.schema;
 /**
  * The 6 primitive kinds a config field can be. Single source of truth for "what kind of field is this",
  * used by {@link ConfigType#kind}, {@link ConfigSchema#isSupported}, and {@code ConfigWriter}'s per-field
- * JSON write dispatch — three places that used to independently re-derive this same 6-way type check.
+ * JSON write dispatch, three places that used to independently re-derive this same 6-way type check.
  */
 public enum ConfigPrimitive {
     BOOL("bool"), INT("int"), LONG("long"), DOUBLE("double"), FLOAT("float"), LIST("list");
@@ -18,7 +18,7 @@ public enum ConfigPrimitive {
         return label;
     }
 
-    /** Matches a field's declared {@link Class}. Returns {@code null} for anything else — callers decide
+    /** Matches a field's declared {@link Class}. Returns {@code null} for anything else: callers decide
      *  their own fallback (historically {@link ConfigType#kind} falls back to {@code "float"}'s label,
      *  while {@link ConfigSchema#isSupported} must treat {@code null} as "not supported"). */
     public static ConfigPrimitive of(Class<?> t) {

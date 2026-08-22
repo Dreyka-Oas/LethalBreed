@@ -25,7 +25,7 @@ public final class ContaminationSymptoms {
     private static final Identifier LATENT_SLOW_ID =
             Identifier.fromNamespaceAndPath("lethalbreed", "contam_latent_slow");
 
-    /** Latent stage: no icon, no damage. Expire the one-shot slow, and every 5–10 in-game days roll a small
+    /** Latent stage: no icon, no damage. Expire the one-shot slow, and every 5-10 in-game days roll a small
      *  chance to surface symptoms (which flips the victim into the visible/damaging stage). */
     public static void tickLatent(LivingEntity e, long t) {
         // Retire the brief infection slow once its window is up.
@@ -81,7 +81,7 @@ public final class ContaminationSymptoms {
     }
 
     public static void applyIcon(LivingEntity e, int amplifier) {
-        // ambient=false, visible=false (NO swirling particles — our plague is silent), showIcon=true (skull only).
+        // ambient=false, visible=false (NO swirling particles: our plague is silent), showIcon=true (skull only).
         // Amplifier mirrors (level-1) so the client scales its screen overlay from the effect it already syncs.
         e.addEffect(new MobEffectInstance(LethalBreedEffects.SUPER_CONTAMINATION,
                 MobEffectInstance.INFINITE_DURATION, Math.max(0, amplifier), false, false, true));

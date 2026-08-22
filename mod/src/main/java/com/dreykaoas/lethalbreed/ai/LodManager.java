@@ -63,7 +63,7 @@ public final class LodManager {
         }
         // A Bomber whose fuse is lit has committed to detonating, so it must keep being ticked to get there.
         // LodBucketPass drops a FROZEN zombie before tick() runs, which would stop the fuse mid-burn and turn
-        // it into a dormant mine — one that goes off the moment a player wanders back within range, since the
+        // it into a dormant mine, one that goes off the moment a player wanders back within range, since the
         // deadline it wakes up to is long past. LOW still runs the special, just on the distance throttle, so
         // detonation can land a few activations late; that is the whole cost of keeping it honest.
         if (lod == LodLevel.FROZEN && SpecialBehavior.fuseIsLit(sz.entity())) {
@@ -73,7 +73,7 @@ public final class LodManager {
         return lod;
     }
 
-    /** True if the zombie has a clear line of sight to the spot (no solid block between its eyes and it) — i.e.
+    /** True if the zombie has a clear line of sight to the spot (no solid block between its eyes and it), i.e.
      *  it has genuinely reached it, not just gotten close on the far side of a wall it still has to break. */
     static boolean canSeeSpot(ServerLevel level, LivingEntity e, double x, double y, double z) {
         Vec3 from = e.getEyePosition();
@@ -91,7 +91,7 @@ public final class LodManager {
         double lowR = Math.max(SchedulerConfig.lodLow, medR);
         // One-sided hysteresis: a zombie keeps its current (closer) tier until it crosses that tier's outer
         // edge by more than lodHysteresis blocks. Upgrades (moving inward) snap at the plain boundary; only
-        // downgrades get the slack — so a zombie idling on a boundary stops flip-flopping tier + re-pathing.
+        // downgrades get the slack: a zombie idling on a boundary stops flip-flopping tier + re-pathing.
         double h = Math.max(0.0, SchedulerConfig.lodHysteresis);
         double high = sq(highR + (prev == LodLevel.HIGH ? h : 0.0));
         double med = sq(medR + (prev == LodLevel.HIGH || prev == LodLevel.MEDIUM ? h : 0.0));

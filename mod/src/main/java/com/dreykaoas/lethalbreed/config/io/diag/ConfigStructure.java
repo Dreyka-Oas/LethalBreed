@@ -15,7 +15,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
- * Checks the SHAPE of the config file — never its values.
+ * Checks the SHAPE of the config file, never its values.
  *
  * <p>A user is free to set any number they like; an out-of-range one is clamped by
  * {@link ConfigBounds} on the way in, deliberately and silently. What this class looks for is a file
@@ -26,11 +26,11 @@ import com.google.gson.JsonObject;
  * <p>It lives here rather than in {@link ConfigIo} so it can be unit-tested: ConfigIo imports
  * FabricLoader and the mod entrypoint's logger and therefore cannot load under plain JUnit. Same
  * reason {@code ContaminationRoll} and {@code PlacedBlockPolicy} were extracted. Keep it free of
- * Minecraft types, file I/O and logging — the caller reports.
+ * Minecraft types, file I/O and logging. The caller reports.
  *
  * <p>It reads BOTH layouts, exactly as {@code ConfigIo.load()} does: the current nested one (a
  * JsonObject per category) and the old flat one (every option on the root). A flat file is old, not
- * broken, and must never be reported as drift — every pre-migration user has one on disk.
+ * broken, and must never be reported as drift, because every pre-migration user has one on disk.
  */
 public final class ConfigStructure {
     private ConfigStructure() {}
@@ -40,7 +40,7 @@ public final class ConfigStructure {
      *
      * @param root       the parsed file; must be a JSON object (a non-object root never reaches here,
      *                   {@code getAsJsonObject()} throws first and ConfigIo quarantines)
-     * @param knownNames every real option name — pass {@code ConfigFields.all()} names in production;
+     * @param knownNames every real option name: pass {@code ConfigFields.all()} names in production;
      *                   taking it as a parameter keeps this testable against a small fixed set
      */
     public static ConfigDrift.Report check(JsonObject root, Set<String> knownNames) {
@@ -112,7 +112,7 @@ public final class ConfigStructure {
                 if (!seen.add(name)) {
                     duplicated.add(name);
                 } else if (!ConfigCategory.of(name).equals(key)) {
-                    // Only worth reporting once, and only for a category that exists — an option inside
+                    // Only worth reporting once, and only for a category that exists, since an option inside
                     // a bogus category is already covered by the bogusCategory entry above.
                     if (knownCategories.contains(key)) {
                         misplaced.add(name);

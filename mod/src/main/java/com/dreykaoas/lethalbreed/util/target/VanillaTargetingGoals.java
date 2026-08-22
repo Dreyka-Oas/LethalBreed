@@ -13,13 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Runtime strip/restore of a mob's vanilla target-selection goals so {@code forceNearestTarget} can be
- * toggled LIVE on already-spawned zombies — not only on freshly spawned ones. When a mob's goals are
+ * toggled LIVE on already-spawned zombies, not only on freshly spawned ones. When a mob's goals are
  * stripped we keep a snapshot (priority + goal) so the exact vanilla set can be re-added if the option is
  * later turned off, without reconstructing subtype-specific goals by hand.
  *
  * <p>The snapshot is held ONLY while a mob is stripped and is keyed by the (post-spawn, stable) entity id;
- * it is dropped on entity unload ({@code EntityEventsInit}), so a stripped mob's goals — which strongly
- * reference the mob — never pin it in memory past despawn/death.
+ * it is dropped on entity unload ({@code EntityEventsInit}), so a stripped mob's goals, which strongly
+ * reference the mob, never pin it in memory past despawn/death.
  */
 public final class VanillaTargetingGoals {
     private VanillaTargetingGoals() {}

@@ -37,7 +37,7 @@ public final class FleeHysteresis {
         return new Outcome(true, false);
     }
 
-    /** True when the threat's movement speed is at least the fleer's effective flee speed — meaning a straight
+    /** True when the threat's movement speed is at least the fleer's effective flee speed, meaning a straight
      *  retreat can't open ground, so fleeing is futile and the fleer should give up sooner and fight. */
     private static boolean threatAtLeastAsFast(Zombie entity, LivingEntity threat) {
         double zombieBase = entity.getAttributeValue(Attributes.MOVEMENT_SPEED);

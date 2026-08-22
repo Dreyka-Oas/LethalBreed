@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * zombie registers its vanilla goals.
  *
  * <p>{@code FloatGoal} sets the navigation to {@code canFloat} and, each tick the zombie is in water,
- * makes it jump (swim up) — exactly the player/drowned-style surface bobbing. Running as a vanilla goal
+ * makes it jump (swim up), exactly the player/drowned-style surface bobbing. Running as a vanilla goal
  * on the entity's own server-AI tick means it applies every tick on the main thread and needs none of the
  * setPos/setDeltaMovement timing workarounds the mod's END_SERVER_TICK scheduler does (the upward impulse
- * goes through the jump control, which vanilla movement honours — see the float-in-water skill).
+ * goes through the jump control, which vanilla movement honours, see the float-in-water skill).
  */
 @Mixin(Zombie.class)
 public abstract class ZombieFloatInWaterMixin {

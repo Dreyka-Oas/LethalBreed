@@ -41,7 +41,7 @@ public final class ZombieBrain {
     public boolean isClimbing() { return pillar.active(); }
     public boolean isSwimming() { return guards.swimming(); }
 
-    /** Force any in-progress jump-pillar off — used when a day-sleeper dozes so a half-built climb can't leave
+    /** Force any in-progress jump-pillar off, used when a day-sleeper dozes so a half-built climb can't leave
      *  it floating (the climb drain evicts it as soon as {@link #isClimbing()} goes false). */
     public void cancelClimb() { pillar.cancel(); }
 
@@ -54,16 +54,16 @@ public final class ZombieBrain {
         int bx = entity.blockPosition().getX();
         int bz = entity.blockPosition().getZ();
         // No spatialGrid().update() here: LodBucketPass already refreshed this zombie's grid cell THIS same
-        // activation (before the FROZEN/throttle skips) and it hasn't moved since — tick() is only reached from
+        // activation (before the FROZEN/throttle skips) and it hasn't moved since: tick() is only reached from
         // that pass, so repeating the update is pure redundant work. bx/bz are kept for MoveDispatch below.
         p.tickSpecial();
         if (p.isSpecialActive()) SpecialBehavior.tick(owner, level, ctx);
         if (owner.lod() == LodLevel.FROZEN) return;
-        // Armed Bomber: fuse is lit, so it stops dead and swells in place until the explosion — checked
+        // Armed Bomber: fuse is lit, so it stops dead and swells in place until the explosion, checked
         // before sleep/shelter/flee since none of those should ever interrupt a committed detonation.
         if (guards.handleArmed()) return;
         // Daytime sleep: a dozing zombie holds still. It is normally FROZEN (so this isn't even reached); this is
-        // a defensive stop in case it is momentarily active. The walk-to-shade is NOT here — that's a normal
+        // a defensive stop in case it is momentarily active. The walk-to-shade is NOT here. That's a normal
         // memory-target pursuit (NORMAL state) so the full breaking/pillaring nav carries it to the shade.
         if (guards.handleSleeping()) return;
         // Sun-shelter overrides even the retreat: a burning wounded zombie dashes to shade (mood already found
@@ -79,7 +79,7 @@ public final class ZombieBrain {
         pursue.run(level, ctx, p, bx, bz);
     }
 
-    /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent — the jump-and-place
+    /** Scheduler entry point each tick for an ascending zombie. Drives the active ascent, the jump-and-place
      *  pillar (places blocks under itself, so it always stands on what it builds). */
     public void climbStep(ServerLevel level, WorldAiContext ctx) {
         pillar.step(level, ctx);

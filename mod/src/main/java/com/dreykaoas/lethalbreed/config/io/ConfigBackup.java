@@ -15,8 +15,8 @@ import java.util.List;
  * tuning, so the mod never deletes one outright: it renames it to
  * {@code lethalbreed.json.old-yyyyMMdd-HHmmss-SSS} and writes a fresh file alongside. The timestamp
  * format is the one {@code ConfigIo.quarantine()} already used, chosen because it sorts
- * lexicographically in chronological order — which is what makes {@link #prune} a plain sort with no
- * bookkeeping file to keep in sync.
+ * lexicographically in chronological order, so {@link #prune} is a plain sort with no bookkeeping file
+ * to keep in sync.
  *
  * <p>Deliberately free of Minecraft types, logging and FabricLoader: it takes explicit paths and
  * returns what it did, so the caller reports and so this is testable under plain JUnit with
@@ -25,7 +25,7 @@ import java.util.List;
 public final class ConfigBackup {
     private ConfigBackup() {}
 
-    /** How many archives to keep. Beyond this the oldest are removed — the recent ones are the ones
+    /** How many archives to keep. Beyond this the oldest are removed: the recent ones are the ones
      *  worth recovering, and an unbounded pile of dead configs is its own kind of mess. */
     public static final int KEEP = 3;
 
@@ -51,7 +51,7 @@ public final class ConfigBackup {
      * what was removed.
      *
      * <p>Matches only {@code <baseName>.old-*}. The live config, other mods' files, and the
-     * {@code .corrupt-} archives written by older versions of this mod are all left untouched — the
+     * {@code .corrupt-} archives written by older versions of this mod are all left untouched. The
      * config directory is shared, and deleting something we did not write would have a blast radius
      * outside this mod entirely.
      */

@@ -13,7 +13,7 @@ import java.util.function.LongFunction;
  * <p>Membership is recorded in three views that must never disagree: the persistent attachment (survives
  * chunk unload), the in-memory tether on {@code ZombiePursuit} (read every activation, cheap), and the
  * pack's own {@code liveIds} roster. Letting call sites update them individually is how one of the three
- * ends up stale — and a stale roster means a pack that materialises members it does not have, or counts
+ * ends up stale, and a stale roster means a pack that materialises members it does not have, or counts
  * members twice. Every transition goes through here.
  */
 public final class PackMembership {
@@ -44,7 +44,7 @@ public final class PackMembership {
         sz.entity().setAttached(PackAttachment.PACK, pack.id);
     }
 
-    /** Take a zombie out of its pack entirely — it becomes loose and may form or join another later. */
+    /** Take a zombie out of its pack entirely: it becomes loose and may form or join another later. */
     public static void leave(SmartZombie sz, PackState pack) {
         if (pack != null) {
             removeId(pack, sz.id());
@@ -68,7 +68,7 @@ public final class PackMembership {
         if (!pack.liveIds.contains(sz.id())) {
             pack.liveIds.add(sz.id());
         }
-        // It was counted as detached while it sat on disk; it is live again now. Never below zero — a double
+        // It was counted as detached while it sat on disk; it is live again now. Never below zero. A double
         // decrement would make an occupied pack read as empty and get dropped with its members still around.
         pack.detached = Math.max(0, pack.detached - 1);
         sz.pursuit().pack().setPackId(pack.id);
@@ -78,9 +78,9 @@ public final class PackMembership {
     /**
      * The chunk unloaded before we could snapshot this member: it went to disk carrying its attachment.
      *
-     * <p>Counted as detached rather than turned into a ghost. Creating a ghost here would mean the same
+     * <p>Counted as detached, with no ghost written. Creating a ghost here would mean the same
      * zombie exists both in the save file and in our snapshot list, and re-materialising it would put a
-     * second copy in the world — permanently, since this mod marks every zombie persistence-required and
+     * second copy in the world, permanently, since this mod marks every zombie persistence-required and
      * nothing ever despawns.
      */
     public static void detach(PackState pack, int entityId) {

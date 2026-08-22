@@ -8,8 +8,8 @@ import net.minecraft.resources.Identifier;
 /**
  * Persistent per-entity attachment holding the id of the pack a zombie belongs to.
  *
- * <p><b>Why persistent rather than a map in the manager.</b> Chunks unload without warning — this project
- * has measured the delay at 2, 35, 272 and once over 1200 ticks across runs — and a zombie that goes to disk
+ * <p><b>Why persistent rather than a map in the manager.</b> Chunks unload without warning (this project
+ * has measured the delay at 2, 35, 272 and once over 1200 ticks across runs) and a zombie that goes to disk
  * takes nothing with it but its NBT. Without the attachment, every member caught by an unload would come
  * back an orphan, and a pack crossing a chunk border would shed most of itself. With it, the zombie carries
  * its membership to disk and re-joins on the way back.
@@ -18,7 +18,7 @@ import net.minecraft.resources.Identifier;
  * rebuilt from this attachment, because runtime ids are reassigned on every reload. This attachment plus the
  * entity UUID are the only durable identities in the system.
  *
- * <p>Written only when membership actually changes, never per tick — an attachment write dirties the chunk.
+ * <p>Written only when membership actually changes, never per tick, because an attachment write dirties the chunk.
  */
 public final class PackAttachment {
     private PackAttachment() {}

@@ -47,7 +47,7 @@ public final class PlacedBlockTracker {
             long age = now - s.placedAt;
             // Never force a chunk load from here. Level.getBlockState() resolves through
             // getChunk(x, z, FULL, /* requireChunk */ true), which on a ServerLevel cache miss does
-            // addTicket + managedBlock + join — a synchronous stall of the server thread, once per tracked
+            // addTicket + managedBlock + join: a synchronous stall of the server thread, once per tracked
             // position per tick, with up to 12000 of them per dimension (audit #3). Same guard
             // CellClassifier:31 already uses. An unloaded placement is held, not dropped: we can neither
             // read nor destroy the block while its chunk is gone, so an over-age entry is resolved by the
@@ -55,9 +55,9 @@ public final class PlacedBlockTracker {
             // long continuous unload (PlacedBlockPolicy.ABANDON_FACTOR lifetimes) makes the tracker give up.
             if (!level.isLoaded(p)) {
                 // Chunk gone: decide nothing here. We can neither read the block state nor destroy it,
-                // so we hold the entry and handle it when the chunk returns — even hours later.
+                // so we hold the entry and handle it when the chunk returns, even hours later.
                 if (PlacedBlockPolicy.abandoned(age, lifetime)) {
-                    it.remove(); // unloaded this long straight: give up rather than grow without bound
+                    it.remove(); // unloaded this long straight: give up, the tracker must not grow forever
                 }
                 continue;
             }

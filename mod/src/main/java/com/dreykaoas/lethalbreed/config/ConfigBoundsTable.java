@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * Pure data: the sane numeric range registered for each clamped config field, keyed by lower-cased field name
- * (matching {@link ConfigSchema#find}'s case-insensitivity). No logic lives here — {@link ConfigBounds#clamp}
+ * (matching {@link ConfigSchema#find}'s case-insensitivity). No logic lives here: {@link ConfigBounds#clamp}
  * looks a field up via {@link #get} and applies the range. Split out so the (large, append-only) table grows
  * without bloating the clamp logic.
  */
@@ -41,8 +41,8 @@ final class ConfigBoundsTable {
 
     /**
      * Register one more bounds group after class-init, for options whose holder joined the schema at runtime
-     * ({@link ConfigSchema#registerHolder}). The dev source set is the only such caller; the static block
-     * below therefore never has to name a group that does not exist in a shipped jar.
+     * ({@link ConfigSchema#registerHolder}). Only the dev source set calls it; the static block below
+     * therefore never has to name a group that does not exist in a shipped jar.
      */
     static void registerGroup(java.util.function.Consumer<BoundsRegistrar> group) {
         group.accept(ConfigBoundsTable::b);

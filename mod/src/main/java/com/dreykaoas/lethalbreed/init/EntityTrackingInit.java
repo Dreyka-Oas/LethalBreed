@@ -42,7 +42,7 @@ final class EntityTrackingInit {
                 SmartZombie sz = registry.remove(entity.getId());
                 // Drop it from the spatial grid too, not just the registry. The only other grid-removal
                 // path (LodBucketPass.untrack) is driven by iterating the registry, so a zombie removed
-                // here was never visited again and its cell slot stayed for the rest of the session —
+                // here was never visited again and its cell slot stayed for the rest of the session:
                 // every death and every chunk unload leaked one, pinning entity -> level -> server, and
                 // neighbour queries (sound, Screamer rally, Healer heal) kept matching those ghosts.
                 if (sz != null && sz.pursuit().pack().inPack()) {
@@ -60,7 +60,7 @@ final class EntityTrackingInit {
                 }
                 if (sz != null) {
                     // Hand vanilla AI back BEFORE the mood object goes away. NoAI is persisted to NBT,
-                    // the "we froze it" flag is not — so a dozing zombie unloaded while frozen would be
+                    // the "we froze it" flag is not, so a dozing zombie unloaded while frozen would be
                     // saved as NoAI=true with nothing left to lift it (audit #2).
                     sz.mood().releaseAiHold();
                     if (sz.pursuit().inGrid()) {
@@ -74,7 +74,7 @@ final class EntityTrackingInit {
 
     /** One ENTITY_LOAD firing: phase-gated spawn filtering, blocked-variant discards, contamination
      *  re-tracking, target indexing, zombie registration and pack re-join. Moved out of the registration
-     *  lambda in {@link #registerTracking} verbatim — the reasoning behind each branch below is unchanged
+     *  lambda in {@link #registerTracking} verbatim. The reasoning behind each branch below is unchanged
      *  from before the extraction. */
     private static void onEntityLoad(ZombieRegistry registry, DimensionManager dimensions,
                                       Entity entity, ServerLevel world) {
@@ -109,7 +109,7 @@ final class EntityTrackingInit {
                 SpawnControl.stripEquipment(zombie);
             }
             // Vanilla despawns non-persistent MONSTER-category mobs once every player is far enough away
-            // (random roll past 32 blocks, unconditional past 128) — that would silently undo the whole
+            // (random roll past 32 blocks, unconditional past 128), which would silently undo the whole
             // LOD/FROZEN system (TickScheduler/SpatialGrid), which exists specifically to keep the zombie
             // population alive-but-cheap while the player is elsewhere, not to have it vanish outright.
             zombie.setPersistenceRequired();
@@ -118,7 +118,7 @@ final class EntityTrackingInit {
             // A member that went to disk carrying its pack attachment (see EntityEventsInit's
             // ENTITY_UNLOAD handler, and PackAttachment's own javadoc) re-joins here, on the way back.
             // Without this, the attachment is written but never read, so a straggler never returns to
-            // its pack — the pack's `detached` count never comes down, and it can outlive every real
+            // its pack: the pack's `detached` count never comes down, and it can outlive every real
             // member it ever had.
             if (PackConfig.packEnabled) {
                 long packId = zombie.getAttachedOrElse(PackAttachment.PACK, PackJoinRule.NO_PACK);
@@ -128,8 +128,8 @@ final class EntityTrackingInit {
             }
             // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
             // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
-            // setNoAi(true) applied by the caller a line before addFreshEntity — which is exactly how
-            // this project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
+            // setNoAi(true) applied by the caller a line before addFreshEntity, exactly how this
+            // project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
             // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
             // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
             // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,

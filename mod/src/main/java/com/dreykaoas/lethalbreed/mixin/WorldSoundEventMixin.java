@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *
  * <p>Covered events: {@code BLOCK_PLACE} (placing a block); {@code BLOCK_OPEN}/{@code BLOCK_CLOSE} (doors,
  * trapdoors, fence gates); and {@code CONTAINER_OPEN}/{@code CONTAINER_CLOSE} (chests, barrels, shulker boxes,
- * ender chests — these emit CONTAINER_* game events, NOT BLOCK_*, so they need their own entries). Block
+ * ender chests, which emit CONTAINER_* game events, NOT BLOCK_*, so they need their own entries). Block
  * breaking already routes through {@code PlayerBlockBreakEvents}, so {@code BLOCK_DESTROY} is intentionally NOT
  * re-emitted here to avoid a double sound. Buttons/levers/pressure plates ({@code BLOCK_ACTIVATE}) are left out
  * on purpose. A zombie source is ignored so zombies don't hear their own digging/door-bashing (mirrors

@@ -21,8 +21,8 @@ final class RenameRepair {
                                 List<ConfigDrift.Unknown> candidates, List<String> targets,
                                 Map<String, Integer> claims) {
         // An explicit rename beats a guess, so it is checked first: a deliberate vocabulary change carries
-        // the user's value across even when the two names share almost no letters — exactly the case edit
-        // distance cannot serve, and exactly where a fuzzy hit would be a coin flip rather than an answer.
+        // the user's value across even when the two names share almost no letters, exactly the case edit
+        // distance cannot serve, and exactly where a fuzzy hit would be a coin flip.
         String renamedTo = ConfigLegacyNames.newNameOf(name);
         if (renamedTo != null && knownNames.contains(renamedTo)) {
             candidates.add(new ConfigDrift.Unknown(name, renamedTo));

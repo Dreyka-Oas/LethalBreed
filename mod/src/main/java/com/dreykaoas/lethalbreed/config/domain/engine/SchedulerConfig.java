@@ -40,7 +40,7 @@ public final class SchedulerConfig {
     public static double lodHysteresis = 4.0;
 
     /** Player simulation-distance cutoff: beyond this radius from the nearest PLAYER a zombie is frozen
-     *  WITHOUT even reclassifying (cheapest skip — no target scan). This also pauses autonomous hunts of
+     *  WITHOUT even reclassifying (cheapest skip, no target scan). This also pauses autonomous hunts of
      *  non-player targets (villagers/animals) when no player is near, so it defaults to 0 (off). Set >=
      *  {@link #lodLow} if you accept "nobody's watching → stop simulating". 0 = never hard-freeze. */
     public static double lodHardFreezeRadius = 0.0;

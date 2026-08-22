@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Drops a day-sleeping zombie's arms to rest along its body instead of the vanilla raised-forward pose.
  * Runs at TAIL of the shared-model {@code setupAnim}, AFTER vanilla has set the pose, and only writes the
- * arm rotations when the render state says this zombie is asleep — non-sleeping frames keep vanilla's pose
+ * arm rotations when the render state says this zombie is asleep. Non-sleeping frames keep vanilla's pose
  * (the parts are shared across all zombies, so we must not mutate them otherwise). Mirrors the belly hook
  * ({@code ZombieBellyModelMixin}).
  */
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractZombieModel.class)
 public class ZombieSleepArmsMixin {
 
-    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$sleepArms(ZombieRenderState state, CallbackInfo ci) {

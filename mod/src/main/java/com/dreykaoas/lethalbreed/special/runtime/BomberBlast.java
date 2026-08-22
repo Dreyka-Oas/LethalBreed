@@ -8,22 +8,22 @@ import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
  *
  * <p>Deliberately free of every {@code net.minecraft} type. The entity-facing half lives in
  * {@link SpecialAbilities}; keeping the numbers here is what lets them be unit-tested without booting a
- * server, and this is the only part of the Bomber that carries non-trivial logic.
+ * server, and the Bomber's non-trivial logic all lives here.
  *
  * <p>The shaping constants below are NOT config options. Only the levers in {@link SpecialVariantConfig}
  * are exposed: the mod already ships hundreds of options, and surfacing every coefficient of a curve would
  * make the variant impossible for a player to balance. The blindness THRESHOLD is configurable because it
  * decides whether the harshest effect appears at all; the shape coefficients only decide dosage.
  *
- * <p>Every min/max pair is read through {@link #lo}/{@link #hi} rather than trusted in order: a player who
- * types the bounds the wrong way round gets the range they obviously meant, not a negative ratio.
+ * <p>Every min/max pair is read through {@link #lo}/{@link #hi}, so their order is never trusted: a player
+ * who types the bounds the wrong way round gets the range they obviously meant, not a negative ratio.
  */
 public final class BomberBlast {
     private BomberBlast() {}
 
     /**
-     * Colour of the splatter particle cloud, packed <b>ARGB</b> — toxic purple-green, distinct from any
-     * vanilla potion colour so the burst reads as this mod's own effect rather than as a thrown potion.
+     * Colour of the splatter particle cloud, packed <b>ARGB</b>: toxic purple-green, distinct from any
+     * vanilla potion colour so the burst reads as this mod's own effect, never as a thrown potion.
      *
      * <p>The {@code 0xFF} alpha is load-bearing, not decoration. {@code ENTITY_EFFECT} carries a packed ARGB
      * int and {@code SpellParticle.MobEffectProvider} feeds its alpha byte straight into {@code setAlpha}, so
@@ -40,12 +40,12 @@ public final class BomberBlast {
 
     /** Lingering gore puddle: how long the residue stays on the ground, floor and fuse-driven span. */
     private static final double PUDDLE_BASE_S = 3.0, PUDDLE_SPAN_S = 9.0;
-    /** The puddle pools tighter than the airborne ring — gore falls inward, it does not hang where it flew. */
+    /** The puddle pools tighter than the airborne ring. Gore falls inward, it does not hang where it flew. */
     private static final double PUDDLE_RADIUS_MUL = 0.6;
     /** Residue bites softer than the burst that threw it. Halving keeps the puddle a hazard to linger in
      *  rather than a second explosion. */
     private static final double PUDDLE_POTENCY = 0.5;
-    /** How often the puddle re-doses whoever is standing in it — the cadence vanilla lingering clouds use. */
+    /** How often the puddle re-doses whoever is standing in it, the cadence vanilla lingering clouds use. */
     public static final int PUDDLE_REAPPLY_TICKS = 20;
 
     private static final int TPS = 20;
@@ -58,9 +58,9 @@ public final class BomberBlast {
      * Fuse length in GAME TICKS for a uniform roll in {@code [0,1]}.
      *
      * <p>Ticks, not activations. {@code SpecialBehavior.tick} only runs once every {@code tickBuckets}
-     * ticks, so the old per-activation charge tied a gameplay tempo to a performance knob — raising
+     * ticks, so the old per-activation charge tied a gameplay tempo to a performance knob: raising
      * {@code tickBuckets} silently doubled the time before detonation. The caller turns this figure into an
-     * absolute deadline, which is what makes the duration independent of activation cadence.
+     * absolute deadline, so the duration no longer follows activation cadence.
      */
     public static int fuseTicksFor(double rand01) {
         double a = SpecialVariantConfig.specialBomberFuseMinTicks;
@@ -69,8 +69,8 @@ public final class BomberBlast {
         return (int) Math.round(min + (max - min) * Math.clamp(rand01, 0.0, 1.0));
     }
 
-    /** Where a fuse length sits in its configured range. A degenerate range yields 0 — the mildest blast,
-     *  which is the safe way to fail. */
+    /** Where a fuse length sits in its configured range. A degenerate range yields 0, the mildest blast:
+     *  the safe way to fail. */
     public static double ratioOf(int fuseTicks) {
         double a = SpecialVariantConfig.specialBomberFuseMinTicks;
         double b = SpecialVariantConfig.specialBomberFuseMaxTicks;
@@ -94,7 +94,7 @@ public final class BomberBlast {
         return power * 2.0;
     }
 
-    /** The gore ring — wider than the blast, so backing out of lethal range still gets you splattered. */
+    /** The gore ring: wider than the blast, so backing out of lethal range still gets you splattered. */
     public static double splatterRadius(double power) {
         return blastRadius(power) * Math.max(0.0, SpecialVariantConfig.specialBomberSplatterMul);
     }

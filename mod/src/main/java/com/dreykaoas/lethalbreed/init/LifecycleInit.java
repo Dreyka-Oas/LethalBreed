@@ -23,17 +23,17 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
  * reach the save file:
  *
  * <ul>
- *   <li>{@code SERVER_STOPPING} (HEAD of {@code MinecraftServer.stopServer()}) — for anything that must be
+ *   <li>{@code SERVER_STOPPING} (HEAD of {@code MinecraftServer.stopServer()}): for anything that must be
  *       written back onto entities before the world is saved. {@code stopServer()} calls
  *       {@code saveAllChunks(...)} and then {@code serverLevel.close()} strictly between the two events, so
  *       this is the last moment an entity mutation still lands in NBT. The {@code NoAI} release lives here;
  *       see the comment on that handler before moving anything into or out of it.</li>
- *   <li>{@code SERVER_STOPPED} (TAIL) — for process-wide ({@code static}, JVM-lived) state that references
+ *   <li>{@code SERVER_STOPPED} (TAIL): for process-wide ({@code static}, JVM-lived) state that references
  *       entities or a {@code ServerLevel} and only needs dropping, not persisting. Unreleased, a stopped
  *       world stays pinned in memory until the next one loads (or forever, for a static collection).</li>
  * </ul>
  *
- * <p>When you add such state, purge it at the matching point — do not rely on the next server tick to do it,
+ * <p>When you add such state, purge it at the matching point. Do not rely on the next server tick to do it,
  * and do not consolidate the two handlers into one.
  */
 public final class LifecycleInit {
@@ -44,8 +44,8 @@ public final class LifecycleInit {
      *  keys the file needs opening anyway. */
 
     public static void register(ZombieRegistry registry, DimensionManager dimensions, TickScheduler scheduler) {
-        // Warm the GPU compute backend at boot (when enabled) so its detection line — GPU name or CPU
-        // fallback — is logged once at startup instead of lazily on the first flow-field solve.
+        // Warm the GPU compute backend at boot (when enabled) so its detection line (GPU name or CPU
+        // fallback) is logged once at startup instead of lazily on the first flow-field solve.
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             if (FlowConfig.useGpu) {
                 GpuComputeManager.get().isAvailable();

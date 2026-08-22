@@ -9,7 +9,7 @@ import net.minecraft.resources.Identifier;
 
 /**
  * Persistent per-entity attachment holding a zombie's {@link SpecialType} id. Set at spawn
- * ({@link SpecialRoller}, in finalizeSpawn — before the entity is tracked) and read by the
+ * ({@link SpecialRoller}, in finalizeSpawn, before the entity is tracked) and read by the
  * {@code SmartZombie} constructor at ENTITY_LOAD. Persistent → survives chunk unload/reload (a vanilla
  * {@code getPersistentData} doesn't exist in this mapping; Fabric's data-attachment API is the way).
  */
@@ -20,7 +20,7 @@ public final class SpecialAttachment {
             Identifier.fromNamespaceAndPath("lethalbreed", "special"), Codec.STRING);
 
     /**
-     * BOMBER belly-swell charge, 0..1. Transient (never persisted — a fresh zombie starts at 0) but
+     * BOMBER belly-swell charge, 0..1. Transient (never persisted: a fresh zombie starts at 0) but
      * synced to tracking clients so the render-side model can inflate the {@code body} part as the
      * fuse burns. Ramped server-side in {@link SpecialBehavior}; read in the client model mixin.
      */
@@ -32,7 +32,7 @@ public final class SpecialAttachment {
 
     /**
      * BOMBER fuse length in GAME TICKS, rolled once when it arms; 0 means not armed yet. Transient and
-     * NOT synced — only the derived {@link #BOMBER_CHARGE} needs to reach clients.
+     * NOT synced. Only the derived {@link #BOMBER_CHARGE} needs to reach clients.
      */
     public static final AttachmentType<Integer> BOMBER_FUSE = AttachmentRegistry.create(
             Identifier.fromNamespaceAndPath("lethalbreed", "bomber_fuse"),
@@ -40,7 +40,7 @@ public final class SpecialAttachment {
 
     /**
      * Game time at which the BOMBER armed. With {@link #BOMBER_FUSE} this makes the detonation an absolute
-     * deadline rather than a per-activation accumulation — so the fuse lasts the same real time whatever
+     * deadline rather than a per-activation accumulation, so the fuse lasts the same real time whatever
      * {@code tickBuckets} is set to, and a skipped activation cannot stretch it.
      */
     public static final AttachmentType<Long> BOMBER_ARMED_AT = AttachmentRegistry.create(

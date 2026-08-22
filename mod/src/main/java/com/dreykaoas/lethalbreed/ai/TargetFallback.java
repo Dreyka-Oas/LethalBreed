@@ -23,7 +23,7 @@ final class TargetFallback {
     static LodLevel classify(SmartZombie sz, ServerLevel level, LodLevel prev) {
         if (TargetingConfig.targetMemoryTicks > 0 && sz.pursuit().hasMemory()
                 && level.getGameTime() < sz.pursuit().memoryExpire()) {
-            // Lost sight AND sound, but remember where it was — keep going there briefly (no live entity, so
+            // Lost sight AND sound, but remember where it was: keep going there briefly (no live entity, so
             // no melee/vanilla target). Reached the spot with nothing there, or memory ran out → forget.
             sz.pursuit().setMemoryTarget();
             sz.entity().setTarget(null);
@@ -31,7 +31,7 @@ final class TargetFallback {
             double arrive = TargetingConfig.soundArriveDistance;
             // Only "arrived, nothing here → forget" when the zombie can actually SEE the remembered spot. If an
             // opaque wall still stands between it and the spot (e.g. a trapped, noisy mob enclosed in blocks),
-            // it is NOT arrived — keep pursuing so it breaks through instead of giving up at the wall and
+            // it is NOT arrived. Keep pursuing so it breaks through instead of giving up at the wall and
             // letting the half-broken block lapse. Memory still expires on its own timer above.
             boolean atSpot = d <= arrive * arrive && LodManager.canSeeSpot(level, sz.entity(),
                     sz.pursuit().tgtX(), sz.pursuit().tgtY(), sz.pursuit().tgtZ());
@@ -50,16 +50,16 @@ final class TargetFallback {
             }
         } else if (sz.pursuit().pack().hasWaypoint()) {
             // Lowest priority: nothing seen, nothing remembered, but the zombie's pack wants it somewhere.
-            // Deliberately NOT the memory slot — see PackTether — so a pack march cannot be clobbered by a
+            // Deliberately NOT the memory slot (see PackTether) so a pack march cannot be clobbered by a
             // passing cow or hijacked by a distress rally, and a marching member is not mistaken for one
             // investigating a noise (which would keep it awake through the day, burning in the sun).
             sz.pursuit().setPackTarget();
             sz.entity().setTarget(null);
             // No canSeeSpot here, unlike the memory branch: that is a level.clip raycast, and paying one per
             // marching member per activation would make the march the dominant cost of the whole system.
-            // Arrival is PackMarch's business — it replants the waypoint every visit regardless.
+            // Arrival is PackMarch's business: it replants the waypoint every visit regardless.
             //
-            // The waypoint is short-range by construction (packMarchLead, capped under lodLow), which is the
+            // The waypoint is short-range by construction (packMarchLead, capped under lodLow). That is the
             // whole reason this classifies to HIGH/MEDIUM instead of FROZEN. Aiming a member at the pack's
             // actual destination hundreds of blocks away would freeze it, not move it.
             return LodManager.lodFromDistSq(sz.pursuit().distanceToTargetSq(), prev);
@@ -67,8 +67,8 @@ final class TargetFallback {
             sz.pursuit().clearTarget();
             sz.pursuit().clearMemory();
             // Cut the vanilla target too, as the memory and pack branches above already do. Without it the
-            // mod declares the zombie frozen and target-less while vanilla's ZombieAttackGoal — never
-            // stripped — keeps driving it at whatever it last locked on, with no flow field, no breach, no
+            // mod declares the zombie frozen and target-less while vanilla's ZombieAttackGoal, never
+            // stripped, keeps driving it at whatever it last locked on, with no flow field, no breach, no
             // pillaring and no tick() of ours. That divergence is what caps a Screamer's rally: the zombies it
             // hands a target to are re-frozen here on their next classify, yet keep walking.
             sz.entity().setTarget(null);

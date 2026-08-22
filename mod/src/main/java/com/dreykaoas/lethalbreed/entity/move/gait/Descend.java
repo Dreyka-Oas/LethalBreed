@@ -16,7 +16,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 /**
  * Descend toward a lower target. Prefers to just walk: flat ground ahead is walked across, a short safe
  * drop ({@link CombatMoveConfig#safeDropBlocks}) is stepped off for free. Only when neither is possible
- * does it carve a forward STAIRCASE or build a stair over a genuine void — so it never breaks a floor it
+ * does it carve a forward STAIRCASE or build a stair over a genuine void, so it never breaks a floor it
  * could stand on, nor digs itself into an unsafe fall.
  */
 public final class Descend {
@@ -29,7 +29,7 @@ public final class Descend {
         int by = entity.blockPosition().getY();
         int bz = entity.blockPosition().getZ();
 
-        // 0) Cheapest descent: a nearby edge with a short SAFE drop — just step/drop off it for free.
+        // 0) Cheapest descent: a nearby edge with a short SAFE drop. Just step/drop off it for free.
         if (tryWalkableStepDown(owner, level, bx, by, bz)) {
             owner.setState(ZombieState.DESCENDING);
             return;
@@ -45,7 +45,7 @@ public final class Descend {
             return;
         }
 
-        // 2) Carve straight DOWN through our own floor toward a target below — one block per activation, but
+        // 2) Carve straight DOWN through our own floor toward a target below, one block per activation, but
         //    ONLY when the resulting fall is safe (a solid landing within safeDropBlocks under the removed
         //    block). Stop nav so the vanilla pathfinder doesn't drag it off the column.
         BlockPos under = new BlockPos(bx, by - 1, bz);
@@ -61,8 +61,8 @@ public final class Descend {
 
         // 2b) Target hid straight DOWN a deep shaft (it fell/dug and is nearly right below us): the safe-carve
         //     above bailed because the shaft is deeper than safeDropBlocks, and a lateral staircase would only
-        //     walk us away from a prey that is directly under our feet. Dig straight down after it anyway — one
-        //     block per activation — so the zombie follows its target down the hole instead of stranding above.
+        //     walk us away from a prey that is directly under our feet. Dig straight down after it anyway (one
+        //     block per activation) so the zombie follows its target down the hole instead of stranding above.
         double hx = owner.tgtX() - entity.getX();
         double hz = owner.tgtZ() - entity.getZ();
         double dbr = CombatMoveConfig.descendDirectlyBelowRadius;
@@ -75,7 +75,7 @@ public final class Descend {
             return;
         }
 
-        // 3) Target directly below over a deep void: can't drop straight safely. Don't strand — build a
+        // 3) Target directly below over a deep void: can't drop straight safely. Don't strand: build a
         //    descending staircase out over the air toward the target.
         StairDescent.build(owner, level, ctx, bx, by, bz, sdx, sdz);
     }

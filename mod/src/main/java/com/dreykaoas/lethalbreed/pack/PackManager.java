@@ -15,7 +15,7 @@ import java.util.Random;
 
 /**
  * Every pack in one dimension. One instance per {@code WorldAiContext}, exactly like
- * {@code BreachCoordinator} — same shape, same lifetime, same server-thread-only contract.
+ * {@code BreachCoordinator}: same shape, same lifetime, same server-thread-only contract.
  *
  * <p><b>The membership invariant, which everything else rests on.</b> A member is in exactly one of three
  * states: a live entity in {@link PackState#liveIds}, a snapshot in {@code ghosts}, or counted in
@@ -34,7 +34,7 @@ public final class PackManager implements PackLifecycle.Registry {
     private int cursor;
     private long nextId = 1L;
 
-    /** Reused by the visit loop — a per-tick allocation here would be paid on the server thread. */
+    /** Reused by the visit loop, because a per-tick allocation here would be paid on the server thread. */
     private final List<PackState> ordered = new ArrayList<>();
 
     @Override
@@ -60,7 +60,7 @@ public final class PackManager implements PackLifecycle.Registry {
     /**
      * Create a pack around one founding member.
      *
-     * <p>The seed comes from the id, so a pack's wandering is reproducible across a reload — the same pack
+     * <p>The seed comes from the id, so a pack's wandering is reproducible across a reload. The same pack
      * always draws the same route, which makes an odd path reportable instead of a one-off.
      */
     public PackState form(SmartZombie founder) {
@@ -121,7 +121,7 @@ public final class PackManager implements PackLifecycle.Registry {
      *
      * <p>Their {@code liveIds} are left empty on purpose: runtime entity ids are reassigned every reload, so
      * the live roster is rebuilt as members come back and re-join through their attachment. What is restored
-     * is the part nothing else owns — route, seed, ghosts, and the detached count.
+     * is the part nothing else owns: route, seed, ghosts, and the detached count.
      */
     public void restore(Iterable<PackState> saved, long nextId) {
         packs.clear();
@@ -132,7 +132,7 @@ public final class PackManager implements PackLifecycle.Registry {
         this.cursor = 0;
     }
 
-    /** This pack's own random stream. Re-derived per destination rather than kept as a field, so a reload
+    /** This pack's own random stream. Re-derived per destination, never kept as a field, so a reload
      *  reproduces the route instead of restarting from a fresh sequence. */
     public static Random rngFor(PackState pack) {
         return new Random(pack.seed ^ pack.destX ^ ((long) pack.destZ << 32));

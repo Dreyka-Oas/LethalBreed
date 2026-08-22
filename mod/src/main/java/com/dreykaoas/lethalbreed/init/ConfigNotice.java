@@ -16,10 +16,10 @@ import net.minecraft.server.permissions.Permissions;
  * the write that follows the read already fixed is deliberately silent, because a message about a file
  * that is already fixed is noise, and noise is what makes an operator stop reading these.
  *
- * <p>It names every offending key rather than counting them. This used to be a count plus
- * {@code /lethalconfig verify}, which made the reader run a command to be told the one thing the message
- * was for; that subcommand is gone. What survives here is rare by construction, so the line budget is a
- * guard against a pathological file, not an expected path.
+ * <p>It names every offending key. This used to be a count plus {@code /lethalconfig verify}, which made
+ * the reader run a command to be told the one thing the message was for; that subcommand is gone. What
+ * survives here is rare by construction, so the line budget is a guard against a pathological file, not
+ * an expected path.
  */
 final class ConfigNotice {
     private ConfigNotice() {}
@@ -32,14 +32,14 @@ final class ConfigNotice {
         // solo player never opens latest.log and would otherwise just watch their hand-edited line
         // stop working with no explanation anywhere they look.
         //
-        // Only for drift the loader could NOT repair — clean() ignores renamed typos, misplaced
+        // Only for drift the loader could NOT repair: clean() ignores renamed typos, misplaced
         // options and stale category names, all of which the load-then-write cycle corrects by itself.
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ConfigDrift.Report report = ConfigIo.lastReport();
             if (report == null || report.clean()) {
                 return;
             }
-            // Same gate the SetConfig packet and /lethalconfig use — only the people who can act on it.
+            // Same gate the SetConfig packet and /lethalconfig use, only the people who can act on it.
             if (!handler.getPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
                 return;
             }
@@ -78,10 +78,10 @@ final class ConfigNotice {
 
         // NoAI-release MUST happen here, on STOPPING, not on STOPPED: Fabric fires SERVER_STOPPING at HEAD of
         // MinecraftServer.stopServer() and SERVER_STOPPED at TAIL, but stopServer() calls saveAllChunks(...)
-        // (flushing every loaded zombie's NoAI to disk) and then serverLevel.close() BEFORE it returns — i.e.
+        // (flushing every loaded zombie's NoAI to disk) and then serverLevel.close() BEFORE it returns, i.e.
         // strictly between STOPPING and STOPPED. By the time STOPPED fires, the save already happened and the
         // level is closed, so releasing the hold there is a no-op that can't reach the NBT that was just
-        // written. Do NOT "tidy" this back into the SERVER_STOPPED handler below — that silently reintroduces
+        // written. Do NOT "tidy" this back into the SERVER_STOPPED handler below: that silently reintroduces
         // the frozen-statue bug this exists to fix (audit #2).
     }
 }

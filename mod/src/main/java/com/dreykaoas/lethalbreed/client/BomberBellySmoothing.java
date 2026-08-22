@@ -9,7 +9,7 @@ package com.dreykaoas.lethalbreed.client;
  * render state is a brand-new object every frame ({@code createRenderState()} calls {@code new
  * ZombieRenderState()} before {@code extractRenderState} populates it), so anything stored there resets to
  * its default every single frame and can never smooth across frames. The client {@code Zombie} entity, by
- * contrast, is not recreated per frame — it is the one object this smoothing can actually persist on.
+ * contrast, is not recreated per frame. It is the one object this smoothing can actually persist on.
  *
  * <p>Lives OUTSIDE the {@code mixin} package on purpose: a type inside a declared mixin package cannot be
  * referenced directly by transformed code (Mixin throws {@code IllegalClassLoadError}).
@@ -20,7 +20,7 @@ public interface BomberBellySmoothing {
 
     void lethalbreed$smoothedBellyCharge(float charge);
 
-    /** Timestamp ({@code System.nanoTime()}) of the last smoothing computation — 0 until a computation has
+    /** Timestamp ({@code System.nanoTime()}) of the last smoothing computation, 0 until a computation has
      *  happened for this entity. */
     long lethalbreed$smoothedBellyChargeLastNanos();
 

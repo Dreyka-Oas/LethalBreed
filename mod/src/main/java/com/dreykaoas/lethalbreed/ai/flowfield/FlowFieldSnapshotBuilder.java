@@ -14,8 +14,8 @@ import java.util.List;
  * SERVER THREAD: reads the world into an immutable {@link Snapshot}. Cells are PASSABLE (free),
  * BREAKABLE (traversable at a cost, flagged to break through), BUILDABLE (a gap traversable at a
  * cost, flagged to bridge), or IMPASSABLE (per {@link CellClassifier}). The cost arrays let the
- * off-thread solve route a path THROUGH a breakable wall or OVER a gap when that beats a long detour
- * — which is what makes zombies break and bridge.
+ * off-thread solve route a path THROUGH a breakable wall or OVER a gap when that beats a long detour.
+ * That is what makes zombies break and bridge.
  */
 public final class FlowFieldSnapshotBuilder {
     private FlowFieldSnapshotBuilder() {}
@@ -73,8 +73,8 @@ public final class FlowFieldSnapshotBuilder {
                 int chunkZ = wz >> 4;
                 if (chunkZ != lastChunkZ) {
                     // 16 consecutive columns share one chunk; resolving it per column repeated the lookup
-                    // 16x over. getChunk(x, z, FULL, false) — never force a load: an absent chunk is
-                    // IMPASSABLE, which is what CellClassifier's isLoaded guard already concluded.
+                    // 16x over. getChunk(x, z, FULL, false), never force a load: an absent chunk is
+                    // IMPASSABLE, the same conclusion CellClassifier's isLoaded guard already reaches.
                     chunk = level.getChunk(wx >> 4, chunkZ,
                             net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false);
                     lastChunkZ = chunkZ;

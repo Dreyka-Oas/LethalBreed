@@ -10,14 +10,15 @@ import java.util.Set;
  * reasons: what counts as drift is a decision about the config format, while how close two names are is a
  * decision about typing mistakes.
  *
- * <p>Package-private on purpose — the suggestion is part of a drift report, never an API of its own.
+ * <p>Package-private on purpose: the suggestion is part of a drift report, never an API of its own.
  */
 final class NameSuggest {
     private NameSuggest() {}
 
     /** Closest known name within an edit-distance budget that scales with length, so "tickBucket" finds
-     *  "tickBuckets" but a name sharing nothing with any option returns null rather than a nonsense
-     *  suggestion. Ties resolve to the alphabetically first candidate so the answer is deterministic. */
+     *  "tickBuckets" but a name sharing nothing with any option returns null where a nonsense suggestion
+     *  would otherwise land. Ties resolve to the alphabetically first candidate so the answer is
+     *  deterministic. */
     static String suggest(String name, Set<String> knownNames) {
         return best(name, knownNames, false);
     }

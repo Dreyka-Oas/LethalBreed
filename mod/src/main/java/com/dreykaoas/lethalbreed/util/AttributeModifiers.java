@@ -37,7 +37,7 @@ public final class AttributeModifiers {
      *
      * <p>{@link #multiplyBase} deltas all add together before being applied to the base once, which is right
      * for independent rolls but wrong for "take whatever this ended up as, and halve it". A -0.40 delta next
-     * to a +0.25 variation roll yields 0.85 of base, not 0.60 of the varied size — and next to a +0.40 it
+     * to a +0.25 variation roll yields 0.85 of base, not 0.60 of the varied size, and next to a +0.40 it
      * yields exactly the original size, cancelling outright.
      */
     public static void multiplyTotal(LivingEntity entity, Holder<Attribute> attr, String idPath, double factor) {

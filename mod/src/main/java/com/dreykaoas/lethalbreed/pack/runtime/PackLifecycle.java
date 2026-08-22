@@ -33,7 +33,7 @@ public final class PackLifecycle {
      * Recompute the pack's position from its live members.
      *
      * <p>Recomputed rather than maintained incrementally: an incremental centroid drifts as members join and
-     * leave, and a drifting centre silently changes who is judged to be straying — the pack would shed
+     * leave, and a drifting centre silently changes who is judged to be straying: the pack would shed
      * members for a reason that is not in any rule. Bounded by {@code packMaxSize} reads.
      *
      * <p>A pack with no live member keeps the position it had: it is virtual, or everyone is on disk, and in
@@ -80,14 +80,14 @@ public final class PackLifecycle {
             }
         }
         // Ghosts die with the pack. They are zombies we took out of the world ourselves, so dropping them
-        // costs population — but the alternative is materialising members of a pack that no longer exists,
+        // costs population, but the alternative is materialising members of a pack that no longer exists,
         // with nowhere to put them and no rule left to govern them.
         pack.ghosts.clear();
         registry.drop(pack.id);
         return true;
     }
 
-    /** Fold {@code pack} into a compatible neighbour, or absorb one into it. At most one merge per visit —
+    /** Fold {@code pack} into a compatible neighbour, or absorb one into it. At most one merge per visit.
      *  the survivor is re-examined when its own turn comes round. */
     public static void merge(PackState pack, List<PackState> ordered, Registry registry,
                              LongFunction<PackState> lookup) {

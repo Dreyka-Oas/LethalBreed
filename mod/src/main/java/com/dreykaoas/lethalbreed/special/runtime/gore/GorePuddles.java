@@ -15,15 +15,15 @@ import java.util.UUID;
 
 /**
  * The gore a Bomber leaves on the ground: a shrinking puddle that keeps dosing whoever stands in it after
- * the blast is long over. Fleeing the explosion no longer settles it — the ground itself stays hostile until
+ * the blast is long over. Fleeing the explosion no longer settles it: the ground itself stays hostile until
  * the residue drains.
  *
  * <p><b>Why this is not an {@code AreaEffectCloud}.</b> Vanilla's lingering cloud gates its victims on
  * {@code isAffectedByPotions()} alone, with no way to spare an ally. A Bomber bursting inside its own pack
- * would blanket that pack in Slowness — the variant would sabotage the horde it fights for. The cloud also
+ * would blanket that pack in Slowness. The variant would sabotage the horde it fights for. The cloud also
  * only knows how to apply {@code MobEffectInstance}s, so it could never carry this mod's contamination, and
  * it applies one flat dose regardless of where in the radius you stand, discarding the distance falloff that
- * is the whole point of {@link BomberBlast#intensity}. Ticking the puddle here reuses the burst's own victim
+ * {@link BomberBlast#intensity} exists to compute. Ticking the puddle here reuses the burst's own victim
  * filter, its own falloff curve and its own gore application, so the puddle and the blast can never drift
  * apart.
  *
@@ -37,7 +37,7 @@ public final class GorePuddles {
 
     /**
      * One puddle. {@code ratio} is the fuse ratio of the Bomber that left it, carried so the dose keeps
-     * scaling with how long that zombie swelled — a puddle from a long fuse stays nastier, not just wider.
+     * scaling with how long that zombie swelled: a puddle from a long fuse stays nastier, not just wider.
      */
     private static final class Puddle {
         final ServerLevel level;
@@ -45,12 +45,12 @@ public final class GorePuddles {
         final double radius0;
         final double ratio;
         final int durationTicks;
-        /** The cocktail the Bomber rolled as it burst — inherited, never re-rolled. */
+        /** The cocktail the Bomber rolled as it burst (inherited, never re-rolled). */
         final List<GoreCocktail.Dose> cocktail;
         /**
          * Who this puddle has already rolled infection against. The puddle re-doses every
          * {@code PUDDLE_REAPPLY_TICKS}, so rolling per dose would turn a few seconds of standing in one into
-         * a certainty; one roll per victim per puddle keeps infection a risk rather than a formality.
+         * a certainty; one roll per victim per puddle keeps infection a risk.
          * Keyed by UUID, not by entity, so a victim who leaves and returns is still remembered without this
          * set pinning a dead entity for the puddle's lifetime.
          */
@@ -127,7 +127,7 @@ public final class GorePuddles {
             if (SpecialVariantConfig.specialBomberPuddleInfect && p.infectionRolled.add(victim.getUUID())
                     && victim.getRandom().nextDouble() < BomberBlast.infectChance(intensity)) {
                 // add() returning true is the whole gate: it means this is the first time this puddle has
-                // considered this victim. Placed before the chance roll on purpose — a victim who fails the
+                // considered this victim. Placed before the chance roll on purpose: a victim who fails the
                 // roll has had their chance and must not get another every second.
                 ContaminationManager.contaminate(victim);
             }

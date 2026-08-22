@@ -22,7 +22,7 @@ import static org.jocl.CL.clSetKernelArg;
 /**
  * Per-call buffer marshalling for one flow-field snapshot on the GPU: builds host arrays from the
  * {@link Snapshot}, uploads them, runs the iterative Bellman-Ford relax kernel until it
- * converges, reads results back, and releases the device buffers. Stateless — bound to a
+ * converges, reads results back, and releases the device buffers. Stateless, bound to a
  * {@link GpuContext}'s context/queue/kernel.
  */
 final class GpuFlowFieldSolver {
@@ -51,7 +51,7 @@ final class GpuFlowFieldSolver {
         int orthoCost = Math.max(1, FlowConfig.flowOrthoCost);
         int diagCost = Math.max(orthoCost, FlowConfig.flowDiagonalCost);
 
-        // Declared null before the try so EVERY buffer — including one whose own clCreateBuffer throws — is
+        // Declared null before the try so EVERY buffer (including one whose own clCreateBuffer throws) is
         // covered by the finally. With setExceptionsEnabled(true), an allocation failure at buffer k used to
         // leak the k-1 already created, because the creates sat outside the protected block (audit #8).
         cl_mem costMem = null, btMem = null, extraMem = null, dirXMem = null, dirZMem = null, changedMem = null;

@@ -15,10 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Zombie hearing for player item drops. When a player tosses (Q / Ctrl-Q) or otherwise drops an item into the
- * world, it funnels through {@link ServerPlayer#drop(net.minecraft.world.item.ItemStack, boolean, boolean)} —
+ * world, it funnels through {@link ServerPlayer#drop(net.minecraft.world.item.ItemStack, boolean, boolean)},
  * the terminal override that spawns the {@link ItemEntity}. We tap it at RETURN and feed a normal-volume sound
  * (same tier as a footstep or a block place, NOT a loud break) into the mod's sound bus at the dropped item's
- * position, so nearby zombies pursue the spot via short-term memory — exactly like the block-place hook in
+ * position, so nearby zombies pursue the spot via short-term memory, exactly like the block-place hook in
  * {@code WorldSoundEventMixin}. A null return means nothing actually left the hand (empty slot). Creative and
  * spectator players make no noise (mirrors the footstep and block-break rules).
  */

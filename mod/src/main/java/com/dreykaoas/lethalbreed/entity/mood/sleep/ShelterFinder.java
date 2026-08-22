@@ -10,11 +10,11 @@ public final class ShelterFinder {
     private ShelterFinder() {}
 
     /** A block of vertical distance costs this many blocks of horizontal distance in the nearness score, so a
-     *  zombie ducks under the CLOSEST roof at (or near) its own level rather than climbing far for cover. */
+     *  zombie ducks under the CLOSEST roof at (or near) its own level and never climbs far for cover. */
     private static final int V_WEIGHT = 3;
 
     /** Search a 3D neighbourhood around {@code origin} for the nearest standable block whose column is NOT under
-     *  open sky (a roofed refuge). Unlike a flat same-Y scan — which misses almost all real cover — this sweeps a
+     *  open sky (a roofed refuge). Unlike a flat same-Y scan (which misses almost all real cover), this sweeps a
      *  vertical band too, so overhangs, doorways, sloped terrain and building interiors one step up/down all
      *  count. Returns the closest such foot position (vertical distance weighted), or null when none is in range.
      *  Does NOT path-check: the brain breaks/pillars/carves its way to the returned target. */
@@ -33,7 +33,7 @@ public final class ShelterFinder {
                 }
                 double horiz = (double) dx * dx + (double) dz * dz;
                 if (horiz >= bestScore) {
-                    continue; // even at the same level this column can't beat the current best — skip it whole
+                    continue; // even at the same level this column can't beat the current best, skip it whole
                 }
                 int x = origin.getX() + dx;
                 int z = origin.getZ() + dz;

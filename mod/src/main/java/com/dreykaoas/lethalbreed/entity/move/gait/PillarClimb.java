@@ -17,7 +17,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
  * The vertical-ascent state machine: jump-and-place. When a target is perched above with no flush wall to
- * scale, the zombie builds a dirt column straight up beneath itself — a real jump cycle (velocity impulse +
+ * scale, the zombie builds a dirt column straight up beneath itself, a real jump cycle (velocity impulse +
  * {@code hurtMarked}), never a setPos levitation, so it stands on what it builds. Owns the whole ascent:
  * the active flag, the post-give-up cooldown, the height/stall watchdog and the column bookkeeping.
  * See the {@code entity-velocity-not-applying} skill.
@@ -51,7 +51,7 @@ public final class PillarClimb {
 
     /**
      * Begin building a dirt column up toward a target perched above (wall, tower, overhang or open gap).
-     * {@link #step} drives a real jump-and-place cycle each tick — like a player pillaring up — so the
+     * {@link #step} drives a real jump-and-place cycle each tick (like a player pillaring up) so the
      * zombie stands on what it builds and never levitates. The column is auto-removed by the tracker.
      */
     public void initiate() {
@@ -95,7 +95,7 @@ public final class PillarClimb {
 
         // A solid ceiling straight overhead blocks the rise. Instead of giving up, mine it out like a player
         // pillaring into a roof: request the block each tick (progressive break) and keep the column running so
-        // the zombie resumes climbing once it's gone. Only break breakable blocks — bedrock/containers stop us.
+        // the zombie resumes climbing once it's gone. Only break breakable blocks. Bedrock/containers stop us.
         BlockPos ceilPos = BlockPos.containing(
                 entity.getX(), entity.getY() + entity.getBbHeight() + ExpertConfig.expertPillarCeilingOffset,
                 entity.getZ());
@@ -104,7 +104,7 @@ public final class PillarClimb {
             ctx.breakManager().request(ceilPos, entity);
             owner.setState(ZombieState.BREAKING);
             entity.setJumping(false);
-            return; // hold position (don't jump into an unbroken ceiling) — retry next tick
+            return; // hold position (don't jump into an unbroken ceiling), retry next tick
         }
 
         // Height budget spent, an unbreakable ceiling, or the rung stalled → give up; the column stays (and is
@@ -136,7 +136,7 @@ public final class PillarClimb {
     }
 
     /** Refill the heading scratch ({@link #dyToTarget}, {@link #hx}, {@link #hz}, {@link #h}) toward the current
-     *  target — or a downward {@code dyToTarget} when there is none. */
+     *  target, or a downward {@code dyToTarget} when there is none. */
     private void computeHeading() {
         dyToTarget = owner.hasTarget() ? (owner.tgtY() - entity.getY()) : -1.0;
         hx = owner.tgtX() - entity.getX();

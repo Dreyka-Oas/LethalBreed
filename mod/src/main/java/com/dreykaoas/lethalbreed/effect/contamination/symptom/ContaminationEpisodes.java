@@ -12,9 +12,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
- * The three independent random symptomatic afflictions (slow / no-jump / weak-strike), each on its own timer via
- * a transient attribute modifier (no effect icon, no particles). Also hosts the shared {@link EpisodeTimers}
- * record used by {@link ContaminationHallucination} for its own single flare timer.
+ * The three independent random symptomatic afflictions (slow / no-jump / weak-strike), each on a separate
+ * timer driven by a transient attribute modifier (no effect icon, no particles). Also hosts the shared
+ * {@link EpisodeTimers} record used by {@link ContaminationHallucination} for its own single flare timer.
  */
 public final class ContaminationEpisodes {
     private ContaminationEpisodes() {}
@@ -62,8 +62,8 @@ public final class ContaminationEpisodes {
             new java.util.HashMap<>();
 
     /** Drive the three independent symptomatic EPISODES for one victim. Higher intensity (mult) makes flares
-     *  stronger and longer and the gaps between them shorter. Seeded lazily so a freshly-symptomatic victim gets
-     *  its first flare after a normal gap rather than instantly. */
+     *  stronger and longer and the gaps between them shorter. Seeded lazily, so a freshly-symptomatic victim
+     *  waits a normal gap before its first flare. */
     public static void tickEpisodes(LivingEntity e, long t, double mult) {
         java.util.EnumMap<Episode, EpisodeTimers> map =
                 EPISODES.computeIfAbsent(e, k -> new java.util.EnumMap<>(Episode.class));
@@ -130,7 +130,7 @@ public final class ContaminationEpisodes {
     }
 
     /** Drop all victims' episode timers at once (server stop). The world is going away, so the transient
-     *  attribute modifiers go with it — this only releases the map's references to dead entities. */
+     *  attribute modifiers go with it. This only releases the map's references to dead entities. */
     public static void clearAllVictims() {
         EPISODES.clear();
     }

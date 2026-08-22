@@ -7,9 +7,9 @@ package com.dreykaoas.lethalbreed.entity;
 public enum LodLevel {
     /** &lt; 32 blocks: flow field + goals + sound + block ops. */
     HIGH,
-    /** 32–64 blocks: flow field navigation only, no block ops. */
+    /** 32-64 blocks: flow field navigation only, no block ops. */
     MEDIUM,
-    /** 64–128 blocks: vanilla wander, ticked 1/8. */
+    /** 64-128 blocks: vanilla wander, ticked 1/8. */
     LOW,
     /** &gt; 128 blocks: not ticked by the mod. */
     FROZEN

@@ -73,7 +73,7 @@ public final class ProgressionConfig {
     public static int phaseMax = 50;
     /** Once {@link #phaseMax} is reached (and {@link #phaseMaxEnabled} is true): true = loop back to
      *  phase 1 and climb again; false = stay pinned at {@link #phaseMax}. No effect when
-     *  {@link #phaseMaxEnabled} is false. Only the auto-advance timer respects this — the dev-only
+     *  {@link #phaseMaxEnabled} is false. Only the auto-advance timer respects this: the dev-only
      *  {@code /lethalphase} command can still force any phase manually. */
     public static boolean phaseLoopEnabled = false;
 
@@ -101,6 +101,6 @@ public final class ProgressionConfig {
     /** Most health a zombie may ever have. */
     public static double phaseHealthCap = 200.0;
     /** Fastest a zombie may ever move. 0.45 preserves today's phase-15 feel (0.414) while stopping the
-     *  runaway that reaches 0.66 with a rolled Speed III — a sprinting player moves at roughly 0.28. */
+     *  runaway that reaches 0.66 with a rolled Speed III (a sprinting player moves at roughly 0.28). */
     public static double phaseSpeedCap = 0.45;
 }

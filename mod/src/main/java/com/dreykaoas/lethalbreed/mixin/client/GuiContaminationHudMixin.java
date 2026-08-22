@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 /**
  * While the local player carries the "La Fin ?" plague (Super Contamination), give the HUD hearts and food icons
  * a faint green sickly tint. Purely cosmetic and deliberately subtle: we keep the vanilla sprites and just draw
- * them through a low-alpha green colour multiplier (blitSprite's ARGB tint arg) — no texture swap, no cracks. Empty
+ * them through a low-alpha green colour multiplier (blitSprite's ARGB tint arg). No texture swap, no cracks. Empty
  * containers/background stay untouched so the bar still reads normally.
  */
 @Environment(EnvType.CLIENT)
@@ -26,7 +26,7 @@ public class GuiContaminationHudMixin {
      *  the sprite keeps its colour and only reads faintly sickly (red channel pulled down a touch). */
     private static final int TINT = 0xFF_D8FFD8;
 
-    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Redirect(require = 0, method = "renderHeart",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"))
@@ -51,7 +51,7 @@ public class GuiContaminationHudMixin {
             g.blitSprite(pipe, sprite, x, y, w, h);
             return;
         }
-        // blitSprite's trailing int is an ARGB colour multiplier — draw the vanilla sprite tinted sickly green.
+        // blitSprite's trailing int is an ARGB colour multiplier: draw the vanilla sprite tinted sickly green.
         g.blitSprite(pipe, sprite, x, y, w, h, TINT);
     }
 

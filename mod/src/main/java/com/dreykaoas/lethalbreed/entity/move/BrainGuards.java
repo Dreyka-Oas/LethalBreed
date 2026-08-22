@@ -42,7 +42,7 @@ final class BrainGuards {
     }
 
     /** BOMBER with a lit fuse: frozen in place, swelling toward detonation. Distinct from FROZEN (which
-     *  means "no target, not simulated") — an armed Bomber is very much simulated, just deliberately not
+     *  means "no target, not simulated"): an armed Bomber is very much simulated, just deliberately not
      *  moving, exactly like a Creeper mid-hiss. */
     boolean handleArmed() {
         if (!SpecialBehavior.fuseIsLit(entity)) {
@@ -54,12 +54,12 @@ final class BrainGuards {
         // isSwimming() answers true, which would keep dragging it toward its target through the whole fuse.
         swimming = false;
         entity.getNavigation().stop();
-        // Kill horizontal momentum only — falling still falls, so an armed Bomber mid-leap lands normally
-        // rather than freezing in the air.
+        // Kill horizontal momentum only. Falling still falls, so an armed Bomber mid-leap lands normally
+        // and does not freeze in the air.
         entity.setDeltaMovement(0.0, entity.getDeltaMovement().y, 0.0);
         // Also null the VANILLA melee target: LodManager.classify() re-asserts it every activation
         // (independently of our pursuit target below), and vanilla's own ZombieAttackGoal steers off that
-        // target on every real game tick regardless of our LOD-bucketed activation cadence — same reason
+        // target on every real game tick regardless of our LOD-bucketed activation cadence, same reason
         // LodBucketPass nulls it for a FROZEN zombie. Without this, an armed Bomber still creeps toward its
         // target between our activations even with navigation stopped and deltaMovement zeroed here. Fuse
         // logic no longer reads this once armed (SpecialBehavior only consults tgt while fuse <= 0), so

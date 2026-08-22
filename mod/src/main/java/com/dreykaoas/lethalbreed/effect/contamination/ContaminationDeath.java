@@ -12,9 +12,9 @@ import net.minecraft.world.entity.player.Player;
  * What the plague does when its host dies: wipe the state, then raise the body if it was upright enough to
  * come back as a zombie.
  *
- * <p>Kept apart from {@link ContaminationLifecycle} because reanimation is the one part of the plague that
- * creates an entity rather than editing one, and because the humanoid test is a rule people come looking
- * for on its own ("why did the creeper not get back up?").
+ * <p>Kept apart from {@link ContaminationLifecycle} because reanimation creates an entity where the rest of
+ * the plague only edits one, and because the humanoid test is a rule people come looking for by itself
+ * ("why did the creeper not get back up?").
  */
 public final class ContaminationDeath {
     private ContaminationDeath() {}
@@ -52,7 +52,7 @@ public final class ContaminationDeath {
     }
 
     /** A biped the plague can raise into a zombie. Players always qualify; every other mob is auto-detected from
-     *  its standing hitbox — tall, narrow and clearly upright. This is dynamic (no hardcoded mob list), so it
+     *  its standing hitbox: tall, narrow and clearly upright. This is dynamic (no hardcoded mob list), so it
      *  covers villagers, piglins, illagers, witches, skeletons, endermen AND modded humanoids alike, while
      *  excluding creepers (too short), golems/quadrupeds (too wide) and small mobs. */
     public static boolean isHumanoid(LivingEntity e) {

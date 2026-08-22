@@ -30,12 +30,12 @@ public final class FlowConfig {
     /** Measure the CPU↔GPU crossover once at server start (micro-benchmark of both solvers at a range of
      *  grid sizes) and use that as the GPU threshold instead of the fixed {@link #gpuMinCells}. Adds a brief
      *  one-off boot cost on this exact machine; the result is logged. Off = use the manual gpuMinCells.
-     *  <p>(Read at start-up — a restart is required to take effect: a runtime GUI/command toggle is a no-op
+     *  <p>(Read at start-up, so a restart is required to take effect: a runtime GUI/command toggle is a no-op
      *  until the next server start, since the crossover is measured once during GPU init.) */
     public static boolean gpuAutoCalibrate = false;
     /** Which OpenCL GPU to use, as an index into the detected-GPU list (logged at boot). -1 = auto (prefer an
      *  AMD/Radeon device, else the first GPU). Out-of-range falls back to auto. Only matters with >1 GPU.
-     *  <p>(Read at start-up — a restart is required to take effect: the device is selected once when the
+     *  <p>(Read at start-up, so a restart is required to take effect: the device is selected once when the
      *  GpuContext is built at server start; changing this at runtime has no effect until a restart.) */
     public static int gpuDeviceIndex = -1;
 
@@ -75,10 +75,10 @@ public final class FlowConfig {
     /** Build a staircase up when the target is at least this many blocks above the zombie. */
     public static double climbThreshold = 2.0;
     /** Climb ZONE: only start a climb toward an overhead target while within this horizontal distance of it.
-     *  Generous on purpose — the climb tops out then walks to the target, so it no longer needs to be perfectly
+     *  Generous on purpose: the climb tops out then walks to the target, so it no longer needs to be perfectly
      *  lined up. Too tight and zombies stall below a target they can't reach. */
     public static double climbHorizRadius = 5.0;
-    /** Activations a zombie waits before re-attempting a climb it just gave up on (too tall / no progress) —
+    /** Activations a zombie waits before re-attempting a climb it just gave up on (too tall / no progress).
      *  stops it jittering up-and-down the same unreachable wall or column forever. */
     public static int climbGiveUpCooldown = 15;
     /** Give up a pillar-up after rising this many blocks without reaching the target (safety cap). */

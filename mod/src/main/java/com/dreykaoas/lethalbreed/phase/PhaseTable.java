@@ -16,7 +16,7 @@ public final class PhaseTable {
     private PhaseTable() {
     }
 
-    /** {@code growth * phase^exponent} — the raw curve, before any ceiling. */
+    /** The raw curve, before any ceiling. */
     private static double raw(double growth, double exponent, int phase) {
         return growth * Math.pow(Math.max(0, phase), exponent);
     }

@@ -12,7 +12,7 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  * of resetting to phase 1 each session.
  *
  * <p>The timer basis is the overworld's {@code getGameTime()} (the persisted world age), so the elapsed time
- * toward the next advance is preserved across reloads too — not just the phase number.
+ * toward the next advance is preserved across reloads too, not just the phase number.
  */
 public final class PhaseSavedData extends SavedData {
 

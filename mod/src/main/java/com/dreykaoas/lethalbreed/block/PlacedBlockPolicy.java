@@ -2,25 +2,25 @@ package com.dreykaoas.lethalbreed.block;
 
 /**
  * The lifetime rules for a zombie-placed block as pure functions. **No Minecraft imports, and none may be
- * added** — that is the whole point of this class, exactly as for {@code ContaminationRoll}:
+ * added**. That is the whole point of this class, exactly as for {@code ContaminationRoll}:
  * {@link PlacedBlockTracker} touches {@code Level}/{@code BlockPos}/{@code Blocks} and so cannot be loaded
- * by a headless unit test, which left the bridging arithmetic — the expiry test, the abandon threshold and
- * the crack ramp — permanently untested.
+ * by a headless unit test, which left the bridging arithmetic (the expiry test, the abandon threshold and
+ * the crack ramp) permanently untested.
  *
  * <p>Every rule here takes the RAW configured lifetime and applies the {@link #lifetime(long)} floor itself,
  * so the clamp cannot be re-lost by a caller that forgets it: {@code placedBlockLifetimeTicks} is
  * operator-settable and a 0 would otherwise divide by zero in the crack ramp.
  *
- * <p>Add a lifetime rule HERE and call it from {@link PlacedBlockTracker} — never inline a fresh copy.
+ * <p>Add a lifetime rule HERE and call it from {@link PlacedBlockTracker}. Never inline a fresh copy.
  */
 public final class PlacedBlockPolicy {
     private PlacedBlockPolicy() {}
 
     /** How many lifetimes a placement may sit in an unloaded chunk before the tracker gives up on it.
      *  Never drop an expired-but-unloaded placement immediately: we can neither read its state nor
-     *  destroy it while the chunk is gone, so dropping it there leaves the block in the world forever —
-     *  a zombie's dirt bridge over a ravine would become permanent terrain, which is exactly what the
-     *  tracker exists to prevent. Holding the entry lets us destroy the block the moment the chunk comes
+     *  destroy it while the chunk is gone, so dropping it there leaves the block in the world forever:
+     *  a zombie's dirt bridge over a ravine would become permanent terrain, exactly what the tracker
+     *  exists to prevent. Holding the entry lets us destroy the block the moment the chunk comes
      *  back, however much later that is. The multiplier only bounds the map against areas a player
      *  explores once and never revisits. */
     public static final long ABANDON_FACTOR = 10L;
@@ -38,7 +38,7 @@ public final class PlacedBlockPolicy {
     }
 
     /** True once a placement has spent {@link #ABANDON_FACTOR} lifetimes straight in an unloaded chunk and
-     *  the tracker gives up on it rather than growing without bound. Deliberately far above
+     *  the tracker gives up on it, so it stops growing without bound. Deliberately far above
      *  {@link #expired}: an over-age placement whose chunk is gone is HELD, not dropped. */
     public static boolean abandoned(long age, long configuredLifetime) {
         return age >= lifetime(configuredLifetime) * ABANDON_FACTOR;

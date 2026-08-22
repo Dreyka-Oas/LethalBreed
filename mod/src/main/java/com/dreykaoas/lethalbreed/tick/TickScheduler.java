@@ -17,7 +17,7 @@ import java.util.Set;
  * work instead of spiking every tick. Each server tick processes exactly one bucket.
  *
  * <p>This class is the orchestrator: it owns the per-tick state and drives the split passes in a
- * fixed order — world rules + sound, then the bucketed {@link LodBucketPass}, then the every-tick
+ * fixed order: world rules + sound, then the bucketed {@link LodBucketPass}, then the every-tick
  * climb/swim {@link EveryTickPass}, then {@link WorldMaintenance#drainBlockOps drains}, then the
  * end-of-tick report through {@link DevProbe}. The scheduling math and pass order are deliberate; the
  * helpers are pure splits.
@@ -57,7 +57,7 @@ public final class TickScheduler {
         com.dreykaoas.lethalbreed.phase.PhaseManager.get().tick(server);
         com.dreykaoas.lethalbreed.effect.ContaminationManager.tick(server);
         // Every tick, not bucketed: a puddle shrinks and re-doses on wall-clock cadence, so routing it through
-        // the LOD buckets would tie its lifetime to a performance knob — the exact coupling the Bomber's fuse
+        // the LOD buckets would tie its lifetime to a performance knob, the exact coupling the Bomber's fuse
         // had to be rescued from.
         GorePuddles.tick(server);
         world.refreshTargetIndex(server); // must precede the bucket pass, which queries it
@@ -82,7 +82,7 @@ public final class TickScheduler {
      * SERVER_STOPPED: drop the every-tick worklists. {@code climbers}/{@code swimmers} hold {@link SmartZombie}
      * references from the world that just closed; this scheduler is a JVM-lived {@code static} in
      * {@code LethalBreedMod}, so without this the old {@code ServerLevel} stays pinned until the NEXT server's
-     * first tick prunes them via {@code EveryTickPass.drive} — i.e. across the whole menu/loading window, at
+     * first tick prunes them via {@code EveryTickPass.drive}, i.e. across the whole menu/loading window, at
      * peak memory (audit #20). {@code tickCounter} resets so a fresh world starts its stagger from 0.
      */
     public void reset() {

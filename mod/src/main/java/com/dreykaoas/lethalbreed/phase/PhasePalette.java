@@ -14,7 +14,7 @@ import net.minecraft.ChatFormatting;
 public final class PhasePalette {
     private PhasePalette() {}
 
-    /** Cyclic color palette for the phase broadcast/command text — only the tier THRESHOLDS
+    /** Cyclic color palette for the phase broadcast/command text: only the tier THRESHOLDS
      *  ({@link ProgressionConfig#phaseColorThresholds}) are configurable, this list is fixed. */
     private static final ChatFormatting[] COLOR_PALETTE = {
             ChatFormatting.GRAY, ChatFormatting.GREEN, ChatFormatting.YELLOW, ChatFormatting.GOLD,

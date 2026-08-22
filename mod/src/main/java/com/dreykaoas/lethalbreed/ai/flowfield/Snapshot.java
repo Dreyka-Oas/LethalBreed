@@ -4,7 +4,7 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 /**
  * Immutable world snapshot for one flow-field solve. Produced on the server thread by
  * {@link FlowFieldSnapshotBuilder} (classifying cells into cost arrays) and consumed off-thread by
- * {@link BellmanFordSolver} (the CPU backup) or the GPU solver — neither of which touch Minecraft.
+ * {@link BellmanFordSolver} (the CPU backup) or the GPU solver, neither of which touch Minecraft.
  */
 public final class Snapshot {
     public final int originX, originZ, width, depth, focusY;
@@ -26,12 +26,12 @@ public final class Snapshot {
         this.seedCells = seedCells;
     }
 
-    /** A flat, fully passable {@code side×side} field with a single corner seed at (0,0) — the clean synthetic
+    /** A flat, fully passable {@code side×side} field with a single corner seed at (0,0): the clean synthetic
      *  workload shared by the calibration bench and the self-test (which then carves its own wall).
      *
      *  <p>Public because the self-test now lives in the {@code dev} source set. This is the ONLY way to obtain
      *  a {@link Snapshot} without a world: the constructor stays package-private, so no external caller can
-     *  fabricate an arbitrary (possibly inconsistent) snapshot — they can only ask for this one canonical
+     *  fabricate an arbitrary (possibly inconsistent) snapshot. They can only ask for this one canonical
      *  synthetic field and then mutate the arrays the already-public accessors hand out. */
     public static Snapshot openSquare(int side) {
         int n = side * side;

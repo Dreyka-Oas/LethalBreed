@@ -14,7 +14,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
-import java.util.List;
 
 /**
  * Per-activation behaviours for ACTIVE specials. Each method self-contains one ability; the dispatch in
@@ -42,9 +41,9 @@ public final class SpecialAbilities {
      *
      * <p>The rally also plants a memory, exactly as {@code SoundEventBus} does for a heard noise. Without it
      * the handover survived only until the recruit's next classify: {@code LodManager} re-runs its own
-     * detection, finds the prey outside that zombie's {@code targetDetectRadius}, and — with no memory to
-     * fall back on — drops straight to the terminal branch that clears everything and freezes. The rally
-     * would then be undone within a couple of activations, which is why a Screamer never seemed to recruit
+     * detection, finds the prey outside that zombie's {@code targetDetectRadius}, and, with no memory to
+     * fall back on, drops straight to the terminal branch that clears everything and freezes. The rally
+     * would then be undone within a couple of activations. That is why a Screamer never seemed to recruit
      * more than one or two.
      */
     public static void hurl(SmartZombie sz, Zombie z, LivingEntity tgt, WorldAiContext ctx) {
@@ -67,14 +66,14 @@ public final class SpecialAbilities {
     /**
      * HEALER: restore health to nearby living smart zombies.
      *
-     * <p>This used to apply {@link MobEffects#REGENERATION} — and healed nothing at all. Vanilla's
+     * <p>This used to apply {@link MobEffects#REGENERATION}, and healed nothing at all. Vanilla's
      * {@code canBeAffected} rejects Regeneration for everything tagged {@code ignores_poison_and_regen},
      * which covers {@code #undead} and therefore every zombie; {@code addEffect} bails out before writing,
      * and {@code forceAddEffect} runs the same check first, so neither route works. The aura was a no-op for
      * its whole existence, hidden because the dev counter incremented regardless of the return value.
      *
      * <p>Forcing the effect through would mean a mixin exempting Regeneration globally, which would also let
-     * every vanilla regeneration potion, beacon and lingering cloud heal zombies — far outside this variant's
+     * every vanilla regeneration potion, beacon and lingering cloud heal zombies, far outside this variant's
      * remit. Healing directly is the mechanic that was actually meant.
      *
      * <p>{@code specialHealerRegenTicks} and {@code specialHealerRegenAmp} keep their names and their
@@ -121,7 +120,7 @@ public final class SpecialAbilities {
             if (child != null) {
                 // No chain-summoning, mirroring SpecialDeath's rule for Splitter children. A child rolls its
                 // own special inside finalizeSpawn, and from the phase where this type exists that is a real
-                // chance of drawing NECROMANCER — each second-generation summoner then wanders into its own
+                // chance of drawing NECROMANCER: each second-generation summoner then wanders into its own
                 // bubble where neither the density cap (a 12-block radius) nor the pack cap can see it, and
                 // nothing in this mod ever despawns.
                 SpecialRoller.assign(child, SpecialType.NONE);

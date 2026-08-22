@@ -37,7 +37,7 @@ public final class WorldAiContext {
         this.packManager = new PackManager();
     }
 
-    /** Pack instinct and migration for this dimension — a pack never crosses into another. */
+    /** Pack instinct and migration for this dimension: a pack never crosses into another. */
     public PackManager packManager() {
         return packManager;
     }
@@ -54,7 +54,7 @@ public final class WorldAiContext {
         return soundBus;
     }
 
-    /** Prey index used by target acquisition — see {@link TargetIndex} for why it exists. */
+    /** Prey index used by target acquisition (see {@link TargetIndex} for why it exists). */
     public TargetIndex targetIndex() {
         return targetIndex;
     }

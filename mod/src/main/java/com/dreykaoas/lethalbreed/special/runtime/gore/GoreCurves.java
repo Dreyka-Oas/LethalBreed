@@ -4,9 +4,8 @@ import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 
 /**
- * The curves that shape the aftermath of a burst rather than the burst itself: how long a puddle lasts and
- * how it shrinks, how many afflictions a phase puts in the cocktail and how strong they get, and how long
- * each one lands for.
+ * The curves for what a burst leaves behind: how long a puddle lasts and how it shrinks, how many
+ * afflictions a phase puts in the cocktail and how strong they get, and how long each one lands for.
  *
  * <p>Pure arithmetic, no world access, so the whole set stays unit-testable without booting a server.
  * {@link BomberBlast} keeps the blast: fuse, power, radius, and the distance falloff these reuse.
@@ -35,7 +34,7 @@ public final class GoreCurves {
     }
 
     /**
-     * The puddle's radius after {@code age} ticks, shrinking linearly so it reaches exactly 0 as it expires —
+     * The puddle's radius after {@code age} ticks, shrinking linearly so it reaches exactly 0 as it expires:
      * the visual and the hazard drain together, and nobody gets clipped by a puddle they can no longer see.
      */
     public static double puddleRadiusAt(double radius0, int age, int durationTicks) {
@@ -47,7 +46,7 @@ public final class GoreCurves {
 
     /**
      * Dose delivered by standing in the puddle: the same proximity-and-fuse curve as the burst, scaled down by
-     * {@link #PUDDLE_POTENCY}. Reusing {@link BomberBlast#intensity} is deliberate — the residue should fall off toward
+     * {@link #PUDDLE_POTENCY}. Reusing {@link BomberBlast#intensity} is deliberate. The residue should fall off toward
      * its own edge exactly the way the ring does, so one rule governs both and there is no second curve to
      * keep in sync.
      */
@@ -58,7 +57,7 @@ public final class GoreCurves {
     /**
      * How many distinct effects this Bomber's gore cocktail carries, given the phase.
      *
-     * <p>Always at least one — a Bomber that splatters nothing is a firework — rising toward
+     * <p>Always at least one (a Bomber that splatters nothing is a firework) rising toward
      * {@code specialBomberEffectCountCeiling} on the same saturating shape the rest of the phase system
      * uses. Rounded rather than floored so the ceiling is actually reachable: {@code (C-1)·(1-decay^p)}
      * approaches {@code C-1} from below and would floor to {@code C-2} forever.
@@ -88,7 +87,7 @@ public final class GoreCurves {
     /**
      * Duration in ticks for one affliction: {@code base + span * intensity} seconds.
      *
-     * <p>Public and generic because the effect set is now rolled per Bomber — each pool entry in
+     * <p>Public and generic because the effect set is now rolled per Bomber: each pool entry in
      * {@code GoreCocktail} brings its own base/span pair, instead of every effect owning a bespoke named
      * shaper here. Distance and fuse length still set the intensity and therefore still set the duration;
      * only WHICH effects land became random.
@@ -100,10 +99,10 @@ public final class GoreCurves {
     /**
      * Whether Blindness is eligible for this blast's cocktail at all.
      *
-     * <p>Kept here rather than inline in {@code GoreCocktail} so the meaning of
-     * {@code specialBomberBlindThreshold} — "intensity from which Blindness is applied, 1.0 disables it" —
-     * stays testable without booting a server. Blindness is the one entry in the pool that removes
-     * information rather than capability, which is why it alone is gated.
+     * <p>Kept out of {@code GoreCocktail} so the meaning of {@code specialBomberBlindThreshold}
+     * ("intensity from which Blindness is applied, 1.0 disables it") stays testable without booting a
+     * server. Blindness alone removes information; every other effect in the pool removes capability, and
+     * that difference is what the gate is for.
      */
     public static boolean blindnessEligible(double intensity) {
         double t = Math.clamp(SpecialVariantConfig.specialBomberBlindThreshold, 0.0, 1.0);

@@ -1,10 +1,10 @@
 package com.dreykaoas.lethalbreed.config.domain.engine;
 
 /**
- * EXPERT / low-level constants — the numeric tolerances, safety clamps and vanilla-derived magic numbers that
+ * EXPERT / low-level constants: the numeric tolerances, safety clamps and vanilla-derived magic numbers that
  * are NOT gameplay knobs. They live here (and in their own "Expert" GUI tab) so nothing in the mod is truly
  * hard-coded, while keeping them out of the normal gameplay tabs. Changing these can BREAK movement, spawning
- * or plague correctness — the defaults are the values the code was written against. Touch only if you know
+ * or plague correctness. The defaults are the values the code was written against. Touch only if you know
  * exactly what each one guards.
  */
 public final class ExpertConfig {

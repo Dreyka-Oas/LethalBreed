@@ -4,7 +4,7 @@ package com.dreykaoas.lethalbreed.effect.contamination;
  * Marks that the {@code LivingEntity.removeAllEffects()} call currently on this thread's stack came from
  * drinking milk, not from {@code /effect clear}.
  *
- * <p>Both routes are the same method — vanilla's {@code ClearAllStatusEffectsConsumeEffect.apply} is
+ * <p>Both routes are the same method: vanilla's {@code ClearAllStatusEffectsConsumeEffect.apply} is
  * literally {@code return livingEntity.removeAllEffects();}, contradicting the "different code path" the
  * mod's own javadoc claimed (audit #1). The two must behave oppositely: milk keeps the plague, the command
  * cures it. Since they are indistinguishable at the callee, the caller marks itself on the way in.

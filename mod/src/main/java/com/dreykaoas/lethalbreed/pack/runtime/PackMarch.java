@@ -20,7 +20,7 @@ import net.minecraft.server.level.ServerLevel;
  * whose targets are within 12 blocks), so the moment one member aggroed, twenty separate breaches would open
  * and none would ever finish.
  *
- * <p>Members that have a real target are skipped: aggro is sovereign. Sleepers are skipped too — day-sleep
+ * <p>Members that have a real target are skipped: aggro is sovereign. Sleepers are skipped too. Day-sleep
  * beats migration, so a pack simply stops at dawn.
  */
 public final class PackMarch {
@@ -28,7 +28,7 @@ public final class PackMarch {
 
     /** How often the headway test is allowed to fire. Long enough that a walking pack visibly closes on
      *  its destination between two checks, short enough that a pack pinned against a wall gives up within
-     *  packStuckActivations x this, i.e. a few seconds rather than a night. */
+     *  packStuckActivations x this, i.e. in seconds, where a slower check would strand it overnight. */
     private static final int HEADWAY_CHECK_TICKS = 40;
 
     public static void tick(ServerLevel level, PackManager manager, PackState pack, long gameTime) {
@@ -37,7 +37,7 @@ public final class PackMarch {
         }
         if (!PackConfig.packMigrateAtDay && level.isBrightOutside()) {
             // Daylight halt. Members keep whatever waypoint they hold until mood puts them to sleep, which
-            // clears it via the FROZEN path — replanting here would fight the day-sleep for the whole day.
+            // clears it via the FROZEN path: replanting here would fight the day-sleep for the whole day.
             return;
         }
         if (gameTime < pack.dwellUntil) {
@@ -49,7 +49,7 @@ public final class PackMarch {
         plantWaypoint(pack, gameTime);
     }
 
-    /** True when this pack needs a new destination — either it got there, or it cannot get there at all. */
+    /** True when this pack needs a new destination (either it got there, or it cannot get there at all). */
     private static boolean arrivedOrStuck(PackState pack, long gameTime) {
         double dx = pack.destX - pack.x;
         double dz = pack.destZ - pack.z;
@@ -92,7 +92,7 @@ public final class PackMarch {
         double wz = d <= 1.0e-6 ? pack.z : pack.z + dz / d * lead;
 
         // Headway is judged on a fixed interval, NOT once per visit. A pack is visited up to once a tick,
-        // and a walking centroid closes on the order of 0.02 blocks in a tick — an order of magnitude under
+        // and a walking centroid closes on the order of 0.02 blocks in a tick, an order of magnitude under
         // HEADWAY_EPSILON. Testing per visit therefore scored a perfectly healthy march as "no headway"
         // almost every tick, tripped packStuckActivations within a second, and made the pack re-roll its
         // destination over and over: measured at 11 blocks covered in 780 ticks where the walk alone should

@@ -6,7 +6,7 @@ import net.minecraft.world.level.Level;
 /**
  * Shared crumbling-overlay bookkeeping for a tracked block: a synthetic breaker id and the last crack stage
  * pushed, so both the progressive {@link BreakManager} and the lifetime {@link PlacedBlockTracker} ramp the
- * vanilla 0→9 overlay the exact same way — pushing a packet only when the stage actually changes, and clearing
+ * vanilla 0→9 overlay the exact same way, pushing a packet only when the stage actually changes, and clearing
  * the cracks the same way when the block is done.
  */
 abstract class CrackingBlock {

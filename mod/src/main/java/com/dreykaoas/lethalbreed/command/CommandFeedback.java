@@ -24,7 +24,7 @@ final class CommandFeedback {
 
     /** Same, for a message that carries a translation key.
      *
-     *  <p>The prefix stays a literal — it is a brand, not a word — and only the message is translated, so
+     *  <p>The prefix stays a literal (it is a brand, not a word) and only the message is translated, so
      *  each recipient reads it in their own language instead of the server's. */
     static void success(CommandSourceStack src, Component msg, ChatFormatting style, boolean broadcast) {
         src.sendSuccess(() -> Component.literal(PREFIX).append(msg).withStyle(style), broadcast);

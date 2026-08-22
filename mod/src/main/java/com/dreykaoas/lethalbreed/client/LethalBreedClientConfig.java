@@ -60,7 +60,7 @@ public final class LethalBreedClientConfig {
                     LethalBreedClientConfig loaded = gson.fromJson(r, LethalBreedClientConfig.class);
                     if (loaded != null) {
                         instance = loaded;
-                        instance.sanitize(); // Gson writes fields raw — guard the only value used at runtime
+                        instance.sanitize(); // Gson writes fields raw, so guard the only value used at runtime
                     }
                 }
             } else {
@@ -74,7 +74,7 @@ public final class LethalBreedClientConfig {
             instance = new LethalBreedClientConfig();
         }
 
-        LethalBreed.LOGGER.info("[LethalBreed] client config — enabled={}, cull={}@{}b, sodium={}",
+        LethalBreed.LOGGER.info("[LethalBreed] client config: enabled={}, cull={}@{}b, sodium={}",
                 instance.enabled, instance.cullDistantZombies, instance.zombieRenderDistance,
                 sodiumPresent);
     }

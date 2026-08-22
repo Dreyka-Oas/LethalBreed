@@ -27,7 +27,7 @@ public final class SoundEventBus {
     // How often the full-world entity scan (tickEntities) actually runs. A moving creature's noise refreshes a
     // zombie's short-term memory (~10 s window), so scanning every Nth tick instead of every tick is imperceptible
     // for pursuit while cutting the per-tick getAllEntities() sweep by N×. Player footsteps (tickPlayers) and event
-    // distribution (process) still run EVERY tick — only the O(all entities) creature scan is throttled.
+    // distribution (process) still run EVERY tick. Only the O(all entities) creature scan is throttled.
     private static final int ENTITY_SCAN_INTERVAL = 4;
 
     // event = {x, y, z, radius}
@@ -82,7 +82,7 @@ public final class SoundEventBus {
         if (!TargetingConfig.soundEnabled) {
             return;
         }
-        // Throttle the O(all entities) sweep — see ENTITY_SCAN_INTERVAL. Cheap early-out on the off ticks.
+        // Throttle the O(all entities) sweep (see ENTITY_SCAN_INTERVAL). Cheap early-out on the off ticks.
         if ((entityScanCounter++ % ENTITY_SCAN_INTERVAL) != 0) {
             return;
         }
@@ -113,7 +113,7 @@ public final class SoundEventBus {
             for (SmartZombie z : near) {
                 // Every zombie in earshot is ROUSED by the noise: notifyHeardSound (re-)arms its day alert so an
                 // awake one keeps hunting, and a sleeping one starts waking (after a short delay) to investigate
-                // this exact spot. A silent, non-attacking player emits nothing, so it never trips this — stealth.
+                // this exact spot. A silent, non-attacking player emits nothing, so it never trips this: stealth.
                 z.mood().notifyHeardSound(gameTime, e[0], e[1], e[2]);
                 if (z.entity().getTarget() != null) {
                     continue; // already chasing a player directly

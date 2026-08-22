@@ -34,7 +34,7 @@ public final class ConfigLoader {
 
     public static ConfigDrift.Report load(Path path) {
         if (!Files.exists(path)) {
-            LethalBreed.LOGGER.info("[LethalBreed] no config file — writing defaults to {}", path);
+            LethalBreed.LOGGER.info("[LethalBreed] no config file, writing defaults to {}", path);
             ConfigWriter.save(path);
             return null;
         }
@@ -47,7 +47,7 @@ public final class ConfigLoader {
             // been flat until this change, so a flat file is what every existing user has; if we only
             // understood the nested shape, the first launch after the migration would read nothing, silently
             // fall back to the 305 code defaults, and the save() below would immediately overwrite the file
-            // with those defaults — destroying every setting the user changed, with no error and no warning.
+            // with those defaults, destroying every setting the user changed, with no error and no warning.
             // Flatten one level deep into a name→value map so both shapes (and any half-migrated mix) resolve
             // through the same per-field loop below. When a name appears both at the root and inside a
             // category, the nested value wins: nested is the current format.
@@ -66,11 +66,7 @@ public final class ConfigLoader {
                 }
             }
 
-            // Check the file's SHAPE before applying anything, so we can tell the user what is wrong
-            // instead of silently dropping it. The loop below is field-driven, not file-driven — it
-            // never looks at a key the schema does not have — so without this a misspelled option is
-            // invisible: the edit does nothing, the summary line still reports success, and save()
-            // deletes the line. The user watches their edit vanish with no explanation.
+            // Check the file's SHAPE before applying anything. Why that matters: see ConfigDriftReport.
             Set<String> knownNames = new HashSet<>();
             for (Field f : ConfigFields.all()) {
                 knownNames.add(f.getName());
@@ -79,14 +75,14 @@ public final class ConfigLoader {
 
             if (report.unusable()) {
                 // Content present but not one key of it recognisable. Anything less than this and
-                // rewriting would throw away the settings that ARE still readable, so this is the only
-                // structural condition that justifies starting over.
+                // rewriting would throw away the settings that ARE still readable, so nothing weaker
+                // justifies starting over.
                 if (ConfigQuarantine.moveAside(path, report.keysInFile() + " keys, none of them a known option")) {
                     ConfigWriter.save(path);
                 }
                 // Deliberately NOT the report: it describes the file we just moved aside. The config now
                 // running is pristine defaults, so there is nothing for the operator join notice to nag
-                // about — and nagging about a file that no longer exists, for the rest of the session, is
+                // about. Nagging about a file that no longer exists, for the rest of the session, is
                 // worse than saying nothing.
                 return null;
             }
@@ -95,8 +91,8 @@ public final class ConfigLoader {
             // Repair the misspellings the check found unambiguous, BEFORE the apply loop: the loop is
             // field-driven and would never look at a key the schema does not have, so without this the
             // user's value is dropped and the write below deletes the line. Moving it onto the real
-            // name means the edit takes effect and the file comes out correct — the point being that
-            // the file fixes itself rather than asking the user to fix it.
+            // name means the edit takes effect and the file comes out correct, the point being that
+            // the file fixes itself and never asks the user to fix it.
             for (ConfigDrift.Rename rename : report.renamed()) {
                 JsonElement carried = values.remove(rename.from());
                 if (carried != null) {

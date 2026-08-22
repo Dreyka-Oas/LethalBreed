@@ -36,7 +36,7 @@ public final class FlowFieldManager {
     private double lastFocusX = Double.NaN;
     private double lastFocusZ = Double.NaN;
 
-    /** Consecutive solve failures, and the tick of the last logged failure — so a persistent failure is
+    /** Consecutive solve failures, and the tick of the last logged failure, so a persistent failure is
      *  reported (with its running count) but not once per cycle. Written on the worker thread and the server
      *  thread; {@code volatile} is enough since neither reads-then-writes based on the other's value. */
     private volatile int consecutiveFailures = 0;
@@ -52,7 +52,7 @@ public final class FlowFieldManager {
         // The `never computed yet` sentinel must be tested explicitly, NOT arithmetically: with
         // lastComputeTick = Long.MIN_VALUE the subtraction `serverTick - lastComputeTick` overflows to a large
         // NEGATIVE value for every realistic serverTick (0 - Long.MIN_VALUE wraps back to Long.MIN_VALUE), so
-        // the throttle read as "not due yet" on the first tick — and, since the early return also skips the
+        // the throttle read as "not due yet" on the first tick, and, since the early return also skips the
         // `lastComputeTick = serverTick` update, on every tick after it too. The field was therefore never
         // solved on any server, and `active()` stayed null for the whole run. Caught by the presence harness.
         if (lastComputeTick != Long.MIN_VALUE && serverTick - lastComputeTick < interval) {
@@ -104,10 +104,10 @@ public final class FlowFieldManager {
                 consecutiveFailures = 0;
             } catch (Throwable t) {
                 // GpuFlowField already catches GPU errors and degrades to CPU (and the GPU circuit breaker
-                // logs those), so reaching here means the CPU solver ITSELF threw — previously swallowed
-                // silently into a discarded Future. Log it (rate-limited) rather than re-solving a throwing
-                // snapshot every interval with no trace. Do NOT null `active`: the last good field is a far
-                // better fallback than none, and there is no other "known" field to swap to.
+                // logs those), so reaching here means the CPU solver ITSELF threw: previously swallowed
+                // silently into a discarded Future. Log it (rate-limited): silence here means a throwing
+                // snapshot gets re-solved every interval with no trace. Do NOT null `active`: the last good
+                // field is a far better fallback than none, and there is no other "known" field to swap to.
                 onSolveFailure(serverTick, t);
             } finally {
                 computing.set(false);
@@ -117,7 +117,7 @@ public final class FlowFieldManager {
 
     /** Record a solve failure and log it at most once per ~10 s window, with the running consecutive count so
      *  a persistent failure is visible without one line per cycle. (POOL.submit can't itself throw here: the
-     *  queue is unbounded and the pool is never shut down, so there is no reject path to guard — audit #19.) */
+     *  queue is unbounded and the pool is never shut down, so there is no reject path to guard. Audit #19.) */
     private void onSolveFailure(long serverTick, Throwable t) {
         int n = ++consecutiveFailures;
         long since = serverTick - lastFailureLogTick;

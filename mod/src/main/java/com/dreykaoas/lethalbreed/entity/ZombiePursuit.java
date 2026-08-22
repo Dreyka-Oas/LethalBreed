@@ -10,7 +10,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 /**
  * Per-zombie pursuit data: the current hunt target, short-term memory of a lost target, a heard-sound point,
  * pack membership, spatial-grid membership, and the special-variant attachment + its action cooldown. Pure
- * state + accessors — no per-tick behaviour (that lives in {@code entity.move.ZombieBrain}).
+ * state + accessors, no per-tick behaviour (that lives in {@code entity.move.ZombieBrain}).
  */
 public final class ZombiePursuit {
     private final Zombie entity;
@@ -81,7 +81,7 @@ public final class ZombiePursuit {
     public long memoryExpire() { return memoryExpire; }
     public void clearMemory() { this.memory = false; }
 
-    /** Pursue the remembered last-known position — no live entity (no melee), just navigate/dig to the spot. */
+    /** Pursue the remembered last-known position: no live entity (no melee), just navigate/dig to the spot. */
     public void setMemoryTarget() {
         this.targetEntity = null;
         this.tgtX = memX;
@@ -107,7 +107,7 @@ public final class ZombiePursuit {
     // --- pack ---
     public PackTether pack() { return pack; }
 
-    /** Walk to the pack's rendezvous — no live entity, so no melee, like {@link #setMemoryTarget()}. The
+    /** Walk to the pack's rendezvous: no live entity, so no melee, like {@link #setMemoryTarget()}. The
      *  waypoint is short-range by construction (packMarchLead), which is what keeps the member out of
      *  FROZEN: LodManager grades on the distance to whatever is being walked to. */
     public void setPackTarget() {

@@ -23,7 +23,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * celebrating), and the daytime doze.
  *
  * <p>The ONLY place {@link #state} is assigned: the awake transitions live in {@link MoodTransitions},
- * the doze in {@link DaySleepCycle}, and both hand a state back rather than writing one. {@link #update}
+ * the doze in {@link DaySleepCycle}, and both hand a state back without writing one. {@link #update}
  * runs once per activation from {@code LodBucketPass}; {@code drive*} run every tick from the brain.
  */
 public final class ZombieMood {
@@ -107,7 +107,7 @@ public final class ZombieMood {
     }
 
     /** Drive the dash to the shade found in {@link #update}. Falls back to a plain retreat when no shade
-     *  was located, so a burning zombie still moves rather than standing still and cooking. */
+     *  was located, so a burning zombie keeps moving. Standing still would only let it cook. */
     public void driveShelter(ServerLevel level) {
         BlockPos shelter = transitions.shelterTarget();
         if (shelter != null) {

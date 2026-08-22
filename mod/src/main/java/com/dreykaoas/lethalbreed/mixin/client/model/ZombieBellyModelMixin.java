@@ -14,19 +14,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Inflates the BOMBER's belly (the {@code body} part) as its fuse burns. The model part is shared across
- * all zombies, so the scale is rewritten every frame from the render state's charge — 0 restores the
+ * all zombies, so the scale is rewritten every frame from the render state's charge: 0 restores the
  * normal shape. Charge 1 → ~2.3x girth on x/z, a touch on y.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(AbstractZombieModel.class)
 public class ZombieBellyModelMixin {
 
-    /** How much charge=1 inflates the belly on x/z, on top of the base 1.0 scale — see class javadoc. */
+    /** How much charge=1 inflates the belly on x/z, on top of the base 1.0 scale (see class javadoc). */
     private static final float GIRTH_XZ_SCALE = 1.3f;
-    /** How much charge=1 inflates the belly on y, on top of the base 1.0 scale — see class javadoc. */
+    /** How much charge=1 inflates the belly on y, on top of the base 1.0 scale (see class javadoc). */
     private static final float GIRTH_Y_SCALE = 0.35f;
 
-    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$swellBelly(ZombieRenderState state, CallbackInfo ci) {

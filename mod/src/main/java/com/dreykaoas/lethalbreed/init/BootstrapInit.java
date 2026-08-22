@@ -23,14 +23,14 @@ public final class BootstrapInit {
         LethalBreedConfig.load();
         ConfigIo.load(); // JSON override: config/oas/lethalbreed.json
         LethalConfigPayloads.registerCommon(); // live-config networking + receiver
-        LethalBreedEffects.register(); // custom effects FIRST — spawn/leap code references them
+        LethalBreedEffects.register(); // custom effects FIRST because spawn/leap code references them
         com.dreykaoas.lethalbreed.effect.LethalBreedPotions.register(); // brewable Super Contamination potion
-        SpecialAttachment.init(); // register the special-type attachment
+        SpecialAttachment.init();
         ZombieStateAttachment.init(); // register the per-zombie behaviour-state attachment (drives sleep silence)
-        ContaminationManager.init(); // register the contamination attachment
+        ContaminationManager.init();
         PackAttachment.init(); // register the pack-membership attachment (survives chunk unload)
         AiConflictDetector.checkModList();
-        LOGGER.info("[LethalBreed] init — MC 1.21.11, Java 21 (Liberica NIK/GraalVM). Buckets={}, cell={}b",
+        LOGGER.info("[LethalBreed] init: MC 1.21.11, Java 21 (Liberica NIK/GraalVM). Buckets={}, cell={}b",
                 SchedulerConfig.tickBuckets, SchedulerConfig.spatialCellSize);
     }
 }

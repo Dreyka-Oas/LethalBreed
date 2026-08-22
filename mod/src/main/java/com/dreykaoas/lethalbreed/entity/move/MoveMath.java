@@ -30,7 +30,7 @@ public final class MoveMath {
 
     /** Clear one body-space cell for a step: if a breakable solid stands at {@code pos}, request its progressive
      *  break, set the zombie to {@code busyState} and return true (the caller should hold/wait this tick). Returns
-     *  false when the cell is already clear or unbreakable — the single place the descent steps clear their path. */
+     *  false when the cell is already clear or unbreakable (the single place the descent steps clear their path). */
     public static boolean requestBreakBodyBlock(SmartZombie owner, ServerLevel level, WorldAiContext ctx,
             BlockPos pos, BlockState state, ZombieState busyState) {
         if (state.blocksMotion() && breakableSolid(level, pos)) {
@@ -44,7 +44,7 @@ public final class MoveMath {
     /**
      * Fall the zombie would take stepping into column (x,z) from feet-level {@code y}: 0 = flat ground
      * straight ahead, 1 = a one-block step-down, etc. {@link Integer#MAX_VALUE} when no solid landing is
-     * found within {@code max} below — a genuine pit / unsafe fall it should bridge or stair instead.
+     * found within {@code max} below, a genuine pit / unsafe fall it should bridge or stair instead.
      * The scanned column is clear above the landing by construction, so the fall path is unobstructed.
      */
     public static int fallDistanceInto(ServerLevel level, int x, int y, int z, int max) {
@@ -57,7 +57,7 @@ public final class MoveMath {
     }
 
     /**
-     * An upward jump impulse with the live Jump Boost effect folded in — so a zombie given the potion (or any
+     * An upward jump impulse with the live Jump Boost effect folded in. So a zombie given the potion (or any
      * mod adding the effect) jumps higher dynamically, exactly like vanilla {@code getJumpPower()} adds
      * {@code 0.1 * (amplifier + 1)}. Never hard-codes the boost; reads the current effect each jump.
      */
@@ -67,7 +67,7 @@ public final class MoveMath {
     }
 
     /**
-     * Horizontal multiplier for the leap, folding in the custom {@link LethalBreedEffects#LEAP} effect — the
+     * Horizontal multiplier for the leap, folding in the custom {@link LethalBreedEffects#LEAP} effect, the
      * horizontal analogue of {@link #jumpVelocity}: each level adds {@code leapEffectPerLevel} to the reach.
      * Returns 1.0 when the zombie doesn't carry the effect. Read live each leap (dynamic, never hard-coded).
      */
@@ -77,7 +77,7 @@ public final class MoveMath {
     }
 
     /**
-     * How many vertical blocks the zombie must clear to walk through — its actual occupied height
+     * How many vertical blocks the zombie must clear to walk through: its actual occupied height
      * (`getBbHeight`, which already reflects the per-zombie SCALE), rounded up. Capped by {@code
      * maxBreakHeight} so a giant doesn't bore a huge tunnel, floored at 1.
      */
@@ -89,7 +89,7 @@ public final class MoveMath {
     /** Turn the entity to face a horizontal heading (yaw from the XZ vector), pitch untouched. No-op on a
      *  degenerate heading (|h| ≤ 1e-2) so a zombie sitting on its target doesn't snap to a junk yaw. */
     public static void faceHeading(LivingEntity entity, double hx, double hz) {
-        if (hx * hx + hz * hz <= ExpertConfig.expertHeadingEpsilon) { // (1e-2)^2 — same gate as the callers, no sqrt
+        if (hx * hx + hz * hz <= ExpertConfig.expertHeadingEpsilon) { // (1e-2)^2, same gate as the callers, no sqrt
             return;
         }
         float yaw = (float) (Mth.atan2(hz, hx) * (180.0 / Math.PI)) - 90.0f;

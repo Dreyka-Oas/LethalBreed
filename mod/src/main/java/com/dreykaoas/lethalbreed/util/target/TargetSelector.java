@@ -82,14 +82,14 @@ public final class TargetSelector {
 
     private static List<LivingEntity> collectCandidates(ServerLevel level, Mob self, double radius, TargetIndex index) {
         // Broad phase. MEASURED (StageProfiler, ~100 zombies): asking the world for every LivingEntity in an
-        // 80-block box was ~50% of the whole reclassify stage, itself ~40% of the mod's tick time — because
+        // 80-block box was ~50% of the whole reclassify stage, itself ~40% of the mod's tick time, because
         // it visits the entire horde only to have isValid reject Zombie on each one.
         //
-        // Shrinking the box does NOT fix that, and that was tested rather than assumed: narrowing the
-        // vertical extent to 24 blocks left the sweep at 23.8us/call against 22.1 without it. The cost is
-        // the entities inside, not the volume. So the horde is simply never offered to the scan: prey lives
-        // in the mod's own TargetIndex, and players — few, and far too important to risk a bookkeeping slip
-        // hiding one — are read live from the level.
+        // Shrinking the box does NOT fix that, and the measurement says so: narrowing the vertical
+        // extent to 24 blocks left the sweep at 23.8us/call against 22.1 without it. The cost is the
+        // entities inside, not the volume. So the horde is simply never offered to the scan: prey lives
+        // in the mod's own TargetIndex, and players (few, and far too important to risk a bookkeeping slip
+        // hiding one) are read live from the level.
         List<LivingEntity> candidates = new ArrayList<>();
         if (index != null) {
             index.collectInto(candidates, self.getX(), self.getZ(), radius);
@@ -114,7 +114,7 @@ public final class TargetSelector {
                 // Iterated in distance order, so the first visible candidate is the nearest visible one.
                 if (distSq[i] <= radiusSq
                         && (!TargetingConfig.requireLineOfSight || Perception.canSee(level, self, candidates.get(i)))) {
-                    return candidates.get(i); // nearest seen — done
+                    return candidates.get(i); // nearest seen, done
                 }
             }
             return null;

@@ -18,14 +18,14 @@ import java.util.List;
  * every victim of that blast and for the puddle it leaves, so a given Bomber has a recognisable poison
  * rather than a new surprise per victim.
  *
- * <p>Every effect in the pool is a hindrance that cannot kill on its own — Poison famously stops at half a
+ * <p>Every effect in the pool is a hindrance that cannot kill on its own: Poison famously stops at half a
  * heart, and the rest only slow, blind, weaken or starve. That is a deliberate boundary: the Bomber is meant
  * to make the horde around you lethal, not to be lethal itself, and it keeps the cocktail from interacting
  * with the no-one-shot guarantee that {@code AttributeCaps} enforces on the zombies.
  *
- * <p>The pool lives here rather than in {@link BomberBlast} because {@code Holder<MobEffect>} is a Minecraft
+ * <p>The pool lives here, outside {@link BomberBlast}, because {@code Holder<MobEffect>} is a Minecraft
  * type, and BomberBlast's freedom from those imports is what lets its maths be unit-tested without booting a
- * server. Only the counts and amplifiers — the parts worth testing — live there.
+ * server. Only the counts and amplifiers (the parts worth testing) live there.
  */
 public final class GoreCocktail {
     private GoreCocktail() {}
@@ -37,7 +37,7 @@ public final class GoreCocktail {
      * @param baseS      duration in seconds at intensity 0
      * @param spanS      seconds added at intensity 1
      * @param ampCap     highest amplifier this effect may reach, regardless of the phase. 0 for effects whose
-     *                   amplifier does nothing in vanilla — showing the player "Nausea III" would promise a
+     *                   amplifier does nothing in vanilla. Showing the player "Nausea III" would promise a
      *                   severity the game does not implement.
      * @param blindGated whether this entry is subject to {@code specialBomberBlindThreshold}
      */
@@ -54,16 +54,16 @@ public final class GoreCocktail {
             new Entry(MobEffects.MINING_FATIGUE, 3.0, 9.0, 2, false),
             new Entry(MobEffects.HUNGER, 4.0, 11.0, 2, false),
             // Blindness stays behind its threshold, keeping specialBomberBlindThreshold's documented meaning
-            // ("intensity from which Blindness is applied", 1.0 disables it). It is also the only entry that
-            // takes away information rather than capability, which is why it is the one that is gated.
+            // ("intensity from which Blindness is applied", 1.0 disables it). It takes away information
+            // where the rest of the pool takes away capability, so it alone is gated.
             new Entry(MobEffects.BLINDNESS, 1.0, 4.0, 0, true));
 
     /**
      * Roll this Bomber's cocktail.
      *
-     * <p>Drawn WITHOUT replacement. Drawing with replacement — the pattern {@code ZombieVariation} uses for
-     * beneficial buffs — would routinely collapse "four effects" into one or two, since a repeat draw only
-     * overwrites the same effect. Distinct afflictions are the whole point here.
+     * <p>Drawn WITHOUT replacement. Drawing with replacement (the pattern {@code ZombieVariation} uses for
+     * beneficial buffs) would routinely collapse "four effects" into one or two, since a repeat draw only
+     * overwrites the same effect. Distinct afflictions are what this method promises.
      *
      * @param phase     current difficulty phase; drives how many effects and how strong they may be
      * @param intensity the blast's intensity at its centre, used only to decide Blindness eligibility

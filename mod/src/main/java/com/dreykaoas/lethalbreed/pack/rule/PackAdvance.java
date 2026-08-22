@@ -7,7 +7,7 @@ package com.dreykaoas.lethalbreed.pack.rule;
  * that chunk to generate; doing it per pack per tick is the cost trap that kills this kind of system. A
  * pack out of view therefore travels in a straight line over oceans and mountains alike, and is snapped
  * back onto the real surface when it materialises. The honest corollary is that no "avoid water" option is
- * implementable here — better to say so than to ship a knob that cannot work.
+ * implementable here: better to say so than to ship a knob that cannot work.
  *
  * <p><b>Prorating by elapsed ticks is not a refinement, it is the correctness condition.</b> Packs are
  * visited round-robin, so the interval between two visits of the same pack grows with the number of packs
@@ -24,7 +24,7 @@ public final class PackAdvance {
     /**
      * Move {@code pos} toward the destination and report whether the pack has arrived.
      *
-     * @param pos           two-slot {x, z}, mutated in place — no allocation in a per-tick loop
+     * @param pos           two-slot {x, z}, mutated in place (no allocation in a per-tick loop)
      * @param blocksPerTick coarse travel speed
      * @param elapsedTicks  ticks since this pack was last advanced; zero or negative moves nothing
      * @param arriveDistance how close counts as there

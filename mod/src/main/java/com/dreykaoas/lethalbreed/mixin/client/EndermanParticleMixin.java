@@ -22,7 +22,7 @@ public abstract class EndermanParticleMixin {
     private static final DustParticleOptions LETHALBREED$BLACK =
             new DustParticleOptions(0x000000, 1.0f);
 
-    // require = 0: purely presentational — see com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
     @Redirect(require = 0, 
             method = "aiStep",
             at = @At(value = "INVOKE",

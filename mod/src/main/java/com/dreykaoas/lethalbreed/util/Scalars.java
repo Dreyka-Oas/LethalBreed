@@ -8,7 +8,7 @@ public final class Scalars {
     private Scalars() {
     }
 
-    /** Square of a value — clearer and cheaper than {@code Math.pow(v, 2)} for squared-distance comparisons. */
+    /** Clearer and cheaper than {@code Math.pow(v, 2)} for squared-distance comparisons. */
     public static double sq(double v) {
         return v * v;
     }

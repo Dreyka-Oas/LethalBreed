@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
 /**
- * WORKER THREAD: solve a {@link Snapshot} with PARALLEL Bellman-Ford relaxation — the multi-core CPU
+ * WORKER THREAD: solve a {@link Snapshot} with PARALLEL Bellman-Ford relaxation, the multi-core CPU
  * backup used whenever the GPU is absent/disabled. Each iteration every passable cell pulls the
  * cheapest cost from its 8 neighbours (across the {@link SolvePool} threads); repeat until a
  * fixpoint (nothing improved) or the safety cap. This is the same algorithm as the GPU
@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
  * Dijkstra (non-negative weights). No Minecraft access.
  *
  * <p>Race-free without locks: each parallel task writes only its OWN cell ({@code cost[i]}, disjoint
- * across tasks). Neighbour reads may be a tick stale within an iteration (Gauss-Seidel) — benign for
+ * across tasks). Neighbour reads may be a tick stale within an iteration (Gauss-Seidel): benign for
  * Bellman-Ford, at worst one extra iteration. The {@code submit(...).join()} barrier between
  * iterations publishes all writes to the next pass.
  */
@@ -81,7 +81,7 @@ final class BellmanFordSolver {
             }
         }
 
-        // Direction extraction: each cell steps to the neighbour minimising `neighbourCost + stepCost` —
+        // Direction extraction: each cell steps to the neighbour minimising `neighbourCost + stepCost`,
         // the SAME quantity the relaxation above minimises, so the emitted step provably realises the cell's
         // own converged cost. Minimising the raw neighbour cost instead (what this pass used to do) is a
         // different criterion whenever diagonals cost more than orthogonals, which they do by default
@@ -89,7 +89,7 @@ final class BellmanFordSolver {
         // yields a strictly longer route. That also made routing hardware-dependent, since the GPU kernel
         // records argmin(cost + step) as a by-product of relaxing. Descent is preserved for free: the winner
         // satisfies cost[target] = cost[i] - step - extra[i] < cost[i].
-        // Parallel — every cell writes only its own dirX[i]/dirZ[i], so no races.
+        // Parallel: every cell writes only its own dirX[i]/dirZ[i], so no races.
         SolvePool.get().submit(() -> IntStream.range(0, n).parallel().forEach(i -> {
             if (cost[i] >= FlowField.IMPASSABLE || cost[i] == 0) {
                 return;

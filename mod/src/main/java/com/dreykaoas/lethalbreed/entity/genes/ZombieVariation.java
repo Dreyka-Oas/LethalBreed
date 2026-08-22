@@ -22,7 +22,7 @@ import java.util.Random;
 /**
  * Gives each zombie a modest, individual flavour: random size, strength, speed and leap power. Rolls
  * are seeded by the entity UUID so they are deterministic (stable across reloads) and applied via
- * permanent attribute modifiers with fixed ids (idempotent — no compounding on chunk reload).
+ * permanent attribute modifiers with fixed ids (idempotent, no compounding on chunk reload).
  */
 public final class ZombieVariation {
     private ZombieVariation() {}
@@ -35,7 +35,7 @@ public final class ZombieVariation {
     private static final long EFFECT_SALT = 4242L;
     private static final long LEAP_SALT = 777L;
 
-    /** Distinct salt so the special roll no longer consumes the phase RNG — it used to share {@code r} inside
+    /** Distinct salt so the special roll no longer consumes the phase RNG: it used to share {@code r} inside
      *  applyPhase, which coupled a zombie's variant to how many phase rolls happened before it. */
     private static final long SPECIAL_SALT = 55501L;
 
@@ -55,7 +55,7 @@ public final class ZombieVariation {
             applyRandomEffect(z); // legacy flat effect roll when the phase system is off
         }
         // Outside the branch on purpose. The special roll used to live inside applyPhase, so turning
-        // phaseSystemEnabled off — a legitimate, exposed option — silently disabled every special variant for
+        // phaseSystemEnabled off (a legitimate, exposed option) silently disabled every special variant for
         // the life of the world, while some forty special* options stayed visible and editable in the GUI with
         // nothing to act on. With the phase system off there is no phase to gate unlocks, so the roll runs at
         // the floor phase where only the earliest types are available.
@@ -64,7 +64,7 @@ public final class ZombieVariation {
                         ? PhaseManager.current()
                         : com.dreykaoas.lethalbreed.special.SpecialType.maxUnlockPhase());
         // LAST, and it has to stay last: it reads finished attribute values, so every modifier and effect
-        // above — including the Juggernaut's health multiplier and the Sprinter's speed — must already be
+        // above, including the Juggernaut's health multiplier and the Sprinter's speed, must already be
         // stamped. Moving this call earlier would let exactly those escape the cap.
         AttributeCaps.enforce(z);
     }
@@ -95,7 +95,7 @@ public final class ZombieVariation {
      *
      *  <p>No REGENERATION either, and not as a balance call: vanilla's {@code canBeAffected} rejects it for
      *  everything tagged {@code ignores_poison_and_regen}, which covers {@code #undead}. Leaving it in the
-     *  pool meant roughly one buff roll in nine silently did nothing — and since the roll is seeded on the
+     *  pool meant roughly one buff roll in nine silently did nothing, and since the roll is seeded on the
      *  zombie's UUID, the same zombie drew the same blank every time its chunk reloaded. */
     @SuppressWarnings("unchecked")
     static Holder<MobEffect>[] effectPool() {

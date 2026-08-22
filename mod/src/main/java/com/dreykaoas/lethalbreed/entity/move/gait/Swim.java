@@ -13,7 +13,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
  * Per-tick water driving. The zombie can't drown, so by default the FloatGoal keeps it bobbing at the
- * surface; when its target is itself submerged below, it dives after it — a downward impulse EVERY tick so
+ * surface; when its target is itself submerged below, it dives after it: a downward impulse EVERY tick so
  * it overcomes the FloatGoal's per-tick lift. Never places blocks in water; only carves real obstacles.
  */
 public final class Swim {
@@ -39,7 +39,7 @@ public final class Swim {
         boolean targetBelow = haveLive && target.isInWater()
                 && tyy < entity.getY() - CombatMoveConfig.waterSubmergeOffset;
 
-        // Drive the swim directly instead of via the path navigation — the water pathfinder kept failing to
+        // Drive the swim directly instead of via the path navigation. The water pathfinder kept failing to
         // settle and the zombie spun in circles. Stop nav, face the target, ease toward it.
         entity.getNavigation().stop();
 
@@ -65,7 +65,7 @@ public final class Swim {
                 : (entity.isUnderWater() ? CombatMoveConfig.waterRiseSpeed : 0.0);
         // Step-out / stack-up: at the surface (not diving) a solid block ahead blocks horizontal progress and
         // swimming disables auto-step. Hop up when the edge is solid at foot level (climb onto shore) OR when
-        // it's too tall (solid at foot+1) — repeated hops let zombies pile onto EACH OTHER (collision) and
+        // it's too tall (solid at foot+1): repeated hops let zombies pile onto EACH OTHER (collision) and
         // scale a high bank they can't step onto alone.
         if (!targetBelow && (sdx != 0 || sdz != 0)) {
             BlockPos base = entity.blockPosition();

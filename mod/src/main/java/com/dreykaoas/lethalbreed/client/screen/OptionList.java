@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 /**
  * Right-hand option list. One row per config option (see {@link OptionEntry} and its subclasses):
  * label + value control (toggle for booleans, edit field for numbers) + a small reset icon.
- * Auto-save: every edit fires {@code onChange(name, value)} immediately — there is no Save button.
+ * Auto-save contract: see {@link OptionEntry}.
  */
 public final class OptionList extends ContainerObjectSelectionList<OptionEntry> {
 

@@ -12,7 +12,7 @@ import static org.jocl.CL.clGetDeviceInfo;
 
 /**
  * OpenCL device-info queries used by {@link GpuContext} to name and size-check a device. Each query degrades
- * to a safe fallback rather than throwing, so a driver missing an optional param never aborts device pick.
+ * to a safe fallback and does not throw, so a driver missing an optional param never aborts device pick.
  */
 final class GpuDeviceInfo {
     /** AMD extension: the commercial board name (e.g. "AMD Radeon RX 9060 XT") vs CL_DEVICE_NAME ("gfx1200"). */

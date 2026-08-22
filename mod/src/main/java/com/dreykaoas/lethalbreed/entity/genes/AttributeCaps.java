@@ -14,19 +14,19 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * bounding the attribute. Vanilla computes an attribute as
  * {@code (base + Σ ADD_VALUE) * (1 + Σ ADD_MULTIPLIED_BASE) * Π (1 + ADD_MULTIPLIED_TOTAL)}, and a rolled
  * Strength is an {@code ADD_VALUE}: it lands INSIDE the base that the phase multiplier then scales. At phase
- * 14 with Strength III that is {@code (3.0 + 9.0) * 3.30 = 39.6} raw damage — precisely the one-shot
+ * 14 with Strength III that is {@code (3.0 + 9.0) * 3.30 = 39.6} raw damage, precisely the one-shot
  * threshold through un-enchanted full netherite, and exactly what a player reported. No ceiling on the curve
  * alone can close that, because the curve is the wrong factor.
  *
  * <p>So this corrects the finished value instead, with an {@code ADD_MULTIPLIED_TOTAL} modifier of
- * {@code cap / actual}. That operation is the one that composes multiplicatively at the very end, which is
- * what "take whatever this ended up as, and bring it down to here" requires; an {@code ADD_MULTIPLIED_BASE}
- * would merely add its delta to the others and land somewhere else entirely.
+ * {@code cap / actual}. That operation composes multiplicatively at the very end, exactly what "take
+ * whatever this ended up as, and bring it down to here" requires; an {@code ADD_MULTIPLIED_BASE} would
+ * merely add its delta to the others and land somewhere else entirely.
  *
  * <p><b>Enforced repeatedly, not once at spawn.</b> A spawn-time pass is provably insufficient, and this was
  * measured rather than reasoned about: vanilla's own zombie-leader bonus is an {@code ADD_MULTIPLIED_TOTAL}
  * of up to x5 stamped in {@code Zombie.handleAttributes}, and stamped AGAIN at runtime whenever a zombie
- * summons reinforcements. A correction placed before it is simply multiplied by it — which is how a capped
+ * summons reinforcements. A correction placed before it is simply multiplied by it. That is how a capped
  * zombie was caught at 227 health against a 200 ceiling, with the correction still visibly attached. So this
  * also runs on every LOD activation, where the common case costs one attribute read that finds nothing to do.
  */
@@ -53,7 +53,7 @@ public final class AttributeCaps {
 
     /**
      * Bring every capped attribute of {@code z} within its ceiling. Idempotent, and cheap when there is
-     * nothing to do — which is the overwhelmingly common case once a zombie has been corrected once.
+     * nothing to do, which is the overwhelmingly common case once a zombie has been corrected once.
      */
     public static void enforce(Zombie z) {
         cap(z, Attributes.ATTACK_DAMAGE, "cap_attack_damage", ProgressionConfig.phaseDamageCap);
@@ -70,7 +70,7 @@ public final class AttributeCaps {
      *
      * <p>The removal has to come first, and that ordering is the whole method. Reading the value while a
      * previous correction is still attached measures the capped figure, not the real one: it reports a value
-     * at or under the cap, concludes nothing needs doing, drops the correction — and the attribute springs
+     * at or under the cap, concludes nothing needs doing, drops the correction, and the attribute springs
      * back to its uncapped value. A pass that undoes the previous pass is worse than no pass at all, and it
      * fails intermittently, only on whichever zombies happen to get enforced twice.
      *
@@ -82,8 +82,8 @@ public final class AttributeCaps {
      */
     private static boolean cap(Zombie z, Holder<Attribute> attr, String idPath, double cap) {
         if (cap <= 0.0 || z.getAttribute(attr) == null || z.getAttributeValue(attr) <= cap) {
-            // Already within bounds — including "within bounds BECAUSE our correction is attached", which is
-            // why nothing is removed on this path. Removing here and re-deriving would read the corrected
+            // Already within bounds, including "within bounds BECAUSE our correction is attached", so
+            // nothing is removed on this path. Removing here and re-deriving would read the corrected
             // value, conclude no correction is needed, and let the raw value spring straight back: a pass
             // that undoes the previous pass. Leaving early also avoids marking the attribute dirty, which
             // matters because this runs on every activation of every zombie.
@@ -95,8 +95,8 @@ public final class AttributeCaps {
         AttributeModifiers.remove(z, attr, idPath);
 
         // Converge instead of solving in one division, because the reading lies. AttributeInstance
-        // .calculateValue ends with attribute.sanitizeValue(...), which CLAMPS to the attribute's own maximum
-        // — 1024 for MAX_HEALTH. Once the raw product passes that, every read returns 1024 no matter how far
+        // .calculateValue ends with attribute.sanitizeValue(...), which CLAMPS to the attribute's own maximum,
+        // 1024 for MAX_HEALTH. Once the raw product passes that, every read returns 1024 no matter how far
         // past it the true product is, so cap/1024 under-corrects and the attribute settles above its
         // ceiling. That is measurable: a zombie was caught at 217.99 against a 200 cap with the correction
         // attached. Each pass multiplies the running factor by cap/observed, which shrinks the product below

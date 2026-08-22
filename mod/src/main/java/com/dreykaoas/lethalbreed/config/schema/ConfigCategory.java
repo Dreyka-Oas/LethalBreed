@@ -13,14 +13,14 @@ public final class ConfigCategory {
         // dev/debug-named options belong in the Dev tab regardless of other keyword matches (e.g.
         // devClimbTest would otherwise be pulled into Climb by the "climb" rule below).
         //
-        // NO SHIPPED OPTION MATCHES THIS RULE ANY MORE — every dev/debug-named one lives on the dev-only
+        // NO SHIPPED OPTION MATCHES THIS RULE ANY MORE: every dev/debug-named one lives on the dev-only
         // DevTestConfig holder, which joins the schema at runtime and only in a development environment.
         // The rule stays because that holder still needs it (devSpecialTest…, debugLogInterval), and it is
         // exactly why a player's GUI has no "Dev" tab: CustomConfigScreen builds its sidebar from the
         // categories the rows actually carry, so with no such row the tab is simply never created.
         //
         // contamDevTimeScale deliberately does NOT match: it starts with "contam", so it lands on the
-        // Contamination tab. That is correct — it is a real player option (ContaminationState reads it to
+        // Contamination tab. That is correct. It is a real player option (ContaminationState reads it to
         // divide the plague timers) and it stays in src/main.
         if (n.startsWith("dev") || n.startsWith("debug")) return "Dev";
         // Expert / low-level constants (tolerances, safety clamps, vanilla magic numbers) get their own tab.
@@ -31,8 +31,8 @@ public final class ConfigCategory {
         if (n.startsWith("pack")) return "Pack";
         // Specials MUST come before Contamination and Mood, for the same reason Pack comes before Breaking:
         // an ability word inside the name would otherwise win. specialScreamerRadius would be captured by
-        // "scream" → Mood, and specialHealerRegenTicks/RegenAmp by "regen" → Mood — which is where those
-        // two already sat, silently, back when they were still named specialSoigneurRegen*. Every special*
+        // "scream" → Mood, and specialHealerRegenTicks/RegenAmp by "regen" → Mood, where those two
+        // already sat, silently, back when they were still named specialSoigneurRegen*. Every special*
         // option is a Specials option, whatever ability word it happens to spell.
         if (n.startsWith("special")) return "Specials";
         if (n.contains("contam")) return "Contamination";

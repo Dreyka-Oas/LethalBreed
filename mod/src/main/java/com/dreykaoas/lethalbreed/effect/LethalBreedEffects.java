@@ -19,17 +19,17 @@ import net.minecraft.world.entity.LivingEntity;
 public final class LethalBreedEffects {
     private LethalBreedEffects() {}
 
-    /** Custom "Leap" effect — boosts a zombie's horizontal leap reach (read in SmartZombie.leapDistanceFactor). */
+    /** Custom "Leap" effect that boosts a zombie's horizontal leap reach (read in SmartZombie.leapDistanceFactor). */
     public static Holder<MobEffect> LEAP;
 
-    /** "Super Contamination" — lethal ramping plague that zombifies its victim (skull icon). */
+    /** "Super Contamination": lethal ramping plague that zombifies its victim (skull icon). */
     public static Holder<MobEffect> SUPER_CONTAMINATION;
 
-    /** "Zombie Vision" — transient hallucination episode; while present the victim's client draws other players as
+    /** "Zombie Vision" is a transient hallucination episode; while present the victim's client draws other players as
      *  zombies. Flares on its own random timer like the other symptomatic episodes. No icon, purely a client cue. */
     public static Holder<MobEffect> ZOMBIE_VISION;
 
-    /** Whether the effect is registered and currently on {@code entity} — the shared null-guarded membership
+    /** Whether the effect is registered and currently on {@code entity}, the shared null-guarded membership
      *  check behind the contamination HUD tint and the hallucination particle cue. */
     public static boolean isSuperContaminated(LivingEntity entity) {
         return SUPER_CONTAMINATION != null && entity.hasEffect(SUPER_CONTAMINATION);
@@ -38,11 +38,11 @@ public final class LethalBreedEffects {
     /** Highest Resistance this mod will ever grant. Vanilla reduces damage by {@code 5*(amp+1)} out of 25, so
      *  amplifier 4 is exactly total immunity: no sword, arrow, fire, fall or poison can touch the mob and
      *  {@code /kill} is the only way out. Both the amplifier bounds that reach here allow 9, so the ceiling
-     *  is enforced at the one place every path passes through rather than trusted to each config. */
+     *  is enforced at the one place every path passes through, and no config is trusted to hold it. */
     private static final int MAX_RESISTANCE_AMP = 3;
 
     /** Apply an INFINITE-duration effect at {@code amplifier}, hidden (no ambient, no particles) but with its
-     *  icon — the shared "buff for the zombie's whole life, invisible to players" idiom used by the special
+     *  icon, the shared "buff for the zombie's whole life, invisible to players" idiom used by the special
      *  roller and the per-zombie variation roll. */
     public static void applyInfinite(LivingEntity entity, Holder<MobEffect> effect, int amplifier) {
         int amp = effect == MobEffects.RESISTANCE ? Math.min(amplifier, MAX_RESISTANCE_AMP) : amplifier;

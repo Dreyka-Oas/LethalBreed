@@ -8,7 +8,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 
 /**
  * Classifies one world column at the focus plane into a traversal type. Pure world reads (server
- * thread only) — used by {@link FlowFieldSnapshotBuilder} to fill the snapshot cost arrays.
+ * thread only), used by {@link FlowFieldSnapshotBuilder} to fill the snapshot cost arrays.
  */
 public final class CellClassifier {
     private CellClassifier() {}
@@ -27,7 +27,7 @@ public final class CellClassifier {
      * <p>Reads from the {@link ChunkAccess} the caller already resolved (once per 16-column run along
      * {@code cz}) instead of {@code ServerLevel.getBlockState}, which re-resolves the owning chunk on
      * every call. A non-null chunk already proves horizontal residency, so the per-position
-     * {@code Level.isLoaded} guard the earlier ServerLevel-only implementation used is dropped — but
+     * {@code Level.isLoaded} guard the earlier ServerLevel-only implementation used is dropped. But
      * {@code isLoaded} also folded in a VERTICAL bounds check ({@code Level.isLoaded} is
      * {@code isOutsideBuildHeight ? false : hasChunk}), which a bare {@code chunk.getBlockState} does not:
      * a {@code y} outside the chunk's build height silently returns void air instead of signalling
@@ -36,7 +36,7 @@ public final class CellClassifier {
      * below to reproduce that half of the guard.
      *
      * <p>Public only so the dev-source-set {@code ComputeSelfTest} can sweep a real world through this exact
-     * method (the {@code classify-coverage} gate — the only automated check that reaches this class
+     * method (the {@code classify-coverage} gate, the only automated check that reaches this class
      * directly). Nothing in {@code main} calls it from outside this package.
      */
     public static byte classify(ServerLevel level, ChunkAccess chunk, BlockPos.MutableBlockPos m,

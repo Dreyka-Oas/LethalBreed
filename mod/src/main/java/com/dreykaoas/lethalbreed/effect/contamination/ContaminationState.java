@@ -19,7 +19,7 @@ import java.util.Set;
  * The plague's persistent attachments, the {@code TRACKED} victim set, the transient per-victim timer maps, the
  * shared RNG, and the age/symptomatic/level/intensity accessors. The single source of truth other contamination
  * classes (and {@link com.dreykaoas.lethalbreed.effect.ContaminationManager}, which re-exports the attachments
- * for external callers) build on — this class has no dependency of its own outside this package.
+ * for external callers) build on: this class has no dependency of its own outside this package.
  */
 public final class ContaminationState {
     private ContaminationState() {}
@@ -90,9 +90,9 @@ public final class ContaminationState {
     }
 
     /** Forget every transient timer/tracking entry for a victim (on cure/death). Does not touch the persistent
-     *  attachments themselves — callers strip those separately since cure and death clear a different subset.
+     *  attachments themselves. Callers strip those separately since cure and death clear a different subset.
      *  Covers only THIS class's collections; the two sibling maps (episodes, hallucination) are purged by
-     *  {@link ContaminationLifecycle#forgetAllTransient} — use that, not this, to fully drop a victim. */
+     *  {@link ContaminationLifecycle#forgetAllTransient}: use that, not this, to fully drop a victim. */
     public static void forgetTimers(LivingEntity e) {
         TRACKED.remove(e);
         NEXT_PULSE_TICK.remove(e);
@@ -102,7 +102,7 @@ public final class ContaminationState {
     }
 
     /** Drop every victim from this class's in-memory collections at once (server stop). Persistent
-     *  attachments are untouched — they live in entity NBT and re-track via {@link ContaminationLifecycle#onLoad}. */
+     *  attachments are untouched. They live in entity NBT and re-track via {@link ContaminationLifecycle#onLoad}. */
     public static void clearAllTransient() {
         TRACKED.clear();
         NEXT_PULSE_TICK.clear();

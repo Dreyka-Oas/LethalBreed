@@ -12,7 +12,7 @@ import com.dreykaoas.lethalbreed.config.ConfigBoundsTable.Range;
  * silently breaking a roll, {@code NaN}/{@code Infinity} poisoning an attribute modifier, …).
  *
  * <p>Clamping here covers EVERY entry point (GUI packet, command, JSON load) in one place, keeps the
- * reflective {@link ConfigSchema} untouched, and is a no-op for every in-range value — so default configs
+ * reflective {@link ConfigSchema} untouched, and is a no-op for every in-range value, so default configs
  * and sane edits behave exactly as before. Booleans and unlisted fields pass through unchanged.
  *
  * <p>The bound ranges themselves live in {@link ConfigBoundsTable}; this class holds only the clamp logic.
@@ -27,7 +27,7 @@ public final class ConfigBounds {
      * <p>Non-finite doubles/floats ({@code NaN}/{@code Infinity}) never get through, whether or not the
      * field is in the bounds table. When bounds exist they are pulled to the lower bound (a safe, in-range
      * value); when they do not, there is no principled in-range value to pick, so the assignment is
-     * REFUSED — {@link ConfigAccess#apply} turns the exception into {@code false} and the field keeps
+     * REFUSED. {@link ConfigAccess#apply} turns the exception into {@code false} and the field keeps
      * whatever valid value it already had. Silently letting a non-finite value through was the real hole:
      * some of them land in persistent per-entity attachments (contamination intensity), so a later config
      * fix cannot undo the damage.
@@ -63,7 +63,7 @@ public final class ConfigBounds {
 
     /**
      * Reject {@code NaN}/{@code Infinity} on a field the bounds table doesn't cover. Arrays are checked
-     * element-wise for the same reason — {@code double[]} options are neither length-bounded nor
+     * element-wise for the same reason: {@code double[]} options are neither length-bounded nor
      * content-validated anywhere else.
      */
     private static void rejectNonFinite(String name, Object value) {
@@ -84,7 +84,7 @@ public final class ConfigBounds {
     }
 
     /**
-     * Register a bounds group defined outside this package — i.e. the dev source set, whose options join the
+     * Register a bounds group defined outside this package, i.e. the dev source set, whose options join the
      * schema at runtime via {@link ConfigSchema#registerHolder}. {@link ConfigBoundsTable} and its {@code b}
      * hook are package-private on purpose; this is the one door into them, and it is the mirror image of
      * {@code registerHolder}: a field and its bound always move together.

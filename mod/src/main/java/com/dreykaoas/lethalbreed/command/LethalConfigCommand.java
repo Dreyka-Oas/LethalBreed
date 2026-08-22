@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.lang.reflect.Field;
 
 /**
- * {@code /lethalconfig} — the mod's single shipped, user-facing command: open the in-game GUI menu
+ * {@code /lethalconfig}, the mod's single shipped, user-facing command: open the in-game GUI menu
  * (player only; a console sender falls back to the text dump).
  *
  * <p>It had a {@code verify} subcommand that printed the config file's structural health. It was
@@ -52,19 +52,19 @@ public final class LethalConfigCommand {
 
     /** Human-readable detected GPU, shown live on the {@code useGpu} row in the GUI. Runs on the server
      *  thread, so it MUST NOT call {@code isAvailable()}: that takes the compute monitor (blocking behind an
-     *  in-flight solve) and lazily triggers OpenCL init — a ~second-long clBuildProgram — on a box where the
+     *  in-flight solve) and lazily triggers OpenCL init (a ~second-long clBuildProgram) on a box where the
      *  admin disabled the GPU precisely to avoid OpenCL. It reads the already-known state instead (audit #9). */
     private static String gpuInfo() {
         var gpu = com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager.get();
         if (!com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig.useGpu) {
-            return "GPU disabled (useGpu=false) — CPU multithread";
+            return "GPU disabled (useGpu=false), CPU multithread";
         }
         if (!gpu.isInitialized()) {
-            return "GPU not initialised — CPU multithread";
+            return "GPU not initialised, CPU multithread";
         }
         return gpu.isAvailableNonBlocking()
                 ? gpu.deviceName() + " (OpenCL)"
-                : "Aucun GPU — CPU multithread";
+                : "Aucun GPU, CPU multithread";
     }
 
     private static int list(CommandContext<CommandSourceStack> ctx) {

@@ -25,8 +25,8 @@ import java.util.List;
 public final class MoodStateDispatch {
     private MoodStateDispatch() {}
 
-    /** ZombieMood's mood states. Owned here (rather than duplicated as a private enum on ZombieMood) so dispatch
-     *  is a plain typed switch — no string bridge between the two classes. */
+    /** ZombieMood's mood states. Owned here, with no duplicate private enum on ZombieMood, so dispatch is a
+     *  plain typed switch, no string bridge between the two classes. */
     public enum State { NORMAL, FLEEING, SHELTERING, CELEBRATING, SLEEPING }
 
     /** Returns true if the distress scream fired this call (caller bumps its own counter + latch). No-op for
@@ -83,7 +83,7 @@ public final class MoodStateDispatch {
         return null;
     }
 
-    /** The nearest TARGETABLE player within {@code radius} — the fallback threat a WOUNDED zombie flees from
+    /** The nearest TARGETABLE player within {@code radius}: the fallback threat a WOUNDED zombie flees from
      *  even when nothing has hit it recently, so it keeps retreating while you stand near it instead of freezing
      *  once the "last hurt by" memory lapses. Creative/spectator players are ignored (same rule as targeting). */
     public static Player nearestTargetablePlayer(Zombie entity, double radius) {

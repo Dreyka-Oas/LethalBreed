@@ -13,7 +13,7 @@ import java.util.Map;
  * PASSIVE = spawn-time buffs only; ACTIVE = per-tick action ({@link SpecialBehavior#tick}); DEATH = on death.
  *
  * <p>The {@linkplain #unlockPhase() unlock phase} (from which phase a type can appear) and the
- * {@linkplain #weight() selection weight} (relative frequency) are NOT hard-coded here — they are read live
+ * {@linkplain #weight() selection weight} (relative frequency) are NOT hard-coded here: they are read live
  * from {@link ProgressionConfig} ({@code special<Type>Phase} / {@code special<Type>Weight}), so both are
  * editable through the config JSON / GUI / {@code /lethalconfig}. The switches below are only the routing to
  * those config fields; the field defaults hold the built-in values.
@@ -38,7 +38,7 @@ public enum SpecialType {
      *
      *  <p>Read-only, and permanently so: the {@code lethalbreed:special} attachment is persistent, so every
      *  special zombie already alive in a saved world carries one of these strings. {@link #fromId} accepts
-     *  them, {@link #id()} never returns one — which means a world quietly re-saves itself onto the English
+     *  them, {@link #id()} never returns one, which means a world quietly re-saves itself onto the English
      *  ids as its chunks cycle, without a migration pass and without a moment where a Bomber reads back as
      *  a plain zombie. */
     private static final Map<String, SpecialType> LEGACY_IDS = Map.of(
@@ -63,11 +63,11 @@ public enum SpecialType {
     /** Translation key for the name shown on the entity.
      *
      *  <p>Replaces the old {@code frName()}, whose value reached every player through
-     *  {@code Component.literal} — so an English client saw a zombie labelled « Nécromancien ». Both lang
+     *  {@code Component.literal}, so an English client saw a zombie labelled "Nécromancien". Both lang
      *  files carry these keys, so each player now gets the name in their own language. */
     public String translationKey() { return "lethalbreed.special." + id; }
 
-    /** Phase from which this type can appear — configurable via {@link ProgressionConfig}. */
+    /** Phase from which this type can appear (configurable via {@link ProgressionConfig}). */
     public int unlockPhase() {
         return switch (this) {
             case SPRINTER -> SpecialVariantConfig.specialSprinterPhase;
@@ -82,7 +82,7 @@ public enum SpecialType {
         };
     }
 
-    /** Relative selection weight (higher = more frequent; 0 = never picked) — configurable via {@link ProgressionConfig}. */
+    /** Relative selection weight (higher = more frequent; 0 = never picked), configurable via {@link ProgressionConfig}. */
     public int weight() {
         return switch (this) {
             case SPRINTER -> SpecialVariantConfig.specialSprinterWeight;
@@ -109,7 +109,7 @@ public enum SpecialType {
         return LEGACY_IDS.getOrDefault(id, NONE);
     }
 
-    /** The highest unlock phase any type asks for — i.e. the phase at which every type is available.
+    /** The highest unlock phase any type asks for (i.e. the phase at which every type is available).
      *  Used when the phase system is switched off: with no progression there is no reason to keep content
      *  permanently locked, so the roll behaves as though everything had been unlocked. */
     public static int maxUnlockPhase() {

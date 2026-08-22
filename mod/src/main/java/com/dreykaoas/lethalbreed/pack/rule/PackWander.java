@@ -9,12 +9,12 @@ import java.util.Random;
  *
  * <p><b>Nothing here may ever consult a player.</b> That is the whole point of the mechanic: a pack drifts
  * because of its own momentum, not because someone is standing somewhere. The rule takes only its current
- * position, its current heading, the world border and an injected {@link Random} — there is no parameter
- * through which a player position could arrive, which is a stronger guarantee than a comment.
+ * position, its current heading, the world border and an injected {@link Random}: there is no parameter
+ * through which a player position could arrive, a stronger guarantee than a comment.
  * {@code PackNoPlayerAccessTest} enforces the same thing across the package.
  *
  * <p>Vanilla points of interest were considered and rejected: {@code PoiManager} forces its sections to load
- * from disk, and a migrating pack is by definition heading for chunks that are not resident — the cost lands
+ * from disk, and a migrating pack is by definition heading for chunks that are not resident. The cost lands
  * on the server thread, for terrain that may not even be generated yet.
  *
  * <p>The heading is <b>persistent and only slightly perturbed per leg</b>. That is what separates a
@@ -29,8 +29,8 @@ public final class PackWander {
     /**
      * Pick the next destination and the heading to carry into the leg after it.
      *
-     * @param outHeading a two-slot scratch array, written with the new unit heading. Passed in rather than
-     *                   allocated so a round-robin over hundreds of packs stays allocation-free.
+     * @param outHeading a two-slot scratch array, written with the new unit heading. Supplied by the caller
+     *                   so a round-robin over hundreds of packs stays allocation-free.
      */
     public static Destination next(int fromX, int fromZ, double headingX, double headingZ,
                                    int borderMinX, int borderMinZ, int borderMaxX, int borderMaxZ,
@@ -58,8 +58,8 @@ public final class PackWander {
         return new Destination(gotX, gotZ);
     }
 
-    /** A fresh pack has no heading yet; atan2(0,0) is 0, which points due east — a fine arbitrary start,
-     *  but say so rather than leave the reader wondering whether it is a bug. */
+    /** A fresh pack has no heading yet; atan2(0,0) is 0, which points due east, a fine arbitrary start,
+     *  but say so, or the reader is left wondering whether it is a bug. */
     private static double baseAngle(double headingX, double headingZ) {
         return Math.atan2(headingZ, headingX);
     }

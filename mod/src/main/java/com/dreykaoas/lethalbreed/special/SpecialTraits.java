@@ -26,7 +26,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 final class SpecialTraits {
     private SpecialTraits() {}
 
-    /** Undo exactly what {@link #applyPassive} stamps for {@code type} — and nothing else, so a buff the
+    /** Undo exactly what {@link #applyPassive} stamps for {@code type}, and nothing else, so a buff the
      *  zombie drew from the random effect pool survives being re-labelled. */
     static void clear(Zombie z, SpecialType type) {
         switch (type) {
@@ -58,7 +58,7 @@ final class SpecialTraits {
             }
             case LEAPER -> infinite(z, LethalBreedEffects.LEAP, SpecialVariantConfig.specialLeaperLeapAmp);
             case JUGGERNAUT -> {
-                // Bulky tank via size/HP/resistance only — no armor (zombies never wear gear).
+                // Bulky tank via size/HP/resistance only: no armor (zombies never wear gear).
                 // The scale-up is skipped where the ceiling is too low. This runs at the TAIL of
                 // finalizeSpawn, i.e. AFTER vanilla accepted the spot using the UNSCALED silhouette, so
                 // growing regardless pushed the zombie's head into the ceiling of any two-block mine gallery:

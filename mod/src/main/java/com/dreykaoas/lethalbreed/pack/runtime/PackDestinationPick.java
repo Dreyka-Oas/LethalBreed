@@ -12,15 +12,15 @@ import net.minecraft.world.level.border.WorldBorder;
  * from {@link PackWander#next} built off the current world border, and both write it onto the pack the same
  * way. Only the two callers' dwell-time bookkeeping differs, so that part stays with each of them.
  *
- * <p>The border is read as four ints so {@link PackWander} stays free of any world type — and, more to the
- * point, so there is no parameter through which a player position could ever reach it. This method is the one
- * place that reads the world border and calls {@link PackWander#next}, so it is where that invariant must hold.
+ * <p>The border is read as four ints so {@link PackWander} stays free of any world type, and, more to the
+ * point, so there is no parameter through which a player position could ever reach it. Nowhere else reads
+ * the world border and calls {@link PackWander#next}, so this is where that invariant must hold.
  */
 final class PackDestinationPick {
     private PackDestinationPick() {}
 
     /** Pick a new destination/heading for {@code pack} at its current position and write destX/destZ/headingX/
-     *  headingZ onto it. Does not touch {@code dwellUntil} or anything else — callers own that. */
+     *  headingZ onto it. Does not touch {@code dwellUntil} or anything else: callers own that. */
     static void pick(ServerLevel level, PackState pack) {
         WorldBorder border = level.getWorldBorder();
         double[] heading = new double[2];

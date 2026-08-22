@@ -6,7 +6,7 @@ package com.dreykaoas.lethalbreed.config.domain;
  * <p>Split out of {@code ProgressionConfig}, which held three unrelated domains. Field NAMES are
  * unchanged and the holders stay adjacent in {@code ConfigSchema.HOLDERS} in their original order, so
  * the on-disk JSON, {@code ConfigBoundsTable}, {@code ConfigCategory} and every translation key are
- * unaffected — see {@code ConfigSchemaOrderTest}.
+ * unaffected (see {@code ConfigSchemaOrderTest}).
  */
 public final class SpecialVariantConfig {
     private SpecialVariantConfig() {}
@@ -20,7 +20,7 @@ public final class SpecialVariantConfig {
     public static double specialPhaseScale = 0.015;
     /** Hard cap on the special chance. */
     public static double specialMaxChance = 0.35;
-    /** Show the special type as a floating name over the zombie (off — no nametags cluttering the screen). */
+    /** Show the special type as a floating name over the zombie (off: no nametags cluttering the screen). */
     public static boolean specialShowName = false;
     /** Activations between an ACTIVE special's repeated actions (bucketed, so ~5 ticks each). */
     public static int specialActionInterval = 10;
@@ -56,10 +56,10 @@ public final class SpecialVariantConfig {
     public static int specialBomberFuseMaxTicks = 120;
     /** Explosion power of the shortest fuse (vanilla TNT ≈ 4.0). */
     public static double specialBomberPowerMin = 2.0;
-    /** Explosion power of the longest fuse — the payoff for having swelled the whole time. */
+    /** Explosion power of the longest fuse, the payoff for having swelled the whole time. */
     public static double specialBomberPowerMax = 5.0;
     /** Splatter radius as a multiple of the blast radius. Above 1.0, backing out of lethal range still
-     *  leaves you inside the gore — which is the whole point of the ring. */
+     *  leaves you inside the gore, and that is what the ring is for. */
     public static double specialBomberSplatterMul = 1.5;
     /** Contamination chance at intensity 1.0; scales down linearly with intensity. */
     public static double specialBomberInfectChance = 0.5;

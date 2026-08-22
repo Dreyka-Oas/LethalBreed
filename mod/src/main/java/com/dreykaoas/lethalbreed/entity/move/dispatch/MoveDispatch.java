@@ -46,9 +46,9 @@ public final class MoveDispatch {
         int sdz = MoveMath.stepSign(dz);
         if (targetOverhead) {
             // Build a dirt pillar to reach an overhead target, but only once genuinely STUCK (no horizontal
-            // progress) — otherwise keep walking toward the wall/target this tick, so a zombie still 2-5 blocks
+            // progress), otherwise keep walking toward the wall/target this tick, so a zombie still 2-5 blocks
             // out reaches the base instead of pillaring a dirt tower in open ground short of it. The pillar
-            // always places blocks under itself (it stands on what it builds) — never a bare velocity wall-scale.
+            // always places blocks under itself (it stands on what it builds), never a bare velocity wall-scale.
             if (stuck) {
                 pillar.initiate();
             }
@@ -58,7 +58,7 @@ public final class MoveDispatch {
             if (dy <= -CombatMoveConfig.descendThreshold) {
                 Descend.step(owner, level, ctx, sdx, sdz);
             } else {
-                // The hunt target's cell (zombie pos + deltas) — lets the breach coordinator group zombies
+                // The hunt target's cell (zombie pos + deltas): lets the breach coordinator group zombies
                 // converging on the SAME target/wall so they focus one breach at a time.
                 BlockPos target = BlockPos.containing(owner.entity().getX() + dx,
                         owner.entity().getY() + dy, owner.entity().getZ() + dz);

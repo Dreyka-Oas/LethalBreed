@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * Reflection enumeration of the config field set. The single source of truth for "which fields are
- * editable options" — every public, static, non-final, primitive field on each {@link #HOLDERS holder}
+ * editable options": every public, static, non-final, primitive field on each {@link #HOLDERS holder}
  * class is exposed automatically, in source-declaration order.
  *
  * <p>The field declarations live on the domain holder classes under {@code config.domain}; each is listed
@@ -31,7 +31,7 @@ import java.util.List;
  * commands) keeps working unchanged.
  *
  * <p>The holder list is not fixed at compile time: {@link #registerHolder} adds one at runtime. That exists
- * for exactly one caller — {@code DevBootstrap}, in a development environment — so the dev-only options and
+ * for exactly one caller ({@code DevBootstrap}, in a development environment), so the dev-only options and
  * the "Dev / Debug" GUI tab they produce simply do not exist in a player's game, and are never written into
  * a player's {@code lethalbreed.json}.
  */
@@ -39,7 +39,7 @@ public final class ConfigSchema {
     private ConfigSchema() {}
 
     /** Every class whose public-static-non-final primitive fields are config options. Shipped holders are
-     *  listed here; {@link #registerHolder} appends a dev-only one at runtime, which is why this is a
+     *  listed here; {@link #registerHolder} appends a dev-only one at runtime, so this has to be a
      *  mutable list rather than the {@code Class<?>[]} it used to be. */
     private static final List<Class<?>> HOLDERS = new ArrayList<>(List.of(
             SchedulerConfig.class,
@@ -59,17 +59,17 @@ public final class ConfigSchema {
             PackConfig.class));
 
     /** Editable fields in source-declaration order, across all holders. Cached rather than recomputed on
-     *  every call (config load, every GUI keystroke via {@code ConfigAccess}, every {@code find()}) — those
+     *  every call (config load, every GUI keystroke via {@code ConfigAccess}, every {@code find()}). Those
      *  only ever rebuilt an identical list. Returned as an unmodifiable view since every caller only
      *  iterates it (audit #29).
      *
      *  <p>{@code volatile} and nullable rather than {@code final}: {@link #registerHolder} runs on the
      *  mod-init thread while every read happens on the server (or client) thread, so the invalidation has to
-     *  publish safely. That safety does not come from "any race here is benign" — {@code all = null} is
+     *  publish safely. That safety does not come from "any race here is benign": {@code all = null} is
      *  indistinguishable from the field's initial default, so a reader racing with {@link #registerHolder}
      *  would have no happens-before edge on the preceding {@code HOLDERS.add} and could cache a list
      *  omitting the just-added holder. It comes from there being no such race in practice: registration
-     *  happens-before any other thread starts — {@link #registerHolder} runs as the first statement of
+     *  happens-before any other thread starts, because {@link #registerHolder} runs as the first statement of
      *  {@code onInitialize()}, on the mod-init thread, before any server or render thread exists, and
      *  {@code Thread.start} supplies the edge. */
     private static volatile List<Field> all;
@@ -78,7 +78,7 @@ public final class ConfigSchema {
      * Add a config holder after class-init, so its options join the schema, the JSON file and the GUI.
      *
      * <p>Called only by {@code DevBootstrap} in a development environment. A shipped jar has no dev source
-     * set, so this is never reached there — which is precisely why a player's config has no dev options and
+     * set, so this is never reached there. That is precisely why a player's config has no dev options and
      * the GUI sidebar has no "Dev / Debug" tab.
      *
      * <p>Registering the same holder twice is a no-op: the duplicate would list every one of its options
@@ -96,12 +96,12 @@ public final class ConfigSchema {
     }
 
     /**
-     * Undo a {@link #registerHolder}. Exists for tests — a registration is process-global, and a test that
+     * Undo a {@link #registerHolder}. Exists for tests: a registration is process-global, and a test that
      * leaves one behind changes the option list every later test sees. Nothing in production unregisters.
      *
      * <p>Not a full undo: it does not remove the {@code ConfigAccess.DEFAULTS} entries
      * {@link ConfigAccess#captureDefaultsFor} added for the holder, so those keys persist in that map for
-     * the JVM's lifetime. Harmless today — {@code DEFAULTS} is only ever read by key, never iterated — but a
+     * the JVM's lifetime. Harmless today ({@code DEFAULTS} is only ever read by key, never iterated), but a
      * test relying on the defaults map being fully clean after unregistering would not find that here.
      */
     static void unregisterHolder(Class<?> holder) {

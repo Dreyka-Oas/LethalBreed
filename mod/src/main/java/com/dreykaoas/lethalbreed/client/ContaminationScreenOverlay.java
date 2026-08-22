@@ -23,7 +23,7 @@ import net.minecraft.world.effect.MobEffectInstance;
  * <p>The victim's <b>periphery blurs while the centre stays sharp</b>. We run a custom post-effect
  * ({@code lethalbreed:contam_radial_blur_N}) that box-blurs a copy of the frame, then mixes sharp vs. blurred by
  * distance from the screen centre: the middle reads crisp, the edges smear. Higher plague levels swap in a chain
- * with a smaller clear radius and stronger blur, so the sharp window shrinks — vision closes in as the sickness
+ * with a smaller clear radius and stronger blur, so the sharp window shrinks: vision closes in as the sickness
  * worsens.
  *
  * <p>Why one JSON per level instead of a single parametrised chain: in 1.21.11 a PostChain's custom uniforms are
@@ -66,7 +66,7 @@ public final class ContaminationScreenOverlay {
         LocalPlayer p = mc.player;
         try {
             // The plague icon stays in Creative/Spectator, but its symptoms (including this vision blur) are
-            // suspended there — matches the server, which freezes all active effects while the player can't
+            // suspended there. That matches the server, which freezes all active effects while the player can't
             // take normal damage.
             if (p != null && (p.isCreative() || p.isSpectator())) {
                 return;
@@ -87,23 +87,23 @@ public final class ContaminationScreenOverlay {
             // pushes an entry back onto the free list; endFrame() is the ONLY thing that decrements
             // framesToLive, closes the target and drops it, and there is no autonomous expiry. Skipping it on
             // the not-sick path is what kept ~33 MB of VRAM (1080p, colour + depth, x2) alive until the
-            // process exited — including after returning to the menu (audit #10).
+            // process exited, including after returning to the menu (audit #10).
             RESOURCE_POOL.endFrame();
         }
     }
 
     /** Release every pooled render target outright. Called on world unload, and this is the ONLY vector it
      *  addresses: our render() is HUD-attached, so it stops being called the moment {@code level == null}, and
-     *  with it endFrame() — leaving the pool's ~33 MB parked until the process exits. Vanilla needs no
+     *  with it endFrame(), leaving the pool's ~33 MB parked until the process exits. Vanilla needs no
      *  equivalent because GameRenderer's own endFrame() keeps sweeping at the main menu.
      *
      *  <p>NOT what fixes the stale-window-size vector, despite the obvious guess: endFrame() sweeps EVERY
-     *  entry in the pool unconditionally and decrements its framesToLive — it is not gated on the entry being
+     *  entry in the pool unconditionally and decrements its framesToLive. It is not gated on the entry being
      *  re-acquired that frame ({@code canUsePhysicalResource} is only consulted inside acquire()). So an entry
      *  orphaned by a resize closes on its own within framesToKeepResource+1 frames, purely from the per-frame
      *  endFrame() in render()'s finally. Vanilla's clear() inside resize() is a transient-VRAM-spike
      *  optimisation, not a correctness requirement. Do not remove that finally on the theory that this method
-     *  covers for it — a disconnect never fires from a resize. */
+     *  covers for it: a disconnect never fires from a resize. */
     private static void releasePool() {
         RESOURCE_POOL.close();
     }

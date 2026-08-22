@@ -11,7 +11,6 @@ public final class TickInit {
     private TickInit() {}
 
     public static void register(TickScheduler scheduler) {
-        // Drive the scheduler once per server tick.
         ServerTickEvents.END_SERVER_TICK.register(scheduler::onServerTick);
     }
 }

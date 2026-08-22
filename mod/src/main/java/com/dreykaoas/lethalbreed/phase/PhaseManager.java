@@ -18,7 +18,7 @@ import java.util.Random;
  *
  * <p>State is PERSISTED per-world via {@link PhaseSavedData} (in {@code <world>/data}), so the phase AND the
  * elapsed time toward the next advance survive close/reopen. The timer runs off the overworld's
- * {@code getGameTime()} (the persisted world age, monotonic across reloads) — NOT the server's since-boot
+ * {@code getGameTime()} (the persisted world age, monotonic across reloads), NOT the server's since-boot
  * tick count, which resets to 0 every launch.
  */
 public final class PhaseManager {
@@ -44,10 +44,10 @@ public final class PhaseManager {
      * ({@code ConfigBoundsTable}: 1..1_000_000) so the two can't drift apart.
      *
      * <p>The phase feeds {@link PhaseTable#frequency} which drives a per-chunk, per-tick spawn loop
-     * ({@code SpawnFrequencyMixin}) on the server thread — an unbounded phase is an unbounded loop.
+     * ({@code SpawnFrequencyMixin}) on the server thread. An unbounded phase is an unbounded loop.
      * The ceiling is enforced at EVERY write ({@link #clampPhase}), not just in the command, because
      * {@link #load} restores straight from the save file: a world already holding an absurd phase must
-     * come back sane rather than replay the freeze on every boot.
+     * come back sane, or it replays the freeze on every boot.
      */
     public static final int MAX_PHASE = 1_000_000;
 
@@ -62,7 +62,7 @@ public final class PhaseManager {
     }
 
     /** SERVER_STARTED: bind to the overworld's persisted phase data and restore the cached mirror from it.
-     *  Replaces the old "reset to phase 1 each session" — the whole point is that it no longer resets. */
+     *  Replaces the old "reset to phase 1 each session": progress now survives a restart. */
     public void load(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
@@ -75,7 +75,7 @@ public final class PhaseManager {
             // Write the repaired value straight back, so the save stops carrying the bad phase even if the
             // session ends before the next advance.
             com.dreykaoas.lethalbreed.LethalBreed.LOGGER.warn(
-                    "[LethalBreed] persisted phase {} is out of range — clamped to {}", store.phase, phase);
+                    "[LethalBreed] persisted phase {} is out of range, clamped to {}", store.phase, phase);
             persist();
         }
         com.dreykaoas.lethalbreed.LethalBreed.LOGGER.info(
@@ -132,7 +132,7 @@ public final class PhaseManager {
     }
 
     /** Force a phase (e.g. the dev-only /lethalphase command) and announce it. Manual override ignores the configurable
-     *  {@code phaseMax} — an admin can deliberately force any phase past the auto-advance ceiling — but
+     *  {@code phaseMax} (an admin can deliberately force any phase past the auto-advance ceiling) but
      *  NOT the hard {@link #MAX_PHASE} ceiling, which exists to keep the spawn loop finite. */
     public void setPhase(MinecraftServer server, int p) {
         phase = clampPhase(p);

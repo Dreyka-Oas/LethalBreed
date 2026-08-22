@@ -65,40 +65,40 @@ public final class ContaminationConfig {
 
     /** Movement-slow episode: fraction of base movement speed removed while active. Default 15%. */
     public static double contamSlowAmount = 0.15;
-    /** Min/max seconds a slow episode lasts. Default 5–10 s. */
+    /** Min/max seconds a slow episode lasts. Default 5-10 s. */
     public static double contamSlowDurMinSec = 5.0;
     public static double contamSlowDurMaxSec = 10.0;
-    /** Min/max seconds between slow episodes (measured from the end of one to the start of the next). 60–180 s. */
+    /** Min/max seconds between slow episodes (measured from the end of one to the start of the next). 60-180 s. */
     public static double contamSlowGapMinSec = 60.0;
     public static double contamSlowGapMaxSec = 180.0;
 
-    /** No-jump episode: while active, JUMP_STRENGTH is forced to 0 (cannot jump). Min/max duration. Default 4–8 s. */
+    /** No-jump episode: while active, JUMP_STRENGTH is forced to 0 (cannot jump). Min/max duration. Default 4-8 s. */
     public static double contamNoJumpDurMinSec = 4.0;
     public static double contamNoJumpDurMaxSec = 8.0;
-    /** Min/max seconds between no-jump episodes. Default 90–240 s. */
+    /** Min/max seconds between no-jump episodes. Default 90-240 s. */
     public static double contamNoJumpGapMinSec = 90.0;
     public static double contamNoJumpGapMaxSec = 240.0;
 
     /** Weak-strike episode: fraction of base attack damage removed while active. Default 40%. */
     public static double contamWeakAmount = 0.40;
-    /** Min/max seconds a weak-strike episode lasts. Default 5–10 s. */
+    /** Min/max seconds a weak-strike episode lasts. Default 5-10 s. */
     public static double contamWeakDurMinSec = 5.0;
     public static double contamWeakDurMaxSec = 10.0;
-    /** Min/max seconds between weak-strike episodes. Default 75–210 s. */
+    /** Min/max seconds between weak-strike episodes. Default 75-210 s. */
     public static double contamWeakGapMinSec = 75.0;
     public static double contamWeakGapMaxSec = 210.0;
 
     /** Zombie-vision hallucination episode (client-only visual): while active, the victim sees every OTHER player
-     *  as a zombie. Min/max seconds it lasts. Default 6–14 s. */
+     *  as a zombie. Min/max seconds it lasts. Default 6-14 s. */
     public static double contamHallucDurMinSec = 6.0;
     public static double contamHallucDurMaxSec = 14.0;
-    /** Min/max seconds between hallucination episodes. Default 80–220 s. */
+    /** Min/max seconds between hallucination episodes. Default 80-220 s. */
     public static double contamHallucGapMinSec = 80.0;
     public static double contamHallucGapMaxSec = 220.0;
 
     /** On death of a contaminated HUMANOID victim (player/villager/piglin...), reanimate it as a zombie. */
     public static boolean contamReanimateHumanoids = true;
-    // Auto-detection of a "humanoid" (upright biped) from its standing hitbox — no hardcoded mob list. Defaults
+    // Auto-detection of a "humanoid" (upright biped) from its standing hitbox, no hardcoded mob list. Defaults
     // keep creepers (1.7 tall) and golems/quadrupeds (wide) out while covering villagers/piglins/modded bipeds.
     /** Min hitbox height (blocks) to qualify as a reanimatable humanoid. */
     public static double contamReanimateMinHeight = 1.75;
@@ -119,7 +119,7 @@ public final class ContaminationConfig {
     /** Dev time-compression for plague timers: every pulse/symptom interval is divided by this factor, so a
      *  developer can watch the (normally days-long) progression fast. Default 1.0 = real timing.
      *
-     *  <p>Despite the name it is a normal player-facing option with its own row in the Contamination tab —
+     *  <p>Despite the name it is a normal player-facing option with its own row in the Contamination tab:
      *  the {@code /lethaldev timescale} command that used to be its only writer was removed as a duplicate
      *  of that row. {@code /lethaldev status} still reports the current value. */
     public static double contamDevTimeScale = 1.0;

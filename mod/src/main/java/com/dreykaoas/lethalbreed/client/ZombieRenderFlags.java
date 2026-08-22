@@ -21,10 +21,10 @@ public interface ZombieRenderFlags {
 
     void lethalbreed$bellyCharge(float charge);
 
-    /** {@link #lethalbreed$bellyCharge()} smoothed in real time client-side — this is the value
+    /** {@link #lethalbreed$bellyCharge()} smoothed in real time client-side. This is the value
      *  {@code ZombieBellyModelMixin.setupAnim} actually reads. The raw value is only rewritten by the server
      *  once per zombie activation (roughly 4x/s at LOD HIGH), which caused visible inflation jumps on a short
-     *  fuse; this fills the gap between updates. Written once per frame with the already-computed result —
+     *  fuse; this fills the gap between updates. Written once per frame with the already-computed result:
      *  the smoothing computation itself (previous value + timestamp) is NOT stored here, since this render
      *  state is a brand-new object every frame and could never carry state across frames; it lives on the
      *  client {@code Zombie} entity instead, see {@code BomberBellySmoothing}. */
@@ -33,12 +33,12 @@ public interface ZombieRenderFlags {
     void lethalbreed$bellyChargeDisplayed(float charge);
 
     /** True when this render state belongs to a player the local (symptomatic) viewer is hallucinating as a
-     *  zombie — swap texture + arm pose. Set in the AvatarRenderer extract hook, read in texture/model hooks. */
+     *  zombie (swap texture + arm pose). Set in the AvatarRenderer extract hook, read in texture/model hooks. */
     boolean lethalbreed$hallucinateZombie();
 
     void lethalbreed$hallucinateZombie(boolean on);
 
-    /** True when the zombie this render state belongs to is day-sleeping — pose it asleep (arms down, eyes
+    /** True when the zombie this render state belongs to is day-sleeping: pose it asleep (arms down, eyes
      *  closed). Set in {@code LivingEntityRendererMixin.extractRenderState}, read in the zombie arms/eyes hooks. */
     boolean lethalbreed$sleeping();
 

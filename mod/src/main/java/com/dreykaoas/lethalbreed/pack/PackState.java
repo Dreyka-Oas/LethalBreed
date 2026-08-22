@@ -8,21 +8,21 @@ import java.util.List;
 /**
  * One pack: where it is, where it is going, and who belongs to it.
  *
- * <p>Mutable by design — this is the per-pack scratch the manager advances every visit, not a value object.
+ * <p>Mutable by design: this is the per-pack scratch the manager advances every visit, not a value object.
  * It stays free of Minecraft types so the rules around it can be tested without a world; the entities
  * themselves are referenced by runtime id (live) or by UUID plus serialised bytes (dematerialised).
  *
  * <p><b>The membership invariant.</b> A member is in exactly one of three places at any instant:
  * <ul>
- *   <li>{@link #liveIds} — a real entity, ticking</li>
- *   <li>{@link #ghosts} — dematerialised by us, its NBT held here</li>
- *   <li>{@link #detached} — the chunk unloaded before we got to it, so the entity went to disk carrying its
+ *   <li>{@link #liveIds}: a real entity, ticking</li>
+ *   <li>{@link #ghosts}: dematerialised by us, its NBT held here</li>
+ *   <li>{@link #detached}: the chunk unloaded before we got to it, so the entity went to disk carrying its
  *       pack attachment, and will re-join when it comes back</li>
  * </ul>
  * Nothing may ever be in two of them. That is the whole defence against duplicating a pack: this mod sets
  * {@code setPersistenceRequired} on every zombie, so a duplicate never despawns and the error compounds.
  *
- * <p>{@link #liveIds} holds runtime entity ids, which change on every chunk reload — it is a cache rebuilt
+ * <p>{@link #liveIds} holds runtime entity ids, which change on every chunk reload. It is a cache rebuilt
  * from the persistent attachment, never an identity. Durable identity is the UUID inside a ghost.
  */
 public final class PackState {
@@ -47,8 +47,8 @@ public final class PackState {
     }
 
     /** Whether a ghost that has now failed {@code retries} consecutive restore sweeps should be dropped
-     *  rather than tried again next sweep. {@code limit <= 0} disables the cutoff — retried forever, which
-     *  is the behaviour from before this cutoff existed. */
+     *  or tried again next sweep. {@code limit <= 0} disables the cutoff, retried forever, the behaviour
+     *  from before this cutoff existed. */
     public static boolean retriesExhausted(int retries, int limit) {
         return limit > 0 && retries >= limit;
     }
@@ -98,7 +98,7 @@ public final class PackState {
         return liveIds.size() + ghosts.size() + Math.max(0, detached);
     }
 
-    /** True once the pack has nobody left anywhere — the manager drops it without waiting for any grace. */
+    /** True once the pack has nobody left anywhere: the manager drops it without waiting for any grace. */
     public boolean isEmpty() {
         return totalMembers() == 0;
     }

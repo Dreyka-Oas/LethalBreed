@@ -99,7 +99,7 @@ public final class SmartZombie {
     public boolean dueThisActivation(int divisor) { return brain.dueThisActivation(divisor); }
 
     /**
-     * Make EVERY zombie burn in daylight, directly — not via the vanilla {@code isSunSensitive} gate (which
+     * Make EVERY zombie burn in daylight, directly, not via the vanilla {@code isSunSensitive} gate (which
      * Husk overrides off). Day + open sky + not in water/rain + not fire-immune → set it alight for 8s.
      * Re-checked each activation; the {@code getRemainingFireTicks>0} guard avoids re-stacking.
      */

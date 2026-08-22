@@ -3,7 +3,7 @@ package com.dreykaoas.lethalbreed.config.domain;
 /**
  * Zombie "mood" behaviours layered on top of the hunt: a victory celebration when a zombie clears an area,
  * a low-health flee (with a distress scream that rallies idle kin), and a slow self-heal while fleeing or
- * celebrating. Only real zombies have these — driven per-activation by {@code entity.ZombieMood}.
+ * celebrating. Only real zombies have these, driven per-activation by {@code entity.ZombieMood}.
  */
 public final class ZombieMoodConfig {
     private ZombieMoodConfig() {}
@@ -12,7 +12,7 @@ public final class ZombieMoodConfig {
     public static boolean moodEnabled = true;
 
     /** Toggle for the low-health FLEE behaviour (wounded zombie retreats + fires the distress rally scream).
-     *  OFF by default — a wounded zombie keeps hunting instead of running. Turn on to bring the retreat back. */
+     *  OFF by default: a wounded zombie keeps hunting instead of running. Turn on to bring the retreat back. */
     public static boolean fleeEnabled = false;
 
     // ---- Flee / regen health hysteresis (fraction of max health) ----
@@ -41,7 +41,7 @@ public final class ZombieMoodConfig {
     /** Activations of failing to open distance from the threat (cornered/wall-blocked) before the fleer gives
      *  up retreating and turns to fight. Stops a cornered wounded zombie from standing passively. Default 6. */
     public static int fleeStuckActivations = 6;
-    /** After giving up a blocked flee, fight for at least this many ticks before flee can re-trigger — keeps
+    /** After giving up a blocked flee, fight for at least this many ticks before flee can re-trigger, which keeps
      *  a cornered zombie attacking instead of flip-flopping flee/fight against the wall. Default 60 = 3 s. */
     public static int corneredFightTicks = 60;
     /** Activations of failing to open distance before giving up when the threat is at least as fast as the
@@ -59,7 +59,7 @@ public final class ZombieMoodConfig {
     public static double shelterSpeed = 1.3;
     /** Server ticks to wait before re-running a shade search that just failed, unless the zombie moved
      *  more than 4 blocks in the meantime. 100 = 5 seconds. 0 DISABLES the cooldown entirely, restoring
-     *  the pre-fix behaviour of a full rescan every activation — including the unbounded case of a
+     *  the pre-fix behaviour of a full rescan every activation, including the unbounded case of a
      *  stationary zombie stuck in water (audit #6). Not recommended; kept only as an operator escape hatch. */
     public static int shelterRetryTicks = 100;
 
@@ -92,8 +92,8 @@ public final class ZombieMoodConfig {
     public static int daySleepWakeDelayTicks = 20;
     /** How long (ticks) a day-zombie stays AWAKE and hunts (by sight AND sound) after being roused by a noise or
      *  a hit, before an idle one goes back to sheltering/sleeping. Each new noise re-arms it. 200 = 10 s. A
-     *  merely-SEEN silent player never arms it (that is the stealth), so this timer — not a per-tick audibility
-     *  test — decides sleep vs hunt, which is what keeps a chasing zombie from stuttering. */
+     *  merely-SEEN silent player never arms it (that is the stealth), so this timer (not a per-tick audibility
+     *  test) decides sleep vs hunt, and a chasing zombie never stutters. */
     public static int daySleepAlertTicks = 200;
     /** Phase at (and above) which a growing FRACTION of zombies stays awake during the day. Below it every
      *  targetless zombie sleeps by day. Default 10. */

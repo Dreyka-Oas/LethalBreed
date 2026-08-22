@@ -9,14 +9,14 @@ import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 
 /**
  * Dispatcher chosen by {@link FlowFieldManager}'s worker task. Uses the GPU when enabled and
- * available, otherwise the CPU solver. Any GPU error degrades to CPU — the GPU is never load-bearing.
+ * available, otherwise the CPU solver. Any GPU error degrades to CPU: the GPU is never load-bearing.
  */
 public final class GpuFlowField {
     private GpuFlowField() {}
 
     public static FlowField compute(Snapshot s) {
         // Size gate: below the threshold the GPU upload/round-trip overhead beats its throughput, so small
-        // fields stay on the CPU. Both solvers yield the identical cost field — this trades latency only.
+        // fields stay on the CPU. Both solvers yield the identical cost field. This trades latency only.
         // The threshold is the auto-calibrated crossover when gpuAutoCalibrate is on (and a calibration has
         // run), else the manual gpuMinCells.
         int cells = s.width() * s.depth();

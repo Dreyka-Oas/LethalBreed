@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Custom config menu (Sodium-style): a search box across the top, a vertical category sidebar on the left,
- * and the option list on the right. Auto-save — every toggle/edit/reset is sent to the server immediately
+ * and the option list on the right. Auto-save: every toggle/edit/reset is sent to the server immediately
  * (no Save/Cancel buttons; Esc closes). Each option row carries its own reset icon. Built from the server
  * snapshot string.
  */
@@ -57,7 +57,7 @@ public final class CustomConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        // Search box — outside/above the two panels, full width.
+        // Search box (outside/above the two panels, full width).
         search = new EditBox(this.font, MARGIN, 8, this.width - 2 * MARGIN, SEARCH_H, Component.literal("search"));
         search.setHint(Component.translatable("lethalbreed.config.search_hint"));
         search.setValue(filter);

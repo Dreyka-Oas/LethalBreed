@@ -12,13 +12,13 @@ import java.util.List;
  * ({@code /lethalconfig}), the JSON loader ({@link ConfigIo}) and the in-game GUI: every public, static,
  * non-final field is exposed automatically, so a new config option needs no per-feature wiring.
  *
- * <p>This is a thin facade — each concern lives in its own leaf class: {@link ConfigSchema} (which fields
+ * <p>This is a thin facade. Each concern lives in its own leaf class: {@link ConfigSchema} (which fields
  * exist), {@link ConfigType} (primitive kind/parse), {@link ConfigCategory} (GUI tab grouping) and
  * {@link ConfigAccess} (read/apply/reset/defaults). {@link #encodeSnapshot()} composes them into the GUI
  * wire line.
  *
  * <p>{@link #encodeSnapshot()} uses control char {@code \\u0001} as field separator and {@code \\n} as
- * line separator — neither ever appears in a field name or a numeric/boolean value, so the wire format
+ * line separator: neither ever appears in a field name or a numeric/boolean value, so the wire format
  * stays unambiguous.
  */
 public final class ConfigFields {

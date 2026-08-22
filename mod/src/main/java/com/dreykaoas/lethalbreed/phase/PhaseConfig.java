@@ -4,7 +4,7 @@ import com.dreykaoas.lethalbreed.entity.genes.AttributeCaps;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 /**
- * The escalation curve as FORMULAS of the phase number, not a static table — so difficulty keeps rising
+ * The escalation curve as FORMULAS of the phase number, not a static table, so difficulty keeps rising
  * forever instead of plateauing past some fixed phase count. Each {@link PhaseDef} holds the per-zombie
  * roll RANGES (which widen with phase = "plus haut, plus random") and the beneficial-effect parameters
  * (which rise = "plus agressif"). Zombies carry no gear, so there are no armor/weapon/enchant fields.
@@ -12,14 +12,14 @@ import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
  * <p>Stat curves (hp/dmg/spd) use an accelerating power curve {@code 1.0 + growth * phase^exponent};
  * effect curves use a saturating curve {@code ceiling - ceiling * decay^phase} (rises then approaches
  * a ceiling). All growth/decay/ceiling parameters live in {@link ProgressionConfig} and are tuned so
- * {@code def(15)} reproduces the old hand-tuned table almost exactly — no difficulty jump for a world
+ * {@code def(15)} reproduces the old hand-tuned table almost exactly: no difficulty jump for a world
  * already at phase 15 when this ships.
  *
  * <p>The stat curves are then bent onto a ceiling by {@link #softCap}, because "accelerating forever" meant
- * a phase-100 zombie hitting for 391 raw — a guaranteed one-shot through full netherite. The bend starts
+ * a phase-100 zombie hitting for 391 raw, a guaranteed one-shot through full netherite. The bend starts
  * only above {@link #KNEE_PHASE}, so that same tuned phase-15 table is still reproduced exactly.
  *
- * <p>These ceilings bound the MULTIPLIER, which is not the same as bounding the attribute: a rolled Strength
+ * <p>These ceilings bound the MULTIPLIER. Bounding the attribute is a different thing: a rolled Strength
  * is an {@code ADD_VALUE} that lands in the base the multiplier scales, so it re-crosses any ceiling set
  * here. {@code AttributeCaps} is what actually guarantees the no-one-shot promise; this class only keeps the
  * curve itself sane.
@@ -48,9 +48,9 @@ public final class PhaseConfig {
      * The phase whose values the shipped stat curves were hand-tuned to reproduce, and therefore the phase up
      * to which {@link #softCap} must change nothing at all.
      *
-     * <p>Not a config option on purpose. It is not a balance lever — it is the anchor that makes the ceilings
-     * a pure addition rather than a rebalance of every existing world, and moving it would silently re-tune
-     * phases 1-15 for everyone. The ceilings themselves are the levers.
+     * <p>Not a config option on purpose. It is not a balance lever. It is the anchor that keeps the ceilings
+     * a pure addition, with no existing world rebalanced, and moving it would silently re-tune phases 1-15
+     * for everyone. The ceilings themselves are the levers.
      */
     static final int KNEE_PHASE = 15;
 
@@ -60,7 +60,7 @@ public final class PhaseConfig {
      * <p>Below {@code knee} the value is returned untouched, so the hand-tuned low phases are bit-for-bit
      * what they were. Above it the curve decays exponentially onto {@code ceiling}. The two halves meet with
      * the same value AND the same slope (the exponential's derivative at the knee is exactly 1), so there is
-     * no visible kink at the join — a player climbing through phase 15 feels nothing happen.
+     * no visible kink at the join: a player climbing through phase 15 feels nothing happen.
      *
      * <p>A hard {@code Math.min} was rejected deliberately: it would make every phase past the crossing point
      * identical, erasing progression entirely. This keeps phases 30, 50 and 100 distinct while bounding them.
@@ -88,7 +88,7 @@ public final class PhaseConfig {
         return Math.max(0.0, Math.min(1.0, v));
     }
 
-    /** Phase 0 = "Classic" (no bonus, no hostile spawns — handled in the spawn hook). Phase is unbounded
+    /** Phase 0 = "Classic" (no bonus, no hostile spawns, handled in the spawn hook). Phase is unbounded
      *  above; every field is computed live from the configured curve. */
     public static PhaseDef def(int phase) {
         int p = Math.max(0, phase);

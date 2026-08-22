@@ -8,9 +8,9 @@ import net.minecraft.resources.Identifier;
 
 /**
  * The zombie's live {@link ZombieState} ordinal, written by the server AI ({@link SmartZombie#setState}) and
- * read server-side by systems that must react to what a zombie is doing — e.g.
+ * read server-side by systems that must react to what a zombie is doing, e.g.
  * {@link com.dreykaoas.lethalbreed.mixin.zombie.ZombieSleepSilenceMixin} keeps a dozing ({@link ZombieState#SLEEPING})
- * zombie's ambient groan silent. Transient — a fresh zombie starts IDLE.
+ * zombie's ambient groan silent. Transient: a fresh zombie starts IDLE.
  */
 public final class ZombieStateAttachment {
     private ZombieStateAttachment() {}
@@ -22,7 +22,7 @@ public final class ZombieStateAttachment {
     /**
      * Whether this zombie is CURRENTLY day-sleeping ({@link ZombieState#SLEEPING}). Unlike {@link #STATE}
      * (server-only), this one is SYNCED to tracking clients so the renderer can pose the zombie as asleep
-     * (arms lowered, eyes closed). Transient — a fresh zombie starts awake (false). Written on every state
+     * (arms lowered, eyes closed). Transient: a fresh zombie starts awake (false). Written on every state
      * change in {@link SmartZombie#setState}.
      */
     public static final AttachmentType<Boolean> SLEEPING = AttachmentRegistry.create(

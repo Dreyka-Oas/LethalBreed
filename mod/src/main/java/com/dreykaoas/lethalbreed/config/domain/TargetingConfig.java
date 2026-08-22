@@ -13,26 +13,26 @@ public final class TargetingConfig {
     // NOTE: a targetDetectVerticalRadius knob was tried here to shrink the broad-phase box, on the theory
     // that the target scan costs by swept volume. Measured: no gain (23.8us/call at 24 blocks vs 22.1 with
     // the full radius), because the cost is visiting the entities inside the box, not the box itself. It was
-    // removed rather than shipped — a knob that changes what zombies can see and buys nothing is a net loss.
+    // removed: a knob that changes what zombies can see and buys nothing is a net loss.
     // See TargetSelector.findNearest for what an actual fix would require.
-    /** Require line of sight to acquire a target by VISION — opaque blocks block sight, translucent ones
+    /** Require line of sight to acquire a target by VISION. Opaque blocks block sight, translucent ones
      *  (glass, ice, leaves) don't. A target behind a solid wall is found via sound instead, not sight. */
     public static boolean requireLineOfSight = true;
     /** Make zombies actually attack their acquired target (deal damage), not just approach it. */
     public static boolean attackAllTargets = true;
-    /** Strip vanilla target-selection goals so our "nearest living entity" pick is authoritative — the
+    /** Strip vanilla target-selection goals so our "nearest living entity" pick is authoritative: the
      *  zombie always retargets to the closest entity instead of vanilla re-locking onto the player. */
     public static boolean forceNearestTarget = true;
-    /** Restrict targeting to PLAYERS only — when on, non-player living entities (villagers, animals, other
+    /** Restrict targeting to PLAYERS only. When on, non-player living entities (villagers, animals, other
      *  mobs) are never acquired as targets. Default off = hunt any valid living entity. */
     public static boolean targetPlayersOnly = false;
     /** Short-term memory: once a target is lost (out of sight AND out of hearing), keep heading to its LAST
      *  known position for this many ticks before giving up (200 = 10s). Any live detection (a nearer/visible
-     *  or heard entity) overrides the memory immediately — the nearest DETECTED target always wins. 0 = off. */
+     *  or heard entity) overrides the memory immediately: the nearest DETECTED target always wins. 0 = off. */
     public static int targetMemoryTicks = 200;
     /** Target stickiness: once committed to a target, don't switch to a newly-visible other unless the new one
      *  is CLOSER than (current distance ÷ this factor). >1 = sticky (1.5 = only switch when the other is ~33%
-     *  nearer). Stops a zombie mid-dig from thrashing between two equally-far targets — while breaking a wall
+     *  nearer). Stops a zombie mid-dig from thrashing between two equally-far targets. While breaking a wall
      *  toward its prey, LOS to that prey is blocked BY the wall, so without this it would keep flipping to
      *  whatever else is momentarily visible and never finish the block. 1 = off (always nearest visible). */
     public static double targetSwitchMargin = 1.5;

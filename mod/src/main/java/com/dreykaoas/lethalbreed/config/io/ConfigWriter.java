@@ -22,8 +22,8 @@ import java.util.TreeMap;
 /**
  * Writing every config option back to disk, grouped by GUI category, via an atomic write-then-rename.
  *
- * <p>Split out of {@code ConfigIo}. Takes the destination path as a parameter rather than resolving it, which
- * is what makes the writer testable against a temp directory with no Fabric runtime present.
+ * <p>Split out of {@code ConfigIo}. The destination path arrives as a parameter, resolved by the caller, so
+ * the writer is testable against a temp directory with no Fabric runtime present.
  */
 public final class ConfigWriter {
     private ConfigWriter() {}
@@ -34,8 +34,8 @@ public final class ConfigWriter {
         // Group options under their GUI category. Categories are sorted alphabetically so the output is
         // deterministic: the file is rewritten on every launch, and a HashMap's iteration order would
         // produce a spurious diff on every run. Within a category, options keep the schema order that
-        // ConfigFields.all() returns — that order is meaningful (grouped by domain class), so it is
-        // preserved rather than re-sorted.
+        // ConfigFields.all() returns. That order is meaningful (grouped by domain class), so nothing
+        // re-sorts it.
         TreeMap<String, JsonObject> byCategory = new TreeMap<>();
         for (Field f : ConfigFields.all()) {
             String category = ConfigCategory.of(f.getName());
@@ -63,7 +63,7 @@ public final class ConfigWriter {
                 }
             } catch (IllegalAccessException e) {
                 // Not writing an option here makes it vanish from the file on this save and come back as a
-                // default on the next load — the user watches a setting disappear with no explanation. Say
+                // default on the next load: the user watches a setting disappear with no explanation. Say
                 // so; the rest of the file still gets written.
                 LethalBreed.LOGGER.error("[LethalBreed] config option {} could not be written to disk",
                         f.getName(), e);
@@ -75,8 +75,8 @@ public final class ConfigWriter {
         }
         // Write-then-rename rather than writeString(path, …), whose implicit TRUNCATE_EXISTING empties the
         // real file BEFORE the new content is written. That window is short, but ENOSPC turns it into a
-        // certainty rather than a race: truncate succeeds, the write does not, and the next start reads a
-        // half-written file. A rename is atomic, so readers only ever see the old file or the new one.
+        // certainty: truncate succeeds, the write does not, and the next start reads a half-written file.
+        // A rename is atomic, so readers only ever see the old file or the new one.
         Path tmp = path.resolveSibling(path.getFileName() + ".tmp");
         boolean moved = false;
         try {

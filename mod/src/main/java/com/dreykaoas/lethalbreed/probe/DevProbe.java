@@ -6,11 +6,11 @@ import net.minecraft.server.MinecraftServer;
  * The single seam between shipped code and development instrumentation.
  *
  * <p>Per-stage timings, dev counters and debug traces all measure things that happen INSIDE {@code main},
- * so they cannot simply live in the {@code dev} source set — {@code main} has to call out. This class is
+ * so they cannot simply live in the {@code dev} source set: {@code main} has to call out. This class is
  * that call-out, and it is deliberately the only one: everything it forwards to lives in {@code dev}.
  *
  * <p><b>Cost in a player jar.</b> {@link #sink} is {@code volatile}, so {@link #on()} is one volatile field
- * read plus a null check, paid at every call site, every tick — a volatile load is not constant-folded or
+ * read plus a null check, paid at every call site, every tick. A volatile load is not constant-folded or
  * hoisted the way a stable static would be, so this is a real, ongoing (if negligible) cost, not one the JIT
  * eliminates. What DOES disappear on a player jar is everything BEHIND the gate: the
  * {@code System.nanoTime()} calls and message building at every call site sit behind {@link #on()} rather
@@ -29,7 +29,7 @@ public final class DevProbe {
     private DevProbe() {}
 
     // Stage ids. Order matches the order LodBucketPass executes them; SCAN/ORDER/LOS are sub-stages of
-    // CLASSIFY and overlap it rather than adding to the total.
+    // CLASSIFY: they overlap it and add nothing to the total.
     public static final int CLASSIFY = 0;
     public static final int GRID = 1;
     public static final int PACK = 2;
@@ -83,7 +83,7 @@ public final class DevProbe {
      *
      * <p><b>Invariant:</b> {@code traceMask != 0} implies {@code sink != null}. Hot-path call sites
      * ({@code PillarClimb}, {@code ZombieBrain}, {@code PackPass}) gate on {@link #tracing(int)} and then
-     * dereference {@link #sink} unchecked, so that implication must hold at every observable point — hence
+     * dereference {@link #sink} unchecked, so that implication must hold at every observable point, hence
      * {@code sink} is assigned before {@code traceMask} here, and {@link #uninstall()} clears them in the
      * opposite order. */
     public static void install(Sink newSink, int newTraceMask) {
@@ -93,7 +93,7 @@ public final class DevProbe {
 
     /** Restore the player-jar state. Exists for tests; nothing in production calls it.
      *
-     * <p>Clears {@code traceMask} before {@code sink} — the reverse of {@link #install}'s order — to preserve
+     * <p>Clears {@code traceMask} before {@code sink} (the reverse of {@link #install}'s order) to preserve
      * the same invariant ({@code traceMask != 0} implies {@code sink != null}) at every observable point. */
     public static void uninstall() {
         traceMask = 0;

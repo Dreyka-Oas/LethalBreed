@@ -14,8 +14,8 @@ import java.util.Map;
  * Field value access for config options: read the current value, apply/parse a new one, and reset to the
  * captured defaults.
  *
- * <p>{@link #DEFAULTS} is captured at this class's init — which happens the first time any config value is
- * read or written — and therefore BEFORE the JSON load or any command can mutate a field, preserving the
+ * <p>{@link #DEFAULTS} is captured at this class's init (which happens the first time any config value is
+ * read or written) and therefore BEFORE the JSON load or any command can mutate a field, preserving the
  * original "factory default" snapshot semantics.
  */
 public final class ConfigAccess {
@@ -32,7 +32,7 @@ public final class ConfigAccess {
      *
      * <p>Not optional. {@link #defaultOf} reports {@code "?"} for an option with no captured entry, and
      * that value travels: it reaches the GUI tooltip and the wire snapshot, and it is what the row's reset
-     * icon writes back when clicked. A missed capture therefore does not fail loudly — it silently turns
+     * icon writes back when clicked. A missed capture therefore does not fail loudly: it silently turns
      * one option's reset button into a corruption button.
      *
      * <p>Public only because {@code ConfigSchema} sits in the {@code config.schema} sub-package; it is that
@@ -49,7 +49,7 @@ public final class ConfigAccess {
                 DEFAULTS.put(f.getName(), ConfigType.copyIfArray(f.get(null)));
             } catch (IllegalAccessException e) {
                 // Same reasoning as snapshot(): an option with no factory default resets to nothing and
-                // reports success anyway. A broken build, not a runtime condition to tolerate.
+                // reports success anyway. Only a broken build gets here, so throwing beats tolerating it.
                 throw new IllegalStateException("cannot capture default for " + f.getName(), e);
             }
         }
@@ -87,7 +87,7 @@ public final class ConfigAccess {
     }
 
     /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}
-     *  AND the value actually changed — a GUI edit box fires one packet per keystroke (audit #16), and most
+     *  AND the value actually changed. A GUI edit box fires one packet per keystroke (audit #16), and most
      *  carry a value equal to the current one (mid-typing, or re-applying the same number), so skipping the
      *  unchanged writes removes the bulk of the redundant full-file saves without any behaviour change. */
     public static boolean apply(String name, String raw, boolean persist) {
@@ -108,7 +108,7 @@ public final class ConfigAccess {
                     ConfigIo.save();
                 }
             } catch (IllegalAccessException ex) {
-                ConfigIo.save(); // couldn't compare — fall back to the old always-save behaviour
+                ConfigIo.save(); // couldn't compare, fall back to the old always-save behaviour
             }
         }
         return true;

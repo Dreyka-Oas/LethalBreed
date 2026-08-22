@@ -23,7 +23,7 @@ public final class BreachCoordinator {
 
     private static final class Breach {
         final BlockPos column;   // feet cell of the column being broken (the shared breach)
-        final BlockPos approach; // where the first breaker attacks from — the side the cluster funnels to
+        final BlockPos approach; // where the first breaker attacks from, the side the cluster funnels to
         final BlockPos target;   // the hunt target this breach serves, so unrelated walls don't merge
         long lastTick;
 
@@ -48,7 +48,7 @@ public final class BreachCoordinator {
             return new BreachTarget(forwardColumn, approach); // legacy: each zombie breaks its own front column
         }
         if (committed) {
-            // Already breaking this column — ANCHOR it (register/refresh) and stay put; the whole cluster
+            // Already breaking this column: ANCHOR it (register/refresh) and stay put; the whole cluster
             // converges on ME instead of me being dragged off to a neighbour's breach mid-break.
             Breach b = breaches.get(forwardColumn.asLong());
             if (b == null) {
@@ -80,7 +80,7 @@ public final class BreachCoordinator {
         }
         if (nearest != null && nearby >= CombatMoveConfig.maxConcurrentBreaches) {
             nearest.lastTick = now;
-            return new BreachTarget(nearest.column, nearest.approach); // at the cap → join the nearest breach
+            return new BreachTarget(nearest.column, nearest.approach);
         }
         // Room for another breach (or none nearby) → register my front column as a new one.
         Breach nb = new Breach(forwardColumn, approach, target, now);

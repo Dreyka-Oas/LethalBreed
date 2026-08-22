@@ -14,8 +14,8 @@ import net.fabricmc.loader.api.FabricLoader;
 /**
  * Entry point for LethalBreed.
  *
- * <p>Phase 1 scope (current): bootstrap the runtime spine — register vanilla zombies into a
- * {@link ZombieRegistry}, drive them through a staggered {@link TickScheduler}, and maintain a
+ * <p>Phase 1 scope (current): bootstrap the runtime spine by registering vanilla zombies into a
+ * {@link ZombieRegistry}, driving them through a staggered {@link TickScheduler}, and maintaining a
  * per-dimension {@link DimensionManager} (spatial grid now, flow field later). All work runs on
  * the server thread for now; off-thread compute (flow field, GPU) arrives in later phases behind
  * the thread-safety discipline described in plan.md.
@@ -36,7 +36,7 @@ public final class LethalBreedMod implements ModInitializer {
     public void onInitialize() {
         // The dev config holder must join the schema BEFORE BootstrapInit.run() reads lethalbreed.json:
         // the loader is field-driven, so options it cannot match are warned about and dropped on the next
-        // write — which would delete a developer's own dev settings from their own file on first launch.
+        // write, which would delete a developer's own dev settings from their own file on first launch.
         devHook("registerConfig");
         BootstrapInit.run();
         EntityEventsInit.register(REGISTRY, DIMENSIONS);
@@ -49,12 +49,12 @@ public final class LethalBreedMod implements ModInitializer {
     }
 
     /**
-     * Call one development-only entry point — but ONLY in a development environment. The dev code lives in a
+     * Call one development-only entry point, but ONLY in a development environment. The dev code lives in a
      * separate {@code dev} source set that is never packaged into the shipped jar, so we reach its bootstrap
      * ({@code com.dreykaoas.lethalbreed.dev.DevBootstrap}) reflectively: on a production jar the class is
      * absent and the lookup fails silently, leaving zero dev wiring active.
      *
-     * @param method argument-free static method on {@code DevBootstrap} — {@code registerConfig} (before the
+     * @param method argument-free static method on {@code DevBootstrap}: {@code registerConfig} (before the
      *               config load) or {@code install} (after it)
      */
     private static void devHook(String method) {
@@ -66,7 +66,7 @@ public final class LethalBreedMod implements ModInitializer {
                     .getMethod(method)
                     .invoke(null);
         } catch (ClassNotFoundException e) {
-            // Dev source set not on the classpath (shipped jar) — expected, nothing to install.
+            // Dev source set not on the classpath (shipped jar): expected, nothing to install.
             LethalBreed.LOGGER.debug("[LethalBreed] no dev source set on classpath; skipping dev hooks.");
         } catch (ReflectiveOperationException e) {
             LethalBreed.LOGGER.warn("[LethalBreed] failed to run dev hook {}", method, e);

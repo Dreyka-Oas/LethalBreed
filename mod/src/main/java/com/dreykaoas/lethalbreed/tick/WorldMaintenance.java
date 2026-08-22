@@ -48,7 +48,7 @@ final class WorldMaintenance {
     }
 
     /** Advance every pack in every loaded dimension: lifecycle first, then the march that plants the shared
-     *  waypoint. Must run BEFORE the bucket pass — LodManager reads that waypoint in the same activation, so
+     *  waypoint. Must run BEFORE the bucket pass, because LodManager reads that waypoint in the same activation, so
      *  planting it afterwards would leave marching members frozen for one whole cycle. */
     void tickPacks(MinecraftServer server, long gameTime) {
         forEachLoadedContext(server, (level, ctx) -> {

@@ -4,7 +4,7 @@
  *
  * <p><b>Why this exists.</b> Target acquisition used to ask the world:
  * {@code getEntitiesOfClass(LivingEntity.class, box, isValid)} over an 80-block box. That visits every
- * entity in the box and runs the predicate on each — and the predicate rejects {@code Zombie}, which in
+ * entity in the box and runs the predicate on each, and the predicate rejects {@code Zombie}, which in
  * this mod is nearly everything in the box. So each zombie paid for walking the whole horde in order to
  * discard it: O(zombies²) per bucket cycle. Measured with {@code StageProfiler} at ~22us per activation,
  * 50% of the reclassify stage and ~20% of the mod's entire tick budget, at only ~100 zombies.

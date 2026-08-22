@@ -20,7 +20,7 @@ import java.util.List;
  * feeds it.
  *
  * <p><b>Cost.</b> A zombie decides one activation in {@code packDecisionDivisor} (8 by default), and a
- * decision is a single {@code queryRadiusInto} on a shared scratch list — no allocation, and bounded by
+ * decision is a single {@code queryRadiusInto} on a shared scratch list, no allocation, and bounded by
  * {@code packScanCap} neighbours. At 300 zombies over 5 buckets that is roughly seven decisions a tick.
  *
  * <p>Called <b>before</b> the FROZEN skip in {@code LodBucketPass} on purpose: a zombie with nothing to hunt
@@ -46,8 +46,8 @@ public final class PackPass {
         }
         PackState mine = tether.inPack() ? manager.get(tether.packId()) : null;
         if (tether.inPack() && mine == null) {
-            // Its pack was dissolved or merged away while it was not looking. Cut it loose rather than let
-            // it keep a dangling id that no lookup will ever resolve.
+            // Its pack was dissolved or merged away while it was not looking. Cut it loose, so it stops
+            // carrying a dangling id that no lookup will ever resolve.
             manager.leave(sz);
             return;
         }
@@ -64,7 +64,7 @@ public final class PackPass {
         if (DevProbe.tracing(DevProbe.PACKS)) {
             // The three numbers that separate the ways "no pack formed" can happen: the rule was never
             // offered a neighbour (n), it was offered some and declined (kind=NONE), or it acted. Without
-            // them the verdict says only that nothing happened, which is the least useful thing to know.
+            // them the verdict says only that nothing happened, the least useful thing to know.
             DevProbe.sink.trace(DevProbe.PACKS, "id=" + sz.id()
                     + " at (" + Math.round(sz.x()) + ", " + Math.round(sz.z()) + ")"
                     + " n=" + n + " pack=" + tether.packId()

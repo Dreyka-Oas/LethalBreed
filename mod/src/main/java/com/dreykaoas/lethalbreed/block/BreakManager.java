@@ -15,7 +15,7 @@ import java.util.Map;
  * Progressive, player-like block breaking. Zombies <i>request</i> a block each tick they want it gone;
  * the manager accumulates damage over time (scaled by hardness), shows the vanilla cracking overlay
  * via {@link ServerLevel#destroyBlockProgress}, and finally destroys it (with drops). A request not
- * renewed within a grace window is abandoned and its cracks clear — so a zombie that walks away or
+ * renewed within a grace window is abandoned and its cracks clear, so a zombie that walks away or
  * whose block changes doesn't leave a half-broken ghost.
  */
 public final class BreakManager {
@@ -81,7 +81,7 @@ public final class BreakManager {
                 continue;
             }
             float hardness = Math.max(0.1f, bs.getDestroySpeed(level, pos));
-            // A held tool (pickaxe, etc.) mines faster — like a player. Bare hand / wrong tool = 1.0.
+            // A held tool (pickaxe, etc.) mines faster, like a player. Bare hand / wrong tool = 1.0.
             float toolSpeed = 1.0f;
             if (s.breaker != null && s.breaker.isAlive()) {
                 float ds = s.breaker.getMainHandItem().getDestroySpeed(bs);
@@ -98,7 +98,7 @@ public final class BreakManager {
             s.progress += rate * toolSpeed * mult / hardness;
             s.showStage(level, pos, PlacedBlockPolicy.stage(s.progress * 10f));
             if (s.progress >= 1.0f) {
-                level.destroyBlock(pos, CombatMoveConfig.breakDropsItems, null, 512); // break effects; drops per config
+                level.destroyBlock(pos, CombatMoveConfig.breakDropsItems, null, 512);
                 s.clearCracks(level, pos);
                 it.remove();
             }

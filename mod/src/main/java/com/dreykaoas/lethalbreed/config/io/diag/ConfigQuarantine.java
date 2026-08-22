@@ -30,7 +30,7 @@ public final class ConfigQuarantine {
         try {
             Path aside = ConfigBackup.archive(path, stamp);
             LethalBreed.LOGGER.error(
-                    "[LethalBreed] config unusable ({}) — moved to {} and rewritten with defaults. "
+                    "[LethalBreed] config unusable ({}): moved to {} and rewritten with defaults. "
                             + "Fix that file and rename it back to keep your settings.",
                     cause, aside);
             try {
@@ -39,15 +39,15 @@ public final class ConfigQuarantine {
                     LethalBreed.LOGGER.info("[LethalBreed] removed old config backup {}", pruned);
                 }
             } catch (IOException pruneFailed) {
-                // Pruning is housekeeping. Failing it must not undo the archive we just made, which is
-                // the part that actually protects the user's settings.
+                // Pruning is housekeeping. Failing it must not undo the archive we just made: the archive
+                // is what actually protects the user's settings.
                 LethalBreed.LOGGER.warn("[LethalBreed] could not trim old config backups: {}",
                         pruneFailed.toString());
             }
             return true;
         } catch (IOException moveFailed) {
             LethalBreed.LOGGER.error(
-                    "[LethalBreed] config unusable ({}) AND could not be moved aside ({}) — running on "
+                    "[LethalBreed] config unusable ({}) AND could not be moved aside ({}), running on "
                             + "defaults, leaving {} untouched.",
                     cause, moveFailed.toString(), path);
             return false;

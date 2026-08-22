@@ -32,7 +32,7 @@ public final class CombatMoveConfig {
 
     // ---- Water behaviour ----
     /** Make zombies FLOAT and swim at the water surface (like a player/drowned) instead of sinking and
-     *  walking along the bottom — so they keep pursuing across water. Adds a vanilla {@code FloatGoal}
+     *  walking along the bottom, so they keep pursuing across water. Adds a vanilla {@code FloatGoal}
      *  (which land mobs have but zombies lack). Read at entity construction (registerGoals). */
     public static boolean floatInWater = true;
     /** Gentle upward velocity per tick used to surface when submerged (small so they don't pop out). */
@@ -40,7 +40,7 @@ public final class CombatMoveConfig {
     /** Downward velocity per tick when diving after a target that is submerged below. */
     public static double waterDiveSpeed = 0.10;
     /** Horizontal swim speed per tick toward the target while in water (driven directly, not via nav, so
-     *  the zombie heads straight at the target instead of circling). Kept modest — vanilla swim pace. */
+     *  the zombie heads straight at the target instead of circling). Kept modest (vanilla swim pace). */
     public static double waterSwimSpeed = 0.06;
     /** Vertical offset (blocks) below the zombie past which a target counts as "submerged below" (triggers a dive). */
     public static double waterSubmergeOffset = 0.5;
@@ -53,26 +53,26 @@ public final class CombatMoveConfig {
 
     // ---- Climb pacing ----
     /** Activations of no horizontal progress before the zombie is "stuck" and may break/build/pillar.
-     *  Until then it just walks (vanilla auto-steps 1 block + jumps 1-wide gaps) — no needless block ops. */
+     *  Until then it just walks (vanilla auto-steps 1 block + jumps 1-wide gaps), no needless block ops. */
     public static int stuckActivations = 2;
     /** Min horizontal-distance-squared improvement (blocks²) that still counts as "making progress" toward the
      *  target. Below this, the activation is counted toward {@link #stuckActivations}. 0.25 = 0.5 blocks; raise
      *  to demand more progress (acts/breaks sooner), lower to be more patient before block ops. */
     public static double stuckProgressEpsilon = 0.25;
     /** Safety cap: abort a pillar climb if it fails to gain a full block within this many activations on the
-     *  CURRENT rung — stops a zombie jumping in place forever when a support can't land (queue full, ceiling,
+     *  CURRENT rung: stops a zombie jumping in place forever when a support can't land (queue full, ceiling,
      *  or a sideways-blocked arc). A healthy pillar gains a rung every few ticks and never trips this. */
     public static int climbJumpMaxAge = 16;
     /** Target this many blocks BELOW (and stuck at a ledge) → dig straight down to descend safely. */
     public static double descendThreshold = 2.0;
     /** A drop this many blocks or shorter is walked/dropped down for free instead of being carved into a
      *  staircase or filled with dirt (vanilla: a fall &lt;4 blocks deals no damage). Stops zombies from
-     *  breaking a floor block — or bridging a ledge — they could simply step off and pass. */
+     *  breaking a floor block (or bridging a ledge) they could simply step off and pass. */
     public static int safeDropBlocks = 3;
     /** Cancel fall damage for our smart zombies. OFF: realistic damage; they avoid falls by digging down. */
     public static boolean preventFallDamage = false;
     /** Once the target is within this horizontal distance AND in line of sight, the zombie has "arrived"
-     *  and can melee — so it does NO block ops (no digging/bridging/breaking next to a reachable target). */
+     *  and can melee, so it does NO block ops (no digging/bridging/breaking next to a reachable target). */
     public static double meleeStopRange = 2.0;
     /** Max vertical gap (blocks) for the arrived/melee stop to apply (a target far above/below isn't a
      *  melee, so block ops may still run to climb/descend to it). */

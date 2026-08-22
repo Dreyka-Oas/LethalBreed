@@ -20,7 +20,7 @@ public final class ContaminationTick {
     private ContaminationTick() {}
 
     // Reused snapshot buffer so the per-tick sweep can mutate `tracked` (cure/removals) mid-iteration without a
-    // ConcurrentModificationException — WITHOUT allocating and rehashing a fresh HashSet every server tick.
+    // ConcurrentModificationException, WITHOUT allocating and rehashing a fresh HashSet every server tick.
     // Server-thread only, non-reentrant (nothing in the loop calls tick() again), so a static scratch is safe.
     private static final ArrayList<LivingEntity> SNAPSHOT = new ArrayList<>();
 
@@ -28,8 +28,8 @@ public final class ContaminationTick {
     private static boolean wasEnabled = true;
 
     public static void tick(MinecraftServer server) {
-        // Cleared BEFORE the guard, not after: the two ordinary ways out of here — `tracked` going empty
-        // (last victim cured or died) and the plague being switched off — both take the early return, and
+        // Cleared BEFORE the guard, not after: the two ordinary ways out of here, `tracked` going empty
+        // (last victim cured or died) and the plague being switched off, both take the early return, and
         // a scratch buffer that only self-clears on the hot path holds its last batch forever. One retained
         // LivingEntity pins level -> ServerLevel -> chunks -> MinecraftServer (audit #8).
         SNAPSHOT.clear();
@@ -43,7 +43,7 @@ public final class ContaminationTick {
         for (int i = 0; i < SNAPSHOT.size(); i++) {
             LivingEntity e = SNAPSHOT.get(i);
             if (e == null || e.isRemoved() || !e.isAlive() || !(e.level() instanceof ServerLevel level)) {
-                // Fully drop the victim from all six collections, not just `tracked` — an unloaded/dead/
+                // Fully drop the victim from all six collections, not just `tracked`: an unloaded/dead/
                 // dimension-changed entity left in the timer maps pins the whole world graph (audit #2).
                 // Persistent attachments stay, so a chunk that reloads re-tracks the victim via onLoad.
                 ContaminationLifecycle.forgetAllTransient(e);
@@ -80,8 +80,8 @@ public final class ContaminationTick {
     private static boolean refreshEnabledState() {
         boolean enabled = ContaminationConfig.contaminationEnabled;
         if (wasEnabled && !enabled) {
-            // Enabled -> disabled: purge once, here, rather than leaving the in-memory state to be cleaned
-            // by a sweep that this very flag switches off. Persistent attachments are untouched, so
+            // Enabled -> disabled: purge once, here. The sweep that would otherwise clean the in-memory
+            // state is switched off by this very flag. Persistent attachments are untouched, so
             // re-enabling the plague re-tracks every victim through onLoad on its next chunk load (audit #9).
             ContaminationLifecycle.onServerStopped();
         }

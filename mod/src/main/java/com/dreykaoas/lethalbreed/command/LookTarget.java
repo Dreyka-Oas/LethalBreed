@@ -12,7 +12,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 
 /**
- * "The entity I am looking at, else me" — the target rule shared by every command that acts on a single
+ * "The entity I am looking at, else me": the target rule shared by every command that acts on a single
  * victim.
  *
  * <p>It sits in the shipped source set because {@code /lethaldev level} does. The remaining
@@ -30,7 +30,7 @@ public final class LookTarget {
      * The living entity the sender is looking at within {@value #LOOK_REACH} blocks, or the sender itself
      * when the crosshair is on nothing.
      *
-     * @throws CommandSyntaxException when the sender is not a player — there is no crosshair to read, so a
+     * @throws CommandSyntaxException when the sender is not a player: there is no crosshair to read, so a
      *         console sender has no target to fall back to either
      */
     public static LivingEntity of(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

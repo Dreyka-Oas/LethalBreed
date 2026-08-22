@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
  * The plague fights the body's recovery: while a player is symptomatic, natural food-based health regeneration
- * randomly stutters. Each heal tick has a chance to be skipped, and that chance climbs with the plague level — so a
+ * randomly stutters. Each heal tick has a chance to be skipped, and that chance climbs with the plague level, so a
  * heavily-infected player at full hunger still heals, just far less reliably. The skip is random (never a hard
  * block) and capped below 100%, so recovery is always technically possible, only slow and erratic at high levels.
  *

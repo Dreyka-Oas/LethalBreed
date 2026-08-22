@@ -12,10 +12,10 @@ import java.util.Map;
 /**
  * Writing a flattened file into the live config, one schema field at a time.
  *
- * <p>The loop is FIELD-driven, not file-driven: it only ever looks at names the schema has, which is why
+ * <p>The loop is FIELD-driven, not file-driven: it only ever looks at names the schema has, so
  * {@code ConfigStructure} has to run first to notice anything the file carries that the schema does not.
  *
- * <p>Every field is guarded on its own. {@code getAsString()} throws on a JSON object or null, and that
+ * <p>Every field is guarded separately. {@code getAsString()} throws on a JSON object or null, and that
  * exception used to escape the loop entirely, leaving every remaining option at its code default, which
  * {@code save()} then persisted. One bad field must not cost the user every field after it.
  */
@@ -32,7 +32,7 @@ final class ConfigApply {
             }
             // One bad field must not cost the user every field after it: getAsString() throws on a
             // JSON object or null (neither overrides JsonElement.getAsString()), and that exception
-            // used to escape the loop entirely, leaving the rest at code defaults — which save() then
+            // used to escape the loop entirely, leaving the rest at code defaults, which save() then
             // persisted. Guard per field, and account for what was dropped instead of staying silent.
             try {
                 JsonElement el = values.get(f.getName());
@@ -58,7 +58,7 @@ final class ConfigApply {
         }
         if (ignored > 0) {
             LethalBreed.LOGGER.warn(
-                    "[LethalBreed] config loaded ({} options applied, {} IGNORED — bad type or value) from {}",
+                    "[LethalBreed] config loaded ({} options applied, {} IGNORED: bad type or value) from {}",
                     applied, ignored, path);
         } else {
             LethalBreed.LOGGER.info("[LethalBreed] config loaded ({} options) from {}", applied, path);

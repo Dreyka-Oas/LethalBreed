@@ -5,15 +5,15 @@ package com.dreykaoas.lethalbreed.pack.rule;
  * it to walk.
  *
  * <p>Held by {@code ZombiePursuit} rather than merged into it, because it is a distinct concern with a
- * distinct lifetime — pursuit data is rewritten every activation by the target scan, this survives across
- * them — and because keeping it a separate, Minecraft-free class means the membership bookkeeping can be
+ * distinct lifetime (pursuit data is rewritten every activation by the target scan, this survives across
+ * them) and because keeping it a separate, Minecraft-free class means the membership bookkeeping can be
  * unit-tested without a world.
  *
  * <p><b>The waypoint deliberately does not live in the pursuit memory slot.</b> That slot already has five
  * writers that do not arbitrate: the seen target, the sound bus, the shade search, the flee drop and the
  * doze suppression. A pack waypoint there would be wiped by the first cow the pack walks past, hijacked by
  * any wounded zombie's distress rally, and would make every member match the "investigating a noise"
- * predicate — the exact thing that keeps a zombie awake through the day and burning in the sun.
+ * predicate, the exact thing that keeps a zombie awake through the day and burning in the sun.
  */
 public final class PackTether {
 
@@ -44,7 +44,7 @@ public final class PackTether {
      * Join or leave a pack.
      *
      * <p>Leaving drops the waypoint as well. A zombie no longer in a pack must not keep walking to that
-     * pack's rendezvous — and worse, a stale waypoint would hold it out of FROZEN forever, so it would tick
+     * pack's rendezvous, and worse, a stale waypoint would hold it out of FROZEN forever, so it would tick
      * at full price for the rest of the world's life while walking somewhere nobody is going.
      */
     public void setPackId(long id) {

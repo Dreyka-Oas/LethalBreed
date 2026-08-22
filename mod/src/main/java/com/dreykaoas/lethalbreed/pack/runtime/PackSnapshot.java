@@ -27,21 +27,21 @@ import java.util.UUID;
  *
  * <p><b>Why full serialisation and not a respawn.</b> Re-spawning a zombie and re-rolling its variation would
  * silently change it. {@code ZombieVariation} seeds every draw on the entity UUID, and a fresh
- * {@code EntityType.ZOMBIE.spawn()} gets a fresh UUID — so size, speed, health, effects <em>and the special
+ * {@code EntityType.ZOMBIE.spawn()} gets a fresh UUID, so size, speed, health, effects <em>and the special
  * type</em> would all be re-drawn, and a Juggernaut could come back a Bomber. Worse, {@code applyPhase} reads
  * {@code PhaseManager.current()} at call time: a pack dematerialised in phase 3 and restored in phase 7 would
  * return with phase-7 stats it never earned. The NBT carries the UUID, so it carries the identity, so it
  * carries all of that unchanged. Fabric's persistent attachments ride along in the same tags, which is how
  * {@code lethalbreed:special}, the pack id and the contamination state survive too.
  *
- * <p>Stored as gzipped bytes rather than a live {@code CompoundTag}: it keeps {@link PackState} free of any
+ * <p>Stored as gzipped bytes, never a live {@code CompoundTag}: it keeps {@link PackState} free of any
  * Minecraft type, and a dematerialised member is written far more often than it is read.
  */
 public final class PackSnapshot {
     private PackSnapshot() {}
 
     /**
-     * Serialise a zombie into a ghost. Returns null if the entity refuses to write — never a half-written
+     * Serialise a zombie into a ghost. Returns null if the entity refuses to write: never a half-written
      * ghost, because a ghost that cannot be restored is a member silently deleted from the pack.
      */
     public static PackState.Ghost capture(ServerLevel level, Zombie zombie) {
@@ -60,7 +60,7 @@ public final class PackSnapshot {
 
     /**
      * Rebuild a ghost at the given position and add it to the world. Returns null when the tag cannot be
-     * read back or the entity type no longer exists — the caller keeps the ghost rather than losing it.
+     * read back or the entity type no longer exists. The caller keeps the ghost.
      *
      * <p>The position is overwritten <b>after</b> the load: the saved coordinates are where the pack was when
      * it dematerialised, which may be hundreds of blocks behind where it has since travelled.

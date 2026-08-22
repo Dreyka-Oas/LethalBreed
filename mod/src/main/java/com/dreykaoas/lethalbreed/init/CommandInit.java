@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
  * <p>Everything else ({@code /lethalspawn}, {@code /lethalspecial} and the other four {@code /lethaldev}
  * subcommands) is a developer tool living in the {@code dev} source set and registered by
  * {@code DevBootstrap}, so a player jar contains none of it. Those dev subcommands attach to the
- * {@code lethaldev} literal registered here — Brigadier merges the two trees.
+ * {@code lethaldev} literal registered here (Brigadier merges the two trees).
  */
 public final class CommandInit {
     private CommandInit() {}

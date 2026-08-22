@@ -17,7 +17,7 @@ public final class ZombieRegistry {
 
     public SmartZombie add(Zombie zombie, ResourceKey<Level> dimension) {
         // Bucket membership is derived live from the entity id + current tickBuckets (see LodBucketPass),
-        // not cached here — so changing tickBuckets at runtime re-spreads the whole population immediately
+        // not cached here, so changing tickBuckets at runtime re-spreads the whole population immediately
         // instead of stranding zombies on a stale bucket index.
         SmartZombie sz = new SmartZombie(zombie, dimension);
         byId.put(zombie.getId(), sz);
