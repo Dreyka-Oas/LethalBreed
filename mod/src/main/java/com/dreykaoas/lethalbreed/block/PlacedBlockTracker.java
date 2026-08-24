@@ -83,4 +83,10 @@ public final class PlacedBlockTracker {
     public int trackedCount() {
         return placed.size();
     }
+
+    /** Whether this exact position is still held. Lets a rig assert on its own placements instead of on a
+     *  dimension-wide total that any bridging zombie moves. */
+    public boolean isTracked(BlockPos pos) {
+        return placed.containsKey(pos.asLong());
+    }
 }

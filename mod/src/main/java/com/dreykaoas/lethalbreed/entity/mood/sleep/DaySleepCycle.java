@@ -14,9 +14,9 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * Daytime dozing: a targetless, peaceful zombie by day either dozes (in shade, or once the horde is
  * sun-immune) or, while it still burns under open sky, heads for the nearest shade first.
  *
- * <p>It never writes the caller's state field: every entry point takes the current {@link State} and
- * returns the resulting one, so {@code ZombieMood} stays the single place the mood state is assigned.
- * Runs once per activation even while FROZEN, so a dozing zombie keeps checking whether to wake.
+ * <p>It never writes the caller's state field: every entry point takes the current {@link State} and returns
+ * the resulting one, so {@code ZombieMood} stays the single place the mood state is assigned. Runs once per
+ * activation even while FROZEN, so a dozing zombie keeps checking whether to wake.
  */
 public final class DaySleepCycle {
 
@@ -30,6 +30,10 @@ public final class DaySleepCycle {
 
     public void releaseAiHold(Zombie entity) {
         pose.release(entity);
+    }
+
+    public boolean holdsAiFreeze() {
+        return pose.holding();
     }
 
     /** One activation. Returns the resulting mood state. */
@@ -50,7 +54,7 @@ public final class DaySleepCycle {
         boolean day = level.isBrightOutside();
         int phase = PhaseManager.current();
         // Sun-fire is deliberately NOT a disturbance: below the immunity phase an exposed zombie is ALWAYS on
-        // fire, and reaching shade is exactly how it escapes that. Only a mob or NON-fire damage disturbs.
+        // fire, and shade is how it escapes. Only a mob or NON-fire damage disturbs.
         boolean disturbed = threat != null || (entity.hurtTime > 0 && !entity.isOnFire());
 
         if (state == State.SLEEPING) {
@@ -61,9 +65,8 @@ public final class DaySleepCycle {
         }
         // Idle daytime sleeper: shelter first if it would burn under open sky, then doze.
         if (dozeIfNotExposed(level, entity, owner, phase)) {
+            // Commit only once grounded: mid-leap or mid-fall the pose deferred, so retry next activation.
             return entity.onGround() ? State.SLEEPING : state;
-            // Only commit to SLEEPING once grounded and frozen; if it is still finishing a leap or fall arc
-            // the pose deferred, so stay put and retry next activation.
         }
         shade.seek(level, entity, owner, now);
         return state;
@@ -101,8 +104,7 @@ public final class DaySleepCycle {
         if (DaySleep.burnsInSun(phase) && level.canSeeSky(entity.blockPosition())) {
             return false;
         }
-        // In shade, or the horde is sun-immune. Snuff any residual sun-fire from the shade-run so it is not
-        // "asleep in the shade yet still on fire".
+        // In shade, or sun-immune: snuff the shade-run's residual fire, or it dozes while still burning.
         if (shade.seeking() && entity.getRemainingFireTicks() > 0 && !level.canSeeSky(entity.blockPosition())) {
             entity.setRemainingFireTicks(0);
         }
@@ -135,12 +137,9 @@ public final class DaySleepCycle {
         pose.release(entity);
     }
 
-    /**
-     * Called by the sound bus for every zombie within earshot of a noise. It re-arms the alert timer so the
-     * zombie stays awake and hunts by sight and sound; for an already-awake one that is all it does. For a
-     * SLEEPING one it also stashes the source and starts the reaction delay. Continuous noise keeps
-     * re-arming the alert, so a chased zombie never lapses back into a doze.
-     */
+    /** Called by the sound bus for every zombie within earshot. It re-arms the alert timer so the zombie
+     *  stays awake and hunts by sight and sound; a SLEEPING one also stashes the source and starts the
+     *  reaction delay. Continuous noise keeps re-arming, so a chased zombie never lapses back into a doze. */
     public void notifyHeardSound(long now, double x, double y, double z, State state) {
         signal.rouse(now);
         if (state == State.SLEEPING) {

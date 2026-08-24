@@ -66,6 +66,13 @@ public final class DevProbe {
         /** One counter increment. {@code entityId} is {@link #GLOBAL} for process-wide counters. */
         void count(int counter, int entityId);
 
+        /** Add {@code n} to the tally named {@code key}. Named rather than an id, because these seams are
+         *  one-offs a single harness reads and an id constant here would be dead weight in a player jar. */
+        void count(String key, int n);
+
+        /** The tally under {@code key} since the last reset, or 0 if nothing ever wrote it. */
+        long counted(String key);
+
         /** One debug line on {@code channel}. Only called when {@link #tracing(int)} is true. */
         void trace(int channel, String message);
 
@@ -115,5 +122,21 @@ public final class DevProbe {
     /** Whether {@code channel} is being traced. Guards message construction, not just the call. */
     public static boolean tracing(int channel) {
         return (traceMask & (1 << channel)) != 0;
+    }
+
+    /** Add {@code n} to a named tally when a sink is installed. Unlike the timing call sites this one has
+     *  nothing to build in front of the gate, so it takes the volatile read itself rather than making every
+     *  caller write {@code if (on())}. */
+    public static void count(String key, int n) {
+        Sink s = sink;
+        if (s != null) {
+            s.count(key, n);
+        }
+    }
+
+    /** Read a named tally back, 0 on a player jar. Harness-side only; nothing on a hot path calls this. */
+    public static long counted(String key) {
+        Sink s = sink;
+        return s == null ? 0L : s.counted(key);
     }
 }

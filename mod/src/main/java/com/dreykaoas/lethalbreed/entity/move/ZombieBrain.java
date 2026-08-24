@@ -73,8 +73,19 @@ public final class ZombieBrain {
         // away from the threat (vanilla nav, so climb/descend still work). No leap/dig/dispatch while fleeing.
         if (guards.handleFleeing(level)) return;
         pillar.tickCooldown();
-        if (pillar.active()) return; // mid climb; the per-tick climbStep finishes it
+        // Water outranks an ascent in progress. The mid-climb return below skips every guard under it, so
+        // without testing the entry here a zombie whose pit floods keeps stacking blocks until the pillar
+        // ends on its own. The guard cancels the column itself, and swimStep takes over from the next tick.
+        if (pillar.active()) {
+            guards.handleSwimEntry();
+            return; // mid climb; the per-tick climbStep finishes it
+        }
         if (guards.handleNoTarget(ctx, p)) return;
+        // Water entry sits here, after the no-target guard and before the hunt: a zombie in water is driven by
+        // Swim from EveryTickPass, every tick, instead of the LOD-throttled walk. Tested after handleNoTarget on
+        // purpose, so a targetless zombie drifting in a pond cannot latch into the swim state with nothing to
+        // chase. Lost between commit 8a0f04a and this line, which left Swim.drive unreachable.
+        if (guards.handleSwimEntry()) return;
 
         pursue.run(level, ctx, p, bx, bz);
     }

@@ -17,7 +17,8 @@
     "zombie.ZombieSleepSilenceMixin",
     "zombie.ZombieSunImmunityMixin",
     "zombie.ZombieFloatInWaterMixin",
-    "zombie.ZombieGoalSuppressMixin"
+    "zombie.ZombieGoalSuppressMixin",
+    "zombie.ZombieNoAiNotPersistedMixin"
   ],
   "client": [
     "client.render.AvatarRendererHallucinationMixin",

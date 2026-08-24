@@ -209,6 +209,28 @@ loom {
     }
 }
 
+// Client gametests: pixels are the one thing neither JUnit nor a dedicated-server harness can assert.
+// createSourceSet gives src/gametest its own mod metadata, so the SHIPPED fabric.mod.json never declares an
+// entrypoint class the player jar does not contain. devSourceSet is deliberately absent from this run:
+// LethalBreedMod reaches DevBootstrap reflectively and swallows the ClassNotFoundException, so the test client
+// sees exactly a player's config schema and a player's GUI. Top level, not inside loom { }: fabricApi is its
+// own extension and does not resolve from within the loom block.
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "lethalbreed-gametest"
+        enableGameTests = false
+        enableClientGameTests = true
+        eula = true
+    }
+}
+
+// `build` ignores a source set nothing depends on, so a gametest that stopped compiling would only surface the
+// next time someone launched the client, hours into a sweep. Fail at build time instead.
+tasks.check {
+    dependsOn(tasks.named("compileGametestJava"))
+}
+
 // The licence has to travel with the jar, for two independent reasons: section 2 of LICENSE makes it a
 // condition of redistribution, and section 6 carries the MIT notice of the bundled JOCL, whose notice
 // clause obliges the same for any copy. `../` because the Gradle root is mod/ while the file sits at the

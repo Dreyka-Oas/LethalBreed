@@ -43,7 +43,10 @@ public final class BlockOperationQueue {
             BlockPos p = places.poll();
             pending.remove(p.asLong());
             BlockState s = level.getBlockState(p);
-            if (s.isAir() || !s.blocksMotion()) { // only fill air / passable vegetation
+            // Water and lava pass !blocksMotion, so the old test turned a shore into dirt one block at a time
+            // whenever a zombie got stuck at the edge of deep water. The rule belongs here rather than at the
+            // three call sites, so it holds for whatever calls this next.
+            if ((s.isAir() || !s.blocksMotion()) && s.getFluidState().isEmpty()) {
                 level.setBlock(p, Blocks.DIRT.defaultBlockState(), 3);
                 tracker.record(p, tick);
                 budget--;

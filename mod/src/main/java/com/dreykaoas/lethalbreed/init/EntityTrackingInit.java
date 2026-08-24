@@ -46,13 +46,17 @@ final class EntityTrackingInit {
                 // every death and every chunk unload leaked one, pinning entity -> level -> server, and
                 // neighbour queries (sound, Screamer rally, Healer heal) kept matching those ghosts.
                 if (sz != null && sz.pursuit().pack().inPack()) {
-                    // The chunk beat the materialiser to it. The zombie is on its way to disk WITH its pack
-                    // attachment, so it will re-join on the way back: count it detached and write no ghost.
-                    // Writing one here is how a member ends up existing twice, and nothing in this mod ever
-                    // despawns, so a duplicate is permanent. Losing a straggler is the cheaper failure.
-                    // getRemovalReason().shouldSave() distinguishes "went to disk" from "was destroyed".
+                    // The chunk beat the materialiser to it: the zombie goes to disk WITH its attachment and
+                    // re-joins on the way back, so count it detached and write no ghost. A ghost here is how a
+                    // member ends up existing twice, and nothing in this mod despawns, so that is permanent.
+                    // A chunk turning HIDDEN ends tracking from PersistentEntitySectionManager.updateChunkStatus,
+                    // which runs BEFORE anything sets a removal reason, so a null reason IS the chunk unload and
+                    // the only case that comes back. Reading null as "not saved" sent that case to leave(), which
+                    // drops the member without counting it and strips the attachment before the section is
+                    // written: the pack fell to zero members and dissolved under a zombie that was merely on
+                    // disk, and the zombie came back loose for good.
                     var reason = entity.getRemovalReason();
-                    if (reason != null && reason.shouldSave()) {
+                    if (reason == null || reason.shouldSave()) {
                         dimensions.get(sz.dimension()).packManager().detach(sz);
                     } else {
                         dimensions.get(sz.dimension()).packManager().leave(sz);
@@ -133,9 +137,11 @@ final class EntityTrackingInit {
             // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
             // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
             // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,
-            // so the repair cannot be made safe. Audit #2 is prevented at the source instead: the freeze
-            // is released on ENTITY_UNLOAD and on SERVER_STOPPING (before saveAllChunks), so no new
-            // statue is ever written. A world already carrying one can be repaired by hand with
+            // so the repair cannot be made safe. Audit #2 is prevented on the WRITE instead, by
+            // ZombieNoAiNotPersistedMixin: the releases on ENTITY_UNLOAD and SERVER_STOPPING only fix the
+            // live entity and are too late for the save (the chunk is serialised before it is unloaded,
+            // and an autosave or /save-all unloads nothing at all). A world already carrying an old
+            // statue can be repaired by hand with
             //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
         }
     }

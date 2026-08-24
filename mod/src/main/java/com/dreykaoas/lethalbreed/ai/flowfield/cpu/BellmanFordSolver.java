@@ -42,7 +42,12 @@ final class BellmanFordSolver {
             cost[seed] = 0;
         }
 
-        int maxIter = width + depth + 2; // safety cap; converges in ~graph-diameter passes, breaks early
+        // width+depth+2 is the diameter of OPEN ground, not of the graph: a corridor or a cave winds, and its
+        // diameter is O(width*depth). Truncating there left unreached cells at IMPASSABLE, the navigator fell
+        // back to walking straight at the target, and the CPU and the GPU truncated at different places, so
+        // parity only held on grids that converged early. The real bound is the cell count; the fixpoint break
+        // below still ends an open-ground solve in the same handful of passes it always did.
+        int maxIter = Math.max(width + depth + 2, n);
         for (int iter = 0; iter < maxIter; iter++) {
             AtomicBoolean changed = new AtomicBoolean(false);
             SolvePool.get().submit(() -> IntStream.range(0, n).parallel().forEach(i -> {

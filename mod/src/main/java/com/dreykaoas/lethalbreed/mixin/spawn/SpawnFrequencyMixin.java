@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.mixin.spawn;
 import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.phase.PhaseTable;
+import com.dreykaoas.lethalbreed.probe.DevProbe;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobCategory;
@@ -44,6 +45,10 @@ public abstract class SpawnFrequencyMixin {
         if (extra <= 0 || !inv.lethalbreed$canSpawnLocal(MobCategory.MONSTER, chunk.getPos())) {
             return;
         }
+        // Counted below the guard, not above it: at phase 0 the curve yields -1, and a tally that accumulates
+        // it once per loaded chunk per tick runs deeply negative. What a harness wants here is the loop trip
+        // count, which nothing downstream reports.
+        DevProbe.count("spawn.extraPasses", extra);
         for (int i = 0; i < extra; i++) {
             NaturalSpawner.spawnCategoryForChunk(MobCategory.MONSTER, level, chunk,
                     inv::lethalbreed$canSpawn, inv::lethalbreed$afterSpawn);

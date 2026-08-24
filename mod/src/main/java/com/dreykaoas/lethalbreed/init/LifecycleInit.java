@@ -4,7 +4,8 @@ package com.dreykaoas.lethalbreed.init;
 import com.dreykaoas.lethalbreed.special.runtime.gore.GorePuddles;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
 
-import com.dreykaoas.lethalbreed.ai.flowfield.cpu.ComputeCalibration;
+import com.dreykaoas.lethalbreed.ai.flowfield.GpuFlowField;
+import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
 import com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
 import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
@@ -49,11 +50,10 @@ public final class LifecycleInit {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             if (FlowConfig.useGpu) {
                 GpuComputeManager.get().isAvailable();
-                // Auto-calibrate the CPU↔GPU crossover on this machine when asked (one-off boot cost).
-                if (FlowConfig.gpuAutoCalibrate) {
-                    ComputeCalibration.calibrate();
-                }
             }
+            // One throwaway solve on the backend that will serve the game, so the first real chase does not
+            // pay for the kernel's first-call buffer allocation (or the CPU pool's first spin-up).
+            GpuFlowField.compute(Snapshot.openSquare(64));
             PhaseManager.get().load(server); // restore the persisted phase (survives close/reopen)
             PackSavedData.loadAll(server, dimensions); // packs keep their route and ghosts across a restart
         });

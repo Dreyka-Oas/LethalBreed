@@ -104,7 +104,9 @@ public final class MoveMath {
         return s.blocksMotion() && MaterialRegistry.isBreakable(level, p, s);
     }
 
+    /** Locale.ROOT for the same reason DevVerdict.fmt uses it: these numbers land in a log a script reads, and
+     *  a French JVM would print 14,1 next to DevVerdict's 14.07 in the same file. */
     public static String f1(double v) {
-        return String.format("%.1f", v);
+        return String.format(java.util.Locale.ROOT, "%.1f", v);
     }
 }

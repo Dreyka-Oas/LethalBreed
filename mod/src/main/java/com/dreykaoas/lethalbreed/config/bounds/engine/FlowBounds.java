@@ -15,7 +15,6 @@ public final class FlowBounds {
     public static void register(BoundsRegistrar r) {
         r.b("flowCpuThreads", 0, 256);
         r.b("gpuWorkgroupSize", 0, 1024);
-        r.b("gpuMinCells", 0, 10_000_000);
         r.b("gpuDeviceIndex", -1, 64);
         r.b("flowRecomputeInterval", 1, 6000);
         r.b("flowResampleOnMoveDist", 0, 1024);

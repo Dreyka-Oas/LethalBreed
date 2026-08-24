@@ -102,6 +102,10 @@ final class BrainGuards {
     boolean handleSwimEntry() {
         if (!(CombatMoveConfig.floatInWater && entity.isInWater()
                 && (!entity.onGround() || entity.isUnderWater()))) {
+            // Clearing on the way out is what the state needs, not just on the way in: a zombie that walks up
+            // a shore on an activation where swimStep does not run would otherwise keep a stale flag, and
+            // EveryTickPass would go on driving it as a swimmer on dry land.
+            swimming = false;
             return false;
         }
         pillar.cancel();

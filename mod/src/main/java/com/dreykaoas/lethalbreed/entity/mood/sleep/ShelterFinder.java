@@ -23,8 +23,17 @@ public final class ShelterFinder {
             DevProbe.sink.count(DevProbe.SHELTER_SCAN, DevProbe.GLOBAL);
         }
         int vBand = Math.max(4, radius / 2);
-        BlockPos best = null;
-        double bestScore = Double.MAX_VALUE;
+        // Two candidates, because the nearest shaded block is almost always the drip line, the first column
+        // under the edge of the roof. Vanilla navigation counts a walk as arrived within about half a block,
+        // so a zombie sent to the drip line stops astride it: its foot block is still open to the sky, it never
+        // counts as sheltered, it never dozes, and it burns one block short of cover. Measured in the shade rig
+        // as a zombie standing at x=153 for 300 ticks with the roof starting at x=154. So aim a block deeper
+        // whenever a deeper block exists, and keep the edge only as the fallback for thin cover (a doorway, a
+        // one-block overhang) where no deeper block does.
+        BlockPos inner = null;
+        double innerScore = Double.MAX_VALUE;
+        BlockPos edge = null;
+        double edgeScore = Double.MAX_VALUE;
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
@@ -32,14 +41,14 @@ public final class ShelterFinder {
                     continue;
                 }
                 double horiz = (double) dx * dx + (double) dz * dz;
-                if (horiz >= bestScore) {
+                if (horiz >= innerScore) {
                     continue; // even at the same level this column can't beat the current best, skip it whole
                 }
                 int x = origin.getX() + dx;
                 int z = origin.getZ() + dz;
                 for (int dy = -vBand; dy <= vBand; dy++) {
                     double score = horiz + (double) V_WEIGHT * dy * dy;
-                    if (score >= bestScore) {
+                    if (score >= innerScore) {
                         continue;
                     }
                     m.set(x, origin.getY() + dy, z);
@@ -52,11 +61,30 @@ public final class ShelterFinder {
                             || !level.getBlockState(m.above()).isAir()) {
                         continue;
                     }
-                    bestScore = score;
-                    best = m.immutable();
+                    if (score < edgeScore) {
+                        edgeScore = score;
+                        edge = m.immutable();
+                    }
+                    if (surroundedByCover(level, m)) {
+                        innerScore = score;
+                        inner = m.immutable();
+                    }
                 }
             }
         }
-        return best;
+        return inner != null ? inner : edge;
+    }
+
+    /** True when the four cardinal neighbours are roofed too, i.e. this is cover rather than its edge. */
+    private static boolean surroundedByCover(ServerLevel level, BlockPos.MutableBlockPos m) {
+        int x = m.getX();
+        int y = m.getY();
+        int z = m.getZ();
+        boolean covered = !level.canSeeSky(m.set(x + 1, y, z))
+                && !level.canSeeSky(m.set(x - 1, y, z))
+                && !level.canSeeSky(m.set(x, y, z + 1))
+                && !level.canSeeSky(m.set(x, y, z - 1));
+        m.set(x, y, z);
+        return covered;
     }
 }

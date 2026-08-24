@@ -17,14 +17,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
- * Per-zombie "mood" on top of the hunt, config-gated by {@link ZombieMoodConfig}: Celebrate (arms up and
- * a groan after a clean kill), Flee (retreat and rally scream below {@code fleeHealthFraction},
- * hysteresis against {@code regainHealthFraction}), Regen (self-heal while fleeing, sheltering or
- * celebrating), and the daytime doze.
+ * Per-zombie "mood" on top of the hunt, config-gated by {@link ZombieMoodConfig}: Celebrate after a clean
+ * kill, Flee below {@code fleeHealthFraction} with hysteresis against {@code regainHealthFraction}, Regen
+ * while fleeing, sheltering or celebrating, and the daytime doze.
  *
- * <p>The ONLY place {@link #state} is assigned: the awake transitions live in {@link MoodTransitions},
- * the doze in {@link DaySleepCycle}, and both hand a state back without writing one. {@link #update}
- * runs once per activation from {@code LodBucketPass}; {@code drive*} run every tick from the brain.
+ * <p>The ONLY place {@link #state} is assigned: the awake transitions live in {@link MoodTransitions}, the
+ * doze in {@link DaySleepCycle}, and both hand a state back without writing one. {@link #update} runs once
+ * per activation from {@code LodBucketPass}; {@code drive*} run every tick from the brain.
  */
 public final class ZombieMood {
     private final Zombie entity;
@@ -53,8 +52,7 @@ public final class ZombieMood {
         return state == State.SLEEPING;
     }
 
-    /** True while walking to a shade block for a day-doze. Read by the brain (keeps the walk calm, no
-     *  leaping) and by LodManager (a seek only "arrives" once the feet are out of the sky). */
+    /** True while walking to shade: the brain keeps the walk calm, LodManager waits for the sky to go. */
     public boolean isSeekingShade() {
         return sleep.seekingShade();
     }
@@ -66,35 +64,35 @@ public final class ZombieMood {
         }
         long now = level.getGameTime();
         if (!ZombieMoodConfig.moodEnabled) {
-            // Mood disabled at runtime: do not leave a zombie frozen mid-doze, hand it back to the hunt.
+            // Mood disabled at runtime: every latched state has to be handed back, not just the doze. The
+            // transitions below stop running, so a zombie caught in FLEEING would retreat until it died.
             if (state == State.SLEEPING) {
                 state = sleep.wake(entity, owner, now, false);
+            } else if (state != State.NORMAL) {
+                state = transitions.releaseAwakeMood(entity);
             }
             return;
         }
         float max = entity.getMaxHealth();
         float frac = max <= 0.0f ? 1.0f : entity.getHealth() / max;
         LivingEntity threat = currentThreat();
-        // A WOUNDED zombie flees the nearest nearby PLAYER too, not only whatever last hit it. Sleep
-        // disturbance below still uses the plain threat: a silent nearby player must NOT wake a sleeper.
+        // A WOUNDED zombie flees the nearest PLAYER too, not only its last aggressor. Sleep keeps the plain
+        // threat below: a silent player standing over a sleeper must not wake it.
         LivingEntity fleeThreat = ZombieMoodConfig.fleeEnabled
                 ? MoodTransitions.flightThreat(entity, threat, frac) : null;
 
         state = transitions.celebrationExpiry(entity, now, frac, state);
         state = transitions.fleeHysteresis(entity, now, frac, fleeThreat, state);
         state = transitions.sunShelter(entity, level, frac, state);
-        // Daytime sleep runs only when not busy fleeing, sheltering or celebrating.
         state = sleep.tick(level, entity, owner, now, threat, state);
-
-        // Per-state side effects (see MoodStateDispatch): drop the hunt, keep LOD alive, fire the distress
-        // scream. The scream measures distance from what it flees, so it rallies once it has opened ground.
+        // Per-state side effects (see MoodStateDispatch): the distress scream rallies the horde only once
+        // the zombie has opened ground between itself and what it flees.
         if (MoodStateDispatch.apply(state, entity, level, owner, ctx, fleeThreat, transitions.distressScreamed())) {
             transitions.markDistressScreamed();
             if (DevProbe.on()) {
                 DevProbe.sink.count(DevProbe.DISTRESS, DevProbe.GLOBAL);
             }
         }
-
         boolean regenEligible = state != State.NORMAL && frac < ZombieMoodConfig.regainHealthFraction;
         lastRegenTime = MoodRegen.tick(entity, regenEligible, now, lastRegenTime);
     }
@@ -106,8 +104,7 @@ public final class ZombieMood {
         MoodMovement.driveFlee(entity, MoodTransitions.flightThreat(entity, currentThreat(), frac));
     }
 
-    /** Drive the dash to the shade found in {@link #update}. Falls back to a plain retreat when no shade
-     *  was located, so a burning zombie keeps moving. Standing still would only let it cook. */
+    /** Dash to the shade from {@link #update}, or a plain retreat when none was found: standing still cooks. */
     public void driveShelter(ServerLevel level) {
         BlockPos shelter = transitions.shelterTarget();
         if (shelter != null) {
@@ -117,11 +114,14 @@ public final class ZombieMood {
         driveFlee(level);
     }
 
-    /** Hand vanilla AI back if the doze is holding it. Called when this mood object is about to be
-     *  discarded, on chunk unload or server stop: vanilla persists {@code NoAI} to entity NBT while our
-     *  own flag is not, so a frozen zombie whose mood dies would reload as a statue (audit #2). */
+    /** Hand vanilla AI back if the doze holds it, so the live entity is sane when this mood is discarded. */
     public void releaseAiHold() {
         sleep.releaseAiHold(entity);
+    }
+
+    /** True while the doze holds vanilla AI off; the save-path mixin asks before dropping NoAI (audit #2). */
+    public boolean holdsAiFreeze() {
+        return sleep.holdsAiFreeze();
     }
 
     /** Called by the sound bus for every zombie within earshot of a noise. */

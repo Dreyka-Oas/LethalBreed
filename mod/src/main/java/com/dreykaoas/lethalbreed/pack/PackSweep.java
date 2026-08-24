@@ -21,7 +21,7 @@ final class PackSweep {
     /** @return the cursor to resume from next tick. */
     static int tick(PackManager manager, Long2ObjectMap<PackState> packs, List<PackState> ordered,
                     int cursor, long gameTime) {
-        if (!PackConfig.packEnabled || packs.isEmpty()) {
+        if (packs.isEmpty()) {
             return cursor;
         }
         ordered.clear();
@@ -31,6 +31,16 @@ final class PackSweep {
         int visits = Math.min(Math.max(1, PackConfig.packsPerTick), ordered.size());
         for (int i = 0; i < visits; i++) {
             PackState pack = ordered.get(cursor++ % ordered.size());
+            if (!PackConfig.packEnabled) {
+                // Turned off at runtime. PackPass hands out no membership any more, so nothing else will
+                // ever empty these or dissolve them: the ones already down to nobody would sit in the map,
+                // and in the save, for the rest of the session. Only those are reaped; a pack still owed a
+                // ghost or a detached member keeps its roster for when the option comes back on.
+                if (pack.isEmpty()) {
+                    manager.drop(pack.id);
+                }
+                continue;
+            }
             PackLifecycle.recentroid(pack);
             if (PackLifecycle.dissolveIfSpent(pack, gameTime, manager)) {
                 continue;

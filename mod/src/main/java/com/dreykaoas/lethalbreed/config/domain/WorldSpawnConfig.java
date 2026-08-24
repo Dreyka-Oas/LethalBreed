@@ -34,7 +34,9 @@ public final class WorldSpawnConfig {
     public static double leapEffectPerLevel = 0.35;
 
     // ---- Night-only phased spawning ----
-    /** Master toggle: hostile spawns are driven by the phase (0 = classic, nothing spawns). */
+    /** Master toggle for the mod's hold on hostile spawning. ON, the phase drives it, and phase 0 means nothing
+     *  spawns at all. OFF, the cull, the mob-cap scaling and the extra passes all stand down and vanilla
+     *  spawning comes back, skeletons and creepers included. It is not a way to empty the world. */
     public static boolean nightSpawnEnabled = true;
     /** Only plain Zombie spawns. When ON, every other hostile (skeleton, creeper, husk, drowned, zombie
      *  villager, zombified piglin, spider, …) is cancelled at spawn, in EVERY phase. */

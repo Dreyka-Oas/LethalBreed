@@ -100,7 +100,9 @@ final class GpuFlowFieldSolver {
             // sequentially (each sees the previous pass's relaxations), and extra passes after convergence
             // are cheap no-ops, so at most one extra batch runs. Correctness is unchanged.
             final int BATCH = 16;
-            int maxIter = width + depth + 2;
+            // Same bound as the CPU solver, and for the same reason: width+depth+2 is the diameter of open
+            // ground, and truncating there made the two backends disagree on a winding grid.
+            int maxIter = Math.max(width + depth + 2, width * depth);
             for (int done = 0; done < maxIter; done += BATCH) {
                 changed[0] = 0;
                 clEnqueueWriteBuffer(ctx.queue, changedMem, true, 0, Sizeof.cl_int, Pointer.to(changed), 0, null, null);

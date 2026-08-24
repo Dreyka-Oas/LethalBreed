@@ -37,15 +37,25 @@ final class DescendForward {
         boolean feetClear = ft.isAir() || !ft.blocksMotion();
 
         // Flat walkable ground ahead (solid floor plus a clear body): the descent is further on, so walk to
-        // it and never break a floor we could stand on.
+        // it and never break a floor we could stand on. This is the only goal in this file at the zombie's own
+        // level, i.e. one cell away, and that is why it needs an accuracy the others do not: see walkFlat.
         if (ft.blocksMotion() && headClear
                 && !level.getBlockState(new BlockPos(ax, by + 1, az)).blocksMotion()) {
-            return walkTo(owner, entity, ax, by, az, ZombieState.DESCENDING);
+            return walkFlat(owner, entity, ax, by, az);
         }
         if (fl.blocksMotion()) {
             if (MoveMath.requestBreakBodyBlock(owner, level, ctx, head, hd, ZombieState.DESCENDING)
                     || MoveMath.requestBreakBodyBlock(owner, level, ctx, feet, ft, ZombieState.DESCENDING)) {
                 return true;
+            }
+            // The same rule the drop branch below applies, and it has to be applied here too: a step whose
+            // body space is solid and UNBREAKABLE is not a step. Without this the branch claims the tick and
+            // orders a walk into the wall, so a boxed-in zombie never reaches the carve branches at all.
+            // Measured in a bedrock shaft: the zombie drifted two thirds of a block off its prey's column, the
+            // step signs stopped being zero, and it spent 258 of 260 ticks in DESCENDING walking into bedrock
+            // with the diggable floor under its own feet untouched.
+            if (!feetClear || !headClear) {
+                return false;
             }
             // Clean one-block step down with a floor: walk to it, which keeps the zombie on the stair.
             return walkTo(owner, entity, ax, by - 1, az, ZombieState.DESCENDING);
@@ -73,6 +83,23 @@ final class DescendForward {
     private static boolean walkTo(SmartZombie owner, Zombie entity, int x, int y, int z, ZombieState state) {
         entity.getNavigation().moveTo(x + 0.5, y, z + 0.5, FlowConfig.navSpeed);
         owner.setState(state);
+        return true;
+    }
+
+    /**
+     * The flat step, pathed with accuracy 0 instead of the 1 {@code moveTo(x, y, z, speed)} passes for us.
+     *
+     * <p>Accuracy is the Manhattan radius at which {@code PathFinder} calls a target reached, so at 1 any node
+     * ONE block from the goal already counts, and the zombie's own node is exactly that for a goal one cell
+     * ahead: the path comes back already complete, the navigation reports done, and nothing moves. Every other
+     * goal in this file is at least two nodes away (a step down, a drop, a built support), which is why they
+     * work at the default and this one never did. Measured on the descend rig: a zombie whose prey was three
+     * blocks below and ten out held its ground for four hundred ticks, state DESCENDING the whole time,
+     * having neither walked to the ledge nor dug a single block.
+     */
+    private static boolean walkFlat(SmartZombie owner, Zombie entity, int ax, int by, int az) {
+        entity.getNavigation().moveTo(ax + 0.5, by, az + 0.5, 0, FlowConfig.navSpeed);
+        owner.setState(ZombieState.DESCENDING);
         return true;
     }
 }

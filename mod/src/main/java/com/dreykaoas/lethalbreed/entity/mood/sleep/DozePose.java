@@ -49,6 +49,12 @@ public final class DozePose {
         return true;
     }
 
+    /** True while the freeze in force is ours. The save path asks before it decides whether it may drop
+     *  {@code NoAI} from the written NBT: a freeze somebody else set stays written. */
+    public boolean holding() {
+        return noAiFrozen;
+    }
+
     /**
      * Hand vanilla AI back if WE are holding it, touching nothing else. Called on wake, whenever the
      * mood step notices the zombie is no longer sleeping, and when the mood object is discarded on

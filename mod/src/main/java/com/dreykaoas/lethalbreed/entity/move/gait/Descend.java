@@ -48,8 +48,15 @@ public final class Descend {
         // 2) Carve straight DOWN through our own floor toward a target below, one block per activation, but
         //    ONLY when the resulting fall is safe (a solid landing within safeDropBlocks under the removed
         //    block). Stop nav so the vanilla pathfinder doesn't drag it off the column.
+        //    Both carve branches below are for a zombie STANDING on the block they take. Mid-air, by - 1 is not
+        //    the floor under its feet, it is the block it is about to land ON, so 2's arithmetic approves a
+        //    fall short by however far there is left to drop and 2b removes a landing it never meant to.
+        //    Measured on a self-built staircase with safeDropBlocks=2: the zombie carved the step it stood on
+        //    (a legal one-block drop), then carved the next one while falling through it, and two separately
+        //    safe decisions chained into one uninterrupted four-block fall.
+        boolean standing = entity.onGround();
         BlockPos under = new BlockPos(bx, by - 1, bz);
-        if (MoveMath.breakableSolid(level, under)) {
+        if (standing && MoveMath.breakableSolid(level, under)) {
             int fall = MoveMath.fallDistanceInto(level, bx, by - 1, bz, CombatMoveConfig.safeDropBlocks);
             if (fall <= CombatMoveConfig.safeDropBlocks) {
                 entity.getNavigation().stop();
@@ -68,7 +75,7 @@ public final class Descend {
         double dbr = CombatMoveConfig.descendDirectlyBelowRadius;
         boolean directlyBelow = hx * hx + hz * hz <= dbr * dbr; // within ~1.5 blocks horizontally by default
         BlockPos straightUnder = new BlockPos(bx, by - 1, bz);
-        if (directlyBelow && MoveMath.breakableSolid(level, straightUnder)) {
+        if (standing && directlyBelow && MoveMath.breakableSolid(level, straightUnder)) {
             entity.getNavigation().stop();
             ctx.breakManager().request(straightUnder, entity);
             owner.setState(ZombieState.DESCENDING);

@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.pack.runtime;
 
+import com.dreykaoas.lethalbreed.LethalBreed;
 import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
 import com.dreykaoas.lethalbreed.pack.PackState;
 
@@ -93,8 +94,8 @@ public final class PackSnapshot {
             NbtIo.writeCompressed(tag, bytes);
             return bytes.toByteArray();
         } catch (IOException e) {
-            // Swallowing this would turn a serialisation failure into a member that simply vanishes.
-            throw new IllegalStateException("could not serialise a pack member", e);
+            LethalBreed.LOGGER.error("[LethalBreed] a pack member could not be serialised", e);
+            return null;
         }
     }
 
@@ -102,7 +103,10 @@ public final class PackSnapshot {
         try (ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
             return NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
         } catch (IOException e) {
-            throw new IllegalStateException("could not read back a pack member", e);
+            // Throwing here would reach the server tick loop, which has no net: an unreadable blob on disk
+            // would then crash every restart.
+            LethalBreed.LOGGER.error("[LethalBreed] a pack member could not be read back", e);
+            return null;
         }
     }
 }

@@ -74,7 +74,10 @@ public final class PackPass {
             case FORM -> manager.form(sz);
             case JOIN -> {
                 PackState target = manager.get(d.packId());
-                if (target != null) {
+                // The rule can only count the members it was shown, and packScanCap (16) sits below
+                // packMaxSize (24), so its own fullness test can never trip at the shipped defaults. The
+                // roster is the only place the real total exists, and it is right here.
+                if (target != null && target.totalMembers() < PackConfig.packMaxSize) {
                     manager.join(sz, target);
                 }
             }

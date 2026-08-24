@@ -22,12 +22,12 @@ public final class MoodTransitions {
     private final FleeThreatTracker fleeTracker = new FleeThreatTracker();
     private long celebrateUntil = Long.MIN_VALUE;
     private long corneredUntil = Long.MIN_VALUE;
-    /** The shaded block a burning wounded zombie is dashing to, if one was found. */
-    private BlockPos shelterTarget = null;
+    /** The shade dash of a burning wounded zombie: refuge, stall watchdog and retry cooldown. */
+    private final SunShelterOverride shelterDash = new SunShelterOverride();
     private boolean distressScreamed = false;
 
     public BlockPos shelterTarget() {
-        return shelterTarget;
+        return shelterDash.shelterTarget();
     }
 
     public boolean distressScreamed() {
@@ -36,6 +36,23 @@ public final class MoodTransitions {
 
     public void markDistressScreamed() {
         distressScreamed = true;
+    }
+
+    /**
+     * Drop whatever awake mood is latched and hand the zombie back to the hunt. Called when the mood option
+     * is switched off at runtime: a zombie already inside FLEEING or SHELTERING has nothing left to take it
+     * out, since the transitions above stop running, and it would keep retreating until it died.
+     *
+     * <p>Lives here rather than in the caller because the flee tracker is private to this class, and a
+     * tracker left holding the old threat would make the next flee decide against stale distances.
+     */
+    public State releaseAwakeMood(Zombie entity) {
+        entity.setAggressive(false);
+        celebrateUntil = Long.MIN_VALUE;
+        shelterDash.clearTarget();
+        distressScreamed = false;
+        fleeTracker.reset();
+        return State.NORMAL;
     }
 
     /** Enter CELEBRATING: arms up for {@code celebrateTicks}. */
@@ -93,12 +110,11 @@ public final class MoodTransitions {
     public State sunShelter(Zombie entity, ServerLevel level, float frac, State state) {
         boolean fleeingOrSheltering = state == State.FLEEING || state == State.SHELTERING;
         if (SunShelterOverride.eligible(fleeingOrSheltering, frac)) {
-            var res = SunShelterOverride.evaluate(entity, level, shelterTarget);
-            shelterTarget = res.shelterTarget();
-            return res.sheltering() ? State.SHELTERING : State.FLEEING;
+            return shelterDash.evaluate(entity, level, level.getGameTime())
+                    ? State.SHELTERING : State.FLEEING;
         }
         if (state == State.SHELTERING) {
-            shelterTarget = null; // no longer eligible; healed up, or the threat-gone path ran above
+            shelterDash.clearTarget(); // no longer eligible; healed up, or the threat-gone path ran above
             return State.FLEEING;
         }
         return state;

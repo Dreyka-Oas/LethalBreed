@@ -11,8 +11,8 @@ import com.dreykaoas.lethalbreed.ai.flowfield.Snapshot;
  * never break the game: at worst it is no win.
  *
  * <p>CPU stays the master path: {@link com.dreykaoas.lethalbreed.ai.flowfield.GpuFlowField} routes a solve
- * to the GPU only when {@code useGpu} is on, a device is available, and the grid is at least
- * {@code gpuMinCells} cells (small fields stay on the CPU, where the GPU round-trip would not pay off).
+ * to the GPU when {@code useGpu} is on and a device is available, whatever the grid size, and to the CPU
+ * otherwise.
  *
  * <p>Device pick + context/kernel build live in {@link GpuContext}; per-call buffer marshalling lives
  * in {@link GpuFlowFieldSolver}. This class is the lazy-init facade and shared serialization point.
@@ -34,6 +34,10 @@ public final class GpuComputeManager {
     /** Consecutive GPU solve failures; reset to 0 on any success. Guarded by this instance's monitor
      *  ({@link #solve} and {@link #logFallbackOnce} are both synchronized). See {@link #FAILURE_LIMIT}. */
     private int consecutiveFailures = 0;
+
+    /** Guarded by the same monitor as {@link #solve}; volatile so {@link #solveCount} can read it without
+     *  queueing behind an in-flight solve. */
+    private volatile long solves = 0L;
 
     /**
      * Circuit-breaker threshold: after this many consecutive GPU solve failures the GPU is switched off for
@@ -97,7 +101,15 @@ public final class GpuComputeManager {
     public synchronized FlowField solve(Snapshot s) {
         FlowField f = GpuFlowFieldSolver.solve(ctx, s);
         consecutiveFailures = 0; // a good solve clears the breaker so transient blips don't accumulate
+        solves++;
         return f;
+    }
+
+    /** Successful GPU solves this session. The dev compute suite reads it to observe which backend
+     *  {@code GpuFlowField} actually picked, rather than re-deriving the dispatcher's own condition and
+     *  asserting it against itself. */
+    public long solveCount() {
+        return solves;
     }
 
     /**

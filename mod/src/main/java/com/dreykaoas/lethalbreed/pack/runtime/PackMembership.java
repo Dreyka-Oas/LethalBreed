@@ -28,19 +28,34 @@ public final class PackMembership {
      */
     public static void join(SmartZombie sz, PackState pack, LongFunction<PackState> lookup) {
         long previous = sz.pursuit().pack().packId();
-        if (previous == pack.id) {
-            return;
-        }
-        if (previous != PackJoinRule.NO_PACK) {
+        if (previous != pack.id && previous != PackJoinRule.NO_PACK) {
             PackState old = lookup.apply(previous);
             if (old != null) {
                 removeId(old, sz.id());
             }
         }
+        admit(sz, pack);
+    }
+
+    /**
+     * Write all three views, even when the tether already names this pack.
+     *
+     * <p>A tether pointing at a pack is not proof that pack's roster knows the member, and the two do come
+     * apart: the same id can be handed to a new {@code PackState} (a restore, a hand-installed pack), which
+     * starts with an empty roster while live members still carry the old tether. Returning early on
+     * {@code previous == pack.id} left that pack reading {@code totalMembers() == 0}, so the next sweep
+     * dissolved it under members that were standing right there, and each of them then went to disk with no
+     * attachment left to come back through. Rewriting is idempotent and costs a contains() on a list capped
+     * at {@code packMaxSize}.
+     */
+    private static void admit(SmartZombie sz, PackState pack) {
         if (!pack.liveIds.contains(sz.id())) {
             pack.liveIds.add(sz.id());
         }
-        sz.pursuit().pack().setPackId(pack.id);
+        if (sz.pursuit().pack().packId() != pack.id) {
+            // setPackId clears the stray counter, so a repair of the roster alone must not reset it.
+            sz.pursuit().pack().setPackId(pack.id);
+        }
         sz.entity().setAttached(PackAttachment.PACK, pack.id);
     }
 

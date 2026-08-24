@@ -64,13 +64,16 @@ public final class PackMaterializer {
         }
         int chunkX = (int) Math.floor(pack.x) >> 4;
         int chunkZ = (int) Math.floor(pack.z) >> 4;
-        // Force the chunk for the duration of the snapshot so capture and discard happen on a loaded
-        // entity, in one go. Releasing it immediately afterwards is what keeps this a saving; holding the
-        // force open would be a permanent pin.
-        boolean forced = level.setChunkForced(chunkX, chunkZ, true);
+        // Force the chunk for the duration of the snapshot so capture and discard happen on a loaded entity,
+        // in one go; holding the force open afterwards would be a permanent pin. setChunkForced answers
+        // whether the forced set CHANGED, so true means WE own the release, and false means somebody else
+        // (a player's forceload, an arena, another mod) holds it and releasing would unload their area.
+        boolean weForcedIt = level.setChunkForced(chunkX, chunkZ, true);
         try {
-            for (int i = 0; i < pack.liveIds.size(); i++) {
-                SmartZombie sz = GameState.REGISTRY.get(pack.liveIds.getInt(i));
+            // discard() raises ENTITY_UNLOAD in the same call, which drops the member from liveIds.
+            int[] roster = pack.liveIds.toIntArray();
+            for (int id : roster) {
+                SmartZombie sz = GameState.REGISTRY.get(id);
                 if (sz == null || !(sz.entity() instanceof Zombie z) || !sz.isValid()) {
                     continue;
                 }
@@ -85,7 +88,7 @@ public final class PackMaterializer {
             pack.phase = PackState.Phase.VIRTUAL;
             pack.dematStreak = 0;
         } finally {
-            if (!forced) {
+            if (weForcedIt) {
                 level.setChunkForced(chunkX, chunkZ, false);
             }
         }
