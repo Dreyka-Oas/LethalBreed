@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.phase;
 
-import com.dreykaoas.lethalbreed.entity.genes.AttributeCaps;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 /**

@@ -1,7 +1,5 @@
 package com.dreykaoas.lethalbreed.special.runtime.gore;
 
-import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
-import com.dreykaoas.lethalbreed.entity.genes.AttributeCaps;
 import com.dreykaoas.lethalbreed.special.runtime.BomberBlast;
 import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;

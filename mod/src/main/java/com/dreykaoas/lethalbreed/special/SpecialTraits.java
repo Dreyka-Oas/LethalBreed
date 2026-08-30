@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.special;
 
-import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
 import com.dreykaoas.lethalbreed.config.domain.SpecialVariantConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.ExpertConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;

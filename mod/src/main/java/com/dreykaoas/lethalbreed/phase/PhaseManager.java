@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.phase;
 
-import com.dreykaoas.lethalbreed.entity.genes.ZombieVariation;
 import com.dreykaoas.lethalbreed.config.domain.ProgressionConfig;
 
 import net.minecraft.ChatFormatting;
@@ -13,7 +12,8 @@ import java.util.Random;
 /**
  * Server-global difficulty phase (0, unbounded above). Auto-advances on a ~10-minute timer (with random
  * jitter), monotonic (only up) unless {@link ProgressionConfig#phaseMaxEnabled} pins/loops it. Announces
- * each change in chat, colored by {@link ProgressionConfig#phaseColorThresholds}. {@link ZombieVariation}
+ * each change in chat, colored by {@link ProgressionConfig#phaseColorThresholds}.
+ * {@link com.dreykaoas.lethalbreed.entity.genes.ZombieVariation ZombieVariation}
  * reads {@link #current()} when scaling a freshly-spawned zombie.
  *
  * <p>State is PERSISTED per-world via {@link PhaseSavedData} (in {@code <world>/data}), so the phase AND the
