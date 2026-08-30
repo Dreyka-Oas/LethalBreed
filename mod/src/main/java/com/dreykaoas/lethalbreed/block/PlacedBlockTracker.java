@@ -7,8 +7,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -88,5 +90,36 @@ public final class PlacedBlockTracker {
      *  dimension-wide total that any bridging zombie moves. */
     public boolean isTracked(BlockPos pos) {
         return placed.containsKey(pos.asLong());
+    }
+
+    /** One tracked placement, flat enough to write to disk: where it is, and the world age it was laid at. */
+    public record Placement(long packedPos, long placedAt) {}
+
+    /** Everything currently tracked, for {@link PlacedBlockSavedData} to write out. */
+    public List<Placement> snapshot() {
+        List<Placement> out = new ArrayList<>(placed.size());
+        for (Map.Entry<Long, State> e : placed.entrySet()) {
+            out.add(new Placement(e.getKey(), e.getValue().placedAt));
+        }
+        return out;
+    }
+
+    /**
+     * Adopt a saved snapshot, discarding whatever was tracked before.
+     *
+     * <p>Replace rather than merge: a dimension's data can be loaded more than once in a process, and an
+     * appending restore would double every entry, which reads as a leak rather than as a bug.
+     *
+     * <p>The crack overlay is not restored, only the placement time. The breaker ids are per-process and
+     * mean nothing to a client that has just connected, so the next tick re-sends the stage from the age.
+     */
+    public void restore(List<Placement> saved) {
+        placed.clear();
+        for (Placement p : saved) {
+            State s = new State();
+            s.placedAt = p.placedAt();
+            s.breakerId = breakerSeq++;
+            placed.put(p.packedPos(), s);
+        }
     }
 }

@@ -78,13 +78,24 @@ final class WorldMaintenance {
         forEachLoadedContext(server, (level, ctx) -> ctx.flowFieldManager().tick(level, tickCounter));
     }
 
-    /** Apply queued world mutations under budget and expire old zombie-placed blocks. */
+    /**
+     * Apply queued world mutations under budget and expire old zombie-placed blocks.
+     *
+     * <p>The two calls that touch a placement's lifetime take the world age, not {@code tickCounter}. The
+     * counter restarts at 0 every launch, so a block laid at counter 40000 and reloaded came back looking as
+     * if it had been placed in the future and never expired. {@code getGameTime()} is persisted with the
+     * world and monotonic across reloads, which is what an age has to be measured against.
+     *
+     * <p>The breaking and breach passes keep the counter: neither survives a restart, so the basis they
+     * count from cannot be observed across one.
+     */
     void drainBlockOps(MinecraftServer server, long tickCounter) {
         forEachLoadedContext(server, (level, ctx) -> {
-            ctx.blockOps().drain(level, ctx.placedBlocks(), tickCounter);
+            long worldAge = level.getGameTime();
+            ctx.blockOps().drain(level, ctx.placedBlocks(), worldAge);
             ctx.breakManager().tick(level, tickCounter);
             ctx.breachCoordinator().tick(level, tickCounter);
-            ctx.placedBlocks().tick(level, tickCounter);
+            ctx.placedBlocks().tick(level, worldAge);
         });
     }
 

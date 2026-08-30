@@ -11,6 +11,10 @@ import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
+import com.dreykaoas.lethalbreed.block.PlacedBlockSavedData;
+
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import com.dreykaoas.lethalbreed.pack.runtime.PackSavedData;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 import com.dreykaoas.lethalbreed.tick.TickScheduler;
@@ -56,6 +60,9 @@ public final class LifecycleInit {
             GpuFlowField.compute(Snapshot.openSquare(64));
             PhaseManager.get().load(server); // restore the persisted phase (survives close/reopen)
             PackSavedData.loadAll(server, dimensions); // packs keep their route and ghosts across a restart
+            // Placed dirt keeps the world age it was laid at, so it resumes crumbling instead of
+            // being forgotten and left standing forever.
+            restorePlacedBlocks(server, dimensions);
         });
 
         ConfigNotice.register();
@@ -63,6 +70,7 @@ public final class LifecycleInit {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             // Before saveAllChunks: see the class javadoc for why this cannot move to STOPPED.
             PackSavedData.saveAll(server, dimensions);
+            storePlacedBlocks(server, dimensions);
             // Hand vanilla AI back to every zombie we are currently freezing, BEFORE saveAllChunks flushes
             // NoAI to NBT. NoAI persists to NBT; our flag does not.
             for (SmartZombie sz : registry.all()) {
@@ -79,5 +87,22 @@ public final class LifecycleInit {
             ContaminationManager.onServerStopped();
             GorePuddles.onServerStopped();
         });
+    }
+
+    /** Hand every dimension's saved dirt back to its tracker, so a reopened world resumes the countdown
+     *  instead of leaving the blocks standing untracked, and therefore standing forever. */
+    private static void restorePlacedBlocks(MinecraftServer server, DimensionManager dimensions) {
+        for (ServerLevel level : server.getAllLevels()) {
+            dimensions.get(level.dimension()).placedBlocks()
+                    .restore(level.getDataStorage().computeIfAbsent(PlacedBlockSavedData.TYPE).placements());
+        }
+    }
+
+    /** Write every dimension's tracked dirt back, on STOPPING for the same reason as the packs. */
+    private static void storePlacedBlocks(MinecraftServer server, DimensionManager dimensions) {
+        for (ServerLevel level : server.getAllLevels()) {
+            level.getDataStorage().computeIfAbsent(PlacedBlockSavedData.TYPE)
+                    .store(dimensions.get(level.dimension()).placedBlocks().snapshot());
+        }
     }
 }
