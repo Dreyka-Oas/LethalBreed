@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.entity.move;
 
 
 import com.dreykaoas.lethalbreed.entity.move.gait.Leap;
-import com.dreykaoas.lethalbreed.entity.move.gait.PillarClimb;
+import com.dreykaoas.lethalbreed.entity.move.gait.climb.PillarClimb;
 import com.dreykaoas.lethalbreed.entity.move.gait.Swim;
 import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.LodLevel;

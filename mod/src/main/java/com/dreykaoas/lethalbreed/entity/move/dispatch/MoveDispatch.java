@@ -8,7 +8,7 @@ import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.move.gait.Descend;
 import com.dreykaoas.lethalbreed.entity.move.MoveMath;
 import com.dreykaoas.lethalbreed.entity.move.gait.Obstacle;
-import com.dreykaoas.lethalbreed.entity.move.gait.PillarClimb;
+import com.dreykaoas.lethalbreed.entity.move.gait.climb.PillarClimb;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;

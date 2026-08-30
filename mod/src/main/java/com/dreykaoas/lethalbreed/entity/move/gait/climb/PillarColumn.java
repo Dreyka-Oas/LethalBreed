@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity.move.gait;
+package com.dreykaoas.lethalbreed.entity.move.gait.climb;
 
 import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig;
@@ -9,8 +9,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
- * The bookkeeping of one ascent: is it running, how high has it risen, which XZ cell is the column locked
- * to, and has the current rung stopped making progress.
+ * The bookkeeping of one ascent, read off the entity. Which XZ cell the column is locked to lives here,
+ * because it is a block position; everything that is only arithmetic lives in {@link ClimbProgress}, where
+ * it can be tested without a world.
  *
  * <p>Separated from {@link PillarClimb} because these are the fields a reader has to hold in their head to
  * follow the climb, and none of them touch the world: the climb decides, this remembers.
@@ -20,12 +21,7 @@ final class PillarColumn {
     private final SmartZombie owner;
     private final Zombie entity;
 
-    private boolean running = false;
-    private int age = 0;
-    private double startY = 0.0;
-    private int topY = 0;     // highest block-Y reached this ascent (for the stall watchdog)
-    private int rungAge = 0;  // activations since the last full-block height gain
-    private int climbCd = 0;  // post-give-up cooldown before another ascent may start
+    private final ClimbProgress progress = new ClimbProgress();
 
     private int colX = 0;
     private int colZ = 0;
@@ -37,11 +33,11 @@ final class PillarColumn {
     }
 
     boolean running() {
-        return running;
+        return progress.running();
     }
 
     int age() {
-        return age;
+        return progress.age();
     }
 
     BlockPos supportPos() {
@@ -54,26 +50,19 @@ final class PillarColumn {
     }
 
     void cancel() {
-        running = false;
+        progress.cancel();
     }
 
     /** Decrement the give-up cooldown each activation (called from the bucketed tick). */
     void tickCooldown() {
-        if (climbCd > 0) {
-            climbCd--;
-        }
+        progress.tickCooldown();
     }
 
     /** Arm a fresh ascent, or refuse when one is running, the cooldown is up, or the zombie is airborne. */
     boolean start() {
-        if (running || climbCd > 0 || !entity.onGround()) {
+        if (!progress.start(entity.onGround(), entity.getY(), entity.blockPosition().getY())) {
             return false;
         }
-        running = true;
-        age = 0;
-        startY = entity.getY();
-        topY = entity.blockPosition().getY();
-        rungAge = 0;
         lockColumn(); // the whole pillar rises straight up one fixed XZ cell
         owner.setState(ZombieState.BUILDING);
         return true;
@@ -89,49 +78,30 @@ final class PillarColumn {
 
     /** Bail while inactive, drop out if the owner is no longer valid, otherwise age the ascent one tick. */
     boolean beginStep() {
-        if (!running) {
-            return false;
-        }
-        if (!owner.isValid()) {
-            running = false;
-            return false;
-        }
-        age++;
-        return true;
+        return progress.beginStep(owner.isValid());
     }
 
-    /**
-     * Advance the stall watchdog from the current block-Y: a new rung resets it, otherwise it ages. True once
-     * the current rung has made no height gain for longer than {@code climbJumpMaxAge} activations (support
-     * cannot land, a lip overhangs, a ceiling is in the way), so the caller aborts where it would otherwise
-     * climb in place.
-     */
+    /** True once the current rung has made no height gain for longer than {@code climbJumpMaxAge}
+     *  activations, so the caller aborts where it would otherwise climb in place. */
     boolean stalled() {
-        int curY = entity.blockPosition().getY();
-        if (curY > topY) {
-            topY = curY;
-            rungAge = 0;
-        } else {
-            rungAge++;
-        }
-        return rungAge > CombatMoveConfig.climbJumpMaxAge;
+        return progress.stalled(entity.blockPosition().getY(), CombatMoveConfig.climbJumpMaxAge);
     }
 
     /** Height risen since this ascent began. */
     double risen() {
-        return entity.getY() - startY;
+        return progress.risen(entity.getY());
     }
 
     /** End the ascent normally (topped out, or reached height): drop the jump intent and stop. */
     void finish() {
         entity.setJumping(false);
-        running = false;
+        progress.finish();
     }
 
     /** Abort the ascent (height cap, stall, ceiling) and arm the give-up cooldown so the dispatcher does not
      *  immediately retry it and falls back to ordinary ground movement instead. */
     void giveUp() {
-        finish();
-        climbCd = FlowConfig.climbGiveUpCooldown;
+        entity.setJumping(false);
+        progress.giveUp(FlowConfig.climbGiveUpCooldown);
     }
 }

@@ -1,4 +1,4 @@
-package com.dreykaoas.lethalbreed.entity.move.gait;
+package com.dreykaoas.lethalbreed.entity.move.gait.climb;
 
 import com.dreykaoas.lethalbreed.entity.move.MoveMath;
 
