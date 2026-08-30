@@ -94,11 +94,12 @@ ne désigne que des suspects, et le verdict vient de la reprise en solitaire.
 
 ### Défauts trouvés dans le mod (consignés, non corrigés)
 
-9. `pillar/only-when-stuck` : le zombie pose de la terre à 5 blocs de la colonne de façade alors que
-   la règle en demande 2 au plus, 30 cellules au total en (495,400). La suite `pillar` est en outre
-   instable d'un lancement à l'autre (11/14, 12/14, 13/14, 14/14 selon les runs) : le compte de
-   cellules varie, ce qui pointe vers l'arène et non vers le code de grimpe. Vérifié en remettant
-   l'arbre entier à `master` : la suite échoue de la même façon, la refonte n'y est pour rien.
+9. Suite `pillar` : instable, pas fausse. Sept lancements ont donné 11/14, 11/14, 12/14, 12/14,
+   13/14, 14/14 et 14/14, les checks rouges changeant d'un run à l'autre (`support-under-feet`,
+   `single-column`, `reach-zone-refuses`, `only-when-stuck`). Le compte de cellules de terre varie
+   aussi, ce qui pointe vers l'arène et non vers le code de grimpe. Vérifié deux fois en remettant
+   l'arbre entier à `master` : elle échoue pareil, la refonte du 30 août n'y est pour rien. Seule au
+   calme, la dernière exécution donne 14/14. À stabiliser avant de pouvoir s'en servir comme preuve.
 10. `packstore/dat-survives-a-restart` : 2/2 meutes reviennent, 4/4 fantômes lisibles et appariés,
     mais 22 champs sur 23 seulement sont identiques après le redémarrage. Un champ ne survit pas.
 11. `mood/celebrate-expires-after-celebrateTicks` et `mood/celebrate-rolls-into-flee` : la durée de
@@ -112,9 +113,16 @@ ne désigne que des suspects, et le verdict vient de la reprise en solitaire.
     un délai de réaction était déjà armé, la fenêtre de silence de 140 ticks n'est jamais observée.
 15. `doze/alert-window-before-redoze` : réveillé à +23, plus aucun échantillon endormi sur 190, et
     jamais rendormi dans les 280 ticks.
+16. `doze/silent-player-never-wakes` : un joueur ciblable à 6 blocs est jugé inaudible sur seulement
+    51 échantillons sur 400. Ce contrôle-là n'est rouge qu'une fois sur deux.
 
 ### Décisions en attente
 
-- Défauts n° 9 à 15 : sept contrôles rouges dans cinq suites, aucun ne touche le code modifié le
-  30 août. Ils sont apparus parce que la matrice complète tourne pour la première fois, pas parce
-  que quelque chose a régressé.
+- Défauts n° 10 à 16 : huit contrôles rouges dans quatre suites, confirmés en reprise solitaire,
+  aucun ne touche le code modifié le 30 août. Ils sont apparus parce que la matrice complète tourne
+  pour la première fois, pas parce que quelque chose a régressé.
+- Défaut n° 9 : la suite `pillar` est à stabiliser. Tant qu'elle varie, elle ne prouve rien, ni dans
+  un sens ni dans l'autre.
+
+Dernière exécution complète, 30 août 20h00 à 20h48 : 50 suites, quatre démarrages `phasesave`,
+tests client. Tout vert sauf `packstore`, `mood`, `spawn` et `doze`, soit huit contrôles.
