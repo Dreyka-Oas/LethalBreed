@@ -4,6 +4,7 @@ import com.dreykaoas.lethalbreed.effect.contamination.ContaminationDeath;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationLifecycle;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationTick;
+import com.dreykaoas.lethalbreed.effect.contamination.PlagueDeadlines;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -38,7 +39,14 @@ import net.minecraft.world.entity.LivingEntity;
 public final class ContaminationManager {
     private ContaminationManager() {}
 
-    public static void init() {}
+    /** Force both attachment holders to load at mod init. Fabric resolves an entity's attachments while it is
+     *  being read from disk, and a type whose class only loads partway through a session is not registered
+     *  yet when the entities read before it go through, so their saved values are dropped. Calling these two
+     *  no-ops runs the static initialisers that do the registering, at a moment when nothing has loaded. */
+    public static void init() {
+        ContaminationState.init();
+        PlagueDeadlines.init();
+    }
 
     /** See {@link ContaminationLifecycle#contaminate}. */
     public static void contaminate(LivingEntity e) {

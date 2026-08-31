@@ -54,4 +54,13 @@ public final class VanillaTargetingGoals {
     public static void drop(int entityId) {
         STRIPPED.remove(entityId);
     }
+
+    /** Empty the whole table at server stop. The per-entity {@link #drop} is the ordinary path and it is
+     *  enough as long as every stripped mob is unloaded before shutdown, which is one unload event away from
+     *  not being true. A single missed entry keeps a WrappedGoal, therefore its Mob, therefore the closed
+     *  world's ServerLevel, alive in a static map for the rest of the process. Restoring the goals here would
+     *  be pointless: the mobs are on their way out and their NBT is already written. */
+    public static void clearAll() {
+        STRIPPED.clear();
+    }
 }

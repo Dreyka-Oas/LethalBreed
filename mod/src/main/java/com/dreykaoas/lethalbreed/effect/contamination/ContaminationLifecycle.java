@@ -61,7 +61,8 @@ public final class ContaminationLifecycle {
         }
         if (!ContaminationState.symptomatic(e)) {
             e.setAttached(ContaminationState.SYMPTOMATIC, true);
-            ContaminationState.NEXT_SYMPTOM_ROLL_TICK.remove(e);
+            PlagueDeadlines.clear(ContaminationState.NEXT_SYMPTOM_ROLL_TICK,
+                    PlagueDeadlines.SYMPTOM_ROLL, e);
         }
         ContaminationState.setLevel(e, lvl);
     }
@@ -79,6 +80,10 @@ public final class ContaminationLifecycle {
         }
         if (e instanceof LivingEntity le && ContaminationState.age(le) > 0) {
             ContaminationState.TRACKED.add(le);
+            // Put the victim's four deadlines back in the timer maps. Without this a reopened world hands it
+            // a fresh pulse, a fresh symptom roll and a fresh level-up roll, so quitting and rejoining at the
+            // right moment postpones the next symptom for nothing.
+            PlagueDeadlines.reload(le);
             if (ContaminationState.symptomatic(le)) {
                 ContaminationSymptoms.applyIcon(le, ContaminationState.level(le) - 1);
             }
@@ -126,6 +131,7 @@ public final class ContaminationLifecycle {
         ContaminationSymptoms.removeLatentSlow(e);
         e.removeAttached(ContaminationState.LEVEL);
         e.removeAttached(ContaminationState.INTENSITY);
+        PlagueDeadlines.strip(e);
         forgetAllTransient(e);
     }
 }

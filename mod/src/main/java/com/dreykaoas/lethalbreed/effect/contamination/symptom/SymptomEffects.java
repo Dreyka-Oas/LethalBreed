@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationRoll;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
+import com.dreykaoas.lethalbreed.effect.contamination.PlagueDeadlines;
 
 /**
  * One victim's symptomatic tick: everything that fires while the plague is showing.
@@ -58,7 +59,7 @@ public final class SymptomEffects {
         // own kind. Only the final, fatal chip goes through the vanilla damage pipeline (death/reanimation).
         Long due = ContaminationState.NEXT_PULSE_TICK.get(e);
         if (due == null) {
-            ContaminationState.NEXT_PULSE_TICK.put(e, t + rollIntervalTicks());
+            armPulse(e, t);
         } else if (t >= due) {
             float dmg = (float) (ContaminationRoll.uniform(ContaminationState.RNG,
                     ContaminationConfig.contamDamageMin, ContaminationConfig.contamDamageMax) * mult);
@@ -72,7 +73,7 @@ public final class SymptomEffects {
                 // Exhaustion drains food gradually: 4.0 exhaustion = 1 food point, so this removes ~dmg food.
                 p.getFoodData().addExhaustion(dmg * (float) ContaminationConfig.contamFoodExhaustionMult);
             }
-            ContaminationState.NEXT_PULSE_TICK.put(e, t + rollIntervalTicks());
+            armPulse(e, t);
         }
 
         // Random episodic afflictions (slow / no-jump / weak-strike), each on a separate timer, scaled by mult.
@@ -92,6 +93,11 @@ public final class SymptomEffects {
      *  immediately overwritten by {@code wasEnabled = enabled} at the end of the transition check, so that
      *  purge still fires exactly once; the re-arm is there for the SERVER_STOPPED path, where nothing else
      *  runs afterwards and the next server must not inherit a stale {@code false}. */
+
+    private static void armPulse(LivingEntity e, long t) {
+        PlagueDeadlines.set(ContaminationState.NEXT_PULSE_TICK, PlagueDeadlines.PULSE,
+                e, t + rollIntervalTicks());
+    }
 
     /** Roll the next pulse delay in ticks, uniform in [contamIntervalMinSec, contamIntervalMaxSec] × 20. */
     private static long rollIntervalTicks() {

@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.effect.contamination.symptom;
 
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationRoll;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
+import com.dreykaoas.lethalbreed.effect.contamination.PlagueDeadlines;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 
@@ -17,7 +18,7 @@ public final class ContaminationEvolve {
         }
         Long roll = ContaminationState.NEXT_EVOLVE_ROLL_TICK.get(e);
         if (roll == null) {
-            ContaminationState.NEXT_EVOLVE_ROLL_TICK.put(e, t + rollEvolveIntervalTicks());
+            armRoll(e, t);
             return;
         }
         if (t >= roll) {
@@ -25,8 +26,13 @@ public final class ContaminationEvolve {
                     ContaminationConfig.contamEvolveMinPct, ContaminationConfig.contamEvolveMaxPct)) {
                 ContaminationState.setLevel(e, ContaminationState.level(e) + 1);
             }
-            ContaminationState.NEXT_EVOLVE_ROLL_TICK.put(e, t + rollEvolveIntervalTicks());
+            armRoll(e, t);
         }
+    }
+
+    private static void armRoll(LivingEntity e, long t) {
+        PlagueDeadlines.set(ContaminationState.NEXT_EVOLVE_ROLL_TICK, PlagueDeadlines.EVOLVE_ROLL,
+                e, t + rollEvolveIntervalTicks());
     }
 
     /** Next level-up roll delay in ticks, uniform in [minDays, maxDays] x 24000. */

@@ -12,6 +12,7 @@ import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
 import com.dreykaoas.lethalbreed.block.PlacedBlockSavedData;
+import com.dreykaoas.lethalbreed.util.target.VanillaTargetingGoals;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -86,6 +87,7 @@ public final class LifecycleInit {
             scheduler.reset();
             ContaminationManager.onServerStopped();
             GorePuddles.onServerStopped();
+            VanillaTargetingGoals.clearAll();
         });
     }
 

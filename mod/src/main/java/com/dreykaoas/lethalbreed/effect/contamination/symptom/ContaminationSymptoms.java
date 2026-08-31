@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.effect.contamination.symptom;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationLifecycle;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationRoll;
 import com.dreykaoas.lethalbreed.effect.contamination.ContaminationState;
+import com.dreykaoas.lethalbreed.effect.contamination.PlagueDeadlines;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 import com.dreykaoas.lethalbreed.effect.LethalBreedEffects;
@@ -37,7 +38,7 @@ public final class ContaminationSymptoms {
 
         Long roll = ContaminationState.NEXT_SYMPTOM_ROLL_TICK.get(e);
         if (roll == null) {
-            ContaminationState.NEXT_SYMPTOM_ROLL_TICK.put(e, t + rollSymptomIntervalTicks());
+            armSymptomRoll(e, t);
             return;
         }
         if (t >= roll) {
@@ -45,11 +46,17 @@ public final class ContaminationSymptoms {
                     ContaminationConfig.contamSymptomMinPct, ContaminationConfig.contamSymptomMaxPct)) {
                 e.setAttached(ContaminationState.SYMPTOMATIC, true);
                 ContaminationState.setLevel(e, 1); // enter symptomatic at level 1 (applies icon + seeds intensity)
-                ContaminationState.NEXT_SYMPTOM_ROLL_TICK.remove(e);
+                PlagueDeadlines.clear(ContaminationState.NEXT_SYMPTOM_ROLL_TICK,
+                        PlagueDeadlines.SYMPTOM_ROLL, e);
             } else {
-                ContaminationState.NEXT_SYMPTOM_ROLL_TICK.put(e, t + rollSymptomIntervalTicks());
+                armSymptomRoll(e, t);
             }
         }
+    }
+
+    private static void armSymptomRoll(LivingEntity e, long t) {
+        PlagueDeadlines.set(ContaminationState.NEXT_SYMPTOM_ROLL_TICK, PlagueDeadlines.SYMPTOM_ROLL,
+                e, t + rollSymptomIntervalTicks());
     }
 
     /** Roll the next symptom-trigger delay in ticks, uniform in [minDays, maxDays] × 24000. */
@@ -58,8 +65,8 @@ public final class ContaminationSymptoms {
                 ContaminationConfig.contamSymptomMaxDays, 1.0, 24000.0);
     }
 
-    /** Apply the brief, particleless latent slow as a transient movement-speed modifier. Its removal tick is
-     *  computed from the current server tick so {@link #tickLatent} can strip it after the short window. */
+    /** Apply the brief, particleless latent slow as a transient movement-speed modifier. Its removal instant is
+     *  computed from the world age so {@link #tickLatent} can strip it after the short window. */
     public static void applyLatentSlow(LivingEntity e) {
         AttributeInstance inst = e.getAttribute(Attributes.MOVEMENT_SPEED);
         if (inst == null || ContaminationConfig.contamLatentSlowAmount <= 0.0
@@ -69,8 +76,10 @@ public final class ContaminationSymptoms {
         inst.addOrUpdateTransientModifier(new AttributeModifier(
                 LATENT_SLOW_ID, -ContaminationConfig.contamLatentSlowAmount,
                 AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-        long now = level.getServer().getTickCount();
-        ContaminationState.LATENT_SLOW_UNTIL_TICK.put(e, now + Math.max(1, ContaminationConfig.contamLatentSlowTicks));
+        // Map only, no attachment: the modifier just added is transient, so the deadline that retires it must
+        // not outlive the session either. See PlagueDeadlines for why this is the one timer left out.
+        ContaminationState.LATENT_SLOW_UNTIL_TICK.put(e,
+                level.getGameTime() + Math.max(1, ContaminationConfig.contamLatentSlowTicks));
     }
 
     public static void removeLatentSlow(LivingEntity e) {

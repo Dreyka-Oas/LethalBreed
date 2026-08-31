@@ -38,7 +38,6 @@ public final class ContaminationTick {
         if (!enabled || ContaminationState.TRACKED.isEmpty()) {
             return;
         }
-        long t = server.getTickCount();
         SNAPSHOT.addAll(ContaminationState.TRACKED);
         for (int i = 0; i < SNAPSHOT.size(); i++) {
             LivingEntity e = SNAPSHOT.get(i);
@@ -49,6 +48,11 @@ public final class ContaminationTick {
                 ContaminationLifecycle.forgetAllTransient(e);
                 continue;
             }
+            // The victim's own world age, not server.getTickCount(): the deadlines this drives are written
+            // into the victim's save data by PlagueDeadlines, and a since-boot counter restarts at 0 every
+            // launch, so a stored deadline would come back hours in the future and never fire. Read per
+            // victim because each dimension keeps its own game time.
+            long t = level.getGameTime();
             int c = ContaminationState.age(e);
             if (c <= 0) {
                 ContaminationLifecycle.cure(e);

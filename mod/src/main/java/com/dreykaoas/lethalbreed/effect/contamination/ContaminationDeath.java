@@ -30,6 +30,7 @@ public final class ContaminationDeath {
         e.removeAttached(ContaminationState.SYMPTOMATIC);
         e.removeAttached(ContaminationState.LEVEL);
         e.removeAttached(ContaminationState.INTENSITY);
+        PlagueDeadlines.strip(e);
         if (DevProbe.on()) {
             DevProbe.sink.count(DevProbe.DEATH, DevProbe.GLOBAL);
         }

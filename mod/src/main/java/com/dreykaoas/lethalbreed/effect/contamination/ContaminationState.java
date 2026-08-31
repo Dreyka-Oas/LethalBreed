@@ -40,15 +40,19 @@ public final class ContaminationState {
             Identifier.fromNamespaceAndPath("lethalbreed", "contam_intensity"), Codec.DOUBLE);
 
     public static final Set<LivingEntity> TRACKED = new HashSet<>();
-    /** Server-tick of the next plague pulse per victim (transient; reseeded on load). */
+    /** The four per-victim deadlines, as world ages. The three below are also written to the victim's save
+     *  data by {@link PlagueDeadlines}: write through its {@code set}/{@code clear} rather than touching a map
+     *  directly, or the two halves drift and a reopened world resumes from a deadline nobody updated. */
     public static final java.util.Map<LivingEntity, Long> NEXT_PULSE_TICK = new java.util.HashMap<>();
-    /** Server-tick of the next latent symptom-trigger roll per victim (transient; reseeded on load). */
     public static final java.util.Map<LivingEntity, Long> NEXT_SYMPTOM_ROLL_TICK = new java.util.HashMap<>();
-    /** Server-tick at which the latent slow modifier should be removed per victim (transient). */
+    /** When the one-shot infection slow comes off. The one deadline that is NOT saved, because the modifier
+     *  it retires is transient and is already gone when the victim comes back. */
     public static final java.util.Map<LivingEntity, Long> LATENT_SLOW_UNTIL_TICK = new java.util.HashMap<>();
-    /** Server-tick of the next level-up roll per victim (transient; reseeded on load). */
     public static final java.util.Map<LivingEntity, Long> NEXT_EVOLVE_ROLL_TICK = new java.util.HashMap<>();
     public static final Random RNG = new Random();
+
+    /** Loading this class is what registers the attachments above; see {@code ContaminationManager.init}. */
+    public static void init() {}
 
     public static int age(LivingEntity e) {
         Integer v = e.getAttached(CONTAM);

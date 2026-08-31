@@ -29,7 +29,11 @@ import java.util.List;
 public final class PackPass {
     private PackPass() {}
 
-    /** Scratch reused across every zombie and every tick. Server thread only, like everything around it. */
+    /** Scratch reused across every zombie and every tick. Server thread only, like everything around it.
+     *  Emptied on the way out of {@link #collectNeighbours}, never merely on the way in: a list cleared only
+     *  before its next fill still holds the previous batch for however long that next fill takes to arrive,
+     *  which after the last pack decision of a world is forever. Up to packScanCap zombies, each pinning its
+     *  ServerLevel and from there the whole server graph (same shape as audit #8). */
     private static final List<SmartZombie> NEIGHBOURS = new ArrayList<>(32);
     private static long[] packIds = new long[32];
     private static int[] entityIds = new int[32];
@@ -113,6 +117,7 @@ public final class PackPass {
             distSq[n] = dx * dx + dz * dz;
             n++;
         }
+        NEIGHBOURS.clear();
         return n;
     }
 
