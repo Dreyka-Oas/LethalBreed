@@ -65,8 +65,9 @@ public final class DaySleepCycle {
         }
         // Idle daytime sleeper: shelter first if it would burn under open sky, then doze.
         if (dozeIfNotExposed(level, entity, owner, phase)) {
-            // Commit only once grounded: mid-leap or mid-fall the pose deferred, so retry next activation.
-            return entity.onGround() ? State.SLEEPING : state;
+            // Commit only once the pose actually took: mid-leap or mid-fall it deferred, so retry next
+            // activation. Asked as onGround() this read the same flag DozePose stopped trusting.
+            return pose.holding() ? State.SLEEPING : state;
         }
         shade.seek(level, entity, owner, now);
         return state;
