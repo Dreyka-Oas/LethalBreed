@@ -5,7 +5,6 @@ import com.dreykaoas.lethalbreed.effect.contamination.symptom.SymptomEffects;
 
 import com.dreykaoas.lethalbreed.config.domain.ContaminationConfig;
 
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -27,7 +26,7 @@ public final class ContaminationTick {
     /** Was the plague enabled on the previous tick? Drives the one-shot purge below. */
     private static boolean wasEnabled = true;
 
-    public static void tick(MinecraftServer server) {
+    public static void tick() {
         // Cleared BEFORE the guard, not after: the two ordinary ways out of here, `tracked` going empty
         // (last victim cured or died) and the plague being switched off, both take the early return, and
         // a scratch buffer that only self-clears on the hot path holds its last batch forever. One retained

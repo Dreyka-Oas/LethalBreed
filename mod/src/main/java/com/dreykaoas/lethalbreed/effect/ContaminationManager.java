@@ -63,8 +63,10 @@ public final class ContaminationManager {
         ContaminationDeath.onDeath(e, level);
     }
 
+    /** Takes the server because the tick hook hands it one, and passes nothing on: the sweep reads each
+     *  victim's own world age, which it gets from the victim's level. */
     public static void tick(MinecraftServer server) {
-        ContaminationTick.tick(server);
+        ContaminationTick.tick();
     }
 
     /** SERVER_STOPPED: drop every victim from the plague's static in-memory collections so a closed world's

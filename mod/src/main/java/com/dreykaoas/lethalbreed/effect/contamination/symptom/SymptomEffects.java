@@ -95,8 +95,7 @@ public final class SymptomEffects {
      *  runs afterwards and the next server must not inherit a stale {@code false}. */
 
     private static void armPulse(LivingEntity e, long t) {
-        PlagueDeadlines.set(ContaminationState.NEXT_PULSE_TICK, PlagueDeadlines.PULSE,
-                e, t + rollIntervalTicks());
+        PlagueDeadlines.set(PlagueDeadlines.Deadline.PULSE, e, t + rollIntervalTicks());
     }
 
     /** Roll the next pulse delay in ticks, uniform in [contamIntervalMinSec, contamIntervalMaxSec] × 20. */

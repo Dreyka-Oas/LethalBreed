@@ -46,8 +46,7 @@ public final class ContaminationSymptoms {
                     ContaminationConfig.contamSymptomMinPct, ContaminationConfig.contamSymptomMaxPct)) {
                 e.setAttached(ContaminationState.SYMPTOMATIC, true);
                 ContaminationState.setLevel(e, 1); // enter symptomatic at level 1 (applies icon + seeds intensity)
-                PlagueDeadlines.clear(ContaminationState.NEXT_SYMPTOM_ROLL_TICK,
-                        PlagueDeadlines.SYMPTOM_ROLL, e);
+                PlagueDeadlines.clear(PlagueDeadlines.Deadline.SYMPTOM_ROLL, e);
             } else {
                 armSymptomRoll(e, t);
             }
@@ -55,8 +54,7 @@ public final class ContaminationSymptoms {
     }
 
     private static void armSymptomRoll(LivingEntity e, long t) {
-        PlagueDeadlines.set(ContaminationState.NEXT_SYMPTOM_ROLL_TICK, PlagueDeadlines.SYMPTOM_ROLL,
-                e, t + rollSymptomIntervalTicks());
+        PlagueDeadlines.set(PlagueDeadlines.Deadline.SYMPTOM_ROLL, e, t + rollSymptomIntervalTicks());
     }
 
     /** Roll the next symptom-trigger delay in ticks, uniform in [minDays, maxDays] × 24000. */

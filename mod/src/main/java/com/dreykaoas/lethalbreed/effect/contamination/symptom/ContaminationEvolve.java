@@ -31,8 +31,7 @@ public final class ContaminationEvolve {
     }
 
     private static void armRoll(LivingEntity e, long t) {
-        PlagueDeadlines.set(ContaminationState.NEXT_EVOLVE_ROLL_TICK, PlagueDeadlines.EVOLVE_ROLL,
-                e, t + rollEvolveIntervalTicks());
+        PlagueDeadlines.set(PlagueDeadlines.Deadline.EVOLVE_ROLL, e, t + rollEvolveIntervalTicks());
     }
 
     /** Next level-up roll delay in ticks, uniform in [minDays, maxDays] x 24000. */
