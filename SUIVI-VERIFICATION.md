@@ -126,3 +126,30 @@ ne désigne que des suspects, et le verdict vient de la reprise en solitaire.
 
 Dernière exécution complète, 30 août 20h00 à 20h48 : 50 suites, quatre démarrages `phasesave`,
 tests client. Tout vert sauf `packstore`, `mood`, `spawn` et `doze`, soit huit contrôles.
+
+## 31 août : correction des défauts consignés dans DEFAUTS-CONNUS.md
+
+Cinq points corrigés en une fois : les trois échéances de la peste écrites sur la victime, l'horloge
+de la peste passée à l'âge du monde, la liste de voisins de la passe de meute vidée en sortie, et la
+table des objectifs vanilla retirés purgée à l'arrêt du serveur. Détail et raisons dans
+`DEFAUTS-CONNUS.md`.
+
+Suite neuve `plaguesave` : deux démarrages sur le même monde, sur le patron de `phasesave`. Le premier
+infecte une vache et écrit ses deux échéances dans son nom, le second rouvre et exige les mêmes
+nombres. 1/1 puis 3/3, pulse et evolve identiques au tick près. Les deux lanceurs la pilotent comme
+`phasesave`, par un `multi_boot` partagé plutôt que par un bloc recopié.
+
+Ce que la correction a fait apparaître, et qui a été corrigé dans la foulée : restaurer aussi
+l'échéance du ralentissement latent cassait `retrack/no-duplicates`, à juste titre, puisque le
+ralentissement lui-même ne survit pas au rechargement. Cette minuterie-là reste en mémoire.
+
+Matrice complète du 31 août, 9h55 à 10h46, 50 suites en parallèle plus les six démarrages des deux
+suites multi-monde : les huit contrôles rouges déjà consignés (défauts 10 à 16) et rien d'autre de
+nouveau. Toutes les suites de la peste et des meutes sont vertes.
+
+17. `descend/refuses-unsafe-drop` est capricieuse, comme `pillar`. Mesurée six fois de part et
+    d'autre de la correction du 30 août sur la terre posée : elle donne 15/15, 14/15 ou 13/15 sans
+    qu'on touche à quoi que ce soit, et elle échoue aussi sur l'arbre d'avant la correction. Quand
+    elle échoue, le zombie construit bien son escalier mais reste à y=97 pendant les 900 ticks du
+    budget. Rien n'expire côté terre posée pendant ce temps, vérifié par instrumentation. À
+    stabiliser avant de pouvoir s'en servir comme preuve.
