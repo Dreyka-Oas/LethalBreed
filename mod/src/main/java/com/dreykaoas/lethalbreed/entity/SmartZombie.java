@@ -27,6 +27,7 @@ public final class SmartZombie {
 
     private final ZombiePursuit pursuit;
     private final ZombieBrain brain;
+    private int airLeft = -1;
     private final ZombieMood mood;
 
     public SmartZombie(Zombie entity, ResourceKey<Level> dimension) {
@@ -95,6 +96,13 @@ public final class SmartZombie {
     public boolean isClimbing() { return brain.isClimbing(); }
     public void cancelClimb() { brain.cancelClimb(); }
     public void swimStep(ServerLevel level, WorldAiContext ctx) { brain.swimStep(level, ctx); }
+
+    /** Ticks of air left before drowning, {@code -1} while the zombie has its head out. Kept here rather
+     *  than on vanilla's air supply, which the game refills every tick for undead, and rather than in a
+     *  static map, which would pin the entity past its death. */
+    public int airLeft() { return airLeft; }
+
+    public void setAirLeft(int ticks) { airLeft = ticks; }
     public boolean isSwimming() { return brain.isSwimming(); }
     public boolean dueThisActivation(int divisor) { return brain.dueThisActivation(divisor); }
 

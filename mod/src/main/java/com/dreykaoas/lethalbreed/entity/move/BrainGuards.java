@@ -1,7 +1,6 @@
 package com.dreykaoas.lethalbreed.entity.move;
 
 import com.dreykaoas.lethalbreed.entity.move.gait.climb.PillarClimb;
-import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
 import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombiePursuit;
@@ -100,7 +99,7 @@ final class BrainGuards {
     }
 
     boolean handleSwimEntry() {
-        if (!(CombatMoveConfig.floatInWater && entity.isInWater()
+        if (!(WaterFear.swims() && entity.isInWater()
                 && (!entity.onGround() || entity.isUnderWater()))) {
             // Clearing on the way out is what the state needs, not just on the way in: a zombie that walks up
             // a shore on an activation where swimStep does not run would otherwise keep a stale flag, and

@@ -31,6 +31,14 @@ public final class CombatMoveConfig {
     public static int maxBreakHeight = 4;
 
     // ---- Water behaviour ----
+    /** Zombies cannot swim: water is impassable to the pathfinder and a submerged zombie drowns. Overrides
+     *  {@link #floatInWater} and the swim drive, which are the opposite behaviour. */
+    public static boolean cannotSwim = true;
+    /** Ticks a zombie's head may stay under water before it starts taking drowning damage. */
+    public static int drownGraceTicks = 40;
+    /** Health removed each activation once the grace is spent. */
+    public static double drownDamage = 4.0;
+
     /** Make zombies FLOAT and swim at the water surface (like a player/drowned) instead of sinking and
      *  walking along the bottom, so they keep pursuing across water. Adds a vanilla {@code FloatGoal}
      *  (which land mobs have but zombies lack). Read at entity construction (registerGoals). */

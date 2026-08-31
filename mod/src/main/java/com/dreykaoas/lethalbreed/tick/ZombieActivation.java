@@ -4,6 +4,7 @@ import com.dreykaoas.lethalbreed.config.domain.engine.SchedulerConfig;
 import com.dreykaoas.lethalbreed.ai.LodManager;
 import com.dreykaoas.lethalbreed.dimension.WorldAiContext;
 import com.dreykaoas.lethalbreed.entity.LodLevel;
+import com.dreykaoas.lethalbreed.entity.move.WaterFear;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.probe.DevProbe;
 import net.minecraft.server.level.ServerLevel;
@@ -80,6 +81,10 @@ final class ZombieActivation {
         // reinforcements: both multiply straight through a correction derived before they existed. Runs even
         // for FROZEN zombies (whose full tick() below is skipped), because a frozen zombie still bites.
         com.dreykaoas.lethalbreed.entity.genes.AttributeCaps.enforce(sz.entity());
+        // Water rules alongside the sun for the same reason: a FROZEN zombie under water still drowns, and a
+        // pathfinder that has not been told water is a wall would walk one in on its next hunt.
+        WaterFear.applyNavigationRules(sz.entity());
+        WaterFear.tickDrowning(level, sz, SchedulerConfig.tickBuckets);
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
         t = mark(DevProbe.SUNBURN, prof, t);

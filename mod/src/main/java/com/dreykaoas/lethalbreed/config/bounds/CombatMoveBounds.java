@@ -21,6 +21,8 @@ public final class CombatMoveBounds {
         r.b("leapUpward", 0, 5);
         r.b("leapMaxVerticalDiff", 0, 64);       // new option (Leap)
         r.b("maxBreakHeight", 1, 16);
+        r.b("drownGraceTicks", 1, 280);
+        r.b("drownDamage", 0, 100);
         r.b("waterRiseSpeed", 0, 2);
         r.b("waterDiveSpeed", 0, 2);
         r.b("waterSwimSpeed", 0, 2);

@@ -2,7 +2,7 @@ package com.dreykaoas.lethalbreed.mixin.zombie;
 
 import com.dreykaoas.lethalbreed.mixin.MobGoalsAccessor;
 
-import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import com.dreykaoas.lethalbreed.entity.move.WaterFear;
 
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -29,7 +29,7 @@ public abstract class ZombieFloatInWaterMixin {
 
     @Inject(method = "registerGoals", at = @At("TAIL"))
     private void lethalbreed$addFloatGoal(CallbackInfo ci) {
-        if (!CombatMoveConfig.floatInWater) {
+        if (!WaterFear.swims()) {
             return;
         }
         // goalSelector is declared on Mob, so reach it via the accessor. Priority 0: floating takes
