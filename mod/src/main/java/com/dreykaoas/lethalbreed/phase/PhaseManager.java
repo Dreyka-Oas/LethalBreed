@@ -143,8 +143,8 @@ public final class PhaseManager {
     }
 
     public void broadcast(MinecraftServer server) {
-        ChatFormatting color = PhasePalette.colorFor(phase);
         server.getPlayerList().broadcastSystemMessage(
-                Component.literal("☠ Phase " + phase).withStyle(color, ChatFormatting.BOLD), false);
+                Component.literal("\u2620 ").append(Component.translatable("lethalbreed.notice.phase", phase))
+                        .withStyle(PhasePalette.colorFor(phase), ChatFormatting.BOLD), false);
     }
 }

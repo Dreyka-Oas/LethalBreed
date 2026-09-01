@@ -22,7 +22,8 @@ public final class BoolOptionEntry extends OptionEntry {
     }
 
     private static Component label(String v) {
-        return Component.literal("true".equalsIgnoreCase(v) ? "ON" : "OFF");
+        return Component.translatable("true".equalsIgnoreCase(v)
+                ? "lethalbreed.toggle.on" : "lethalbreed.toggle.off");
     }
 
     @Override

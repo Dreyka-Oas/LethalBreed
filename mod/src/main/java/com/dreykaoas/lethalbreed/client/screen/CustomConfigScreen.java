@@ -35,7 +35,7 @@ public final class CustomConfigScreen extends Screen {
     private String gpuInfo = null;
 
     public CustomConfigScreen(String data) {
-        super(Component.literal("LethalBreed Config"));
+        super(Component.translatable("lethalbreed.config.title"));
         // Optional leading "@gpu=<detected gpu>" meta line, shown live on the useGpu row.
         if (data.startsWith("@gpu=")) {
             int nl = data.indexOf('\n');
@@ -58,8 +58,11 @@ public final class CustomConfigScreen extends Screen {
     @Override
     protected void init() {
         // Search box (outside/above the two panels, full width).
-        search = new EditBox(this.font, MARGIN, 8, this.width - 2 * MARGIN, SEARCH_H, Component.literal("search"));
-        search.setHint(Component.translatable("lethalbreed.config.search_hint"));
+        // Same key for the narration label and the visible hint: a screen reader announcing "search" in
+        // English on a French client is the one place this screen still leaked an untranslated word.
+        Component searchLabel = Component.translatable("lethalbreed.config.search_hint");
+        search = new EditBox(this.font, MARGIN, 8, this.width - 2 * MARGIN, SEARCH_H, searchLabel);
+        search.setHint(searchLabel);
         search.setValue(filter);
         search.setResponder(text -> {
             filter = text == null ? "" : text;
