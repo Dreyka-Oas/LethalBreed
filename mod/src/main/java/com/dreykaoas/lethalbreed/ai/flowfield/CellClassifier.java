@@ -1,6 +1,8 @@
 package com.dreykaoas.lethalbreed.ai.flowfield;
 
 import com.dreykaoas.lethalbreed.block.MaterialRegistry;
+import com.dreykaoas.lethalbreed.config.domain.CombatMoveConfig;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,6 +20,33 @@ public final class CellClassifier {
     public static final byte BREAKABLE = 1;
     public static final byte BUILDABLE = 2;
     public static final byte IMPASSABLE = 3;
+
+    /**
+     * Water deep enough to put a zombie's head under, at the plane it would walk on.
+     *
+     * <p>Without this, water is passable to the field: it does not block motion, so a flooded column reads as
+     * a fine place to stand and the route goes straight through the lake. With it, a lake is a wall and a ford
+     * is not, which is the whole difference the option is asking for: shallow water is crossed, deep water is
+     * walked around.
+     *
+     * <p>The depth is a shipped number rather than the zombie's own height because the field is computed once
+     * per dimension and read by every zombie in it. Two blocks is the ordinary zombie; a taller one wading a
+     * two-deep ford still keeps its eyes clear, and one that walks into something deeper drowns, which is the
+     * other half of the same option.
+     */
+    private static boolean drownsHere(ChunkAccess chunk, BlockPos.MutableBlockPos m, int wx, int wz, int focusY) {
+        if (!CombatMoveConfig.cannotSwim) {
+            return false;
+        }
+        int depth = Math.max(1, CombatMoveConfig.waterAvoidDepth);
+        for (int dy = 0; dy < depth; dy++) {
+            m.set(wx, focusY + dy, wz);
+            if (chunk.isOutsideBuildHeight(m) || !chunk.getBlockState(m).getFluidState().is(FluidTags.WATER)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Classify a column at the focus plane: PASSABLE if there is a standable spot in the vertical
@@ -41,6 +70,9 @@ public final class CellClassifier {
      */
     public static byte classify(ServerLevel level, ChunkAccess chunk, BlockPos.MutableBlockPos m,
                                 int wx, int wz, int focusY, int vtol) {
+        if (drownsHere(chunk, m, wx, wz, focusY)) {
+            return IMPASSABLE;
+        }
         // Standable anywhere in the window?
         for (int y = focusY + vtol; y >= focusY - vtol; y--) {
             m.set(wx, y, wz);

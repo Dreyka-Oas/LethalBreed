@@ -34,9 +34,13 @@ public final class CombatMoveConfig {
     /** Zombies cannot swim: water is impassable to the pathfinder and a submerged zombie drowns. Overrides
      *  {@link #floatInWater} and the swim drive, which are the opposite behaviour. */
     public static boolean cannotSwim = true;
+    /** Water blocks stacked at a walking plane that make the column a wall to the flow field. Two is the
+     *  ordinary zombie's head height: shallower than this is a ford and gets crossed. */
+    public static int waterAvoidDepth = 2;
     /** Ticks a zombie's head may stay under water before it starts taking drowning damage. */
     public static int drownGraceTicks = 40;
-    /** Health removed each activation once the grace is spent. */
+    /** Health removed on the first activation past the grace, and added again on every one after: the
+     *  drowning gets worse, so a zombie with a large health pool still dies in a bounded time. */
     public static double drownDamage = 4.0;
 
     /** Make zombies FLOAT and swim at the water surface (like a player/drowned) instead of sinking and

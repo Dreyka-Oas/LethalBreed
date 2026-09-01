@@ -68,6 +68,19 @@ final class BrainGuards {
         return true;
     }
 
+    /** Head under water: stop hunting and climb out. Ahead of the hunt because a
+     *  zombie that is drowning has nothing more pressing, and behind the pursuit it would be overruled every
+     *  activation by a path back toward the target on the far bank. */
+    boolean handleSubmerged() {
+        if (WaterFear.submerged(entity)) {
+            pillar.cancel();
+            WaterFear.retreat(entity, owner);
+            owner.setState(ZombieState.IDLE);
+            return true;
+        }
+        return false;
+    }
+
     boolean handleSleeping() {
         if (!owner.mood().isSleeping()) return false;
         pillar.cancel();

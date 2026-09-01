@@ -27,7 +27,8 @@ public final class SmartZombie {
 
     private final ZombiePursuit pursuit;
     private final ZombieBrain brain;
-    private int airLeft = -1;
+    private int airLeft = Integer.MIN_VALUE;
+    private long dryFooting = Long.MIN_VALUE;
     private final ZombieMood mood;
 
     public SmartZombie(Zombie entity, ResourceKey<Level> dimension) {
@@ -97,12 +98,19 @@ public final class SmartZombie {
     public void cancelClimb() { brain.cancelClimb(); }
     public void swimStep(ServerLevel level, WorldAiContext ctx) { brain.swimStep(level, ctx); }
 
-    /** Ticks of air left before drowning, {@code -1} while the zombie has its head out. Kept here rather
+    /** Ticks of air left before drowning, counting on past zero to drive the escalating damage. Kept here
+     *  rather
      *  than on vanilla's air supply, which the game refills every tick for undead, and rather than in a
-     *  static map, which would pin the entity past its death. */
+     *  static map, which would pin the entity past its death. See {@code WaterFear} for the sentinel. */
     public int airLeft() { return airLeft; }
 
     public void setAirLeft(int ticks) { airLeft = ticks; }
+
+    /** The last block this zombie stood on with its head clear of water, packed, or {@code Long.MIN_VALUE}
+     *  when it has never had one. Where {@code WaterFear} sends it back to when it wades in too deep. */
+    public long dryFooting() { return dryFooting; }
+
+    public void setDryFooting(long packed) { dryFooting = packed; }
     public boolean isSwimming() { return brain.isSwimming(); }
     public boolean dueThisActivation(int divisor) { return brain.dueThisActivation(divisor); }
 

@@ -80,6 +80,7 @@ public final class ZombieBrain {
             guards.handleSwimEntry();
             return; // mid climb; the per-tick climbStep finishes it
         }
+        if (guards.handleSubmerged()) return;
         if (guards.handleNoTarget(ctx, p)) return;
         // Water entry sits here, after the no-target guard and before the hunt: a zombie in water is driven by
         // Swim from EveryTickPass, every tick, instead of the LOD-throttled walk. Tested after handleNoTarget on
