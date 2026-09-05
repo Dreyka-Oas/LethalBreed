@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(net.minecraft.client.renderer.entity.player.AvatarRenderer.class)
 public abstract class AvatarRendererHallucinationMixin {
 
-    // require = 0 because this injection is cosmetic. lethalbreed.client.mixins.json sets defaultRequire = 1,
+    // require = 0 because this injection is cosmetic. lethalbreed.mixins.json sets defaultRequire = 1,
     // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
     // render mod injecting into the same target should cost a visual effect, not the whole game.
     @Inject(require = 0, method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",

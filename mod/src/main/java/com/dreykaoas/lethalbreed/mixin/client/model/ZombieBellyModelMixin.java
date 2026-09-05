@@ -26,7 +26,7 @@ public class ZombieBellyModelMixin {
     /** How much charge=1 inflates the belly on y, on top of the base 1.0 scale (see class javadoc). */
     private static final float GIRTH_Y_SCALE = 0.35f;
 
-    // require = 0 because this injection is cosmetic. lethalbreed.client.mixins.json sets defaultRequire = 1,
+    // require = 0 because this injection is cosmetic. lethalbreed.mixins.json sets defaultRequire = 1,
     // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
     // render mod injecting into the same target should cost a visual effect, not the whole game.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",

@@ -26,7 +26,7 @@ public class GuiContaminationHudMixin {
      *  the sprite keeps its colour and only reads faintly sickly (red channel pulled down a touch). */
     private static final int TINT = 0xFF_D8FFD8;
 
-    // require = 0 because this injection is cosmetic. lethalbreed.client.mixins.json sets defaultRequire = 1,
+    // require = 0 because this injection is cosmetic. lethalbreed.mixins.json sets defaultRequire = 1,
     // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
     // render mod injecting into the same target should cost a visual effect, not the whole game.
     @Redirect(require = 0, method = "renderHeart",
