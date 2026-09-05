@@ -38,18 +38,6 @@ public final class BomberBlast {
      *  can never stop mattering however long the Bomber swelled. */
     private static final double FUSE_WEIGHT = 0.6;
 
-    /** Lingering gore puddle: how long the residue stays on the ground, floor and fuse-driven span. */
-    private static final double PUDDLE_BASE_S = 3.0, PUDDLE_SPAN_S = 9.0;
-    /** The puddle pools tighter than the airborne ring. Gore falls inward, it does not hang where it flew. */
-    private static final double PUDDLE_RADIUS_MUL = 0.6;
-    /** Residue bites softer than the burst that threw it. Halving keeps the puddle a hazard to linger in
-     *  rather than a second explosion. */
-    private static final double PUDDLE_POTENCY = 0.5;
-    /** How often the puddle re-doses whoever is standing in it, the cadence vanilla lingering clouds use. */
-    public static final int PUDDLE_REAPPLY_TICKS = 20;
-
-    private static final int TPS = 20;
-
     private static double lo(double a, double b) { return Math.min(a, b); }
 
     private static double hi(double a, double b) { return Math.max(a, b); }

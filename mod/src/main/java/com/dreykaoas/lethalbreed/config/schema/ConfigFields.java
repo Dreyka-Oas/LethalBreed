@@ -30,10 +30,6 @@ public final class ConfigFields {
         return ConfigSchema.all();
     }
 
-    public static Field find(String name) {
-        return ConfigSchema.find(name);
-    }
-
     public static String kind(Field f) {
         return ConfigType.kind(f);
     }
