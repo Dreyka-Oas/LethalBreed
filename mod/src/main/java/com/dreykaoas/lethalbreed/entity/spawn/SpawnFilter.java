@@ -33,7 +33,8 @@ public final class SpawnFilter {
     private SpawnFilter() {}
 
     /** UUIDs already handed to {@link #shouldCullOnLoad} this session, standing in for the "first add" flag
-     *  {@code Entity} lacks. Hostiles only, and dropped at SERVER_STOPPED by {@link #onServerStopped}. */
+     *  {@code Entity} lacks. Hostiles only, emptied entry by entry as they die ({@link #onEntityUnload})
+     *  and wholesale at SERVER_STOPPED ({@link #onServerStopped}). */
     private static final Set<UUID> loadedOnce = new HashSet<>();
 
     /** Drops the seen-UUID set. Static state outlives the world, so a set left standing would carry a
@@ -41,6 +42,18 @@ public final class SpawnFilter {
      *  restarting the process would start over. */
     public static void onServerStopped() {
         loadedOnce.clear();
+    }
+
+    /** ENTITY_UNLOAD: a mob that will never load again leaves the set. Without this the set only grows, one
+     *  entry per hostile the world has ever loaded, and a server up for days holds every mob it has killed.
+     *  Only KILLED and DISCARDED go: a chunk unload (null reason, or UNLOADED_*) and a dimension change both
+     *  come back under the same UUID, and forgetting those would re-open the reload cull this class exists
+     *  to close. */
+    public static void onEntityUnload(Entity entity) {
+        Entity.RemovalReason reason = entity.getRemovalReason();
+        if (reason == Entity.RemovalReason.KILLED || reason == Entity.RemovalReason.DISCARDED) {
+            loadedOnce.remove(entity.getUUID());
+        }
     }
 
     /** Records the UUID and answers whether this add is its first this session. */

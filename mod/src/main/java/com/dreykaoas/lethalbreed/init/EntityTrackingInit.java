@@ -33,6 +33,7 @@ final class EntityTrackingInit {
     static void register(ZombieRegistry registry, DimensionManager dimensions) {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> onEntityLoad(registry, dimensions, entity, world));
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
+            SpawnFilter.onEntityUnload(entity); // a dead hostile leaves the seen-UUID set with it
             // Prey leaves the index the moment it leaves the level. TargetIndex.refresh() also sweeps dead
             // entries defensively, but relying on that alone is how the SpatialGrid leak (P7-1) happened.
             if (TargetIndex.indexable(entity)) {
@@ -146,5 +147,4 @@ final class EntityTrackingInit {
             //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
         }
     }
-
 }
