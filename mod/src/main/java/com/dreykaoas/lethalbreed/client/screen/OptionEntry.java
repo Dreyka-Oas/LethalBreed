@@ -82,7 +82,7 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
     private void drawDesc(GuiGraphics g, int rightControlsW) {
         String s;
         if ("useGpu".equals(row.name()) && gpuInfo != null && !gpuInfo.isEmpty()) {
-            s = "GPU : " + gpuInfo; // live detected GPU instead of the static description
+            s = gpuInfo; // live detected GPU instead of the static description
         } else {
             String key = "lethalbreed.option." + row.name() + ".desc";
             s = Component.translatable(key).getString();
@@ -129,7 +129,7 @@ public abstract class OptionEntry extends ContainerObjectSelectionList.Entry<Opt
                 .append(Component.literal(" (" + row.name() + ")").withStyle(ChatFormatting.DARK_GRAY)));
         // Description (live GPU on the useGpu row, else the static .desc translation).
         if ("useGpu".equals(row.name()) && gpuInfo != null && !gpuInfo.isEmpty()) {
-            lines.add(Component.literal("GPU : " + gpuInfo).withStyle(ChatFormatting.GRAY));
+            lines.add(Component.literal(gpuInfo).withStyle(ChatFormatting.GRAY));
         } else {
             String key = "lethalbreed.option." + row.name() + ".desc";
             String desc = Component.translatable(key).getString();

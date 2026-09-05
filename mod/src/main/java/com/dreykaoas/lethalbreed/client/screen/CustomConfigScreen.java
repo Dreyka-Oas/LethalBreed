@@ -1,5 +1,6 @@
 package com.dreykaoas.lethalbreed.client.screen;
 
+import com.dreykaoas.lethalbreed.net.GpuStatus;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.components.EditBox;
@@ -36,11 +37,13 @@ public final class CustomConfigScreen extends Screen {
 
     public CustomConfigScreen(String data) {
         super(Component.translatable("lethalbreed.config.title"));
-        // Optional leading "@gpu=<detected gpu>" meta line, shown live on the useGpu row.
+        // Optional leading "@gpu=<status token>" meta line, worded here so the reader gets their own
+        // language, then shown live on the useGpu row.
         if (data.startsWith("@gpu=")) {
             int nl = data.indexOf('\n');
             if (nl > 0) {
-                gpuInfo = data.substring(5, nl);
+                GpuStatus status = GpuStatus.decode(data.substring(5, nl));
+                gpuInfo = status == null ? null : status.text().getString();
                 data = data.substring(nl + 1);
             }
         }

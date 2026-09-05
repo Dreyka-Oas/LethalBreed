@@ -1,6 +1,7 @@
 package com.dreykaoas.lethalbreed.command;
 
 import com.dreykaoas.lethalbreed.config.schema.ConfigFields;
+import com.dreykaoas.lethalbreed.net.GpuStatus;
 import com.dreykaoas.lethalbreed.net.LethalConfigPayloads;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -46,30 +47,32 @@ public final class LethalConfigCommand {
             return list(ctx); // console: fall back to the text dump
         }
         ServerPlayNetworking.send(player, new LethalConfigPayloads.OpenConfig(
-                "@gpu=" + gpuInfo() + "\n" + ConfigFields.encodeSnapshot()));
+                "@gpu=" + detectGpu().encode() + "\n" + ConfigFields.encodeSnapshot()));
         return 1;
     }
 
-    /** Human-readable detected GPU, shown live on the {@code useGpu} row in the GUI. Runs on the server
-     *  thread, so it MUST NOT call {@code isAvailable()}: that takes the compute monitor (blocking behind an
-     *  in-flight solve) and lazily triggers OpenCL init (a ~second-long clBuildProgram) on a box where the
-     *  admin disabled the GPU precisely to avoid OpenCL. It reads the already-known state instead (audit #9). */
-    private static String gpuInfo() {
-        var gpu = com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager.get();
+    /** Which compute path the solver is on, shown live on the {@code useGpu} row in the GUI. Runs on the
+     *  server thread, so it MUST NOT call {@code isAvailable()}: that takes the compute monitor (blocking
+     *  behind an in-flight solve) and lazily triggers OpenCL init (a ~second-long clBuildProgram) on a box
+     *  where the admin disabled the GPU precisely to avoid OpenCL. It reads the already-known state
+     *  instead (audit #9). */
+    private static GpuStatus detectGpu() {
         if (!com.dreykaoas.lethalbreed.config.domain.engine.FlowConfig.useGpu) {
-            return "GPU disabled (useGpu=false), CPU multithread";
+            return new GpuStatus(GpuStatus.Kind.DISABLED, "");
         }
+        var gpu = com.dreykaoas.lethalbreed.ai.flowfield.gpu.GpuComputeManager.get();
         if (!gpu.isInitialized()) {
-            return "GPU not initialised, CPU multithread";
+            return new GpuStatus(GpuStatus.Kind.UNINITIALIZED, "");
         }
         return gpu.isAvailableNonBlocking()
-                ? gpu.deviceName() + " (OpenCL)"
-                : "Aucun GPU, CPU multithread";
+                ? new GpuStatus(GpuStatus.Kind.ACTIVE, gpu.deviceName())
+                : new GpuStatus(GpuStatus.Kind.UNAVAILABLE, "");
     }
 
     private static int list(CommandContext<CommandSourceStack> ctx) {
         CommandFeedback.success(ctx.getSource(),
-                ConfigFields.all().size() + " options", ChatFormatting.GOLD, false);
+                Component.translatable("lethalbreed.command.config.count", ConfigFields.all().size()),
+                ChatFormatting.GOLD, false);
         for (Field f : ConfigFields.all()) {
             String line = "  " + f.getName() + " = " + ConfigFields.read(f) + "  (" + ConfigFields.kind(f) + ")";
             ctx.getSource().sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GRAY), false);

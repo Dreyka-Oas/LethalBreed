@@ -99,8 +99,8 @@ public final class AiConflictDetector {
         LethalBreed.LOGGER.error("[LethalBreed] AI CONFLICT: {}", detail);
         if (TargetingConfig.failOnAiConflict) {
             level.getServer().getPlayerList().broadcastSystemMessage(
-                    Component.literal("§c[LethalBreed] Incompatible zombie-AI mod detected (" + detail
-                            + "), stopping the server. Remove it, or set failOnAiConflict=false.")
+                    Component.literal("[LethalBreed] ")
+                            .append(Component.translatable("lethalbreed.notice.ai_conflict", detail))
                             .withStyle(ChatFormatting.RED),
                     false);
             level.getServer().halt(false);
