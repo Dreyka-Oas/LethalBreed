@@ -12,10 +12,10 @@ import java.util.List;
 
 /**
  * SERVER THREAD: reads the world into an immutable {@link Snapshot}. Cells are PASSABLE (free),
- * BREAKABLE (traversable at a cost, flagged to break through), BUILDABLE (a gap traversable at a
- * cost, flagged to bridge), or IMPASSABLE (per {@link CellClassifier}). The cost arrays let the
- * off-thread solve route a path THROUGH a breakable wall or OVER a gap when that beats a long detour.
- * That is what makes zombies break and bridge.
+ * BREAKABLE (traversable at the break cost), BUILDABLE (a gap traversable at the build cost), or
+ * IMPASSABLE (per {@link CellClassifier}). The classification survives only as that per-cell cost:
+ * it lets the off-thread solve route a path THROUGH a breakable wall or OVER a gap when that beats
+ * a long detour. That is what makes zombies break and bridge.
  */
 public final class FlowFieldSnapshotBuilder {
     private FlowFieldSnapshotBuilder() {}
