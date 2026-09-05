@@ -57,7 +57,6 @@ public final class FlowFieldSnapshotBuilder {
         int n = width * depth;
         boolean[] passable = new boolean[n];
         int[] extraCost = new int[n];
-        byte[] flags = new byte[n];
         int breakCost = FlowConfig.flowBreakCost;
         int buildCost = FlowConfig.flowBuildCost;
 
@@ -85,8 +84,8 @@ public final class FlowFieldSnapshotBuilder {
                         : CellClassifier.classify(level, chunk, m, wx, wz, focusY, vtol);
                 switch (type) {
                     case CellClassifier.PASSABLE -> { passable[i] = true; }
-                    case CellClassifier.BREAKABLE -> { passable[i] = true; extraCost[i] = breakCost; flags[i] = FlowField.FLAG_BREAK; }
-                    case CellClassifier.BUILDABLE -> { passable[i] = true; extraCost[i] = buildCost; flags[i] = FlowField.FLAG_BUILD; }
+                    case CellClassifier.BREAKABLE -> { passable[i] = true; extraCost[i] = breakCost; }
+                    case CellClassifier.BUILDABLE -> { passable[i] = true; extraCost[i] = buildCost; }
                     default -> { passable[i] = false; }
                 }
             }
@@ -105,13 +104,12 @@ public final class FlowFieldSnapshotBuilder {
             int i = cx * depth + cz;
             passable[i] = true;
             extraCost[i] = 0;
-            flags[i] = FlowField.FLAG_NONE;
             seeds.add(i);
         }
         int[] seedCells = new int[seeds.size()];
         for (int k = 0; k < seedCells.length; k++) {
             seedCells[k] = seeds.get(k);
         }
-        return new Snapshot(minX, minZ, width, depth, focusY, passable, extraCost, flags, seedCells);
+        return new Snapshot(minX, minZ, width, depth, focusY, passable, extraCost, seedCells);
     }
 }

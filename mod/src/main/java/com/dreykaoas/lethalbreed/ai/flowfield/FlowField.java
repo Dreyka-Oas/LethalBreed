@@ -9,10 +9,6 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 public final class FlowField {
     public static final short IMPASSABLE = Short.MAX_VALUE;
 
-    public static final byte FLAG_NONE = 0;
-    public static final byte FLAG_BREAK = 1;
-    public static final byte FLAG_BUILD = 2;
-
     private final int originX;
     private final int originZ;
     private final int width;
