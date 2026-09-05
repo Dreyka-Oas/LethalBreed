@@ -66,3 +66,6 @@ Thumbs.db
 
 # ---- Nested LethalBreed-web repo (separate, private git repo, do not track or embed) ----
 /web/
+
+# ---- Local scratch for the subagent-driven run, never pushed ----
+.superpowers/
