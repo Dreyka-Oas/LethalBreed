@@ -83,8 +83,9 @@ final class EntityTrackingInit {
     private static void onEntityLoad(ZombieRegistry registry, DimensionManager dimensions,
                                       Entity entity, ServerLevel world) {
         // Phase-gated hostile filtering. In phase 0 (classic) NOTHING hostile spawns; in phases 1..15 only
-        // plain Zombie is allowed (every other hostile is culled). Applies only to freshly-added entities,
-        // not chunk-reloads (isAddedToLevel true == first add). We gate on the type filter regardless.
+        // plain Zombie is allowed (every other hostile is culled). shouldCull only ever answers true the
+        // first time it sees a given entity, so a mob that already survived its spawn is never discarded
+        // again just because its chunk reloaded, or because the phase/filter changed in the meantime.
         if (WorldSpawnConfig.nightSpawnEnabled && SpawnFilter.shouldCull(entity)) {
             entity.discard();
             return;

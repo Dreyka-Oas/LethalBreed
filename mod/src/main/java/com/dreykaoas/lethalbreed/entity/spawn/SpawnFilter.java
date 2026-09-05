@@ -4,9 +4,14 @@ import com.dreykaoas.lethalbreed.config.domain.WorldSpawnConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Phase-gated hostile spawn filter. The mod owns the entire hostile population:
@@ -18,15 +23,31 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  *       other {@link MobCategory#MONSTER} is culled.</li>
  * </ul>
  *
- * <p>Passive/ambient/water mobs are never touched. Called from the {@code ENTITY_LOAD} hook.
+ * <p>Passive/ambient/water mobs are never touched. Called from the {@code ENTITY_LOAD} hook, which fires
+ * identically for a fresh spawn and for a chunk simply coming back with the same mob in it; {@code
+ * shouldCull} only ever answers true the first time it sees a given UUID this session, so a mob that
+ * already survived once is never discarded again on a later reload.
  */
 public final class SpawnFilter {
     private SpawnFilter() {}
 
+    /** UUIDs already seen this session, standing in for the "first add" flag {@code Entity} lacks. */
+    private static final Set<UUID> loadedOnce = new HashSet<>();
+
+    /** The two vanilla bosses. Both are MobCategory.MONSTER, so the phase gate below would discard them like
+     *  any hostile, and a summoned Wither or a live Dragon would vanish the next time its chunk loads. */
+    public static boolean isProtectedBoss(EntityType<?> type) {
+        return type == EntityType.ENDER_DRAGON || type == EntityType.WITHER;
+    }
+
     /** True if this entity must be discarded at load under the current phase + filter config. */
     public static boolean shouldCull(Entity entity) {
         if (!(entity instanceof Mob mob) || mob.getType().getCategory() != MobCategory.MONSTER) {
-            return false; // only hostile mobs are governed here
+            return false; // only hostile mobs are governed here, so only they go into loadedOnce
+        }
+        boolean firstLoad = loadedOnce.add(entity.getUUID());
+        if (isProtectedBoss(mob.getType()) || !firstLoad) {
+            return false;
         }
         // Phase 0 = classic: nothing hostile spawns.
         if (PhaseManager.current() <= 0) {
