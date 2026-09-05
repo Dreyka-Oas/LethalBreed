@@ -11,6 +11,7 @@ import com.dreykaoas.lethalbreed.dimension.DimensionManager;
 import com.dreykaoas.lethalbreed.effect.ContaminationManager;
 import com.dreykaoas.lethalbreed.entity.SmartZombie;
 import com.dreykaoas.lethalbreed.entity.ZombieRegistry;
+import com.dreykaoas.lethalbreed.entity.spawn.SpawnFilter;
 import com.dreykaoas.lethalbreed.block.PlacedBlockSavedData;
 import com.dreykaoas.lethalbreed.util.target.VanillaTargetingGoals;
 
@@ -87,6 +88,7 @@ public final class LifecycleInit {
             scheduler.reset();
             ContaminationManager.onServerStopped();
             GorePuddles.onServerStopped();
+            SpawnFilter.onServerStopped();
             VanillaTargetingGoals.clearAll();
         });
     }

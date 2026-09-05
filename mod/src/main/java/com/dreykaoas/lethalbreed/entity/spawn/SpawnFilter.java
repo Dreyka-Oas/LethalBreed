@@ -23,16 +23,39 @@ import java.util.UUID;
  *       other {@link MobCategory#MONSTER} is culled.</li>
  * </ul>
  *
- * <p>Passive/ambient/water mobs are never touched. Called from the {@code ENTITY_LOAD} hook, which fires
- * identically for a fresh spawn and for a chunk simply coming back with the same mob in it; {@code
- * shouldCull} only ever answers true the first time it sees a given UUID this session, so a mob that
- * already survived once is never discarded again on a later reload.
+ * <p>Passive/ambient/water mobs are never touched. The {@code ENTITY_LOAD} hook fires identically for a
+ * fresh spawn and for a chunk simply coming back with the same mob in it, so the hook calls
+ * {@link #shouldCullOnLoad} and not {@link #shouldCull}: the first of the two remembers the UUID and
+ * therefore never answers true twice for the same mob, the second is a plain read of the current rules that
+ * the dev harnesses can re-ask as often as they need.
  */
 public final class SpawnFilter {
     private SpawnFilter() {}
 
-    /** UUIDs already seen this session, standing in for the "first add" flag {@code Entity} lacks. */
+    /** UUIDs already handed to {@link #shouldCullOnLoad} this session, standing in for the "first add" flag
+     *  {@code Entity} lacks. Hostiles only, and dropped at SERVER_STOPPED by {@link #onServerStopped}. */
     private static final Set<UUID> loadedOnce = new HashSet<>();
+
+    /** Drops the seen-UUID set. Static state outlives the world, so a set left standing would carry a
+     *  singleplayer session's verdicts into the next world opened in the same JVM, where a dedicated server
+     *  restarting the process would start over. */
+    public static void onServerStopped() {
+        loadedOnce.clear();
+    }
+
+    /** Records the UUID and answers whether this add is its first this session. */
+    static boolean firstLoadThisSession(UUID id) {
+        return loadedOnce.add(id);
+    }
+
+    /** The ENTITY_LOAD verdict: cull only on the entity's first add, so a mob that already survived its
+     *  spawn is not discarded later just because its chunk came back or the phase moved under it. */
+    public static boolean shouldCullOnLoad(Entity entity) {
+        if (!(entity instanceof Mob mob) || mob.getType().getCategory() != MobCategory.MONSTER) {
+            return false; // only hostile mobs are governed here, so only they go into loadedOnce
+        }
+        return firstLoadThisSession(entity.getUUID()) && shouldCull(entity);
+    }
 
     /** The two vanilla bosses. Both are MobCategory.MONSTER, so the phase gate below would discard them like
      *  any hostile, and a summoned Wither or a live Dragon would vanish the next time its chunk loads. */
@@ -40,13 +63,13 @@ public final class SpawnFilter {
         return type == EntityType.ENDER_DRAGON || type == EntityType.WITHER;
     }
 
-    /** True if this entity must be discarded at load under the current phase + filter config. */
+    /** True if this entity must be discarded at load under the current phase + filter config. Reads only:
+     *  the dev harnesses re-ask it on a prop to explain a failure, and must get the same answer twice. */
     public static boolean shouldCull(Entity entity) {
         if (!(entity instanceof Mob mob) || mob.getType().getCategory() != MobCategory.MONSTER) {
-            return false; // only hostile mobs are governed here, so only they go into loadedOnce
+            return false; // only hostile mobs are governed here
         }
-        boolean firstLoad = loadedOnce.add(entity.getUUID());
-        if (isProtectedBoss(mob.getType()) || !firstLoad) {
+        if (isProtectedBoss(mob.getType())) {
             return false;
         }
         // Phase 0 = classic: nothing hostile spawns.
