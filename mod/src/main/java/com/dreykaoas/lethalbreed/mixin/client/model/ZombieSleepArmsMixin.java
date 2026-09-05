@@ -23,7 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractZombieModel.class)
 public class ZombieSleepArmsMixin {
 
-    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0 because this injection is cosmetic. lethalbreed.client.mixins.json sets defaultRequire = 1,
+    // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
+    // render mod injecting into the same target should cost a visual effect, not the whole game.
     @Inject(require = 0, method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/ZombieRenderState;)V",
             at = @At("TAIL"))
     private void lethalbreed$sleepArms(ZombieRenderState state, CallbackInfo ci) {

@@ -26,7 +26,9 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 @Mixin(LivingEntityRenderer.class)
 public class LivingEntityRendererMixin {
 
-    // require = 0: purely presentational. See com.dreykaoas.lethalbreed.client.PresentationalMixinNotes.
+    // require = 0 because this injection is cosmetic. lethalbreed.client.mixins.json sets defaultRequire = 1,
+    // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
+    // render mod injecting into the same target should cost a visual effect, not the whole game.
     @Inject(require = 0, method = "extractRenderState", at = @At("TAIL"))
     private void lethalbreed$carryBellyCharge(LivingEntity entity, LivingEntityRenderState state,
                                               float partialTick, CallbackInfo ci) {
