@@ -20,39 +20,74 @@ import java.util.List;
 public final class FlowFieldSnapshotBuilder {
     private FlowFieldSnapshotBuilder() {}
 
+    /**
+     * The window one solve covers: origin, width and depth, margin included and clamped to {@code maxGrid}.
+     * Separated from {@link #snapshot} so the geometry can be tested without a server.
+     *
+     * <p>When the clamp bites, the window recentres on the player closest to the group's centre of mass, not
+     * on the middle of their bounding box: two players further apart than the grid put that middle in a window
+     * holding neither, and a window with no player in it seeds nothing, leaving every cell IMPASSABLE silently.
+     */
+    public static int[] window(int[] xs, int[] zs, int margin, int maxGrid) {
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+        int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+        long sumX = 0, sumZ = 0;
+        for (int k = 0; k < xs.length; k++) {
+            minX = Math.min(minX, xs[k]);
+            maxX = Math.max(maxX, xs[k]);
+            minZ = Math.min(minZ, zs[k]);
+            maxZ = Math.max(maxZ, zs[k]);
+            sumX += xs[k];
+            sumZ += zs[k];
+        }
+        minX -= margin; maxX += margin;
+        minZ -= margin; maxZ += margin;
+        int width = maxX - minX + 1;
+        int depth = maxZ - minZ + 1;
+        if (width <= maxGrid && depth <= maxGrid) {
+            return new int[]{minX, minZ, width, depth};
+        }
+        int anchor = 0;
+        long best = Long.MAX_VALUE;
+        long cxAvg = sumX / xs.length, czAvg = sumZ / zs.length;
+        for (int k = 0; k < xs.length; k++) {
+            long dx = xs[k] - cxAvg, dz = zs[k] - czAvg;
+            long d = dx * dx + dz * dz;
+            if (d < best) {
+                best = d;
+                anchor = k;
+            }
+        }
+        if (width > maxGrid) {
+            minX = xs[anchor] - maxGrid / 2;
+            width = maxGrid;
+        }
+        if (depth > maxGrid) {
+            minZ = zs[anchor] - maxGrid / 2;
+            depth = maxGrid;
+        }
+        return new int[]{minX, minZ, width, depth};
+    }
+
     /** Classify cells + seeds. {@code players} should already be filtered to targets. */
     public static Snapshot snapshot(ServerLevel level, List<ServerPlayer> players) {
         int margin = FlowConfig.flowMargin;
         int maxGrid = FlowConfig.flowMaxGrid;
         int vtol = FlowConfig.flowVerticalTolerance;
 
-        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
-        int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+        int[] xs = new int[players.size()];
+        int[] zs = new int[players.size()];
         long sumY = 0;
-        for (ServerPlayer p : players) {
-            BlockPos bp = p.blockPosition();
-            minX = Math.min(minX, bp.getX());
-            maxX = Math.max(maxX, bp.getX());
-            minZ = Math.min(minZ, bp.getZ());
-            maxZ = Math.max(maxZ, bp.getZ());
+        for (int k = 0; k < players.size(); k++) {
+            BlockPos bp = players.get(k).blockPosition();
+            xs[k] = bp.getX();
+            zs[k] = bp.getZ();
             sumY += bp.getY();
         }
         int focusY = (int) (sumY / players.size());
 
-        minX -= margin; maxX += margin;
-        minZ -= margin; maxZ += margin;
-        int width = maxX - minX + 1;
-        int depth = maxZ - minZ + 1;
-        if (width > maxGrid) {
-            int cx = (minX + maxX) / 2;
-            minX = cx - maxGrid / 2;
-            width = maxGrid;
-        }
-        if (depth > maxGrid) {
-            int cz = (minZ + maxZ) / 2;
-            minZ = cz - maxGrid / 2;
-            depth = maxGrid;
-        }
+        int[] w = window(xs, zs, margin, maxGrid);
+        int minX = w[0], minZ = w[1], width = w[2], depth = w[3];
 
         int n = width * depth;
         boolean[] passable = new boolean[n];
