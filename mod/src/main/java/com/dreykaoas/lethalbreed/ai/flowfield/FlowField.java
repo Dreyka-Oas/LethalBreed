@@ -2,9 +2,9 @@ package com.dreykaoas.lethalbreed.ai.flowfield;
 
 /**
  * Immutable per-dimension flow field over a rectangular XZ region. Each reachable cell stores its
- * cost-to-nearest-player, a unit step direction pointing downhill, and a flag describing what is
- * needed to ENTER the cell (nothing, break a block, or bridge a gap). A zombie samples its own cell
- * and the cell ahead in O(1).
+ * cost-to-nearest-player and a unit step direction pointing downhill. What it takes to enter a cell,
+ * break a block or bridge a gap, is already priced into that cost by {@link FlowFieldSnapshotBuilder}
+ * and is not carried here. A zombie samples its own cell and the cell ahead in O(1).
  */
 public final class FlowField {
     public static final short IMPASSABLE = Short.MAX_VALUE;
