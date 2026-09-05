@@ -51,6 +51,12 @@ public final class AttributeCaps {
         return cap / actual;
     }
 
+    /** Health to keep once the ceiling has moved: never above the new maximum, and never above what the
+     *  zombie had. Filling it instead heals whoever was wounded when the cap bit. */
+    public static double clampedHealth(double current, double max) {
+        return Math.min(current, max);
+    }
+
     /**
      * Bring every capped attribute of {@code z} within its ceiling. Idempotent, and cheap when there is
      * nothing to do, which is the overwhelmingly common case once a zombie has been corrected once.
@@ -58,10 +64,10 @@ public final class AttributeCaps {
     public static void enforce(Zombie z) {
         cap(z, Attributes.ATTACK_DAMAGE, "cap_attack_damage", ProgressionConfig.phaseDamageCap);
         cap(z, Attributes.MOVEMENT_SPEED, "cap_movement_speed", ProgressionConfig.phaseSpeedCap);
-        // Health last, and re-filled afterwards: shrinking max health leaves the current value above the new
-        // maximum, and vanilla renders that as a health bar that cannot be drained by the missing amount.
+        // Health last: shrinking max health leaves the current value above the new maximum, and vanilla
+        // renders that as a health bar that cannot be drained by the missing amount.
         if (cap(z, Attributes.MAX_HEALTH, "cap_max_health", ProgressionConfig.phaseHealthCap)) {
-            z.setHealth(z.getMaxHealth());
+            z.setHealth((float) clampedHealth(z.getHealth(), z.getMaxHealth()));
         }
     }
 
