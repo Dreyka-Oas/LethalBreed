@@ -49,6 +49,12 @@ public enum SpecialType {
             "soigneur", HEALER,
             "necromancien", NECROMANCER);
 
+    /** The same table, for {@code ShippedVariants} to turn each entry into a registry alias. Already
+     *  immutable, so it is handed over as it is rather than copied. */
+    public static Map<String, SpecialType> legacyIds() {
+        return LEGACY_IDS;
+    }
+
     private final String id;
     private final Kind kind;
 
