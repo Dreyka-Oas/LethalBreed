@@ -210,7 +210,7 @@
   "lethalbreed.option.blockDrowned": "Bloquer les noyés",
   "lethalbreed.option.blockDrowned.desc": "Supprime les noyés au chargement.",
   "lethalbreed.option.stripZombieEquipment": "Retirer l'équipement des zombies",
-  "lethalbreed.option.stripZombieEquipment.desc": "Retire armure/armes des zombies.",
+  "lethalbreed.option.stripZombieEquipment.desc": "Retire armure et armes à tous les zombies, qu'ils viennent d'apparaître ou qu'ils arrivent avec un chunk. Désactivé par défaut : le zombie garde alors son équipement vanilla, et une arme ou un outil en main le fait frapper plus fort et casser les blocs plus vite.",
   "lethalbreed.option.forceAllZombiesSunBurn": "Tous les zombies brûlent au soleil",
   "lethalbreed.option.forceAllZombiesSunBurn.desc": "Tous les types brûlent au jour (husks inclus).",
   "lethalbreed.option.sunBurnDurationTicks": "Durée de combustion au soleil (ticks)",

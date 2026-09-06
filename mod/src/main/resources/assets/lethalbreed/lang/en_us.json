@@ -210,7 +210,7 @@
   "lethalbreed.option.blockDrowned": "Block Drowned",
   "lethalbreed.option.blockDrowned.desc": "Discard drowned on load.",
   "lethalbreed.option.stripZombieEquipment": "Strip Zombie Equipment",
-  "lethalbreed.option.stripZombieEquipment.desc": "Remove armor/weapons from zombies.",
+  "lethalbreed.option.stripZombieEquipment.desc": "Remove armor and weapons from every zombie, whether it spawns fresh or loads with a chunk. Off by default: a zombie then keeps its vanilla gear, and a held weapon or tool makes it hit harder and break blocks faster.",
   "lethalbreed.option.forceAllZombiesSunBurn": "Force All Zombies Sun-Burn",
   "lethalbreed.option.forceAllZombiesSunBurn.desc": "All zombie types burn in daylight (incl. husks).",
   "lethalbreed.option.sunBurnDurationTicks": "Sun Burn Duration (ticks)",
