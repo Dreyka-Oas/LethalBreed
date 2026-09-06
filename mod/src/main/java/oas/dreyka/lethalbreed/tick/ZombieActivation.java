@@ -20,9 +20,9 @@ import net.minecraft.world.entity.player.Player;
 final class ZombieActivation {
     private ZombieActivation() {}
 
-    /** Game ticks one activation stands for. A FROZEN zombie is reclassified once every
-     *  frozenReclassifyDivisor rounds, so anything spending time per activation, the drowning clock first,
-     *  has to be told the longer figure or it runs that many times too slow. */
+    /** Game ticks one activation stands for. A zombie that carried FROZEN into this activation was passed
+     *  over for frozenReclassifyDivisor rounds, so anything spending time per activation, the drowning clock
+     *  first, has to be told the longer figure or it runs that many times too slow. */
     public static int elapsedTicks(boolean frozen) {
         int buckets = Math.max(1, SchedulerConfig.tickBuckets);
         return frozen ? buckets * Math.max(1, SchedulerConfig.frozenReclassifyDivisor) : buckets;
@@ -69,11 +69,16 @@ final class ZombieActivation {
      *  LOD tier after mood processing (mood can un-freeze a zombie, so the tier must be re-read afterward). */
     static LodLevel classifyAndUpdate(SmartZombie sz, ServerLevel level, WorldAiContext ctx, boolean prof) {
         long t = prof ? System.nanoTime() : 0L;
+        // The tier LodBucketPass just read to decide whether this round was skippable, i.e. the one left in
+        // place at the end of the PREVIOUS activation. That is what spaced this activation from the last one,
+        // so it is the only tier that can say how much time has passed. Classify's fresh answer cannot: mood
+        // overrides it to HIGH for a fleeing, sheltering or celebrating zombie and the dozing pose overrides
+        // it to FROZEN, both after classify has spoken and both changing the spacing of the NEXT activation.
+        LodLevel spacing = sz.lod();
         // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
         // ALL buckets. A global tick%interval would only ever align with bucket 0.
         LodManager.classify(sz, level, ctx.targetIndex());
         t = mark(DevProbe.CLASSIFY, prof, t);
-        LodLevel lod = sz.lod();
         // Keep FROZEN zombies in the spatial grid (their tick(), which inserts them, is skipped below)
         // so neighbour queries still find them: a Screamer rallying idle zombies, a Healer healing them,
         // and sound propagation all target exactly these.
@@ -89,7 +94,7 @@ final class ZombieActivation {
         // for FROZEN zombies (whose full tick() below is skipped), because a frozen zombie still bites.
         oas.dreyka.lethalbreed.entity.genes.AttributeCaps.enforce(sz.entity());
         // Alongside the sun for the same reason: a FROZEN zombie with its head under water still drowns.
-        WaterFear.tickWater(level, sz, elapsedTicks(lod == LodLevel.FROZEN));
+        WaterFear.tickWater(level, sz, elapsedTicks(spacing == LodLevel.FROZEN));
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
         t = mark(DevProbe.SUNBURN, prof, t);
