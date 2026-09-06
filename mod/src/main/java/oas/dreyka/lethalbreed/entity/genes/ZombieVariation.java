@@ -40,7 +40,12 @@ public final class ZombieVariation {
     private static final long SPECIAL_SALT = 55501L;
 
     public static void apply(Zombie z) {
-        SpawnControl.stripEquipment(z); // zombies never carry weapons/tools/armor (also clears vanilla natural gear + pickups)
+        // Same option EntityTrackingInit reads on load. Stripping here too is not redundant work: this pass
+        // runs inside finalizeSpawn, before the zombie is in the world, so it never gets to exist holding the
+        // gear vanilla just handed it.
+        if (WorldSpawnConfig.stripZombieEquipment) {
+            SpawnControl.stripEquipment(z); // also clears vanilla natural gear and pickups
+        }
         if (WorldSpawnConfig.enableVariation) {
             Random r = seeded(z, 0L);
             applyMultiplier(z, Attributes.SCALE, SCALE_ID, roll(r, WorldSpawnConfig.varScaleMin, WorldSpawnConfig.varScaleMax));

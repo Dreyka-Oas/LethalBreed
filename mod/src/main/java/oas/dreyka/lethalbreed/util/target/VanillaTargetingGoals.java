@@ -1,5 +1,7 @@
 package oas.dreyka.lethalbreed.util.target;
 
+import oas.dreyka.lethalbreed.LethalBreed;
+import oas.dreyka.lethalbreed.api.LethalBreedApi;
 import oas.dreyka.lethalbreed.mixin.MobGoalsAccessor;
 
 import net.minecraft.world.entity.Mob;
@@ -9,6 +11,7 @@ import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,15 +30,33 @@ public final class VanillaTargetingGoals {
     /** entityId -> the vanilla target goals removed from it (present iff currently stripped). */
     private static final Map<Integer, List<WrappedGoal>> STRIPPED = new ConcurrentHashMap<>();
 
+    /** Goal classes already reported by {@link #warnOnce}, so one addon does not fill the log. */
+    private static final Set<String> WARNED = ConcurrentHashMap.newKeySet();
+
     /** Remove every target goal, remembering the set for a later {@link #restore}. No-op if already stripped. */
     public static void strip(Mob mob) {
         GoalSelector ts = ((MobGoalsAccessor) mob).lethalbreed$targetSelector();
         // computeIfAbsent guards double-strip: the snapshot is only ever taken while goals are still present.
         STRIPPED.computeIfAbsent(mob.getId(), id -> {
             List<WrappedGoal> saved = new ArrayList<>(ts.getAvailableGoals());
+            for (WrappedGoal w : saved) {
+                String cls = w.getGoal().getClass().getName();
+                if (!LethalBreedApi.isAllowedAiNamespace(cls)) {
+                    warnOnce(cls);
+                }
+            }
             ts.removeAllGoals(g -> true);
             return saved;
         });
+    }
+
+    /** AiConflictDetector only ever walks the goalSelector, so a foreign goal sitting in the targetSelector
+     *  was emptied here without anyone being told. Once per class, not once per zombie. */
+    private static void warnOnce(String cls) {
+        if (WARNED.add(cls)) {
+            LethalBreed.LOGGER.warn("[LethalBreed] removing foreign targeting goal {} (forceNearestTarget=true). "
+                    + "Declare your namespace with LethalBreedApi.allowAiNamespace to be told about this once.", cls);
+        }
     }
 
     /** Re-add the exact vanilla target goals captured by {@link #strip}. No-op if the mob isn't stripped. */
