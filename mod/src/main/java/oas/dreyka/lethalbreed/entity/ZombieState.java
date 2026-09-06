@@ -16,5 +16,8 @@ public enum ZombieState {
     SLEEPING,
     /** Bomber fuse lit, frozen in place until detonation, like a Creeper. Appended LAST, same reason as
      *  SLEEPING: the ordinal is persisted. */
-    ARMED
+    ARMED,
+    /** Latched onto the victim it landed on, riding it while it gnaws. Appended LAST, same reason as
+     *  SLEEPING: the ordinal is persisted. */
+    CLINGING
 }

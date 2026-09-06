@@ -31,6 +31,18 @@ public final class ZombieStateAttachment {
                     .initializer(() -> false)
                     .syncWith(ByteBufCodecs.BOOL, AttachmentSyncPredicate.all()));
 
+    /**
+     * Whether this zombie is CURRENTLY clinging to its victim ({@link ZombieState#CLINGING}). Synced to
+     * tracking clients for the same reason as {@link #SLEEPING} and unlike {@link #STATE} (server-only):
+     * the pose lives in the renderer, which never sees the AI state. Transient: a fresh zombie clings to
+     * nothing (false). Written on every state change in {@link SmartZombie#setState}.
+     */
+    public static final AttachmentType<Boolean> CLINGING = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "clinging"),
+            builder -> builder
+                    .initializer(() -> false)
+                    .syncWith(ByteBufCodecs.BOOL, AttachmentSyncPredicate.all()));
+
     /** Force class-load so the attachment registers during mod init. */
     public static void init() {}
 }

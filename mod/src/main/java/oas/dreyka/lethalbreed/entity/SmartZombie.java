@@ -78,6 +78,8 @@ public final class SmartZombie {
             // Mirror the sleeping bit into the SYNCED attachment so the client renderer can pose the zombie
             // as asleep (arms down, eyes closed). Kept in lockstep with STATE, on change only.
             entity.setAttached(ZombieStateAttachment.SLEEPING, state == ZombieState.SLEEPING);
+            // Same deal for the clinging bit: the renderer holds the latched pose and never sees the state.
+            entity.setAttached(ZombieStateAttachment.CLINGING, state == ZombieState.CLINGING);
         }
     }
     public LodLevel lod() { return lod; }
