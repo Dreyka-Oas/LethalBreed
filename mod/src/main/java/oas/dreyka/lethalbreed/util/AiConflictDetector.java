@@ -3,6 +3,7 @@ package oas.dreyka.lethalbreed.util;
 import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 
 import oas.dreyka.lethalbreed.LethalBreed;
+import oas.dreyka.lethalbreed.api.LethalBreedApi;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -20,9 +21,10 @@ import java.util.Set;
  * <ol>
  *   <li><b>Known list</b>: a curated set of mod IDs checked at startup (perf mods like Lithium that
  *       keep behaviour identical are NOT here).</li>
- *   <li><b>Behavioural auto-detect</b>: scans a real zombie's goals once; any goal class that is
- *       neither vanilla ({@code net.minecraft.*}) nor ours means another mod injected zombie AI.
- *       This catches <i>any</i> such mod without knowing its id.</li>
+ *   <li><b>Behavioural auto-detect</b>: scans a real zombie's goals once; any goal class that is neither
+ *       vanilla ({@code net.minecraft.*}), nor ours, nor declared through
+ *       {@link oas.dreyka.lethalbreed.api.LethalBreedApi#allowAiNamespace} by an addon means another mod
+ *       injected zombie AI. This catches <i>any</i> such mod without knowing its id.</li>
  * </ol>
  *
  * On conflict: loud log, and if {@link oas.dreyka.lethalbreed.config.domain.TargetingConfig#failOnAiConflict} (default true) a hard stop,
@@ -67,7 +69,7 @@ public final class AiConflictDetector {
         Set<String> foreign = new LinkedHashSet<>();
         zombie.removeAllGoals(goal -> {
             String cls = goal.getClass().getName();
-            if (!cls.startsWith("net.minecraft.") && !cls.startsWith("oas.dreyka.lethalbreed")) {
+            if (!LethalBreedApi.isAllowedAiNamespace(cls)) {
                 foreign.add(cls);
             }
             return false; // scan only, never remove

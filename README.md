@@ -29,6 +29,10 @@ LethalBreed drives zombie AI itself, so it cannot run alongside any other mod th
 are refused at startup; an unlisted one is caught from the goals attached to the first zombie it meets.
 Everything that does not touch zombie AI is fine, performance mods included.
 
+Addons implement `oas.dreyka.lethalbreed.api.LethalBreedAddon` and declare it under the
+`lethalbreed:addon` entrypoint. See `LethalBreedApi` for the phase event and the AI namespace allowlist,
+which is how an addon's own zombie goal avoids being read as a conflict.
+
 Minecraft 1.21.11, Fabric 0.19.3, Java 21.
 
 The mod is in [`mod/`](mod/).

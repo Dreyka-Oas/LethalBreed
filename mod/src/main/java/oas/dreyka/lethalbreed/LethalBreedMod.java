@@ -2,6 +2,7 @@ package oas.dreyka.lethalbreed;
 
 import oas.dreyka.lethalbreed.dimension.DimensionManager;
 import oas.dreyka.lethalbreed.entity.ZombieRegistry;
+import oas.dreyka.lethalbreed.init.AddonInit;
 import oas.dreyka.lethalbreed.init.BootstrapInit;
 import oas.dreyka.lethalbreed.init.CommandInit;
 import oas.dreyka.lethalbreed.init.EntityEventsInit;
@@ -39,6 +40,7 @@ public final class LethalBreedMod implements ModInitializer {
         // write, which would delete a developer's own dev settings from their own file on first launch.
         devHook("registerConfig");
         BootstrapInit.run();
+        AddonInit.register(); // other mods' entry points, before anything reads a registry
         EntityEventsInit.register(REGISTRY, DIMENSIONS);
         TickInit.register(SCHEDULER);
         CommandInit.register();

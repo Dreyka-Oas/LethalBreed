@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.phase;
 
+import oas.dreyka.lethalbreed.api.LethalBreedApi;
 import oas.dreyka.lethalbreed.config.domain.ProgressionConfig;
 
 import net.minecraft.ChatFormatting;
@@ -106,13 +107,9 @@ public final class PhaseManager {
             return;
         }
         if (now - lastAdvanceGameTime >= nextIntervalTicks) {
-            phase = clampPhase(applyCeiling(phase + 1));
-            lastAdvanceGameTime = now;
-            scheduleNext();
-            persist();
+            setPhase(server, applyCeiling(phase + 1));
             oas.dreyka.lethalbreed.LethalBreed.LOGGER.info(
                     "[LethalBreed] phase advanced -> {} (worldAge={})", phase, now);
-            broadcast(server);
         }
     }
 
@@ -131,15 +128,18 @@ public final class PhaseManager {
         nextIntervalTicks = Math.max(1, ProgressionConfig.phaseIntervalTicks + j);
     }
 
-    /** Force a phase (e.g. the dev-only /lethalphase command) and announce it. Manual override ignores the configurable
+    /** The one road to a new phase: the auto-advance above and the dev-only /lethalphase command both come
+     *  through here, so an addon listener hears every change. Forcing a phase ignores the configurable
      *  {@code phaseMax} (an admin can deliberately force any phase past the auto-advance ceiling) but
      *  NOT the hard {@link #MAX_PHASE} ceiling, which exists to keep the spawn loop finite. */
     public void setPhase(MinecraftServer server, int p) {
+        int previous = phase;
         phase = clampPhase(p);
         lastAdvanceGameTime = server.overworld().getGameTime();
         scheduleNext();
         persist();
         broadcast(server);
+        LethalBreedApi.firePhaseChanged(previous, phase);
     }
 
     public void broadcast(MinecraftServer server) {
