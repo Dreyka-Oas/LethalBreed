@@ -6,6 +6,7 @@ import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
 import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
 import oas.dreyka.lethalbreed.config.domain.engine.ExpertConfig;
 import oas.dreyka.lethalbreed.config.domain.engine.FlowConfig;
+import oas.dreyka.lethalbreed.config.domain.move.LeapConfig;
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.config.domain.ProgressionConfig;
 import oas.dreyka.lethalbreed.config.domain.engine.SchedulerConfig;
@@ -46,6 +47,7 @@ public final class ConfigSchema {
             FlowConfig.class,
             TargetingConfig.class,
             WorldSpawnConfig.class,
+            LeapConfig.class, // must stay right before CombatMoveConfig, see its javadoc
             CombatMoveConfig.class,
             // These two were one holder (ProgressionConfig). They MUST stay adjacent and in this order:
             // ConfigSchema.all() order is the on-disk write order within a category (ConfigSchemaOrderTest).

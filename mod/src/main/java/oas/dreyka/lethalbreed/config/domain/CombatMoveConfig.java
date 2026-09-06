@@ -1,31 +1,12 @@
 package oas.dreyka.lethalbreed.config.domain;
 
 /**
- * Movement combat: leap/pounce, water swim/dive/float, climb pacing, descend/safe-drop, melee stop range
- * and the progressive block breaking / block-ops budget.
+ * Movement combat: water swim/dive/float, climb pacing, descend/safe-drop, melee stop range and the
+ * progressive block breaking / block-ops budget. The leap and its cling live on
+ * {@link oas.dreyka.lethalbreed.config.domain.move.LeapConfig}.
  */
 public final class CombatMoveConfig {
     private CombatMoveConfig() {}
-
-    // ---- Leap / pounce ----
-    /** Zombies occasionally lunge at a target to catch it. */
-    public static boolean leapEnabled = true;
-    /** Activations between possible leaps (per zombie). */
-    public static int leapCooldownActivations = 12;
-    /** Chance to leap on an eligible activation. */
-    public static float leapChance = 0.4f;
-    /** Leap only when the target is between these horizontal distances. */
-    public static double leapMinRange = 2.5;
-    public static double leapMaxRange = 8.0;
-    /** Leap velocity. */
-    public static double leapHorizontalSpeed = 0.55;
-    public static double leapUpward = 0.42;
-    /** Max absolute vertical offset (blocks) to target for a leap to fire (too high/low = no pounce). */
-    public static double leapMaxVerticalDiff = 3.0;
-    /** Horizontal distance (blocks) ahead a leap probes for solid ground before committing (never leap into a gap). */
-    public static int leapLandingScanDist = 3;
-    /** Vertical depth (blocks below foot level) the leap-landing probe scans for ground. */
-    public static int leapLandingScanDepth = 3;
 
     /** Max vertical blocks a zombie breaks to pass an obstacle (size-aware, ceil of its height). */
     public static int maxBreakHeight = 4;

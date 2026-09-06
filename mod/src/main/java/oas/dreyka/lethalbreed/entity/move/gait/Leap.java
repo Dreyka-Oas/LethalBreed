@@ -3,7 +3,7 @@ package oas.dreyka.lethalbreed.entity.move.gait;
 import oas.dreyka.lethalbreed.entity.move.MoveMath;
 
 
-import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
+import oas.dreyka.lethalbreed.config.domain.move.LeapConfig;
 
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.entity.ZombieState;
@@ -42,16 +42,16 @@ public final class Leap {
      * true when it leapt (the caller should let the arc carry the zombie this activation).
      */
     public boolean tryLeap(ServerLevel level, double dx, double dz, double dy, double horizSq) {
-        if (!CombatMoveConfig.leapEnabled || owner.isClimbing() || !entity.onGround() || leapCd > 0) {
+        if (!LeapConfig.leapEnabled || owner.isClimbing() || !entity.onGround() || leapCd > 0) {
             return false;
         }
         double horiz = Math.sqrt(horizSq);
         double ldf = MoveMath.leapDistanceFactor(entity); // custom LEAP effect → farther reach (1.0 if absent)
-        double lo = Math.min(CombatMoveConfig.leapMinRange, CombatMoveConfig.leapMaxRange);
-        double hi = Math.max(CombatMoveConfig.leapMinRange, CombatMoveConfig.leapMaxRange);
+        double lo = Math.min(LeapConfig.leapMinRange, LeapConfig.leapMaxRange);
+        double hi = Math.max(LeapConfig.leapMinRange, LeapConfig.leapMaxRange);
         if (horiz < lo || horiz > hi * ldf
-                || Math.abs(dy) >= CombatMoveConfig.leapMaxVerticalDiff
-                || entity.getRandom().nextFloat() >= CombatMoveConfig.leapChance) {
+                || Math.abs(dy) >= LeapConfig.leapMaxVerticalDiff
+                || entity.getRandom().nextFloat() >= LeapConfig.leapChance) {
             return false;
         }
         double inv = 1.0 / horiz;
@@ -61,11 +61,11 @@ public final class Leap {
         if (!hasLanding(level, ndx, ndz, ldf)) {
             return false;
         }
-        entity.setDeltaMovement(ndx * CombatMoveConfig.leapHorizontalSpeed * leapFactor * ldf,
-                MoveMath.jumpVelocity(entity, CombatMoveConfig.leapUpward * leapFactor),
-                ndz * CombatMoveConfig.leapHorizontalSpeed * leapFactor * ldf);
+        entity.setDeltaMovement(ndx * LeapConfig.leapHorizontalSpeed * leapFactor * ldf,
+                MoveMath.jumpVelocity(entity, LeapConfig.leapUpward * leapFactor),
+                ndz * LeapConfig.leapHorizontalSpeed * leapFactor * ldf);
         entity.hurtMarked = true;
-        leapCd = CombatMoveConfig.leapCooldownActivations;
+        leapCd = LeapConfig.leapCooldownActivations;
         owner.setState(ZombieState.PURSUING_PLAYER);
         return true;
     }
@@ -79,11 +79,11 @@ public final class Leap {
      * probe by the same factor keeps the check aimed where the zombie will actually come down.
      */
     private boolean hasLanding(ServerLevel level, double ndx, double ndz, double ldf) {
-        int dist = Mth.ceil(CombatMoveConfig.leapLandingScanDist * Math.max(1.0, ldf));
+        int dist = Mth.ceil(LeapConfig.leapLandingScanDist * Math.max(1.0, ldf));
         int lx = Mth.floor(entity.getX() + ndx * dist);
         int lz = Mth.floor(entity.getZ() + ndz * dist);
         int ly = Mth.floor(entity.getY());
-        for (int yy = ly + 1; yy >= ly - CombatMoveConfig.leapLandingScanDepth; yy--) {
+        for (int yy = ly + 1; yy >= ly - LeapConfig.leapLandingScanDepth; yy--) {
             if (level.getBlockState(new BlockPos(lx, yy, lz)).blocksMotion()) {
                 return true;
             }

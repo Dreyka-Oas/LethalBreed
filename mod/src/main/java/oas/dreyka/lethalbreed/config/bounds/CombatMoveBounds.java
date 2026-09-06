@@ -46,6 +46,12 @@ public final class CombatMoveBounds {
         r.b("breakConcentrationCap", 1, 32);
         r.b("leapLandingScanDist", 1, 64);
         r.b("leapLandingScanDepth", 1, 64);
+        r.b("leapClingMinSeconds", 0, 60);
+        r.b("leapClingMaxSeconds", 0, 60);
+        r.b("leapClingDamage", 0, 100);
+        r.b("leapClingReachSq", 0, 64);
+        r.b("leapClingMaxDropBelow", 0, 16);
+        r.b("leapClingCooldownActivations", 0, 1000);
         r.b("waterSubmergeOffset", 0, 8);
         r.b("waterArriveDistance", 0, 8);
         r.b("waterVelocityBlend", 0, 1);
