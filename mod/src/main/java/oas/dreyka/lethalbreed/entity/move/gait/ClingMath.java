@@ -81,6 +81,11 @@ public final class ClingMath {
      * @param free whether a box of that shape has the world to itself where it has been put
      */
     public static Vec3 perch(AABB prey, AABB body, Predicate<AABB> free) {
-        return above(prey);
+        Vec3 top = above(prey);
+        if (free.test(body.move(top))) {
+            return top;
+        }
+        Vec3 shared = inside(prey);
+        return free.test(body.move(shared)) ? shared : null;
     }
 }
