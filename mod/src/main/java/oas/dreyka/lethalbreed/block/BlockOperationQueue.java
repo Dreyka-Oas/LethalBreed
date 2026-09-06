@@ -35,7 +35,7 @@ public final class BlockOperationQueue {
         }
     }
 
-    /** Apply up to the per-tick budget of placements. */
+    /** Examine up to the per-tick budget of queued positions, placing the ones that still qualify. */
     public void drain(Level level, PlacedBlockTracker tracker, long tick) {
         int budget = CombatMoveConfig.blockOpsPerTick;
 

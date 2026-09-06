@@ -125,7 +125,8 @@ public final class CombatMoveConfig {
     /** Master toggle for ALL world mutation (breaks + placements/bridge/pillar). false = pure vanilla
      *  pathing, zero block ops. Gated at BreakManager.request and BlockOperationQueue.enqueuePlace. */
     public static boolean blockOpsEnabled = true;
-    /** Max placement ops applied per tick per dimension (the place queue; breaks run via BreakManager). */
+    /** Max queued placements examined per tick per dimension, refusals included (the place queue; breaks run
+     *  via BreakManager). */
     public static int blockOpsPerTick = 20;
     /** Pending-op queue cap; ops past this are dropped until it drains. */
     public static int blockOpsQueueCap = 500;
