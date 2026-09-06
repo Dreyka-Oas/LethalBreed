@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.mixin.client.model;
 
+import oas.dreyka.lethalbreed.client.LimbPose;
 import oas.dreyka.lethalbreed.client.ZombieRenderFlags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -32,9 +33,7 @@ public abstract class PlayerModelZombieArmsMixin extends HumanoidModel<AvatarRen
             return;
         }
         // Classic zombie stance: both arms straight out (~90° forward), no swing, slight inward tilt.
-        // Fully qualified: HumanoidModel declares its own nested ArmPose enum, which this mixin inherits
-        // and which would otherwise shadow the imported oas.dreyka.lethalbreed.client.ArmPose helper.
-        oas.dreyka.lethalbreed.client.ArmPose.set(this.rightArm, -1.5f, 0.0f, 0.05f);
-        oas.dreyka.lethalbreed.client.ArmPose.set(this.leftArm, -1.5f, 0.0f, -0.05f);
+        LimbPose.set(this.rightArm, -1.5f, 0.0f, 0.05f);
+        LimbPose.set(this.leftArm, -1.5f, 0.0f, -0.05f);
     }
 }

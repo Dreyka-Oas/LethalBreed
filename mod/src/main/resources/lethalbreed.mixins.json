@@ -30,6 +30,7 @@
     "client.render.LivingEntityRendererMixin",
     "client.ZombieBellySmoothingMixin",
     "client.model.ZombieBellyModelMixin",
+    "client.model.ZombieClingPoseMixin",
     "client.model.ZombieSleepArmsMixin"
   ],
   "injectors": {

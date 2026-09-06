@@ -26,6 +26,9 @@ public class LivingEntityRenderStateMixin implements ZombieRenderFlags {
     @Unique
     private boolean lethalbreed$sleeping;
 
+    @Unique
+    private boolean lethalbreed$clinging;
+
     @Override
     public float lethalbreed$bellyCharge() {
         return lethalbreed$bellyCharge;
@@ -64,5 +67,15 @@ public class LivingEntityRenderStateMixin implements ZombieRenderFlags {
     @Override
     public void lethalbreed$sleeping(boolean sleeping) {
         this.lethalbreed$sleeping = sleeping;
+    }
+
+    @Override
+    public boolean lethalbreed$clinging() {
+        return lethalbreed$clinging;
+    }
+
+    @Override
+    public void lethalbreed$clinging(boolean clinging) {
+        this.lethalbreed$clinging = clinging;
     }
 }

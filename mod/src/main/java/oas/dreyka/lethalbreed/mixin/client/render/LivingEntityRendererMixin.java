@@ -18,9 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 
 /**
- * Copies synced zombie-only cosmetic state (BOMBER belly charge) onto the render
- * state each frame, so model mixins can react without touching the entity. Runs for every living entity
- * (cheap guard); non-zombies write the neutral defaults, resetting shared model parts on the next frame.
+ * Copies synced zombie-only cosmetic state (BOMBER belly charge, the day-sleeping bit, the cling) onto the
+ * render state each frame, so model mixins can react without touching the entity. Runs for every living
+ * entity (cheap guard); non-zombies write the neutral defaults, resetting shared model parts on the next
+ * frame.
  */
 @Environment(EnvType.CLIENT)
 @Mixin(LivingEntityRenderer.class)
@@ -30,7 +31,7 @@ public class LivingEntityRendererMixin {
     // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
     // render mod injecting into the same target should cost a visual effect, not the whole game.
     @Inject(require = 0, method = "extractRenderState", at = @At("TAIL"))
-    private void lethalbreed$carryBellyCharge(LivingEntity entity, LivingEntityRenderState state,
+    private void lethalbreed$carryZombieFlags(LivingEntity entity, LivingEntityRenderState state,
                                               float partialTick, CallbackInfo ci) {
         float charge = entity instanceof Zombie
                 ? entity.getAttachedOrElse(SpecialAttachment.BOMBER_CHARGE, 0.0f)
@@ -45,9 +46,11 @@ public class LivingEntityRendererMixin {
         // handed to the model, written once per frame below.
         flags.lethalbreed$bellyChargeDisplayed(smoothedBellyCharge(entity, charge));
 
-        boolean sleeping = entity instanceof Zombie
-                && entity.getAttachedOrElse(ZombieStateAttachment.SLEEPING, false);
-        ((ZombieRenderFlags) state).lethalbreed$sleeping(sleeping);
+        boolean zombie = entity instanceof Zombie;
+        flags.lethalbreed$sleeping(zombie
+                && entity.getAttachedOrElse(ZombieStateAttachment.SLEEPING, false));
+        flags.lethalbreed$clinging(zombie
+                && entity.getAttachedOrElse(ZombieStateAttachment.CLINGING, false));
     }
 
     /** Pulls the displayed belly charge toward {@code target}, using the previous value + timestamp

@@ -3,9 +3,9 @@ package oas.dreyka.lethalbreed.client;
 /**
  * Duck interface mixed into {@code LivingEntityRenderState}, carrying every mod-specific render flag from
  * the entity (read in an {@code extractRenderState} hook) to the client models and layers, which have no
- * access to the entity itself post render-state refactor. Currently three unrelated flags: the BOMBER belly
- * charge, the hallucinate-as-zombie swap and the day-sleeping pose. Non-zombies leave them all at their
- * neutral value.
+ * access to the entity itself post render-state refactor. Currently four unrelated flags: the BOMBER belly
+ * charge, the hallucinate-as-zombie swap, the day-sleeping pose and the cling. Non-zombies leave them all at
+ * their neutral value.
  *
  * <p>Add a new render-state accessor HERE (not in a mixin class) and populate it in the matching extract hook.
  *
@@ -43,4 +43,11 @@ public interface ZombieRenderFlags {
     boolean lethalbreed$sleeping();
 
     void lethalbreed$sleeping(boolean sleeping);
+
+    /** True when the zombie this render state belongs to is latched onto a victim: pose it clinging (limbs
+     *  clamped, head worrying at the prey, see {@link ClingPose}). Set in
+     *  {@code LivingEntityRendererMixin.extractRenderState}, read in {@code ZombieClingPoseMixin}. */
+    boolean lethalbreed$clinging();
+
+    void lethalbreed$clinging(boolean clinging);
 }
