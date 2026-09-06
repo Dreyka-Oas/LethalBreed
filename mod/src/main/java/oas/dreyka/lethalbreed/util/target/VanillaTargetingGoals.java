@@ -54,8 +54,10 @@ public final class VanillaTargetingGoals {
      *  was emptied here without anyone being told. Once per class, not once per zombie. */
     private static void warnOnce(String cls) {
         if (WARNED.add(cls)) {
-            LethalBreed.LOGGER.warn("[LethalBreed] removing foreign targeting goal {} (forceNearestTarget=true). "
-                    + "Declare your namespace with LethalBreedApi.allowAiNamespace to be told about this once.", cls);
+            LethalBreed.LOGGER.warn("[LethalBreed] removed foreign targeting goal {}: forceNearestTarget=true empties "
+                    + "the whole target selector. Set forceNearestTarget=false in config/oas/lethalbreed.json to keep it. "
+                    + "Calling LethalBreedApi.allowAiNamespace silences this line and the conflict scan, it does not "
+                    + "keep the goal.", cls);
         }
     }
 
