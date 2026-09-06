@@ -1,0 +1,68 @@
+package oas.dreyka.lethalbreed.mixin.client.render;
+
+import oas.dreyka.lethalbreed.client.ZombieRenderFlags;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+
+/**
+ * Adds the BOMBER belly-charge field to every living render state. See {@link ZombieRenderFlags}.
+ */
+@Environment(EnvType.CLIENT)
+@Mixin(LivingEntityRenderState.class)
+public class LivingEntityRenderStateMixin implements ZombieRenderFlags {
+
+    @Unique
+    private float lethalbreed$bellyCharge;
+
+    @Unique
+    private float lethalbreed$bellyChargeDisplayed;
+
+    @Unique
+    private boolean lethalbreed$hallucinateZombie;
+
+    @Unique
+    private boolean lethalbreed$sleeping;
+
+    @Override
+    public float lethalbreed$bellyCharge() {
+        return lethalbreed$bellyCharge;
+    }
+
+    @Override
+    public void lethalbreed$bellyCharge(float charge) {
+        this.lethalbreed$bellyCharge = charge;
+    }
+
+    @Override
+    public float lethalbreed$bellyChargeDisplayed() {
+        return lethalbreed$bellyChargeDisplayed;
+    }
+
+    @Override
+    public void lethalbreed$bellyChargeDisplayed(float charge) {
+        this.lethalbreed$bellyChargeDisplayed = charge;
+    }
+
+    @Override
+    public boolean lethalbreed$hallucinateZombie() {
+        return lethalbreed$hallucinateZombie;
+    }
+
+    @Override
+    public void lethalbreed$hallucinateZombie(boolean on) {
+        this.lethalbreed$hallucinateZombie = on;
+    }
+
+    @Override
+    public boolean lethalbreed$sleeping() {
+        return lethalbreed$sleeping;
+    }
+
+    @Override
+    public void lethalbreed$sleeping(boolean sleeping) {
+        this.lethalbreed$sleeping = sleeping;
+    }
+}

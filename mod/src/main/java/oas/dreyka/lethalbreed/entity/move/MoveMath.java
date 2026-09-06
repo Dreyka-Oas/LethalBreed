@@ -1,0 +1,112 @@
+package oas.dreyka.lethalbreed.entity.move;
+
+import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
+import oas.dreyka.lethalbreed.config.domain.engine.ExpertConfig;
+import oas.dreyka.lethalbreed.config.domain.WorldSpawnConfig;
+
+import oas.dreyka.lethalbreed.block.MaterialRegistry;
+import oas.dreyka.lethalbreed.dimension.WorldAiContext;
+import oas.dreyka.lethalbreed.effect.LethalBreedEffects;
+import oas.dreyka.lethalbreed.entity.SmartZombie;
+import oas.dreyka.lethalbreed.entity.ZombieState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.state.BlockState;
+
+/** Shared leaf math/helpers for the zombie movement steps. Stateless, no Minecraft-side mutation. */
+public final class MoveMath {
+    private MoveMath() {
+    }
+
+    /** Quantise a signed delta to a cardinal step: +1 / -1 / 0 (dead-zone within 0.5). */
+    public static int stepSign(double d) {
+        double dz = ExpertConfig.expertStepDeadzone;
+        return d > dz ? 1 : (d < -dz ? -1 : 0);
+    }
+
+    /** Clear one body-space cell for a step: if a breakable solid stands at {@code pos}, request its progressive
+     *  break, set the zombie to {@code busyState} and return true (the caller should hold/wait this tick). Returns
+     *  false when the cell is already clear or unbreakable (the single place the descent steps clear their path). */
+    public static boolean requestBreakBodyBlock(SmartZombie owner, ServerLevel level, WorldAiContext ctx,
+            BlockPos pos, BlockState state, ZombieState busyState) {
+        if (state.blocksMotion() && breakableSolid(level, pos)) {
+            ctx.breakManager().request(pos, owner.entity());
+            owner.setState(busyState);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Fall the zombie would take stepping into column (x,z) from feet-level {@code y}: 0 = flat ground
+     * straight ahead, 1 = a one-block step-down, etc. {@link Integer#MAX_VALUE} when no solid landing is
+     * found within {@code max} below, a genuine pit / unsafe fall it should bridge or stair instead.
+     * The scanned column is clear above the landing by construction, so the fall path is unobstructed.
+     */
+    public static int fallDistanceInto(ServerLevel level, int x, int y, int z, int max) {
+        for (int yy = y - 1; yy >= y - 1 - max; yy--) {
+            if (level.getBlockState(new BlockPos(x, yy, z)).blocksMotion()) {
+                return (y - 1) - yy;
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
+
+    /**
+     * An upward jump impulse with the live Jump Boost effect folded in. So a zombie given the potion (or any
+     * mod adding the effect) jumps higher dynamically, exactly like vanilla {@code getJumpPower()} adds
+     * {@code 0.1 * (amplifier + 1)}. Never hard-codes the boost; reads the current effect each jump.
+     */
+    public static double jumpVelocity(LivingEntity entity, double base) {
+        MobEffectInstance jump = entity.getEffect(MobEffects.JUMP_BOOST);
+        return jump != null ? base + 0.1 * (jump.getAmplifier() + 1) : base;
+    }
+
+    /**
+     * Horizontal multiplier for the leap, folding in the custom {@link LethalBreedEffects#LEAP} effect, the
+     * horizontal analogue of {@link #jumpVelocity}: each level adds {@code leapEffectPerLevel} to the reach.
+     * Returns 1.0 when the zombie doesn't carry the effect. Read live each leap (dynamic, never hard-coded).
+     */
+    public static double leapDistanceFactor(LivingEntity entity) {
+        MobEffectInstance e = entity.getEffect(LethalBreedEffects.LEAP);
+        return e != null ? 1.0 + WorldSpawnConfig.leapEffectPerLevel * (e.getAmplifier() + 1) : 1.0;
+    }
+
+    /**
+     * How many vertical blocks the zombie must clear to walk through: its actual occupied height
+     * (`getBbHeight`, which already reflects the per-zombie SCALE), rounded up. Capped by {@code
+     * maxBreakHeight} so a giant doesn't bore a huge tunnel, floored at 1.
+     */
+    public static int breakHeight(LivingEntity entity) {
+        int n = (int) Math.ceil(entity.getBbHeight() - ExpertConfig.expertBreakHeightEpsilon);
+        return Math.max(1, Math.min(n, CombatMoveConfig.maxBreakHeight));
+    }
+
+    /** Turn the entity to face a horizontal heading (yaw from the XZ vector), pitch untouched. No-op on a
+     *  degenerate heading (|h| ≤ 1e-2) so a zombie sitting on its target doesn't snap to a junk yaw. */
+    public static void faceHeading(LivingEntity entity, double hx, double hz) {
+        if (hx * hx + hz * hz <= ExpertConfig.expertHeadingEpsilon) { // (1e-2)^2, same gate as the callers, no sqrt
+            return;
+        }
+        float yaw = (float) (Mth.atan2(hz, hx) * (180.0 / Math.PI)) - 90.0f;
+        entity.setYRot(yaw);
+        entity.yBodyRot = yaw;
+        entity.yHeadRot = yaw;
+    }
+
+    /** True if (x,y,z) is a motion-blocking block the configured material rules allow breaking. */
+    public static boolean breakableSolid(ServerLevel level, BlockPos p) {
+        BlockState s = level.getBlockState(p);
+        return s.blocksMotion() && MaterialRegistry.isBreakable(level, p, s);
+    }
+
+    /** Locale.ROOT for the same reason DevVerdict.fmt uses it: these numbers land in a log a script reads, and
+     *  a French JVM would print 14,1 next to DevVerdict's 14.07 in the same file. */
+    public static String f1(double v) {
+        return String.format(java.util.Locale.ROOT, "%.1f", v);
+    }
+}

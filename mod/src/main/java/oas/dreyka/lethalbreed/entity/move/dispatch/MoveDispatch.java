@@ -1,0 +1,69 @@
+package oas.dreyka.lethalbreed.entity.move.dispatch;
+
+import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
+import oas.dreyka.lethalbreed.config.domain.engine.FlowConfig;
+import oas.dreyka.lethalbreed.dimension.WorldAiContext;
+import oas.dreyka.lethalbreed.entity.LodLevel;
+import oas.dreyka.lethalbreed.entity.SmartZombie;
+import oas.dreyka.lethalbreed.entity.move.gait.Descend;
+import oas.dreyka.lethalbreed.entity.move.MoveMath;
+import oas.dreyka.lethalbreed.entity.move.gait.Obstacle;
+import oas.dreyka.lethalbreed.entity.move.gait.climb.PillarClimb;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+
+/**
+ * Final movement-mode selection once the zombie has navigated toward its target: whether it has arrived
+ * (melee, no block ops), or must climb to an overhead target, descend to a lower one, or break/bridge a
+ * lateral obstacle. Pure decision + delegation to the leaf step units.
+ */
+public final class MoveDispatch {
+    private MoveDispatch() {
+    }
+
+    public static void choose(SmartZombie owner, ServerLevel level, WorldAiContext ctx, PillarClimb pillar,
+                              LivingEntity te, double dx, double dz, double dy, double horizSq,
+                              boolean stuck, int bx, int bz, boolean breaking) {
+        // Arrived (in range + line of sight) → let vanilla melee finish it; do no block ops.
+        boolean canHit = te != null && te.isAlive()
+                && horizSq <= CombatMoveConfig.meleeStopRange * CombatMoveConfig.meleeStopRange
+                && Math.abs(dy) <= CombatMoveConfig.meleeStopHeight
+                && owner.entity().getSensing().hasLineOfSight(te);
+        if (canHit) {
+            return;
+        }
+
+        // HIGH/MEDIUM climb/descend to reach an elevated/lower target; LOW/FROZEN stay ground-only.
+        boolean canClimbLod = owner.lod() == LodLevel.HIGH || owner.lod() == LodLevel.MEDIUM;
+        if (!canClimbLod) {
+            return;
+        }
+        double climbR = FlowConfig.climbHorizRadius;
+        boolean targetOverhead = dy >= FlowConfig.climbThreshold && horizSq <= climbR * climbR;
+        boolean targetUnderfoot = dy <= -CombatMoveConfig.descendThreshold && horizSq <= climbR * climbR;
+        int sdx = MoveMath.stepSign(dx);
+        int sdz = MoveMath.stepSign(dz);
+        if (targetOverhead) {
+            // Build a dirt pillar to reach an overhead target, but only once genuinely STUCK (no horizontal
+            // progress), otherwise keep walking toward the wall/target this tick, so a zombie still 2-5 blocks
+            // out reaches the base instead of pillaring a dirt tower in open ground short of it. The pillar
+            // always places blocks under itself (it stands on what it builds), never a bare velocity wall-scale.
+            if (stuck) {
+                pillar.initiate();
+            }
+        } else if (targetUnderfoot) {
+            Descend.step(owner, level, ctx, sdx, sdz);
+        } else if (stuck) {
+            if (dy <= -CombatMoveConfig.descendThreshold) {
+                Descend.step(owner, level, ctx, sdx, sdz);
+            } else {
+                // The hunt target's cell (zombie pos + deltas): lets the breach coordinator group zombies
+                // converging on the SAME target/wall so they focus one breach at a time.
+                BlockPos target = BlockPos.containing(owner.entity().getX() + dx,
+                        owner.entity().getY() + dy, owner.entity().getZ() + dz);
+                Obstacle.handleToward(owner, level, ctx, bx, bz, sdx, sdz, target, breaking);
+            }
+        }
+    }
+}

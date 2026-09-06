@@ -16,10 +16,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.dreykaoas.lethalbreed.LethalBreedMod"
+      "oas.dreyka.lethalbreed.LethalBreedMod"
     ],
     "client": [
-      "com.dreykaoas.lethalbreed.client.LethalBreedClient"
+      "oas.dreyka.lethalbreed.client.LethalBreedClient"
     ]
   },
   "mixins": [

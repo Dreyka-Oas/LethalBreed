@@ -20,7 +20,7 @@ base {
 // `unzip -l build/libs/*.jar | grep lethalbreed/dev/` → nothing. It is added to the runClient/runServer
 // classpath, so all of the above runs under `gradlew runServer` / `gradlew runClient` only.
 //
-// main keeps exactly one seam back into this source set: com.dreykaoas.lethalbreed.probe.DevProbe. Timings,
+// main keeps exactly one seam back into this source set: oas.dreyka.lethalbreed.probe.DevProbe. Timings,
 // counters and traces measure things that happen INSIDE main-source code (a tick, a stage, a hit), so they
 // cannot be observed purely from dev, so main has to call out to record them. DevProbe is that single call-out:
 // a volatile sink field plus cheap gate checks, wired up by DevBootstrap (in dev) through the existing
@@ -92,7 +92,7 @@ tasks.named<JavaCompile>("compileJava") {
 // reads), and FlowFieldPerfBench alone cost 2.5 s of the suite's 3.2 s. Gating them on a system property
 // rather than on @Disabled keeps them genuinely runnable: `--tests` selects tests, it does not re-enable a
 // disabled one, and the test JVM is forked so a bare -D on the Gradle command line never reaches it.
-//   ./gradlew test -Plb.bench=true --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"
+//   ./gradlew test -Plb.bench=true --tests "oas.dreyka.lethalbreed.ai.flowfield.FlowFieldPerfBench"
 // A Provider<String> of "true"/"false", not a Boolean. Hence "flag" rather than "enabled", which would
 // invite `if (benchFlag)` and read as already-resolved.
 val benchFlag = providers.gradleProperty("lb.bench").orElse("false")
