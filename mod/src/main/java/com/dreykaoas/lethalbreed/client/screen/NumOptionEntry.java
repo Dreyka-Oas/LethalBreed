@@ -25,7 +25,10 @@ public final class NumOptionEntry extends OptionEntry {
 
     public NumOptionEntry(Font font, ConfigScreenData.Row row, BiConsumer<String, String> onChange, String gpuInfo) {
         super(font, row, onChange, gpuInfo);
-        this.edit = new EditBox(font, 0, 0, 70, 16, Component.literal(row.name()));
+        // The narration message, read aloud when the field takes focus: the label the row shows, not the
+        // Java field name, with the same fallback as OptionEntry.drawLabel.
+        this.edit = new EditBox(font, 0, 0, 70, 16,
+                Component.translatableWithFallback("lethalbreed.option." + row.name(), row.name()));
         this.edit.setMaxLength(row.kind().equals("list") ? 256 : 32);
         this.edit.setValue(value);
         this.edit.setResponder(text -> {

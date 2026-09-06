@@ -2,6 +2,7 @@ package com.dreykaoas.lethalbreed.client.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,14 @@ public final class OptionList extends ContainerObjectSelectionList<OptionEntry> 
         String f = filter.toLowerCase(Locale.ROOT);
         for (ConfigScreenData.Row r : rows) {
             boolean catOk = category == null || category.equals(r.category());
-            boolean nameOk = f.isEmpty() || r.name().toLowerCase(Locale.ROOT).contains(f);
+            // Searched on the label the row actually shows, same fallback as OptionEntry.drawLabel, else a
+            // French player typing a French word finds nothing. The field name stays searchable for whoever
+            // knows the config key.
+            String label = Component.translatableWithFallback(
+                    "lethalbreed.option." + r.name(), r.name()).getString();
+            boolean nameOk = f.isEmpty()
+                    || r.name().toLowerCase(Locale.ROOT).contains(f)
+                    || label.toLowerCase(Locale.ROOT).contains(f);
             if (catOk && nameOk) {
                 addEntry("bool".equals(r.kind())
                         ? new BoolOptionEntry(minecraft.font, r, onChange, gpuInfo)

@@ -3,6 +3,7 @@ package com.dreykaoas.lethalbreed.command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,8 +57,11 @@ public final class LookTarget {
         return best != null ? best : player;
     }
 
-    /** How to name a target in command feedback: a player by its account name, anything else by its type. */
-    public static String name(LivingEntity e) {
-        return e instanceof ServerPlayer p ? p.getGameProfile().name() : e.getType().toString();
+    /** How to name a target in command feedback: a player by its account name, anything else by the
+     *  translated name of its type, so each client reads it in its own language. */
+    public static Component name(LivingEntity e) {
+        return e instanceof ServerPlayer p
+                ? Component.literal(p.getGameProfile().name())
+                : e.getType().getDescription();
     }
 }

@@ -1,6 +1,5 @@
 package com.dreykaoas.lethalbreed.command;
 
-import com.dreykaoas.lethalbreed.phase.PhaseConfig;
 import com.dreykaoas.lethalbreed.phase.PhaseManager;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -8,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 
 /**
  * {@code /lethalphase}: tell the sender which difficulty phase the world is on, and nothing else.
@@ -36,11 +36,11 @@ public final class PhaseCommand {
 
     private static int show(CommandContext<CommandSourceStack> ctx) {
         int p = PhaseManager.current();
-        // The name alone, not "Phase p - <name>": PhaseDef.name is built as "Phase " + p, so spelling the
-        // number out as well printed "Phase 1 - Phase 1". Reading it from the def keeps the command
-        // correct if phases ever get real names.
+        // Same key as the advance broadcast, not PhaseDef.name: that field is built as "Phase " + p in
+        // Java and would reach a French player in English. One key for both messages also keeps the
+        // wording of the readout and of the announcement from drifting apart.
         CommandFeedback.success(ctx.getSource(),
-                PhaseConfig.def(p).name(), ChatFormatting.GOLD, false);
+                Component.translatable("lethalbreed.notice.phase", p), ChatFormatting.GOLD, false);
         return p;
     }
 }
