@@ -8,6 +8,7 @@ import oas.dreyka.lethalbreed.init.CommandInit;
 import oas.dreyka.lethalbreed.init.EntityEventsInit;
 import oas.dreyka.lethalbreed.init.LifecycleInit;
 import oas.dreyka.lethalbreed.init.TickInit;
+import oas.dreyka.lethalbreed.special.ShippedVariants;
 import oas.dreyka.lethalbreed.tick.TickScheduler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
@@ -39,6 +40,9 @@ public final class LethalBreedMod implements ModInitializer {
         // the loader is field-driven, so options it cannot match are warned about and dropped on the next
         // write, which would delete a developer's own dev settings from their own file on first launch.
         devHook("registerConfig");
+        // Ahead of the addons on purpose: the eight shipped ids are claimed first, so a mod that happens to
+        // want "bomber" is refused at its own registration instead of blowing up ours.
+        ShippedVariants.register();
         // Before BootstrapInit for the same reason the dev hook is: an addon declares its options here, and
         // an option that joins the schema after the file has been read is one the loader cannot match, so
         // the player's saved value for it is warned about and dropped on the next write. BootstrapInit calls

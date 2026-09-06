@@ -1,5 +1,7 @@
 package oas.dreyka.lethalbreed.special;
 
+import oas.dreyka.lethalbreed.api.variant.SpecialVariant;
+import oas.dreyka.lethalbreed.api.variant.SpecialVariantRegistry;
 import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
 
 import net.minecraft.network.chat.Component;
@@ -26,53 +28,57 @@ public final class SpecialRoller {
         if (r.nextDouble() >= chance) {
             return;
         }
-        List<SpecialType> pool = SpecialType.available(phase);
+        List<SpecialVariant> pool = SpecialVariantRegistry.available(phase);
         if (pool.isEmpty()) {
             return;
         }
-        SpecialType type = pickWeighted(pool, r);
-        assign(z, type);
+        assign(z, pickWeighted(pool, r));
     }
 
-    /** Force a specific type (used by the test command and Splitter children = NONE). */
+    /** Force one of the shipped types. The road the test command and the Splitter's children take. */
     public static void assign(Zombie z, SpecialType type) {
-        // Strip whatever the previous type had already stamped. A Splitter child is spawned, runs the whole
-        // finalizeSpawn chain (including its OWN special roll) and only THEN gets assign(NONE). Returning
+        assign(z, type == SpecialType.NONE ? null : SpecialVariantRegistry.byId(type.id()));
+    }
+
+    /** Force any variant, this mod's or a stranger's; null strips whatever the zombie was carrying. */
+    public static void assign(Zombie z, SpecialVariant variant) {
+        // Strip whatever the previous variant had already stamped. A Splitter child is spawned, runs the whole
+        // finalizeSpawn chain (including its OWN special roll) and only THEN gets assign(null). Returning
         // early left those passives in place: a child re-labelled "none" kept Resistance II, double health and
         // a spc_scale of +0.40 that exactly cancels the -0.40 of split_small, so the "small child" came out
         // full size, twice as tough, and (with specialShowName) still wearing a "Juggernaut" nametag.
-        SpecialType previous = SpecialType.fromId(z.getAttached(SpecialAttachment.SPECIAL));
-        if (previous != type && previous != SpecialType.NONE) {
-            SpecialTraits.clear(z, previous);
+        SpecialVariant previous = SpecialVariantRegistry.byId(z.getAttached(SpecialAttachment.SPECIAL));
+        if (previous != null && previous != variant) {
+            previous.behavior().onUnassign(z);
         }
-        z.setAttached(SpecialAttachment.SPECIAL, type.id());
-        if (type == SpecialType.NONE) {
+        z.setAttached(SpecialAttachment.SPECIAL, variant == null ? SpecialType.NONE.id() : variant.id());
+        if (variant == null) {
             return;
         }
         if (SpecialVariantConfig.specialShowName) {
-            z.setCustomName(Component.translatable(type.translationKey()));
+            z.setCustomName(Component.translatable(variant.translationKey()));
             z.setCustomNameVisible(true);
         }
-        SpecialTraits.apply(z, type);
+        variant.behavior().onSpawn(z);
     }
 
-    private static SpecialType pickWeighted(List<SpecialType> pool, Random r) {
+    private static SpecialVariant pickWeighted(List<SpecialVariant> pool, Random r) {
         int total = 0;
-        for (SpecialType t : pool) {
-            total += t.weight();
+        for (SpecialVariant v : pool) {
+            total += Math.max(0, v.weight().getAsInt());
         }
-        // Every unlocked type is weighted 0, so the player has switched them all off. The old code clamped the
-        // bound to 1 and then fell through to pool.get(size-1), handing back a type whose weight explicitly
+        // Every unlocked variant is weighted 0, so the player has switched them all off. The old code clamped
+        // the bound to 1 and then fell through to pool.get(size-1), handing back a type whose weight explicitly
         // said "never", most visible at phase 2, where the pool is SPRINTER alone and zeroing its weight
         // produced 100 % Sprinters.
         if (total <= 0) {
-            return SpecialType.NONE;
+            return null;
         }
         int pick = r.nextInt(total);
-        for (SpecialType t : pool) {
-            pick -= t.weight();
+        for (SpecialVariant v : pool) {
+            pick -= Math.max(0, v.weight().getAsInt());
             if (pick < 0) {
-                return t;
+                return v;
             }
         }
         return pool.get(pool.size() - 1);

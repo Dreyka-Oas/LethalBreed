@@ -1,17 +1,21 @@
 package oas.dreyka.lethalbreed.special;
 
 import oas.dreyka.lethalbreed.LethalBreed;
+import oas.dreyka.lethalbreed.api.variant.SpecialVariant;
+import oas.dreyka.lethalbreed.api.variant.SpecialVariantRegistry;
 import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
 import oas.dreyka.lethalbreed.dimension.WorldAiContext;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.special.runtime.BomberBlast;
 import oas.dreyka.lethalbreed.special.runtime.SpecialAbilities;
-import oas.dreyka.lethalbreed.special.runtime.SpecialDeath;
+import oas.dreyka.lethalbreed.special.runtime.VariantTickContext;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Runtime behaviour for ACTIVE special zombies (per-activation, cooldown-gated) and DEATH specials. */
@@ -36,12 +40,37 @@ public final class SpecialBehavior {
         return z.getAttachedOrElse(SpecialAttachment.BOMBER_FUSE, 0) > 0;
     }
 
-    /** Called every activation from {@code SmartZombie.tick}; each case self-gates on target + cooldown. */
+    /** Called every activation from {@code SmartZombie.tick}, whoever the variant belongs to. */
     public static void tick(SmartZombie sz, ServerLevel level, WorldAiContext ctx) {
-        SpecialType t = sz.pursuit().special();
-        if (t.kind() != SpecialType.Kind.ACTIVE) {
+        SpecialVariant v = sz.pursuit().variant();
+        if (v == null || v.kind() != SpecialVariant.Kind.ACTIVE) {
             return;
         }
+        run(v, () -> v.behavior().tick(new VariantTickContext(sz, level, ctx)));
+    }
+
+    /**
+     * Call a variant and survive it going wrong.
+     *
+     * <p>Reported once per variant and then swallowed: this runs on every activation of every zombie
+     * carrying it, so a variant that throws reliably would otherwise write the same stack trace a few
+     * hundred times a second and bury everything else in the log.
+     */
+    private static void run(SpecialVariant v, Runnable call) {
+        try {
+            call.run();
+        } catch (Throwable t) {
+            if (BLAMED.add(v.id())) {
+                LethalBreed.LOGGER.error("[LethalBreed] variant {} threw, and is being reported once only",
+                        v.id(), t);
+            }
+        }
+    }
+
+    private static final Set<String> BLAMED = ConcurrentHashMap.newKeySet();
+
+    /** The eight shipped cases, exactly as they were; each self-gates on target + cooldown. */
+    static void shippedTick(SpecialType t, SmartZombie sz, ServerLevel level, WorldAiContext ctx) {
         Zombie z = sz.entity();
         LivingEntity tgt = z.getTarget();
         if (tgt == null) {
@@ -101,8 +130,12 @@ public final class SpecialBehavior {
         }
     }
 
-    /** DEATH special: a Splitter spawns two small, non-special children. */
+    /** DEATH variants act as the zombie dies, while it is still where it stood. */
     public static void onDeath(Zombie z, ServerLevel level) {
-        SpecialDeath.onDeath(z, level);
+        SpecialVariant v = SpecialVariantRegistry.byId(z.getAttached(SpecialAttachment.SPECIAL));
+        if (v == null || v.kind() != SpecialVariant.Kind.DEATH) {
+            return;
+        }
+        run(v, () -> v.behavior().onDeath(z, level));
     }
 }

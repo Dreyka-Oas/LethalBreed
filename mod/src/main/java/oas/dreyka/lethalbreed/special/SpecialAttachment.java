@@ -16,8 +16,19 @@ import net.minecraft.resources.Identifier;
 public final class SpecialAttachment {
     private SpecialAttachment() {}
 
-    public static final AttachmentType<String> SPECIAL = AttachmentRegistry.createPersistent(
-            Identifier.fromNamespaceAndPath("lethalbreed", "special"), Codec.STRING);
+    /**
+     * The variant id. Persisted with the same {@code Codec.STRING} it always was, so a world written by an
+     * older build reads back byte for byte, and now synced to tracking clients as well.
+     *
+     * <p>The sync is what lets a third party draw its own variant. This mod's own eight are recognisable by
+     * their stats and their nametag, but a renderer needs to know which variant it is looking at, and until
+     * now that answer never left the server.
+     */
+    public static final AttachmentType<String> SPECIAL = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "special"),
+            builder -> builder
+                    .persistent(Codec.STRING)
+                    .syncWith(ByteBufCodecs.STRING_UTF8, AttachmentSyncPredicate.all()));
 
     /**
      * BOMBER belly-swell charge, 0..1. Transient (never persisted: a fresh zombie starts at 0) but

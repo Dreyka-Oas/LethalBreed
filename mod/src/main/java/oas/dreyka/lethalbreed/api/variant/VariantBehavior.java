@@ -20,6 +20,15 @@ public interface VariantBehavior {
     default void onSpawn(Zombie zombie) {}
 
     /**
+     * Undo exactly what {@link #onSpawn} stamped, because the zombie is being given another variant.
+     *
+     * <p>Rarer than it sounds and worth writing anyway: a Splitter's child runs its own roll before being
+     * forced back to no variant at all, and whatever the first roll stamped stays on it otherwise. Undo your
+     * own marks and nothing else, so a buff the zombie got from somewhere else survives the relabelling.
+     */
+    default void onUnassign(Zombie zombie) {}
+
+    /**
      * ACTIVE: called on the zombie's own activation, which is not every game tick. The zombie is staggered
      * across buckets for performance, so counting calls measures a config knob rather than time. Read the
      * game time when you need a delay, and use {@link VariantContext#ready} for the shared cooldown.

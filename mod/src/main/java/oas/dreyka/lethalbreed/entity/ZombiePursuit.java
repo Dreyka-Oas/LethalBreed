@@ -1,9 +1,8 @@
 package oas.dreyka.lethalbreed.entity;
 
-import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
+import oas.dreyka.lethalbreed.api.variant.SpecialVariant;
 import oas.dreyka.lethalbreed.pack.rule.PackTether;
-import oas.dreyka.lethalbreed.special.SpecialAttachment;
-import oas.dreyka.lethalbreed.special.SpecialType;
+import oas.dreyka.lethalbreed.special.SpecialSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
@@ -36,14 +35,13 @@ public final class ZombiePursuit {
     private long cellKey = 0L;
     private boolean inGrid = false;
 
-    // Special-variant type (persistent attachment, set at spawn) + its action cooldown.
-    private SpecialType special;
-    private boolean specialResolved = false;
-    private int specialCd = 0;
+    // Special variant (persistent attachment, set at spawn) + its action cooldown. Its own object since a
+    // variant can now come from another mod, and since this class had no room left for the accessor.
+    private final SpecialSlot slot;
 
     public ZombiePursuit(Zombie entity) {
         this.entity = entity;
-        this.special = SpecialType.fromId(entity.getAttached(SpecialAttachment.SPECIAL));
+        this.slot = new SpecialSlot(entity);
     }
 
     // --- target ---
@@ -127,24 +125,18 @@ public final class ZombiePursuit {
     }
 
     // --- special variant ---
-    public SpecialType special() { return special; }
-    public boolean specialReady() { return specialCd <= 0; }
-    public void resetSpecialCd() { specialCd = Math.max(1, SpecialVariantConfig.specialActionInterval); }
-    public boolean isSpecialActive() { return special.kind() == SpecialType.Kind.ACTIVE; }
+    public SpecialVariant variant() { return slot.variant(); }
+    public boolean specialReady() { return slot.ready(); }
+    public void resetSpecialCd() { slot.resetCooldown(); }
+    public boolean isSpecialActive() { return slot.isActive(); }
 
-    /** Re-read the special type from the attachment (used after the test command forces a type). */
+    /** Re-read the variant from the attachment (used after the test command forces one). */
     public void refreshSpecial() {
-        this.special = SpecialType.fromId(entity.getAttached(SpecialAttachment.SPECIAL));
+        slot.refresh(entity);
     }
 
     /** First-tick resolve (attachment reliably present by now) + per-tick cooldown decrement. */
     public void tickSpecial() {
-        if (!specialResolved) {
-            refreshSpecial();
-            specialResolved = true;
-        }
-        if (specialCd > 0) {
-            specialCd--;
-        }
+        slot.tick(entity);
     }
 }

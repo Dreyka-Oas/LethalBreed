@@ -67,7 +67,9 @@ public final class ZombieVariation {
         oas.dreyka.lethalbreed.special.SpecialRoller.roll(z, seeded(z, SPECIAL_SALT),
                 ProgressionConfig.phaseSystemEnabled
                         ? PhaseManager.current()
-                        : oas.dreyka.lethalbreed.special.SpecialType.maxUnlockPhase());
+                        // The registry, not the enum: an addon's variant asking for a later phase than any
+                        // of the eight would otherwise never be reachable on a server with phases off.
+                        : oas.dreyka.lethalbreed.api.variant.SpecialVariantRegistry.maxUnlockPhase());
         // LAST, and it has to stay last: it reads finished attribute values, so every modifier and effect
         // above, including the Juggernaut's health multiplier and the Sprinter's speed, must already be
         // stamped. Moving this call earlier would let exactly those escape the cap.
