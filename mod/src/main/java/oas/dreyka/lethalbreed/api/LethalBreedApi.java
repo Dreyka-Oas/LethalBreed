@@ -1,6 +1,6 @@
 package oas.dreyka.lethalbreed.api;
 
-import oas.dreyka.lethalbreed.LethalBreed;
+import oas.dreyka.lethalbreed.phase.PhaseBus;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -14,8 +14,6 @@ public final class LethalBreedApi {
 
     private static final List<String> AI_NAMESPACES = new CopyOnWriteArrayList<>(
             List.of("net.minecraft.", "oas.dreyka.lethalbreed"));
-
-    private static final List<PhaseChanged> PHASE_LISTENERS = new CopyOnWriteArrayList<>();
 
     /**
      * Declare that goals from {@code prefix} are yours and are not a conflict.
@@ -38,19 +36,17 @@ public final class LethalBreedApi {
         return false;
     }
 
+    /**
+     * Be told when the night progression moves, with the phase left behind and the one just reached.
+     *
+     * <p>Called on the server thread, once the new phase is authoritative, so reading anything that scales
+     * with it inside the listener gives the new value. Opening a world announces the phase it comes back
+     * at, unless that is the phase already in memory, which is the case a fresh world at 0 falls into.
+     *
+     * <p>There is deliberately no way to announce one. A phase belongs to the server and a listener that
+     * heard an invented change would act on a world that never moved.
+     */
     public static void onPhaseChanged(PhaseChanged listener) {
-        PHASE_LISTENERS.add(listener);
-    }
-
-    /** Called by PhaseManager once the new phase is authoritative. A listener that throws must not take the
-     *  server down with it, so each one is isolated. */
-    public static void firePhaseChanged(int from, int to) {
-        for (PhaseChanged l : PHASE_LISTENERS) {
-            try {
-                l.onPhaseChanged(from, to);
-            } catch (Throwable t) {
-                LethalBreed.LOGGER.error("[LethalBreed] addon phase listener failed: {}", t.toString());
-            }
-        }
+        PhaseBus.subscribe(listener);
     }
 }

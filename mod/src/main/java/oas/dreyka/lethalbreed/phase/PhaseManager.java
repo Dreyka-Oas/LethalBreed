@@ -1,6 +1,6 @@
 package oas.dreyka.lethalbreed.phase;
 
-import oas.dreyka.lethalbreed.api.LethalBreedApi;
+import oas.dreyka.lethalbreed.LethalBreed;
 import oas.dreyka.lethalbreed.config.domain.ProgressionConfig;
 
 import net.minecraft.ChatFormatting;
@@ -62,11 +62,12 @@ public final class PhaseManager {
         return INSTANCE.phase;
     }
 
-    /** SERVER_STARTED: bind to the overworld's persisted phase data and restore the cached mirror from it.
-     *  Replaces the old "reset to phase 1 each session": progress now survives a restart. */
+    /** SERVER_STARTED: bind to the overworld's persisted phase data, restore the cached mirror from it and
+     *  announce where the world came back at, so a listener registered at load never starts out blind. */
     public void load(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         store = overworld.getDataStorage().computeIfAbsent(PhaseSavedData.TYPE);
+        int previous = phase;
         // Clamp on restore, not just on write: a save produced before the ceiling existed, or hand-edited,
         // would otherwise reinstate an unbounded phase at every boot.
         phase = clampPhase(store.phase);
@@ -75,13 +76,13 @@ public final class PhaseManager {
         if (store.phase != phase) {
             // Write the repaired value straight back, so the save stops carrying the bad phase even if the
             // session ends before the next advance.
-            oas.dreyka.lethalbreed.LethalBreed.LOGGER.warn(
-                    "[LethalBreed] persisted phase {} is out of range, clamped to {}", store.phase, phase);
+            LethalBreed.LOGGER.warn("[LethalBreed] persisted phase {} is out of range, clamped to {}",
+                    store.phase, phase);
             persist();
         }
-        oas.dreyka.lethalbreed.LethalBreed.LOGGER.info(
-                "[LethalBreed] phase loaded: {} (worldAge={}, nextIn={})",
+        LethalBreed.LOGGER.info("[LethalBreed] phase loaded: {} (worldAge={}, nextIn={})",
                 phase, overworld.getGameTime(), nextIntervalTicks);
+        PhaseBus.fire(previous, phase);
     }
 
     /** Push the cached mirror into the world store and mark it dirty so it is written on the next save. */
@@ -108,8 +109,7 @@ public final class PhaseManager {
         }
         if (now - lastAdvanceGameTime >= nextIntervalTicks) {
             setPhase(server, applyCeiling(phase + 1));
-            oas.dreyka.lethalbreed.LethalBreed.LOGGER.info(
-                    "[LethalBreed] phase advanced -> {} (worldAge={})", phase, now);
+            LethalBreed.LOGGER.info("[LethalBreed] phase advanced -> {} (worldAge={})", phase, now);
         }
     }
 
@@ -139,7 +139,7 @@ public final class PhaseManager {
         scheduleNext();
         persist();
         broadcast(server);
-        LethalBreedApi.firePhaseChanged(previous, phase);
+        PhaseBus.fire(previous, phase);
     }
 
     public void broadcast(MinecraftServer server) {
