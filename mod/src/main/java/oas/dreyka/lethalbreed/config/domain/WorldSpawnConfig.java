@@ -56,9 +56,12 @@ public final class WorldSpawnConfig {
     public static boolean blockBabyZombies = true;
     /** Discard drowned on load (keeps the population to plain zombies). */
     public static boolean blockDrowned = true;
-    /** Strip armor/weapons from zombies. OFF: they keep gear, a held weapon adds melee damage (vanilla)
-     *  and a held tool speeds up their block breaking (see BreakManager). */
-    public static boolean stripZombieEquipment = false;
+    /** Strip armor and weapons from zombies, on a fresh spawn as on a chunk load. ON by default because
+     *  this is what the mod has always played like: the strip used to be unconditional at finalizeSpawn and
+     *  the option only reached the load path, so turning it off never actually left a spawning zombie armed.
+     *  OFF: they keep vanilla gear, a held weapon adds melee damage and a held tool speeds up their block
+     *  breaking (see BreakManager). */
+    public static boolean stripZombieEquipment = true;
     /** Force every zombie type to burn in daylight (husks too); Fire Resistance/helmet/water still protect. */
     public static boolean forceAllZombiesSunBurn = true;
     /** Fire ticks applied per sun-burn trigger (160 = 8s, like vanilla). */
