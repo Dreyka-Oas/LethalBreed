@@ -20,6 +20,14 @@ import net.minecraft.world.entity.player.Player;
 final class ZombieActivation {
     private ZombieActivation() {}
 
+    /** Game ticks one activation stands for. A FROZEN zombie is reclassified once every
+     *  frozenReclassifyDivisor rounds, so anything spending time per activation, the drowning clock first,
+     *  has to be told the longer figure or it runs that many times too slow. */
+    public static int elapsedTicks(boolean frozen) {
+        int buckets = Math.max(1, SchedulerConfig.tickBuckets);
+        return frozen ? buckets * Math.max(1, SchedulerConfig.frozenReclassifyDivisor) : buckets;
+    }
+
     /** Record one profiling checkpoint and return the new "last timestamp", or {@code t} unchanged when
      *  profiling is off. No allocation, safe to call every activation of this hot per-zombie loop. */
     static long mark(int stage, boolean prof, long t) {
@@ -81,7 +89,7 @@ final class ZombieActivation {
         // for FROZEN zombies (whose full tick() below is skipped), because a frozen zombie still bites.
         oas.dreyka.lethalbreed.entity.genes.AttributeCaps.enforce(sz.entity());
         // Alongside the sun for the same reason: a FROZEN zombie with its head under water still drowns.
-        WaterFear.tickWater(level, sz, SchedulerConfig.tickBuckets);
+        WaterFear.tickWater(level, sz, elapsedTicks(lod == LodLevel.FROZEN));
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
         t = mark(DevProbe.SUNBURN, prof, t);
