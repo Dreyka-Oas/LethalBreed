@@ -17,8 +17,9 @@ import net.minecraft.world.phys.Vec3;
  * vehicle's type cannot be serialized, and {@code EntityType.PLAYER} is declared {@code noSave()}, so a
  * zombie can never ride a player, which is the whole point of the feature. The guard is sound: a passenger
  * is written inside its vehicle's data and a player is never written at all, so the zombie would be lost on
- * the next save. It is pinned onto the victim by hand instead, exactly where a passenger would have sat,
- * and a cling ends if the world is reloaded under it.
+ * the next save. It is pinned onto the victim by hand instead, where a passenger would have sat when the
+ * ceiling allows it, and a cling ends if the world is reloaded under it, leaving nothing behind on the
+ * zombie: no flag of ours is persisted, which is what makes that clean.
  *
  * <p><b>Two cadences.</b> {@link #follow()} runs every tick from {@code EveryTickPass} or the zombie trails
  * a block behind a running player. {@link #tick} runs once per activation and is told how much game time
@@ -58,9 +59,9 @@ public final class Cling {
         ticksLeft = ClingMath.durationTicks(entity.getRandom().nextDouble());
         owed = 0.0;
         entity.getNavigation().stop();
-        entity.setNoGravity(true);
         owner.setState(ZombieState.CLINGING);
-        follow();
+        // Placing it is left to follow(): LodBucketPass collects a zombie that latched during the bucket
+        // run it just finished, and the every-tick pass places it before this same tick ends.
         return true;
     }
 
@@ -84,21 +85,26 @@ public final class Cling {
         }
     }
 
-    /** Once per tick: hold the zombie where a passenger would have sat, on top of its prey. */
+    /** Once per tick: hold the zombie on its prey, where {@link ClingMath#perch} says there is room. */
     public void follow() {
         if (!active()) {
             return;
         }
-        if (lost()) {
+        Vec3 feet = lost() ? null : ClingMath.perch(entity, victim);
+        if (feet == null) {
             release();
             return;
         }
         // Re-asserted here, not only at the latch: the brain guards run ahead of the hunt and any of them
         // may have moved the state, which would drop the synced flag the renderer poses from.
         owner.setState(ZombieState.CLINGING);
+        // Gravity is left alone on purpose. Vanilla persists NoGravity from the moment it is true, no cling
+        // survives a reload to clear it again, and a zombie that comes back floating never paths or leaps
+        // again (audit #2, in its other flag). The pin below is the last word of a server tick, after every
+        // entity has moved and after the trackers have gone out, so the fall it undoes is never seen.
         entity.setDeltaMovement(Vec3.ZERO);
         entity.resetFallDistance();
-        entity.setPos(victim.getX(), victim.getY() + victim.getBbHeight(), victim.getZ());
+        entity.setPos(feet.x, feet.y, feet.z);
         entity.setYRot(victim.getYRot());
         entity.setYHeadRot(victim.getYRot());
     }
@@ -130,7 +136,6 @@ public final class Cling {
         ticksLeft = 0;
         owed = 0.0;
         cooldown = LeapConfig.leapClingCooldownActivations;
-        entity.setNoGravity(false);
         if (owner.state() == ZombieState.CLINGING) {
             owner.setState(ZombieState.PURSUING_PLAYER);
         }
