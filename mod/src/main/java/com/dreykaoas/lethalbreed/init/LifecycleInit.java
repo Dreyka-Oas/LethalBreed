@@ -69,6 +69,15 @@ public final class LifecycleInit {
 
         ConfigNotice.register();
 
+        // Every world save, autosave included, and not only the shutdown one below: SERVER_STOPPING is never
+        // reached by a crash or a power cut, so a world that had been autosaving for hours still came back
+        // with no pack and no tracked dirt at all. Fires at the head of saveAllChunks, before the data
+        // storage is flushed, which is what makes the write land in the same save.
+        ServerLifecycleEvents.BEFORE_SAVE.register((server, flush, force) -> {
+            PackSavedData.saveAll(server, dimensions);
+            storePlacedBlocks(server, dimensions);
+        });
+
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             // Before saveAllChunks: see the class javadoc for why this cannot move to STOPPED.
             PackSavedData.saveAll(server, dimensions);
