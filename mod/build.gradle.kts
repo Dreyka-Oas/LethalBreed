@@ -1,6 +1,7 @@
 plugins {
     id("fabric-loom") version "1.17.12"
     java
+    `maven-publish`
 }
 
 version = project.property("mod_version") as String
@@ -72,6 +73,34 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+    // An addon author has to point Gradle at something, and reading the javadoc is the only way they
+    // learn a signature without cloning this repository. No sources jar next to it: see the publishing
+    // block below.
+    withJavadocJar()
+}
+
+// The javadoc that travels covers api/ and nothing else. The rest of main is mechanics, and a mechanic
+// is not a promise: documenting it would publish the shape of code the licence grants no right to use.
+// Doclint stays off because these comments are prose written for a reader rather than a schema, and its
+// HTML rules would fail the build over a missing paragraph tag.
+tasks.javadoc {
+    include("oas/dreyka/lethalbreed/api/**")
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+}
+
+// What a third party compiles against. `remapJar` is the artifact, not the intermediate under
+// build/devlibs: Loom swaps it into the java component itself, so an addon's own Loom run maps the
+// named mappings back and no separate api jar is needed.
+//
+// It stops at the local repository on purpose. GitHub Packages was the obvious remote and was dropped:
+// it demands a token even to read a public package, so the two lines shown to an addon author would not
+// work as written. Someone who has not cloned this repository has nothing to resolve yet.
+publishing {
+    publications {
+        create<MavenPublication>("mod") {
+            from(components["java"])
+        }
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -245,8 +274,10 @@ tasks.jar {
     from("../LICENSE")
 }
 
-// `gradlew build` produces exactly one artifact: build/libs/lethalbreed-<version>.jar, the player jar.
-// build/devlibs holds Loom's unmapped intermediate, an implementation detail of remapJar, never shipped.
-// No sources jar, no javadoc jar, no dev flavour: dev tooling lives in src/dev and runs under runClient/
-// runServer only. The jar is unobfuscated by choice: the source is public and readable anyway, so
-// obfuscating it would only cost crash-report legibility. Reading it is not licence to reuse it.
+// `gradlew build` produces the player jar, build/libs/lethalbreed-<version>.jar, plus the javadoc jar
+// the publication carries. build/devlibs holds Loom's unmapped intermediate, an implementation detail of
+// remapJar, never shipped. No sources jar and no dev flavour: dev tooling lives in src/dev and runs under
+// runClient/runServer only, and the sources stay out of the repository because publishing them under an
+// all-rights-reserved licence would hand over the whole mod rather than the surface an addon needs. The
+// jar is unobfuscated by choice: the source is public and readable anyway, so obfuscating it would only
+// cost crash-report legibility. Reading it is not licence to reuse it.
