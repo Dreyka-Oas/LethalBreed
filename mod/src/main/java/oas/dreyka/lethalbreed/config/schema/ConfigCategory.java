@@ -9,6 +9,11 @@ public final class ConfigCategory {
     private ConfigCategory() {}
 
     public static String of(String name) {
+        // A prefix another mod claimed decides before the chain even starts. Everything below was written
+        // against this mod's own option names and would happily file a stranger's option by a word it
+        // happens to contain, which is the one thing a reservation exists to stop.
+        String claimed = ConfigCategories.categoryFor(name);
+        if (claimed != null) return claimed;
         String n = name.toLowerCase(Locale.ROOT);
         // dev/debug-named options belong in the Dev tab regardless of other keyword matches (e.g.
         // devClimbTest would otherwise be pulled into Climb by the "climb" rule below).

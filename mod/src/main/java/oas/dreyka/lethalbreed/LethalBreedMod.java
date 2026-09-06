@@ -39,8 +39,12 @@ public final class LethalBreedMod implements ModInitializer {
         // the loader is field-driven, so options it cannot match are warned about and dropped on the next
         // write, which would delete a developer's own dev settings from their own file on first launch.
         devHook("registerConfig");
+        // Before BootstrapInit for the same reason the dev hook is: an addon declares its options here, and
+        // an option that joins the schema after the file has been read is one the loader cannot match, so
+        // the player's saved value for it is warned about and dropped on the next write. BootstrapInit calls
+        // them back a second time right after that read.
+        AddonInit.register();
         BootstrapInit.run();
-        AddonInit.register(); // other mods' entry points, before anything reads a registry
         EntityEventsInit.register(REGISTRY, DIMENSIONS);
         TickInit.register(SCHEDULER);
         CommandInit.register();

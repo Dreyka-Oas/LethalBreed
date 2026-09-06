@@ -22,6 +22,9 @@ public final class BootstrapInit {
     public static void run() {
         LethalBreedConfig.load();
         ConfigIo.load(); // JSON override: config/oas/lethalbreed.json
+        // Right here and nowhere later: an addon deciding something off a config value has to see what the
+        // player set, and every registration below is already free to read the loaded values itself.
+        AddonInit.afterConfigLoad();
         LethalConfigPayloads.registerCommon(); // live-config networking + receiver
         LethalBreedEffects.register(); // custom effects FIRST because spawn/leap code references them
         oas.dreyka.lethalbreed.effect.LethalBreedPotions.register(); // brewable Super Contamination potion
