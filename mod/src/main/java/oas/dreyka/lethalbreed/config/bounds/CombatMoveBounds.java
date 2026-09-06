@@ -5,9 +5,7 @@ import oas.dreyka.lethalbreed.config.BoundsRegistrar;
 /**
  * Clamp ranges for the leap, water, climb and block-breaking options.
  *
- * <p>Split out of {@code ConfigBoundsTable}, which had grown to 305 append-only lines across nine unrelated
- * domains: a bound belongs next to the options it governs, and {@code ConfigBoundsTest} fails the build if
- * any numeric option loses one.
+ * <p>{@code ConfigBoundsTest} fails the build if a numeric option loses its bound.
  */
 public final class CombatMoveBounds {
     private CombatMoveBounds() {}
