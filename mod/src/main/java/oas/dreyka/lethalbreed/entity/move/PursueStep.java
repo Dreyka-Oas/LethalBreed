@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.entity.move;
 
+import oas.dreyka.lethalbreed.entity.move.gait.Cling;
 import oas.dreyka.lethalbreed.entity.move.gait.Leap;
 import oas.dreyka.lethalbreed.entity.move.gait.climb.PillarClimb;
 import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
@@ -29,6 +30,7 @@ final class PursueStep {
     private final Zombie entity;
     private final PillarClimb pillar;
     private final Leap leap;
+    private final Cling cling;
     private final BrainNavigator nav;
 
     private double lastHorizDistSq = -1.0;
@@ -36,15 +38,22 @@ final class PursueStep {
     /** Latched last tick: hold position on the block instead of re-pathing. */
     private boolean breaking = false;
 
-    PursueStep(SmartZombie owner, Zombie entity, PillarClimb pillar, Leap leap, BrainNavigator nav) {
+    PursueStep(SmartZombie owner, Zombie entity, PillarClimb pillar, Leap leap, Cling cling,
+               BrainNavigator nav) {
         this.owner = owner;
         this.entity = entity;
         this.pillar = pillar;
         this.leap = leap;
+        this.cling = cling;
         this.nav = nav;
     }
 
     void run(ServerLevel level, WorldAiContext ctx, ZombiePursuit p, int bx, int bz) {
+        // A latched zombie is being placed by Cling, not steered: navigation, block ops and the leap all
+        // have to keep out of the way, and the stuck detector must not read the ride as a lack of progress.
+        if (cling.active()) {
+            return;
+        }
         // The vanilla attack target (melee) is set authoritatively in LodManager.classify, which runs in the
         // SAME activation immediately before this tick, so no setTarget re-assert is needed here. We still
         // read the pursuit target to drive movement dispatch below.
@@ -77,6 +86,11 @@ final class PursueStep {
         leap.tickCooldown();
         if (!stuck && !shadeSeek && !packMarch && leap.tryLeap(level, dx, dz, dy, horizSq)) {
             owner.setState(ZombieState.PURSUING_PLAYER);
+            return;
+        }
+        // Then, on the activations that leap is still resolving over: did the arc come down on the prey?
+        // Only a real entity can be ridden, so a memory target (te == null) never latches anything.
+        if (cling.tryCling(te, leap.leaping())) {
             return;
         }
 

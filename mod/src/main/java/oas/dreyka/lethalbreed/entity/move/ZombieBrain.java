@@ -1,6 +1,7 @@
 package oas.dreyka.lethalbreed.entity.move;
 
 
+import oas.dreyka.lethalbreed.entity.move.gait.Cling;
 import oas.dreyka.lethalbreed.entity.move.gait.Leap;
 import oas.dreyka.lethalbreed.entity.move.gait.climb.PillarClimb;
 import oas.dreyka.lethalbreed.entity.move.gait.Swim;
@@ -21,6 +22,7 @@ public final class ZombieBrain {
     private final Zombie entity;
     private final PillarClimb pillar;
     private final Leap leap;
+    private final Cling cling;
     private final BrainNavigator nav;
 
     private final BrainGuards guards;
@@ -33,13 +35,21 @@ public final class ZombieBrain {
         this.entity = owner.entity();
         this.pillar = new PillarClimb(owner);
         this.leap = new Leap(owner);
+        this.cling = new Cling(owner);
         this.nav = new BrainNavigator(owner);
         this.guards = new BrainGuards(owner, this.entity, this.pillar, this.nav);
-        this.pursue = new PursueStep(owner, this.entity, this.pillar, this.leap, this.nav);
+        this.pursue = new PursueStep(owner, this.entity, this.pillar, this.leap, this.cling, this.nav);
     }
 
     public boolean isClimbing() { return pillar.active(); }
     public boolean isSwimming() { return guards.swimming(); }
+    public boolean isClinging() { return cling.active(); }
+
+    /** Every tick while latched, so the zombie does not trail behind the prey it is riding. */
+    public void clingStep() { cling.follow(); }
+
+    /** Every activation, latched or not: the cling clock, its gnaw and its cooldown all run on real time. */
+    public void tickCling(ServerLevel level, int activationTicks) { cling.tick(level, activationTicks); }
 
     /** Force any in-progress jump-pillar off, used when a day-sleeper dozes so a half-built climb can't leave
      *  it floating (the climb drain evicts it as soon as {@link #isClimbing()} goes false). */

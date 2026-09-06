@@ -32,7 +32,8 @@ final class LodBucketPass {
     private long frozenRound = 0L;
 
     private void tickAndCollect(SmartZombie sz, ServerLevel level, WorldAiContext ctx, boolean prof,
-                                 Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
+                                 Set<SmartZombie> climbers, Set<SmartZombie> swimmers,
+                                 Set<SmartZombie> clingers) {
         long tt = prof ? System.nanoTime() : 0L;
         sz.tick(level, ctx);
         ZombieActivation.mark(DevProbe.TICK, prof, tt);
@@ -42,9 +43,15 @@ final class LodBucketPass {
         if (sz.isSwimming()) {
             swimmers.add(sz);
         }
+        // Collected here and not before the FROZEN skip above: a cling can only START inside the tick that
+        // just ran, and once in the set it stays there until it lets go, frozen or not.
+        if (sz.isClinging()) {
+            clingers.add(sz);
+        }
     }
 
-    void run(MinecraftServer server, int buckets, int currentBucket, Set<SmartZombie> climbers, Set<SmartZombie> swimmers) {
+    void run(MinecraftServer server, int buckets, int currentBucket, Set<SmartZombie> climbers,
+             Set<SmartZombie> swimmers, Set<SmartZombie> clingers) {
         // buckets is supplied by the scheduler (the same value it used to derive currentBucket), so membership
         // stays consistent even when autoScaleBuckets recomputes it from population each tick. Computing the
         // bucket live (id % buckets) means a count change re-spreads every zombie at once, none stranded.
@@ -109,7 +116,7 @@ final class LodBucketPass {
             }
             spent++;
 
-            tickAndCollect(sz, level, ctx, prof, climbers, swimmers);
+            tickAndCollect(sz, level, ctx, prof, climbers, swimmers, clingers);
         }
     }
 

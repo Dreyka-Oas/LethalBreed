@@ -31,6 +31,7 @@ public final class TickScheduler {
     private long tickCounter = 0L;
     private final Set<SmartZombie> climbers = new HashSet<>(); // zombies mid jump-pillar, ticked every tick
     private final Set<SmartZombie> swimmers = new HashSet<>(); // zombies in water, ticked every tick (rise/dive)
+    private final Set<SmartZombie> clingers = new HashSet<>(); // zombies latched on prey, pinned every tick
 
     public TickScheduler(ZombieRegistry registry, DimensionManager dimensions) {
         this.registry = registry;
@@ -67,10 +68,13 @@ public final class TickScheduler {
         world.tickPacks(server, server.overworld().getGameTime());
         world.recomputeFlowFields(server, tickCounter);
 
-        bucketPass.run(server, buckets, currentBucket, climbers, swimmers);
+        bucketPass.run(server, buckets, currentBucket, climbers, swimmers, clingers);
 
         everyTickPass.processClimbers(server, climbers);
         everyTickPass.processSwimmers(server, swimmers);
+        // Last of the three: a latched zombie is placed, so its position has to be the final word of the
+        // tick, over anything the climb or the swim drive has just done with it.
+        everyTickPass.processClingers(server, clingers);
         world.drainBlockOps(server, tickCounter);
         if (probing) {
             DevProbe.sink.tickEnd(server, tickCounter, System.nanoTime() - t0);
@@ -88,6 +92,7 @@ public final class TickScheduler {
     public void reset() {
         climbers.clear();
         swimmers.clear();
+        clingers.clear();
         tickCounter = 0L;
     }
 }

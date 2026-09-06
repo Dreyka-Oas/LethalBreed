@@ -34,6 +34,11 @@ final class EveryTickPass {
                 (sz, level) -> sz.swimStep(level, dimensions.get(sz.dimension())));
     }
 
+    /** Hold a latched zombie on its prey every tick, or it trails a block behind a running player. */
+    void processClingers(MinecraftServer server, Set<SmartZombie> clingers) {
+        drive(server, clingers, SmartZombie::isClinging, (sz, level) -> sz.clingStep());
+    }
+
     private void drive(MinecraftServer server, Set<SmartZombie> set,
                        Predicate<SmartZombie> stillActive, BiConsumer<SmartZombie, ServerLevel> step) {
         if (set.isEmpty()) {

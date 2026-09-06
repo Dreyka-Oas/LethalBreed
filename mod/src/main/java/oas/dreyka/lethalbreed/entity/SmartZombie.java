@@ -114,6 +114,9 @@ public final class SmartZombie {
 
     public void setDryFooting(long packed) { dryFooting = packed; }
     public boolean isSwimming() { return brain.isSwimming(); }
+    public boolean isClinging() { return brain.isClinging(); }
+    public void clingStep() { brain.clingStep(); }
+    public void tickCling(ServerLevel level, int activationTicks) { brain.tickCling(level, activationTicks); }
     public boolean dueThisActivation(int divisor) { return brain.dueThisActivation(divisor); }
 
     /**

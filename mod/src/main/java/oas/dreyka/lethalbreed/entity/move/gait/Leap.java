@@ -19,10 +19,19 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * own cooldown and the per-zombie leap-distance factor.
  */
 public final class Leap {
+    /** Activations a launched leap keeps counting as a pounce in progress, which is the window {@link Cling}
+     *  is allowed to latch in. Measured rather than guessed: a leap fired from the far end of its range
+     *  lands about four blocks short of the target, the zombie walks the rest, and that took eight
+     *  activations against a standing villager on flat ground. Three, the length of the arc itself, never
+     *  caught anything: the cling only gets one look per activation and the prey was still out of reach on
+     *  every one of them. */
+    private static final int POUNCE_ACTIVATIONS = 8;
+
     private final SmartZombie owner;
     private final Zombie entity;
     private final double leapFactor;
     private int leapCd = 0;
+    private int sinceLeap = POUNCE_ACTIVATIONS;
 
     public Leap(SmartZombie owner) {
         this.owner = owner;
@@ -35,6 +44,15 @@ public final class Leap {
         if (leapCd > 0) {
             leapCd--;
         }
+        if (sinceLeap < POUNCE_ACTIVATIONS) {
+            sinceLeap++;
+        }
+    }
+
+    /** True while this zombie is still seeing through the pounce it launched: the arc, then the few steps
+     *  it takes to close what the arc fell short of. */
+    public boolean leaping() {
+        return sinceLeap < POUNCE_ACTIVATIONS;
     }
 
     /**
@@ -66,6 +84,7 @@ public final class Leap {
                 ndz * LeapConfig.leapHorizontalSpeed * leapFactor * ldf);
         entity.hurtMarked = true;
         leapCd = LeapConfig.leapCooldownActivations;
+        sinceLeap = 0;
         owner.setState(ZombieState.PURSUING_PLAYER);
         return true;
     }

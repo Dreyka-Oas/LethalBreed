@@ -50,7 +50,10 @@ final class ZombieActivation {
      *  which is precisely when a migration is supposed to be happening. The cutoff still applies to
      *  every loose zombie, so its point (stop simulating what nobody watches) survives. */
     static boolean hardFreezeSkip(SmartZombie sz, ServerLevel level, double hardFreeze) {
-        if (hardFreeze > 0.0 && !sz.pursuit().pack().inPack()) {
+        // A latched zombie is exempt alongside a pack member: this branch returns before the cling clock
+        // below is ever spent, so a zombie riding a villager out of every player's radius would hang off it
+        // for good instead of for five seconds.
+        if (hardFreeze > 0.0 && !sz.pursuit().pack().inPack() && !sz.isClinging()) {
             Player np = level.getNearestPlayer(sz.entity(), hardFreeze);
             if (np == null) {
                 sz.pursuit().clearTarget();
@@ -95,6 +98,9 @@ final class ZombieActivation {
         oas.dreyka.lethalbreed.entity.genes.AttributeCaps.enforce(sz.entity());
         // Alongside the sun for the same reason: a FROZEN zombie with its head under water still drowns.
         WaterFear.tickWater(level, sz, elapsedTicks(spacing == LodLevel.FROZEN));
+        // Same deal for the cling: its two to five seconds are wall-clock seconds, so the countdown and the
+        // gnaw have to be spent on every activation, including the ones whose full tick() is skipped below.
+        sz.tickCling(level, elapsedTicks(spacing == LodLevel.FROZEN));
         // Daylight burn must apply even to idle/FROZEN zombies (whose full tick() below is skipped).
         sz.applySunBurn(level);
         t = mark(DevProbe.SUNBURN, prof, t);
