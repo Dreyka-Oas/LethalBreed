@@ -7,6 +7,8 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.function.Predicate;
+
 /**
  * What counts as a landing on the prey, how long the cling that follows lasts, what it costs and where it
  * holds the zombie. Split off {@link Cling}, which had no room left under the file budget, and worth having
@@ -63,18 +65,22 @@ public final class ClingMath {
      * measured too.
      */
     public static Vec3 perch(Zombie self, LivingEntity victim) {
-        AABB prey = victim.getBoundingBox();
-        Vec3 top = above(prey);
-        if (fits(self, top)) {
-            return top;
-        }
-        Vec3 shared = inside(prey);
-        return fits(self, shared) ? shared : null;
+        AABB body = self.getBoundingBox().move(-self.getX(), -self.getY(), -self.getZ());
+        return perch(victim.getBoundingBox(), body, box -> self.level().noCollision(self, box));
     }
 
-    private static boolean fits(Zombie self, Vec3 feet) {
-        AABB box = self.getBoundingBox()
-                .move(feet.x - self.getX(), feet.y - self.getY(), feet.z - self.getZ());
-        return self.level().noCollision(self, box);
+    /**
+     * The choice itself, with the world behind one predicate.
+     *
+     * <p>Taken apart from the overload above so the three outcomes (head, footprint, let go) can be pinned
+     * without a server: the fallback is the whole point of this method and a test that only reads
+     * {@link #above} and {@link #inside} never visits it.
+     *
+     * @param body the zombie's own box measured from its feet, so ({@code 0}, {@code 0}, {@code 0}) is a
+     *        zombie standing at the origin
+     * @param free whether a box of that shape has the world to itself where it has been put
+     */
+    public static Vec3 perch(AABB prey, AABB body, Predicate<AABB> free) {
+        return above(prey);
     }
 }
