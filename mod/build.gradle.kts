@@ -112,6 +112,11 @@ tasks.test {
 tasks.processResources {
     // Exclude the raw .cl from the output; the .clx copy is written by doLast below.
     exclude("kernels/*.cl")
+    // exclude() drops the .cl from the task's input snapshot as well, so editing the kernel used to leave
+    // processResources UP-TO-DATE and the jar shipping the previous .clx. Naming the source as an input and
+    // the generated file as an output puts the doLast back under up-to-date checking instead of outside it.
+    inputs.file("src/main/resources/kernels/bellman_ford.cl")
+    outputs.file(provider { destinationDir.resolve("kernels/bellman_ford.clx") })
     doLast {
         // Truncate each line at its first `//`: the kernel has 23 comment-bearing lines and 10 of them are
         // TRAILING comments on live code (18-22, 27, 36, 45, 61, 68), so dropping whole lines would delete

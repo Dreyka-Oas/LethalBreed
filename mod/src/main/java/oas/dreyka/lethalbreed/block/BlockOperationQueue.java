@@ -42,6 +42,10 @@ public final class BlockOperationQueue {
         while (budget > 0 && !places.isEmpty()) {
             BlockPos p = places.poll();
             pending.remove(p.asLong());
+            // Charged here, on every entry examined, because a refusal costs a getBlockState like a placement
+            // does. Charged only on success, blockOpsPerTick stopped bounding anything: a queue sitting at its
+            // cap full of positions the test below rejects (solid ground, water) drained whole in one tick.
+            budget--;
             BlockState s = level.getBlockState(p);
             // Water and lava pass !blocksMotion, so the old test turned a shore into dirt one block at a time
             // whenever a zombie got stuck at the edge of deep water. The rule belongs here rather than at the
@@ -49,7 +53,6 @@ public final class BlockOperationQueue {
             if ((s.isAir() || !s.blocksMotion()) && s.getFluidState().isEmpty()) {
                 level.setBlock(p, Blocks.DIRT.defaultBlockState(), 3);
                 tracker.record(p, tick);
-                budget--;
             }
         }
     }

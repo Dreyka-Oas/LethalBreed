@@ -74,6 +74,13 @@ public final class BreakManager {
                 it.remove();
                 continue;
             }
+            // Never force a chunk load from here, same guard PlacedBlockTracker uses: getBlockState()
+            // resolves through getChunk(..., requireChunk = true), which on a cache miss stalls the server
+            // thread on addTicket + managedBlock + join. An unloaded break is held rather than dropped,
+            // because the grace check above already retires it if the chunk never comes back.
+            if (!level.isLoaded(pos)) {
+                continue;
+            }
             BlockState bs = level.getBlockState(pos);
             if (!MaterialRegistry.isBreakable(level, pos, bs)) {
                 s.clearCracks(level, pos);

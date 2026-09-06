@@ -75,13 +75,5 @@ final class ConfigNotice {
                         .withStyle(ChatFormatting.GRAY));
             }
         });
-
-        // NoAI-release MUST happen here, on STOPPING, not on STOPPED: Fabric fires SERVER_STOPPING at HEAD of
-        // MinecraftServer.stopServer() and SERVER_STOPPED at TAIL, but stopServer() calls saveAllChunks(...)
-        // (flushing every loaded zombie's NoAI to disk) and then serverLevel.close() BEFORE it returns, i.e.
-        // strictly between STOPPING and STOPPED. By the time STOPPED fires, the save already happened and the
-        // level is closed, so releasing the hold there is a no-op that can't reach the NBT that was just
-        // written. Do NOT "tidy" this back into the SERVER_STOPPED handler below: that silently reintroduces
-        // the frozen-statue bug this exists to fix (audit #2).
     }
 }
