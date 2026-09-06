@@ -79,9 +79,8 @@ public final class LifecycleInit {
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            // Before saveAllChunks: see the class javadoc for why this cannot move to STOPPED.
-            PackSavedData.saveAll(server, dimensions);
-            storePlacedBlocks(server, dimensions);
+            // No save here: stopServer() calls saveAllChunks unconditionally, and BEFORE_SAVE above rides its
+            // head, so the shutdown write already happens through that handler.
             // Hand vanilla AI back to every zombie we are currently freezing, BEFORE saveAllChunks flushes
             // NoAI to NBT. NoAI persists to NBT; our flag does not.
             for (SmartZombie sz : registry.all()) {
@@ -111,7 +110,7 @@ public final class LifecycleInit {
         }
     }
 
-    /** Write every dimension's tracked dirt back, on STOPPING for the same reason as the packs. */
+    /** Write every dimension's tracked dirt back, from BEFORE_SAVE for the same reason as the packs. */
     private static void storePlacedBlocks(MinecraftServer server, DimensionManager dimensions) {
         for (ServerLevel level : server.getAllLevels()) {
             level.getDataStorage().computeIfAbsent(PlacedBlockSavedData.TYPE)

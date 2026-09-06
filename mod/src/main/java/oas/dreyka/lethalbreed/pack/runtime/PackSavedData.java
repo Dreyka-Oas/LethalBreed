@@ -113,8 +113,9 @@ public final class PackSavedData extends SavedData {
     /**
      * Write every dimension's packs back.
      *
-     * <p>Must run on SERVER_STOPPING, not STOPPED: {@code stopServer()} saves the chunks and the data
-     * storage between the two events, so this is the last moment a write still reaches the disk.
+     * <p>Called from BEFORE_SAVE, which fires at the head of {@code saveAllChunks} and therefore before the
+     * data storage is flushed. Never from STOPPED: {@code stopServer()} has already saved by then, so a write
+     * there would only reach the disk on the next save, which for a stopping server is never.
      */
     public static void saveAll(MinecraftServer server, DimensionManager dimensions) {
         for (ServerLevel level : server.getAllLevels()) {
