@@ -4,14 +4,12 @@ import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.spatial.SpatialGrid;
+import oas.dreyka.lethalbreed.spatial.TargetIndex;
 import oas.dreyka.lethalbreed.util.Players;
 import oas.dreyka.lethalbreed.util.target.Perception;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,10 +22,10 @@ import java.util.Map;
  * grid, setting their sound target. Server-thread only.
  */
 public final class SoundEventBus {
-    // How often the full-world entity scan (tickEntities) actually runs. A moving creature's noise refreshes a
-    // zombie's short-term memory (~10 s window), so scanning every Nth tick instead of every tick is imperceptible
-    // for pursuit while cutting the per-tick getAllEntities() sweep by N×. Player footsteps (tickPlayers) and event
-    // distribution (process) still run EVERY tick. Only the O(all entities) creature scan is throttled.
+    // How often the prey sweep (tickEntities) actually runs. A moving creature's noise refreshes a zombie's
+    // short-term memory (~10 s window), so scanning every Nth tick instead of every tick is imperceptible for
+    // pursuit while cutting that sweep by N×. Player footsteps (tickPlayers) and event distribution (process)
+    // still run EVERY tick. Only the O(prey) creature scan is throttled.
     private static final int ENTITY_SCAN_INTERVAL = 4;
 
     // event = {x, y, z, radius}
@@ -78,20 +76,21 @@ public final class SoundEventBus {
      *  by {@link #tickPlayers} (their server-side delta is unreliable, so that path uses positional delta);
      *  every other creature has reliable {@code getDeltaMovement}, so {@link Perception#isAudible} is enough.
      *  A loud action (arm swing) carries {@code ×soundLoudMultiplier}, mirroring the acquisition hearing rule. */
-    public void tickEntities(ServerLevel level) {
+    public void tickEntities(TargetIndex index) {
         if (!TargetingConfig.soundEnabled) {
             return;
         }
-        // Throttle the O(all entities) sweep (see ENTITY_SCAN_INTERVAL). Cheap early-out on the off ticks.
+        // Throttle the sweep (see ENTITY_SCAN_INTERVAL). Cheap early-out on the off ticks.
         if ((entityScanCounter++ % ENTITY_SCAN_INTERVAL) != 0) {
             return;
         }
         double base = TargetingConfig.soundBaseRadius;
         double loud = base * Math.max(1.0, TargetingConfig.soundLoudMultiplier);
-        for (Entity ent : level.getAllEntities()) {
-            if (!(ent instanceof LivingEntity e) || ent instanceof Player || ent instanceof Zombie) {
-                continue; // players covered by tickPlayers; zombies never hunt their own kind
-            }
+        // The prey index IS this method's filter: TargetIndex.indexable holds exactly the living entities
+        // that are neither player (covered by tickPlayers) nor zombie (never hunted by their own kind), and
+        // the scheduler refreshes it on the line above the one that calls us. Walking the level instead meant
+        // visiting the whole horde, every dropped item and every projectile to reject them one by one.
+        for (LivingEntity e : index.all()) {
             if (Perception.isAudible(e)) {
                 emit(e.getX(), e.getY(), e.getZ(), e.swinging ? loud : base);
             }

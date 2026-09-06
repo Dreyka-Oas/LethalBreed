@@ -13,16 +13,23 @@ abstract class CrackingBlock {
     int breakerId;
     int lastStage = -1;
 
-    /** Push the crack overlay only when the stage actually changed (avoids per-tick packet spam). */
+    /**
+     * Push the crack overlay only when the stage actually changed (avoids per-tick packet spam).
+     *
+     * <p>The position is frozen before it leaves: ClientboundBlockDestructionPacket keeps the instance it is
+     * given and serialises it later, on the netty event loop, so a caller sweeping its blocks with one reused
+     * cursor would have every packet read whatever position the sweep had reached by then. A caller that
+     * already holds an immutable position pays nothing, {@code immutable()} returns itself.
+     */
     void showStage(Level level, BlockPos pos, int stage) {
         if (stage != lastStage) {
-            level.destroyBlockProgress(breakerId, pos, stage);
+            level.destroyBlockProgress(breakerId, pos.immutable(), stage);
             lastStage = stage;
         }
     }
 
-    /** Clear any crack overlay for this block. */
+    /** Clear any crack overlay for this block. Freezes the position for the reason given on {@link #showStage}. */
     void clearCracks(Level level, BlockPos pos) {
-        level.destroyBlockProgress(breakerId, pos, -1);
+        level.destroyBlockProgress(breakerId, pos.immutable(), -1);
     }
 }

@@ -93,8 +93,15 @@ public final class TargetSelector {
         List<LivingEntity> candidates = new ArrayList<>();
         if (index != null) {
             index.collectInto(candidates, self.getX(), self.getZ(), radius);
+            // The index already narrows prey to the radius; the player list does not, and it is the whole
+            // server's. A player further than the radius is dropped by the radius test in nearestVisible
+            // anyway, so keeping it here only pays for it in the shuffle and the sort, once per zombie per
+            // activation. Same squared 3D distance those two use, so the pick itself cannot move.
+            double radiusSq = radius * radius;
             for (Player p : level.players()) {
-                candidates.add(p);
+                if (self.distanceToSqr(p) <= radiusSq) {
+                    candidates.add(p);
+                }
             }
             candidates.removeIf(e -> !TargetFilter.isValid(self, e));
         } else {

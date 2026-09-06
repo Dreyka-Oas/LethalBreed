@@ -42,10 +42,14 @@ public final class PlacedBlockTracker {
         }
         long lifetime = CombatMoveConfig.placedBlockLifetimeTicks; // floored at 1 inside PlacedBlockPolicy
         Iterator<Map.Entry<Long, State>> it = placed.entrySet().iterator();
+        // One cursor for the whole sweep instead of a BlockPos per entry per tick, with up to 12000 entries
+        // per dimension. Only ever handed to calls that read its coordinates on the spot; anything that keeps
+        // the position past this loop (a destruction packet, a block update) gets a frozen copy below.
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
         while (it.hasNext()) {
             Map.Entry<Long, State> e = it.next();
             State s = e.getValue();
-            BlockPos p = BlockPos.of(e.getKey());
+            p.set(e.getKey());
             long age = now - s.placedAt;
             // Never force a chunk load from here. Level.getBlockState() resolves through
             // getChunk(x, z, FULL, /* requireChunk */ true), which on a ServerLevel cache miss does
@@ -71,9 +75,12 @@ public final class PlacedBlockTracker {
                 continue;
             }
             if (PlacedBlockPolicy.expired(age, lifetime)) {
-                s.clearCracks(level, p);
+                // destroyBlock hands the position to a level event and to block updates, both of which outlive
+                // this iteration, so the cursor must not be what they keep.
+                BlockPos at = p.immutable();
+                s.clearCracks(level, at);
                 // Same effect as breaking by hand (particles + sound) but NO drop.
-                level.destroyBlock(p, false, null, 512);
+                level.destroyBlock(at, false, null, 512);
                 it.remove();
                 continue;
             }

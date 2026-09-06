@@ -42,7 +42,7 @@ final class WorldMaintenance {
     void processSound(MinecraftServer server) {
         forEachLoadedContext(server, (level, ctx) -> {
             ctx.soundBus().tickPlayers(level);
-            ctx.soundBus().tickEntities(level);
+            ctx.soundBus().tickEntities(ctx.targetIndex());
             ctx.soundBus().process(ctx.spatialGrid(), level.getGameTime());
         });
     }

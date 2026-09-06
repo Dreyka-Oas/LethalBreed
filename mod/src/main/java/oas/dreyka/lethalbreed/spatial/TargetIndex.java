@@ -102,6 +102,13 @@ public final class TargetIndex {
         }
     }
 
+    /** Every prey currently tracked, in no particular order, for a caller that wants the whole dimension
+     *  rather than a disc around a point. Iteration only: tracking is changed through {@link #track} and
+     *  {@link #forget}, never through this view. */
+    public Iterable<LivingEntity> all() {
+        return tracked.values();
+    }
+
     /** Drop everything. Called when the dimension's context is discarded. */
     public void clear() {
         cells.clear();

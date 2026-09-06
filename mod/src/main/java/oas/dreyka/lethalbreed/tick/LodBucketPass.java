@@ -90,9 +90,8 @@ final class LodBucketPass {
                 continue;
             }
 
-            WorldAiContext classifyCtx = dimensions.get(sz.dimension());
             WorldAiContext ctx = dimensions.get(sz.dimension());
-            LodLevel lod = ZombieActivation.classifyAndUpdate(sz, level, classifyCtx, ctx, prof);
+            LodLevel lod = ZombieActivation.classifyAndUpdate(sz, level, ctx, prof);
             if (lod == LodLevel.FROZEN) {
                 continue;
             }

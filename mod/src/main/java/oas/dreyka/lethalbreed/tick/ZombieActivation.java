@@ -59,12 +59,11 @@ final class ZombieActivation {
 
     /** Runs the classify → grid → pack → sun-burn → mood phase for one zombie activation and returns the
      *  LOD tier after mood processing (mood can un-freeze a zombie, so the tier must be re-read afterward). */
-    static LodLevel classifyAndUpdate(SmartZombie sz, ServerLevel level, WorldAiContext classifyCtx,
-                                        WorldAiContext ctx, boolean prof) {
+    static LodLevel classifyAndUpdate(SmartZombie sz, ServerLevel level, WorldAiContext ctx, boolean prof) {
         long t = prof ? System.nanoTime() : 0L;
         // Reclassify every activation so LOD + nearest-player (used for pillaring) stay fresh for
         // ALL buckets. A global tick%interval would only ever align with bucket 0.
-        LodManager.classify(sz, level, classifyCtx.targetIndex());
+        LodManager.classify(sz, level, ctx.targetIndex());
         t = mark(DevProbe.CLASSIFY, prof, t);
         LodLevel lod = sz.lod();
         // Keep FROZEN zombies in the spatial grid (their tick(), which inserts them, is skipped below)
