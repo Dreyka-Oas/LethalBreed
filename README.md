@@ -37,5 +37,7 @@ Minecraft 1.21.11, Fabric 0.19.3, Java 21.
 
 The mod is in [`mod/`](mod/).
 
-© Dreyka Oas. All rights reserved. Free to play and to share unmodified. Selling it, forking it or
-reusing it means asking first. See [LICENSE](LICENSE).
+MIT, © 2026 Dreyka Oas. Play it, share it, fork it, build an addon on it and publish that addon, all
+without asking. Keep the copyright and permission notice with any substantial copy of the code, which
+is the whole of what MIT requires. See [LICENSE](LICENSE). A mention is welcome as a courtesy, never
+as a condition.

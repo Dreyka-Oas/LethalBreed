@@ -80,7 +80,7 @@ java {
 }
 
 // The javadoc that travels covers api/ and nothing else. The rest of main is mechanics, and a mechanic
-// is not a promise: documenting it would publish the shape of code the licence grants no right to use.
+// is not a promise: documenting it would read as a contract for signatures that move between versions.
 // Doclint stays off because these comments are prose written for a reader rather than a schema, and its
 // HTML rules would fail the build over a missing paragraph tag.
 tasks.javadoc {
@@ -265,11 +265,10 @@ tasks.check {
     dependsOn(tasks.named("compileGametestJava"))
 }
 
-// The licence has to travel with the jar, for two independent reasons: section 2 of LICENSE makes it a
-// condition of redistribution, and section 6 carries the MIT notice of the bundled JOCL, whose notice
-// clause obliges the same for any copy. `../` because the Gradle root is mod/ while the file sits at the
-// repository root, next to the README. Added to `jar`, not `remapJar`: remapJar copies the jar output,
-// so it inherits it.
+// The licence has to travel with the jar, for two independent reasons: MIT obliges the notice to follow
+// any substantial copy, and the same file carries the notice of the bundled JOCL, whose own MIT clause
+// obliges the same. `../` because the Gradle root is mod/ while the file sits at the repository root,
+// next to the README. Added to `jar`, not `remapJar`: remapJar copies the jar output, so it inherits it.
 tasks.jar {
     from("../LICENSE")
 }
@@ -277,7 +276,6 @@ tasks.jar {
 // `gradlew build` produces the player jar, build/libs/lethalbreed-<version>.jar, plus the javadoc jar
 // the publication carries. build/devlibs holds Loom's unmapped intermediate, an implementation detail of
 // remapJar, never shipped. No sources jar and no dev flavour: dev tooling lives in src/dev and runs under
-// runClient/runServer only, and the sources stay out of the repository because publishing them under an
-// all-rights-reserved licence would hand over the whole mod rather than the surface an addon needs. The
-// jar is unobfuscated by choice: the source is public and readable anyway, so obfuscating it would only
-// cost crash-report legibility. Reading it is not licence to reuse it.
+// runClient/runServer only, and an addon author who wants the sources clones the repository, which MIT
+// lets them do with the whole tree. The jar is unobfuscated by choice: obfuscating it would only cost
+// crash-report legibility on code anyone is free to read anyway.
