@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "examplebreed",
+  "version": "1.0.0",
+  "name": "ExampleBreed",
+  "description": "A frostbite zombie, a creature the spawn filter must not eat, and four options.",
+  "environment": "*",
+  "entrypoints": {
+    "lethalbreed:addon": [
+      "com.example.examplebreed.ExampleBreedAddon"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "lethalbreed": ">=1.0.0"
+  }
+}
