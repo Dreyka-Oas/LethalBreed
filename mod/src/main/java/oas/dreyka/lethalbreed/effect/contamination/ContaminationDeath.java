@@ -2,6 +2,7 @@ package oas.dreyka.lethalbreed.effect.contamination;
 
 import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
 import oas.dreyka.lethalbreed.effect.LethalBreedEffects;
+import oas.dreyka.lethalbreed.entity.spawn.SpawnFilter;
 import oas.dreyka.lethalbreed.probe.DevProbe;
 
 import net.minecraft.server.level.ServerLevel;
@@ -48,6 +49,10 @@ public final class ContaminationDeath {
         if (z != null) {
             z.setPos(e.getX(), e.getY(), e.getZ());
             z.setYRot(e.getYRot());
+            // The spawn filter would otherwise eat this body inside addFreshEntity: at phase 0 whatever it
+            // is, and above it whenever onlyPlainZombie is on and the victim was a villager. See
+            // SpawnFilter.spare: the plague's own conversions are not what that filter is for.
+            SpawnFilter.spare(z);
             level.addFreshEntity(z);
         }
     }

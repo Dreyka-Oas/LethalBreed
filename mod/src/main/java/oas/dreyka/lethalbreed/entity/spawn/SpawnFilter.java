@@ -70,6 +70,24 @@ public final class SpawnFilter {
         return LOADED_ONCE.add(id);
     }
 
+    /**
+     * Spend an entity's one load-cull check before it reaches the level, so it stands whatever the phase and
+     * the plain-Zombie rule would have said. For bodies this mod raises ON PURPOSE, and for nothing else.
+     *
+     * <p>The filter's remit is spawning. A body the plague raises off a corpse is a conversion of something
+     * that was already in the world and already the mod's own doing, so putting it back through the spawn
+     * rules is asking a question that was answered when the victim was infected. It answered it wrong, too:
+     * {@code ENTITY_LOAD} fires inside {@code addFreshEntity}, so a villager killed by the plague raised a
+     * zombie villager that was discarded in the same call, {@code ZombieVillager.class} not being exactly
+     * {@code Zombie.class}. Nothing was left standing and nothing was logged, which reads from the table
+     * exactly like the death hook never firing at all.
+     *
+     * <p>Call it BEFORE {@code addFreshEntity}: afterwards the verdict has already been taken.
+     */
+    public static void spare(Entity entity) {
+        LOADED_ONCE.add(entity.getUUID());
+    }
+
     /** The ENTITY_LOAD verdict: cull only on the entity's first add, so a mob that already survived its
      *  spawn is not discarded later just because its chunk came back or the phase moved under it. */
     public static boolean shouldCullOnLoad(Entity entity) {
