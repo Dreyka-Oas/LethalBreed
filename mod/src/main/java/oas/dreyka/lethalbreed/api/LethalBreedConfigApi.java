@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.api;
 
+import oas.dreyka.lethalbreed.LethalBreed;
 import oas.dreyka.lethalbreed.config.ConfigBounds;
 import oas.dreyka.lethalbreed.config.schema.ConfigCategories;
 import oas.dreyka.lethalbreed.config.schema.ConfigSchema;
@@ -51,6 +52,10 @@ public final class LethalBreedConfigApi {
                 r.b(b.option(), b.min(), b.max());
             }
         });
+        // Proof for the addon author, in their own log, that the claim went through: without it a
+        // misspelled entry point looks exactly like a registration that worked.
+        LethalBreed.LOGGER.info("[LethalBreed] config options starting with '{}' go to the {} tab",
+                prefix, category);
     }
 
     private static void checkFieldNames(String prefix, Class<?> holder) {

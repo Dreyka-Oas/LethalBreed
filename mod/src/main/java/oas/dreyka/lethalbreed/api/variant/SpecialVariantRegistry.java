@@ -1,5 +1,7 @@
 package oas.dreyka.lethalbreed.api.variant;
 
+import oas.dreyka.lethalbreed.LethalBreed;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +48,9 @@ public final class SpecialVariantRegistry {
             throw new IllegalArgumentException("variant id " + id + " is already registered");
         }
         ORDER.add(variant);
+        // The mod's own eight come through here too, so the boot log reads as one roster: an addon author
+        // sees their id sitting in the same list, at the position their entry point put it.
+        LethalBreed.LOGGER.info("[LethalBreed] special variant {}: {}", id, variant.kind());
         return variant;
     }
 
