@@ -204,7 +204,7 @@
   "lethalbreed.option.nightSpawnEnabled": "Spawn de nuit phasé",
   "lethalbreed.option.nightSpawnEnabled.desc": "Interrupteur maitre du spawn hostile du mod. Desactive, le spawn vanilla revient : squelettes, creepers, plafond vanilla. Pour que rien n'apparaisse, laissez-le active et restez en phase 0.",
   "lethalbreed.option.onlyPlainZombie": "Zombies simples uniquement",
-  "lethalbreed.option.onlyPlainZombie.desc": "Annule tout autre hostile à l'apparition (squelette, creeper, husk, noyé, araignée et les autres) dans toutes les phases.",
+  "lethalbreed.option.onlyPlainZombie.desc": "Annule tout autre hostile à l'apparition (squelette, creeper, husk, noyé, araignée et les autres) dans toutes les phases. Un villageois tué par la peste se relève aussi en zombie simple au lieu d'un zombie villageois.",
   "lethalbreed.option.spawnMaxExtraPasses": "Passes de spawn supplémentaires (max)",
   "lethalbreed.option.spawnMaxExtraPasses.desc": "Plafond de sécurité sur les passes de spawn supplémentaires par chunk et par tick. C'est une protection contre un tick qui s'emballe, pas un réglage d'équilibrage.",
   "lethalbreed.option.blockBabyZombies": "Bloquer les bébés zombies",

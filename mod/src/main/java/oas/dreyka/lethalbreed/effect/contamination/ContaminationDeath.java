@@ -1,6 +1,7 @@
 package oas.dreyka.lethalbreed.effect.contamination;
 
 import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
+import oas.dreyka.lethalbreed.config.domain.WorldSpawnConfig;
 import oas.dreyka.lethalbreed.effect.LethalBreedEffects;
 import oas.dreyka.lethalbreed.entity.spawn.SpawnFilter;
 import oas.dreyka.lethalbreed.probe.DevProbe;
@@ -40,9 +41,13 @@ public final class ContaminationDeath {
         }
     }
 
-    /** Spawn a fresh zombie at the victim's death spot (its "reanimation"). Villagers rise as zombie villagers. */
+    /** Spawn a fresh zombie at the victim's death spot (its "reanimation"). A villager rises as a zombie
+     *  villager only where the world is allowed to hold one: {@link WorldSpawnConfig#onlyPlainZombie} is the
+     *  player's statement that the plague produces plain zombies and nothing else, and a body raised off a
+     *  corpse is part of that population like any other. */
     private static void reanimate(LivingEntity e, ServerLevel level) {
-        var type = (e instanceof net.minecraft.world.entity.npc.villager.Villager)
+        var type = (e instanceof net.minecraft.world.entity.npc.villager.Villager
+                && !WorldSpawnConfig.onlyPlainZombie)
                 ? net.minecraft.world.entity.EntityType.ZOMBIE_VILLAGER
                 : net.minecraft.world.entity.EntityType.ZOMBIE;
         var z = type.create(level, net.minecraft.world.entity.EntitySpawnReason.CONVERSION);

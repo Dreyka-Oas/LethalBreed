@@ -204,7 +204,7 @@
   "lethalbreed.option.nightSpawnEnabled": "Phased Night Spawning",
   "lethalbreed.option.nightSpawnEnabled.desc": "Master switch for the mod's hostile spawning. Off hands spawning back to vanilla: skeletons, creepers, the vanilla mob cap. To have nothing spawn at all, leave it ON and stay at phase 0.",
   "lethalbreed.option.onlyPlainZombie": "Plain Zombies Only",
-  "lethalbreed.option.onlyPlainZombie.desc": "Cancels every other hostile at spawn (skeleton, creeper, husk, drowned, spider and the rest) in every phase.",
+  "lethalbreed.option.onlyPlainZombie.desc": "Cancels every other hostile at spawn (skeleton, creeper, husk, drowned, spider and the rest) in every phase. A villager the plague kills also gets back up as a plain zombie instead of a zombie villager.",
   "lethalbreed.option.spawnMaxExtraPasses": "Max Extra Spawn Passes",
   "lethalbreed.option.spawnMaxExtraPasses.desc": "Safety ceiling on the extra spawn passes per chunk per tick. It is a protection against a runaway tick, not a balance knob.",
   "lethalbreed.option.blockBabyZombies": "Block Baby Zombies",

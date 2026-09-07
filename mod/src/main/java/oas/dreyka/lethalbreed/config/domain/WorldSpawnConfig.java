@@ -39,7 +39,9 @@ public final class WorldSpawnConfig {
      *  spawning comes back, skeletons and creepers included. It is not a way to empty the world. */
     public static boolean nightSpawnEnabled = true;
     /** Only plain Zombie spawns. When ON, every other hostile (skeleton, creeper, husk, drowned, zombie
-     *  villager, zombified piglin, spider, …) is cancelled at spawn, in EVERY phase. */
+     *  villager, zombified piglin, spider, …) is cancelled at spawn, in EVERY phase. It reads on the plague's
+     *  own conversions too: a villager it kills gets back up as a plain zombie rather than a zombie villager,
+     *  since that body joins the same population. */
     public static boolean onlyPlainZombie = true;
     // Mob-cap and spawn-frequency multipliers are formula-driven (unbounded, no per-phase table any
     // more), see PhaseTable.mobcap()/frequency() and the phaseMobcap*/phaseFrequency* knobs in
