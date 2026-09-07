@@ -3,12 +3,14 @@ package oas.dreyka.lethalbreed.entity.move.gait;
 import oas.dreyka.lethalbreed.entity.move.MoveMath;
 
 
+import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
 import oas.dreyka.lethalbreed.config.domain.move.LeapConfig;
 
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.entity.ZombieState;
 import oas.dreyka.lethalbreed.entity.genes.ZombieVariation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -75,8 +77,10 @@ public final class Leap {
         double inv = 1.0 / horiz;
         double ndx = dx * inv;
         double ndz = dz * inv;
-        // Only leap if there's ground to land on, never leap into a gap / off a short bridge.
-        if (!hasLanding(level, ndx, ndz, ldf)) {
+        int dist = Mth.ceil(LeapConfig.leapLandingScanDist * Math.max(1.0, ldf));
+        // Only leap if there's ground to land on, never leap into a gap / off a short bridge, and never
+        // toward water a zombie that cannot swim would drown in.
+        if (!hasLanding(level, ndx, ndz, dist) || waterOnRoute(level, ndx, ndz, dist)) {
             return false;
         }
         entity.setDeltaMovement(ndx * LeapConfig.leapHorizontalSpeed * leapFactor * ldf,
@@ -92,19 +96,47 @@ public final class Leap {
     /**
      * True if there is solid ground near where a leap would land (so we don't jump into a gap).
      *
-     * <p>The probe follows {@code ldf}. The launch velocity below is multiplied by it (a Leaper carrying
-     * LEAP flies roughly twice as far) while this scan used a flat {@code leapLandingScanDist}, so the
-     * invariant "never leap into a gap" was checked at 3 blocks for a jump landing at 7 or more. Scaling the
-     * probe by the same factor keeps the check aimed where the zombie will actually come down.
+     * <p>{@code dist} follows the LEAP effect. The launch velocity below is multiplied by it (a Leaper
+     * carrying LEAP flies roughly twice as far) while this scan used a flat {@code leapLandingScanDist}, so
+     * the invariant "never leap into a gap" was checked at 3 blocks for a jump landing at 7 or more. Scaling
+     * the probe by the same factor keeps the check aimed where the zombie will actually come down.
      */
-    private boolean hasLanding(ServerLevel level, double ndx, double ndz, double ldf) {
-        int dist = Mth.ceil(LeapConfig.leapLandingScanDist * Math.max(1.0, ldf));
+    private boolean hasLanding(ServerLevel level, double ndx, double ndz, int dist) {
         int lx = Mth.floor(entity.getX() + ndx * dist);
         int lz = Mth.floor(entity.getZ() + ndz * dist);
         int ly = Mth.floor(entity.getY());
         for (int yy = ly + 1; yy >= ly - LeapConfig.leapLandingScanDepth; yy--) {
             if (level.getBlockState(new BlockPos(lx, yy, lz)).blocksMotion()) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * True when water stands anywhere along the arc, at any height the zombie could come down at.
+     *
+     * <p>{@link #hasLanding} alone lets a leap into a lake through, and does so by design: a lake bottom is
+     * solid, so the landing probe reports perfectly good ground under two blocks of water. The whole flight
+     * path is examined rather than the landing column alone because the leap is not accurate enough to trust
+     * one column: it overshoots or falls short by several blocks, so a pond crossed at its narrowest still
+     * ends with the zombie in it.
+     *
+     * <p>Skipped outright when the server lets zombies swim, where landing in water costs nothing.
+     */
+    private boolean waterOnRoute(ServerLevel level, double ndx, double ndz, int dist) {
+        if (!CombatMoveConfig.cannotSwim) {
+            return false;
+        }
+        int ly = Mth.floor(entity.getY());
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+        for (int step = 1; step <= dist; step++) {
+            int wx = Mth.floor(entity.getX() + ndx * step);
+            int wz = Mth.floor(entity.getZ() + ndz * step);
+            for (int yy = ly + 1; yy >= ly - LeapConfig.leapLandingScanDepth; yy--) {
+                if (level.getBlockState(p.set(wx, yy, wz)).getFluidState().is(FluidTags.WATER)) {
+                    return true;
+                }
             }
         }
         return false;
