@@ -1,6 +1,7 @@
 package oas.dreyka.lethalbreed.pack;
 
 import oas.dreyka.lethalbreed.pack.rule.PackJoinRule;
+import oas.dreyka.lethalbreed.api.event.PackJoinCallback;
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.pack.runtime.PackLifecycle;
@@ -62,8 +63,15 @@ public final class PackManager implements PackLifecycle.Registry {
      *
      * <p>The seed comes from the id, so a pack's wandering is reproducible across a reload. The same pack
      * always draws the same route, which makes an odd path reportable instead of a one-off.
+     *
+     * <p>Asked before the id is drawn, so a refused founder leaves no roster and no gap in the seed sequence.
+     *
+     * @return the new pack, or null when a {@link PackJoinCallback} listener refused the founder
      */
     public PackState form(SmartZombie founder) {
+        if (!PackJoinCallback.EVENT.invoker().allowJoin(founder.entity(), PackJoinCallback.FOUNDING, true)) {
+            return null;
+        }
         long id = nextId++;
         PackState pack = new PackState(id, founder.x(), founder.z(), id * 0x9E3779B97F4A7C15L);
         packs.put(id, pack);
@@ -72,7 +80,9 @@ public final class PackManager implements PackLifecycle.Registry {
     }
 
     public void join(SmartZombie sz, PackState pack) {
-        PackMembership.join(sz, pack, this::get);
+        if (PackJoinCallback.EVENT.invoker().allowJoin(sz.entity(), pack.id, true)) {
+            PackMembership.join(sz, pack, this::get);
+        }
     }
 
     public void leave(SmartZombie sz) {
