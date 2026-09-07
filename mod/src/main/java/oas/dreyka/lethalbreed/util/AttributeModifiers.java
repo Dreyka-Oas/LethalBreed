@@ -40,7 +40,25 @@ public final class AttributeModifiers {
                 AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     }
 
-    /** Shared stamp behind both flavours: same key, scale and no-op rule, only the operation differs. */
+    /**
+     * Same scaling as {@link #multiplyTotal}, held only for as long as the caller keeps it.
+     *
+     * <p>A permanent modifier is written into the entity's save data, so a hold that ends when its owner ends
+     * (a cling, an episode) would come back on the next load with nobody left to lift it. Transient is what
+     * makes the world reload the release of last resort.
+     */
+    public static void multiplyTotalTransient(LivingEntity entity, Holder<Attribute> attr, String idPath,
+            double factor) {
+        AttributeInstance inst = entity.getAttribute(attr);
+        if (inst == null) {
+            return;
+        }
+        inst.addOrUpdateTransientModifier(new AttributeModifier(
+                Identifier.fromNamespaceAndPath("lethalbreed", idPath), factor - 1.0,
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+    }
+
+    /** Shared stamp behind both permanent flavours: same key, scale and no-op rule, only the operation differs. */
     private static void multiply(LivingEntity entity, Holder<Attribute> attr, Identifier id, double factor,
             AttributeModifier.Operation operation) {
         AttributeInstance inst = entity.getAttribute(attr);

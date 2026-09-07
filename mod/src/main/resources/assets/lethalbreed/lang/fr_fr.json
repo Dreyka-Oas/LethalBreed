@@ -253,6 +253,8 @@
   "lethalbreed.option.leapClingMaxDropBelow.desc": "De combien de blocs le zombie peut être sous la cible et s'accrocher quand même.",
   "lethalbreed.option.leapClingCooldownActivations": "Bond : délai avant réaccroche (activations)",
   "lethalbreed.option.leapClingCooldownActivations.desc": "Activations avant qu'un même zombie puisse se raccrocher.",
+  "lethalbreed.option.leapClingSlowAmount": "Bond : ralentissement d'accroche",
+  "lethalbreed.option.leapClingSlowAmount.desc": "Part de sa vitesse que la proie perd tant qu'un zombie est accroché à son dos.",
   "lethalbreed.option.maxBreakHeight": "Hauteur max de casse",
   "lethalbreed.option.maxBreakHeight.desc": "Blocs verticaux max cassés pour passer.",
   "lethalbreed.option.floatInWater": "Flotter dans l'eau",

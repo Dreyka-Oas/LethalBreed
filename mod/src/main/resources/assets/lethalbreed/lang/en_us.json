@@ -253,6 +253,8 @@
   "lethalbreed.option.leapClingMaxDropBelow.desc": "How far below the target the zombie may still be and latch on anyway.",
   "lethalbreed.option.leapClingCooldownActivations": "Leap: Cling Cooldown (activations)",
   "lethalbreed.option.leapClingCooldownActivations.desc": "Activations before the same zombie may latch on again.",
+  "lethalbreed.option.leapClingSlowAmount": "Leap: Cling Slow",
+  "lethalbreed.option.leapClingSlowAmount.desc": "Fraction of its movement speed the prey loses while a zombie is holding onto its back.",
   "lethalbreed.option.maxBreakHeight": "Max Break Height",
   "lethalbreed.option.maxBreakHeight.desc": "Max vertical blocks a zombie breaks to pass.",
   "lethalbreed.option.floatInWater": "Float In Water",

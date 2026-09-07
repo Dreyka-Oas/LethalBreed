@@ -59,4 +59,8 @@ public final class LeapConfig {
     /** Activations before the same zombie may cling again. Twenty-four is six seconds at the default
      *  five-tick bucket, longer than the longest cling, so one zombie alone cannot pin a player forever. */
     public static int leapClingCooldownActivations = 24;
+    /** Fraction of its movement speed the prey loses while a zombie is holding onto its back. Applied to the
+     *  running total, so a speed potion is cut down by the same share rather than cancelling it out. At the
+     *  default a burdened player still walks, slowly enough to be caught by the rest of the horde. */
+    public static double leapClingSlowAmount = 0.35;
 }

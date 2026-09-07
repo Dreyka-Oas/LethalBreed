@@ -17,9 +17,9 @@ import net.minecraft.world.phys.Vec3;
  * vehicle's type cannot be serialized, and {@code EntityType.PLAYER} is declared {@code noSave()}, so a
  * zombie can never ride a player, which is the whole point of the feature. The guard is sound: a passenger
  * is written inside its vehicle's data and a player is never written at all, so the zombie would be lost on
- * the next save. It is pinned onto the victim by hand instead, where a passenger would have sat when the
- * ceiling allows it, and a cling ends if the world is reloaded under it, leaving nothing behind on the
- * zombie: no flag of ours is persisted, which is what makes that clean.
+ * the next save. It is pinned onto the victim's back by hand instead, and a cling ends if the world is
+ * reloaded under it, leaving nothing behind on either side: no flag of ours is persisted and the drag it
+ * puts on the prey is transient, which is what makes that clean.
  *
  * <p><b>Two cadences.</b> {@link #follow()} runs every tick from {@code EveryTickPass} or the zombie trails
  * a block behind a running player. {@link #tick} runs once per activation and is told how much game time
@@ -58,6 +58,7 @@ public final class Cling {
         victim = target;
         ticksLeft = ClingMath.durationTicks(entity.getRandom().nextDouble());
         owed = 0.0;
+        ClingMath.grip(target);
         entity.getNavigation().stop();
         owner.setState(ZombieState.CLINGING);
         // Placing it is left to follow(): LodBucketPass collects a zombie that latched during the bucket
@@ -132,6 +133,9 @@ public final class Cling {
     }
 
     private void release() {
+        if (victim != null) {
+            ClingMath.ungrip(victim);
+        }
         victim = null;
         ticksLeft = 0;
         owed = 0.0;
