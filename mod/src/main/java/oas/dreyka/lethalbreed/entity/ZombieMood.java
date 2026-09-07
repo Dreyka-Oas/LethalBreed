@@ -84,7 +84,7 @@ public final class ZombieMood {
         state = transitions.celebrationExpiry(entity, now, frac, state);
         state = transitions.fleeHysteresis(entity, now, frac, fleeThreat, state);
         state = transitions.sunShelter(entity, level, frac, state);
-        state = sleep.tick(level, entity, owner, now, threat, state);
+        state = MoodStateDispatch.settle(entity, sleep.tick(level, entity, owner, now, threat, state));
         // Per-state side effects (see MoodStateDispatch): the distress scream rallies the horde only once
         // the zombie has opened ground between itself and what it flees.
         if (MoodStateDispatch.apply(state, entity, level, owner, ctx, fleeThreat, transitions.distressScreamed())) {

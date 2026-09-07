@@ -1,5 +1,7 @@
 package oas.dreyka.lethalbreed.entity.mood;
 
+import oas.dreyka.lethalbreed.api.event.MoodCallback;
+import oas.dreyka.lethalbreed.api.event.MoodState;
 import oas.dreyka.lethalbreed.config.domain.ZombieMoodConfig;
 import oas.dreyka.lethalbreed.dimension.WorldAiContext;
 import oas.dreyka.lethalbreed.entity.LodLevel;
@@ -28,6 +30,21 @@ public final class MoodStateDispatch {
     /** ZombieMood's mood states. Owned here, with no duplicate private enum on ZombieMood, so dispatch is a
      *  plain typed switch, no string bridge between the two classes. */
     public enum State { NORMAL, FLEEING, SHELTERING, CELEBRATING, SLEEPING }
+
+    /**
+     * Let the listeners have the mood the transitions arrived at, and return whatever comes back.
+     *
+     * <p>Conversion is by ordinal in both directions, which costs an array lookup and holds only as long as
+     * {@link MoodState} and {@link State} carry the same names in the same order. {@code MoodStateParityTest}
+     * is what keeps that true.
+     */
+    public static State settle(Zombie entity, State proposed) {
+        MoodState answer = MoodCallback.EVENT.invoker().mood(entity, MOODS[proposed.ordinal()]);
+        return answer == null ? proposed : STATES[answer.ordinal()];
+    }
+
+    private static final MoodState[] MOODS = MoodState.values();
+    private static final State[] STATES = State.values();
 
     /** Returns true if the distress scream fired this call (caller bumps its own counter + latch). No-op for
      *  {@code NORMAL}. */
