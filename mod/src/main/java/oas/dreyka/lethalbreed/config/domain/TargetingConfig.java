@@ -57,4 +57,11 @@ public final class TargetingConfig {
     public static double soundMoveThreshold = 0.08;
     /** Distance (blocks) at which a zombie considers it has reached the sound source. */
     public static double soundArriveDistance = 2.5;
+
+    // Appended at the end of the holder on purpose: the file on a player's disk is written in declaration
+    // order, so adding this anywhere else would shuffle every line under it in a config they may have
+    // annotated or diffed.
+    /** Tallest creature (blocks) a zombie will hunt. Anything above this is left alone, which is how giants
+     *  and oversized modded mobs stay out of the horde's reach. Raise it to let them be hunted. */
+    public static double targetMaxPreyHeight = 5.0;
 }

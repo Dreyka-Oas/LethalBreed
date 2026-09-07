@@ -167,6 +167,8 @@
   "lethalbreed.option.soundMoveThreshold.desc": "Mouvement min pour émettre un pas.",
   "lethalbreed.option.soundArriveDistance": "Distance d'arrivée au son",
   "lethalbreed.option.soundArriveDistance.desc": "Distance considérée comme atteinte de la source.",
+  "lethalbreed.option.targetMaxPreyHeight": "Taille max des proies",
+  "lethalbreed.option.targetMaxPreyHeight.desc": "Plus grande créature qu'un zombie chasse.",
   "lethalbreed.option.clearWeather": "Météo dégagée",
   "lethalbreed.option.clearWeather.desc": "Garde la météo dégagée.",
   "lethalbreed.option.enableVariation": "Activer la variation",

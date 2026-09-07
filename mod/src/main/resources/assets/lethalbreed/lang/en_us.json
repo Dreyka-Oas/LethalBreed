@@ -167,6 +167,8 @@
   "lethalbreed.option.soundMoveThreshold.desc": "Min movement to emit a footstep sound.",
   "lethalbreed.option.soundArriveDistance": "Sound Arrive Distance",
   "lethalbreed.option.soundArriveDistance.desc": "Distance counted as reaching the source.",
+  "lethalbreed.option.targetMaxPreyHeight": "Max Prey Height",
+  "lethalbreed.option.targetMaxPreyHeight.desc": "Tallest creature a zombie will hunt.",
   "lethalbreed.option.clearWeather": "Clear Weather",
   "lethalbreed.option.clearWeather.desc": "Keep the weather clear.",
   "lethalbreed.option.enableVariation": "Enable Variation",

@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.util.target;
 
+import oas.dreyka.lethalbreed.api.event.TargetCandidateCallback;
 import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 import oas.dreyka.lethalbreed.util.Players;
 
@@ -21,17 +22,27 @@ import net.minecraft.world.entity.player.Player;
 public final class TargetFilter {
     private TargetFilter() {}
 
+    /**
+     * The shipped answer, then whatever the listeners make of it.
+     *
+     * <p>A dead or removed candidate never reaches them: it is not a rule anybody could sensibly want to
+     * override, and it is the one case the scan hits most often.
+     */
     public static boolean isValid(Mob self, LivingEntity e) {
         if (e == self || !e.isAlive() || e.isRemoved()) {
             return false;
         }
+        return TargetCandidateCallback.EVENT.invoker().isValidPrey(self, e, byRules(e));
+    }
+
+    private static boolean byRules(LivingEntity e) {
         if (e instanceof Zombie) {
             return false; // own kind (zombie / husk / zombie villager / zombified piglin)
         }
         if (e instanceof EnderDragon || e instanceof WitherBoss) {
             return false; // bosses
         }
-        if (e.getBbHeight() > 5.0f) {
+        if (e.getBbHeight() > TargetingConfig.targetMaxPreyHeight) {
             return false; // too tall (giants, large modded mobs): never attack these
         }
         if (e instanceof ArmorStand) {

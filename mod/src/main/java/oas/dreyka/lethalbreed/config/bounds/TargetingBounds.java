@@ -18,6 +18,6 @@ public final class TargetingBounds {
         r.b("soundLoudMultiplier", 1, 16);
         r.b("soundMoveThreshold", 0, 10);
         r.b("soundArriveDistance", 0, 64);
-
+        r.b("targetMaxPreyHeight", 0, 64);
     }
 }
