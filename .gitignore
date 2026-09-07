@@ -77,7 +77,5 @@ docs/superpowers/
 PLAN.md
 DEFAUTS-CONNUS.md
 
-# ---- Dev/test tooling and test source, never published: only the player-facing mod ships ----
+# ---- Dev/test tooling, never published: only the mod itself ships ----
 mod/scripts/
-mod/src/test/
-mod/src/gametest/
