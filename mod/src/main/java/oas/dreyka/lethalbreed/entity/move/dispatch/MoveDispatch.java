@@ -6,6 +6,7 @@ import oas.dreyka.lethalbreed.dimension.WorldAiContext;
 import oas.dreyka.lethalbreed.entity.LodLevel;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.entity.move.gait.Descend;
+import oas.dreyka.lethalbreed.entity.move.Clearance;
 import oas.dreyka.lethalbreed.entity.move.MoveMath;
 import oas.dreyka.lethalbreed.entity.move.gait.Obstacle;
 import oas.dreyka.lethalbreed.entity.move.gait.climb.PillarClimb;
@@ -44,6 +45,11 @@ public final class MoveDispatch {
         boolean targetUnderfoot = dy <= -CombatMoveConfig.descendThreshold && horizSq <= climbR * climbR;
         int sdx = MoveMath.stepSign(dx);
         int sdz = MoveMath.stepSign(dz);
+        // Ahead of all three branches: a body that does not physically fit where it stands cannot walk, climb
+        // or descend its way out, so the lip pinning it comes off before anything else is tried.
+        if (stuck && Clearance.clearJam(owner, level, ctx, bx, bz, sdx, sdz)) {
+            return;
+        }
         if (targetOverhead) {
             // Build a dirt pillar to reach an overhead target, but only once genuinely STUCK (no horizontal
             // progress), otherwise keep walking toward the wall/target this tick, so a zombie still 2-5 blocks
