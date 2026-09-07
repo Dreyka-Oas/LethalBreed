@@ -4,6 +4,7 @@ import oas.dreyka.lethalbreed.effect.contamination.symptom.ContaminationEpisodes
 import oas.dreyka.lethalbreed.effect.contamination.symptom.ContaminationHallucination;
 import oas.dreyka.lethalbreed.effect.contamination.symptom.ContaminationSymptoms;
 
+import oas.dreyka.lethalbreed.api.event.ContaminationCallback;
 import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
 import oas.dreyka.lethalbreed.effect.LethalBreedEffects;
 import oas.dreyka.lethalbreed.probe.DevProbe;
@@ -11,6 +12,7 @@ import oas.dreyka.lethalbreed.probe.DevProbe;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
  * Infection entry/exit points: contaminate, chunk-load re-tracking, death (+ humanoid reanimation), and the
@@ -24,10 +26,19 @@ public final class ContaminationLifecycle {
     private ContaminationLifecycle() {}
 
     /** Infect a victim (called from the zombie-hit hook). No-op if already contaminated or it's a zombie.
-     *  Starts LATENT: nothing visible, no plague damage, only a brief particleless slow right now. */
+     *  Starts LATENT: nothing visible, no plague damage, only a brief particleless slow right now.
+     *
+     *  <p>The single door the plague comes through, which is why {@link ContaminationCallback} is asked here
+     *  and nowhere else: {@link #forceLevel} infects through this call before it sets a level, so an addon
+     *  that immunises its creature is obeyed by {@code /lethaldev level} too, without that command needing to
+     *  know the event exists. The two guards above the question stay above it on purpose, a zombie never
+     *  catching what it carries and a victim never being infected twice. */
     public static void contaminate(LivingEntity e) {
-        if (!ContaminationConfig.contaminationEnabled || e instanceof net.minecraft.world.entity.monster.zombie.Zombie
-                || ContaminationState.age(e) > 0) {
+        if (e instanceof Zombie || ContaminationState.age(e) > 0) {
+            return;
+        }
+        if (!ContaminationCallback.EVENT.invoker()
+                .allowContamination(e, ContaminationConfig.contaminationEnabled)) {
             return;
         }
         e.setAttached(ContaminationState.CONTAM, 1);
