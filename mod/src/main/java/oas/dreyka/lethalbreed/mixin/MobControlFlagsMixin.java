@@ -3,7 +3,6 @@ package oas.dreyka.lethalbreed.mixin;
 import oas.dreyka.lethalbreed.util.MovementLock;
 
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.goal.Goal;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -1,6 +1,5 @@
 package oas.dreyka.lethalbreed.pack.runtime;
 
-import oas.dreyka.lethalbreed.pack.rule.PackAdvance;
 import oas.dreyka.lethalbreed.GameState;
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
@@ -37,7 +36,7 @@ public final class PackLifecycle {
      * members for a reason that is not in any rule. Bounded by {@code packMaxSize} reads.
      *
      * <p>A pack with no live member keeps the position it had: it is virtual, or everyone is on disk, and in
-     * both cases {@code PackAdvance} owns where it is.
+     * both cases {@link oas.dreyka.lethalbreed.pack.rule.PackAdvance} owns where it is.
      */
     public static void recentroid(PackState pack) {
         if (pack.liveIds.isEmpty()) {

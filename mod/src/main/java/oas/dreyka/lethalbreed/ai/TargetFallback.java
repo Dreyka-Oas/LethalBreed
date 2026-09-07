@@ -1,6 +1,5 @@
 package oas.dreyka.lethalbreed.ai;
 
-import oas.dreyka.lethalbreed.pack.rule.PackTether;
 import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 import oas.dreyka.lethalbreed.entity.LodLevel;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
@@ -50,7 +49,7 @@ final class TargetFallback {
             }
         } else if (sz.pursuit().pack().hasWaypoint()) {
             // Lowest priority: nothing seen, nothing remembered, but the zombie's pack wants it somewhere.
-            // Deliberately NOT the memory slot (see PackTether) so a pack march cannot be clobbered by a
+            // Deliberately NOT the memory slot (see {@link oas.dreyka.lethalbreed.pack.rule.PackTether}) so a pack march cannot be clobbered by a
             // passing cow or hijacked by a distress rally, and a marching member is not mistaken for one
             // investigating a noise (which would keep it awake through the day, burning in the sun).
             sz.pursuit().setPackTarget();

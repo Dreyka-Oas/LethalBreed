@@ -44,13 +44,13 @@ public final class SpawnFilter {
     /** UUIDs already handed to {@link #shouldCullOnLoad} this session, standing in for the "first add" flag
      *  {@code Entity} lacks. Hostiles only, emptied entry by entry as they die ({@link #onEntityUnload})
      *  and wholesale at SERVER_STOPPED ({@link #onServerStopped}). */
-    private static final Set<UUID> loadedOnce = new HashSet<>();
+    private static final Set<UUID> LOADED_ONCE = new HashSet<>();
 
     /** Drops the seen-UUID set. Static state outlives the world, so a set left standing would carry a
      *  singleplayer session's verdicts into the next world opened in the same JVM, where a dedicated server
      *  restarting the process would start over. */
     public static void onServerStopped() {
-        loadedOnce.clear();
+        LOADED_ONCE.clear();
     }
 
     /** ENTITY_UNLOAD: a mob that will never load again leaves the set. Without this the set only grows, one
@@ -61,20 +61,20 @@ public final class SpawnFilter {
     public static void onEntityUnload(Entity entity) {
         Entity.RemovalReason reason = entity.getRemovalReason();
         if (reason == Entity.RemovalReason.KILLED || reason == Entity.RemovalReason.DISCARDED) {
-            loadedOnce.remove(entity.getUUID());
+            LOADED_ONCE.remove(entity.getUUID());
         }
     }
 
     /** Records the UUID and answers whether this add is its first this session. */
     static boolean firstLoadThisSession(UUID id) {
-        return loadedOnce.add(id);
+        return LOADED_ONCE.add(id);
     }
 
     /** The ENTITY_LOAD verdict: cull only on the entity's first add, so a mob that already survived its
      *  spawn is not discarded later just because its chunk came back or the phase moved under it. */
     public static boolean shouldCullOnLoad(Entity entity) {
         if (!(entity instanceof Mob mob) || mob.getType().getCategory() != MobCategory.MONSTER) {
-            return false; // only hostile mobs are governed here, so only they go into loadedOnce
+            return false; // only hostile mobs are governed here, so only they go into LOADED_ONCE
         }
         return firstLoadThisSession(entity.getUUID()) && shouldCull(entity);
     }

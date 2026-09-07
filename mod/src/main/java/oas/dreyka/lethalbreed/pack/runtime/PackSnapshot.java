@@ -1,7 +1,6 @@
 package oas.dreyka.lethalbreed.pack.runtime;
 
 import oas.dreyka.lethalbreed.LethalBreed;
-import oas.dreyka.lethalbreed.entity.genes.ZombieVariation;
 import oas.dreyka.lethalbreed.pack.PackState;
 
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +26,7 @@ import java.util.UUID;
  * The NBT round trip for one dematerialised pack member.
  *
  * <p><b>Why full serialisation and not a respawn.</b> Re-spawning a zombie and re-rolling its variation would
- * silently change it. {@code ZombieVariation} seeds every draw on the entity UUID, and a fresh
+ * silently change it. {@link oas.dreyka.lethalbreed.entity.genes.ZombieVariation} seeds every draw on the entity UUID, and a fresh
  * {@code EntityType.ZOMBIE.spawn()} gets a fresh UUID, so size, speed, health, effects <em>and the special
  * type</em> would all be re-drawn, and a Juggernaut could come back a Bomber. Worse, {@code applyPhase} reads
  * {@code PhaseManager.current()} at call time: a pack dematerialised in phase 3 and restored in phase 7 would
