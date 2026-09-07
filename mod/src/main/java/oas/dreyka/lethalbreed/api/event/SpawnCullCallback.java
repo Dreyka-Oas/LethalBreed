@@ -1,7 +1,5 @@
 package oas.dreyka.lethalbreed.api.event;
 
-import oas.dreyka.lethalbreed.LethalBreed;
-
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.entity.Entity;
@@ -58,10 +56,6 @@ public interface SpawnCullCallback {
     Set<String> BLAMED = ConcurrentHashMap.newKeySet();
 
     private static void blame(SpawnCullCallback listener, Throwable t) {
-        String name = listener.getClass().getName();
-        if (BLAMED.add(name)) {
-            LethalBreed.LOGGER.error("[LethalBreed] spawn cull listener {} threw, and is being reported "
-                    + "once only; the mob it was asked about is being culled", name, t);
-        }
+        CallbackBlame.report(BLAMED, listener, t, "spawn cull", "the mob it was asked about is being culled");
     }
 }

@@ -1,7 +1,5 @@
 package oas.dreyka.lethalbreed.api.event;
 
-import oas.dreyka.lethalbreed.LethalBreed;
-
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -54,10 +52,6 @@ public interface MoodCallback {
     Set<String> BLAMED = ConcurrentHashMap.newKeySet();
 
     private static void blame(MoodCallback listener, Throwable t) {
-        String name = listener.getClass().getName();
-        if (BLAMED.add(name)) {
-            LethalBreed.LOGGER.error("[LethalBreed] mood listener {} threw, and is being reported once only; "
-                    + "the mood it was asked about is left as it stood", name, t);
-        }
+        CallbackBlame.report(BLAMED, listener, t, "mood", "the mood it was asked about is left as it stood");
     }
 }

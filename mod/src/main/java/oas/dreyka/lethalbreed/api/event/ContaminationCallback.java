@@ -1,7 +1,5 @@
 package oas.dreyka.lethalbreed.api.event;
 
-import oas.dreyka.lethalbreed.LethalBreed;
-
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.entity.LivingEntity;
@@ -55,10 +53,7 @@ public interface ContaminationCallback {
     Set<String> BLAMED = ConcurrentHashMap.newKeySet();
 
     private static void blame(ContaminationCallback listener, Throwable t) {
-        String name = listener.getClass().getName();
-        if (BLAMED.add(name)) {
-            LethalBreed.LOGGER.error("[LethalBreed] contamination listener {} threw, and is being reported "
-                    + "once only; the verdict it was asked about is left as it stood", name, t);
-        }
+        CallbackBlame.report(BLAMED, listener, t, "contamination",
+                "the verdict it was asked about is left as it stood");
     }
 }
