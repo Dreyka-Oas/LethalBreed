@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.util.target;
 
+import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
 import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 import oas.dreyka.lethalbreed.spatial.TargetIndex;
 import oas.dreyka.lethalbreed.probe.DevProbe;
@@ -37,6 +38,13 @@ public final class TargetSelector {
         }
         if (best == null) {
             return current; // nothing else detected → stay committed and keep digging toward it
+        }
+        // Stickiness must not outrank the dry-first rule of TargetOrder: a zombie that cannot swim and is
+        // committed to prey now standing in water abandons it for anything reachable on foot, however much
+        // further away it is. Without this, the margin holds the zombie on the wading target and it walks
+        // into the lake after it.
+        if (CombatMoveConfig.cannotSwim && current.isInWater() && !best.isInWater()) {
+            return best;
         }
         // Keep current unless the new candidate is closer than current ÷ margin (compare in squared space).
         return curSq <= self.distanceToSqr(best) * margin * margin ? current : best;
