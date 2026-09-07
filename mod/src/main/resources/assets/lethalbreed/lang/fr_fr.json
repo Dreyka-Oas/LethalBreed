@@ -517,6 +517,8 @@
   "lethalbreed.option.contamPhaseScale.desc": "Chance d'infection ajoutée par phase.",
   "lethalbreed.option.contamMaxChance": "Chance max d'infection",
   "lethalbreed.option.contamMaxChance.desc": "Plafond de la chance d'infection.",
+  "lethalbreed.option.contamCertainPhase": "Infection certaine à partir de la phase",
+  "lethalbreed.option.contamCertainPhase.desc": "Phase à partir de laquelle tout coup de zombie infecte à coup sûr. -1 laisse la chance décider.",
   "lethalbreed.option.contamSymptomMinDays": "Déclenchement des symptômes : jours min",
   "lethalbreed.option.contamSymptomMinDays.desc": "Nombre minimum de jours de jeu entre deux tirages pour que les symptômes latents se déclarent.",
   "lethalbreed.option.contamSymptomMaxDays": "Déclenchement des symptômes : jours max",

@@ -16,6 +16,9 @@ public final class ContaminationConfig {
     public static double contamPhaseScale = 0.0307;
     /** Cap on the infection chance (highest difficulty). */
     public static double contamMaxChance = 0.45;
+    /** Phase from which a zombie hit infects outright, cap and all. Below it the scaled chance above decides;
+     *  from it on there is no roll left to win. -1 turns it off and leaves the chance in charge for good. */
+    public static int contamCertainPhase = 5;
 
     // ---- Latent phase (invisible): infected but symptoms not yet triggered ----
     // Nothing is shown (no HUD tint, no icon, no particles). No plague damage yet. The only tell is a brief,

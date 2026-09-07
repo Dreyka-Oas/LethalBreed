@@ -7,6 +7,7 @@ import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 import oas.dreyka.lethalbreed.dimension.DimensionManager;
 import oas.dreyka.lethalbreed.dimension.WorldAiContext;
 import oas.dreyka.lethalbreed.effect.ContaminationManager;
+import oas.dreyka.lethalbreed.effect.contamination.ContaminationRoll;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.entity.mood.sleep.DozePose;
 import oas.dreyka.lethalbreed.entity.ZombieRegistry;
@@ -80,9 +81,7 @@ public final class EntityEventsInit {
             if (ContaminationConfig.contaminationEnabled && source.getEntity() instanceof Zombie
                     && !(entity instanceof Zombie)) {
                 int phase = PhaseManager.current();
-                double chance = Math.min(ContaminationConfig.contamMaxChance,
-                        ContaminationConfig.contamBaseChance + phase * ContaminationConfig.contamPhaseScale);
-                if (entity.getRandom().nextDouble() < chance) {
+                if (entity.getRandom().nextDouble() < ContaminationRoll.infectionChance(phase)) {
                     ContaminationManager.contaminate(entity);
                 }
             }

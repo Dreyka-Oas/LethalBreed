@@ -14,6 +14,7 @@ public final class ContaminationBounds {
         r.b("contamBaseChance", 0, 1);
         r.b("contamPhaseScale", 0, 1);
         r.b("contamMaxChance", 0, 1);
+        r.b("contamCertainPhase", -1, 10_000);
         r.b("contamDamageMin", 0, 1000);
         r.b("contamDamageMax", 0, 1000);
         r.b("contamIntervalMinSec", 0, 3600);

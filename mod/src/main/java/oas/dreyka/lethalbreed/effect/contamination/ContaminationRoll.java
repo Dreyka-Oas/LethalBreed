@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.effect.contamination;
 
+import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
 import oas.dreyka.lethalbreed.config.domain.engine.ExpertConfig;
 
 import java.util.Random;
@@ -54,5 +55,22 @@ public final class ContaminationRoll {
     public static boolean percent(Random rng, double minPct, double maxPct) {
         double pct = uniform(rng, minPct, maxPct);
         return rng.nextDouble() * 100.0 < pct;
+    }
+
+    /**
+     * Odds a zombie's hit infects at {@code phase}: the capped ramp, or certainty once the world is late
+     * enough.
+     *
+     * <p>The ramp alone never reaches 1 whatever the phase, so on a world that had been running for weeks
+     * the plague was still a coin flip and a corpse rising again was down to luck.
+     * {@code contamCertainPhase} is where the flip stops, and a negative value keeps the ramp in charge for
+     * a server that wants the old behaviour.
+     */
+    public static double infectionChance(int phase) {
+        if (ContaminationConfig.contamCertainPhase >= 0 && phase >= ContaminationConfig.contamCertainPhase) {
+            return 1.0;
+        }
+        return Math.min(ContaminationConfig.contamMaxChance,
+                ContaminationConfig.contamBaseChance + phase * ContaminationConfig.contamPhaseScale);
     }
 }

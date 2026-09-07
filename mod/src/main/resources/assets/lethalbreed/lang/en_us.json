@@ -517,6 +517,8 @@
   "lethalbreed.option.contamPhaseScale.desc": "Added infection chance per phase.",
   "lethalbreed.option.contamMaxChance": "Contamination Max Chance",
   "lethalbreed.option.contamMaxChance.desc": "Cap on the infection chance.",
+  "lethalbreed.option.contamCertainPhase": "Certain Infection From Phase",
+  "lethalbreed.option.contamCertainPhase.desc": "Phase from which every zombie hit infects outright. -1 leaves the scaled chance in charge.",
   "lethalbreed.option.contamSymptomMinDays": "Symptom Roll: Min Days",
   "lethalbreed.option.contamSymptomMinDays.desc": "Fewest in-game days between rolls for latent symptoms to surface.",
   "lethalbreed.option.contamSymptomMaxDays": "Symptom Roll: Max Days",
