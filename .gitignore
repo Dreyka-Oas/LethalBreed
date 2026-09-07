@@ -72,3 +72,7 @@ Thumbs.db
 
 # ---- Session-scoped design docs, never published ----
 docs/superpowers/
+
+# ---- Working notes, never published ----
+PLAN.md
+DEFAUTS-CONNUS.md
