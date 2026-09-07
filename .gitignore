@@ -76,3 +76,6 @@ docs/superpowers/
 # ---- Working notes, never published ----
 PLAN.md
 DEFAUTS-CONNUS.md
+
+# ---- Dev/test tooling, never published: only the mod itself ships ----
+mod/scripts/
