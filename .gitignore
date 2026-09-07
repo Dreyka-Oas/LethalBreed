@@ -69,3 +69,6 @@ Thumbs.db
 
 # ---- Local scratch for the subagent-driven run, never pushed ----
 .superpowers/
+
+# ---- Session-scoped design docs, never published ----
+docs/superpowers/
