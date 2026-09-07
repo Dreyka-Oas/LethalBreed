@@ -33,9 +33,7 @@ Addons implement `oas.dreyka.lethalbreed.api.LethalBreedAddon` and declare it un
 `lethalbreed:addon` entrypoint. See `LethalBreedApi` for the phase event and the AI namespace allowlist,
 which is how an addon's own zombie goal avoids being read as a conflict.
 
-Minecraft 1.21.11, Fabric 0.19.3, Java 21.
-
-The mod is in [`mod/`](mod/).
+A Fabric mod. The mod is in [`mod/`](mod/).
 
 MIT, © 2026 Dreyka Oas. Play it, share it, fork it, build an addon on it and publish that addon, all
 without asking. Keep the copyright and permission notice with any substantial copy of the code, which
