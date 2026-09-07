@@ -1,8 +1,12 @@
 package oas.dreyka.lethalbreed.entity.spawn;
 
+import oas.dreyka.lethalbreed.api.event.SpawnCullCallback;
 import oas.dreyka.lethalbreed.config.domain.WorldSpawnConfig;
 import oas.dreyka.lethalbreed.phase.PhaseManager;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -22,6 +26,11 @@ import java.util.UUID;
  *       (NOT Husk / ZombieVillager / ZombifiedPiglin / Drowned, which are all subclasses) survives; every
  *       other {@link MobCategory#MONSTER} is culled.</li>
  * </ul>
+ *
+ * <p>That rule takes the whole hostile population with it, including whatever another mod adds. Two ways
+ * out, both of them another author's to use and neither of them a config option a player can turn on: the
+ * {@link #SPAWN_PROTECTED} tag for a fixed list of entity types, and {@link SpawnCullCallback} for a
+ * decision that has to look at the mob.
  *
  * <p>Passive/ambient/water mobs are never touched. The {@code ENTITY_LOAD} hook fires identically for a
  * fresh spawn and for a chunk simply coming back with the same mob in it, so the hook calls
@@ -76,13 +85,27 @@ public final class SpawnFilter {
         return type == EntityType.ENDER_DRAGON || type == EntityType.WITHER;
     }
 
+    /** Entity types a datapack, or another mod's own data, declares off limits. Empty in the shipped jar:
+     *  it exists so that sparing a boss costs a JSON file rather than a listener. */
+    public static final TagKey<EntityType<?>> SPAWN_PROTECTED = TagKey.create(Registries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath("lethalbreed", "spawn_protected"));
+
     /** True if this entity must be discarded at load under the current phase + filter config. Reads only:
-     *  the dev harnesses re-ask it on a prop to explain a failure, and must get the same answer twice. */
+     *  the dev harnesses re-ask it on a prop to explain a failure, and must get the same answer twice.
+     *
+     *  <p>The listeners are asked last, and only about a mob the rules have already condemned. Asking them
+     *  about every hostile that was going to live anyway would put another mod's code on the load path of
+     *  the one mob population this mod exists to own. */
     public static boolean shouldCull(Entity entity) {
+        return culledByRules(entity)
+                && SpawnCullCallback.EVENT.invoker().allowCull(entity, PhaseManager.current(), true);
+    }
+
+    private static boolean culledByRules(Entity entity) {
         if (!(entity instanceof Mob mob) || mob.getType().getCategory() != MobCategory.MONSTER) {
             return false; // only hostile mobs are governed here
         }
-        if (isProtectedBoss(mob.getType())) {
+        if (isProtectedBoss(mob.getType()) || mob.getType().is(SPAWN_PROTECTED)) {
             return false;
         }
         // Phase 0 = classic: nothing hostile spawns.
