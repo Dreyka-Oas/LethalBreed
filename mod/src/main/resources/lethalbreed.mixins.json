@@ -6,6 +6,7 @@
     "plague.EffectClearCuresPlagueMixin",
     "plague.LivingEntityCanBeAffectedMixin",
     "plague.MilkKeepsPlagueMixin",
+    "MobControlFlagsMixin",
     "MobGoalsAccessor",
     "plague.PlagueBlocksRegenMixin",
     "PlayerItemDropSoundMixin",

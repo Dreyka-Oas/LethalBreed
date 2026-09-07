@@ -6,6 +6,7 @@ import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.entity.ZombiePursuit;
 import oas.dreyka.lethalbreed.entity.ZombieState;
 import oas.dreyka.lethalbreed.special.SpecialBehavior;
+import oas.dreyka.lethalbreed.util.MovementLock;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -24,6 +25,8 @@ final class BrainGuards {
     private final BrainNavigator nav;
     /** True while the swim driver owns this zombie; read back by the brain for {@code isSwimming()}. */
     private boolean swimming = false;
+    /** True while {@link #handleArmed} holds the movement lock, so it is given back exactly once. */
+    private boolean parked = false;
 
     BrainGuards(SmartZombie owner, Zombie entity, PillarClimb pillar, BrainNavigator nav) {
         this.owner = owner;
@@ -45,6 +48,10 @@ final class BrainGuards {
      *  moving, exactly like a Creeper mid-hiss. */
     boolean handleArmed() {
         if (!SpecialBehavior.fuseIsLit(entity)) {
+            if (parked) {
+                MovementLock.release(entity);
+                parked = false;
+            }
             return false;
         }
         pillar.cancel();
@@ -52,7 +59,11 @@ final class BrainGuards {
         // swimStep() every server tick (outside the normal LOD-throttled cadence) for as long as
         // isSwimming() answers true, which would keep dragging it toward its target through the whole fuse.
         swimming = false;
-        entity.getNavigation().stop();
+        // Stopping the navigation alone left the Bomber creeping about a block over a long fuse: the walk
+        // input MoveControl had already written stays in force, and the wander goal is free to hand out a
+        // new path the moment the target below is cleared. MovementLock takes both away.
+        MovementLock.hold(entity);
+        parked = true;
         // Kill horizontal momentum only. Falling still falls, so an armed Bomber mid-leap lands normally
         // and does not freeze in the air.
         entity.setDeltaMovement(0.0, entity.getDeltaMovement().y, 0.0);
