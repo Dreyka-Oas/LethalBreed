@@ -52,7 +52,7 @@ public final class SpatialGrid {
             return newKey;
         }
         if (z.pursuit().inGrid()) {
-            removeFrom(oldKey, z);
+            CellMath.removeFrom(cells, oldKey, z);
         }
         cells.computeIfAbsent(newKey, k -> new ArrayList<>(4)).add(z);
         z.pursuit().setCell(newKey, true);
@@ -61,18 +61,8 @@ public final class SpatialGrid {
 
     public void remove(SmartZombie z) {
         if (z.pursuit().inGrid()) {
-            removeFrom(z.pursuit().cellKey(), z);
+            CellMath.removeFrom(cells, z.pursuit().cellKey(), z);
             z.pursuit().setCell(0L, false);
-        }
-    }
-
-    private void removeFrom(long key, SmartZombie z) {
-        List<SmartZombie> list = cells.get(key);
-        if (list != null) {
-            list.remove(z);
-            if (list.isEmpty()) {
-                cells.remove(key);
-            }
         }
     }
 

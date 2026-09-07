@@ -7,7 +7,9 @@ import oas.dreyka.lethalbreed.config.io.ConfigIo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,36 +41,35 @@ public final class ConfigAccess {
      * method's private helper and has no other caller.
      */
     public static void captureDefaultsFor(Class<?> holder) {
+        List<Field> fields = new ArrayList<>();
         for (Field f : holder.getDeclaredFields()) {
             int m = f.getModifiers();
-            if (!Modifier.isPublic(m) || !Modifier.isStatic(m) || Modifier.isFinal(m)
-                    || !ConfigSchema.isSupported(f.getType())) {
-                continue;
-            }
-            try {
-                DEFAULTS.put(f.getName(), ConfigType.copyIfArray(f.get(null)));
-            } catch (IllegalAccessException e) {
-                // Same reasoning as snapshot(): an option with no factory default resets to nothing and
-                // reports success anyway. Only a broken build gets here, so throwing beats tolerating it.
-                throw new IllegalStateException("cannot capture default for " + f.getName(), e);
+            if (Modifier.isPublic(m) && Modifier.isStatic(m) && !Modifier.isFinal(m)
+                    && ConfigSchema.isSupported(f.getType())) {
+                fields.add(f);
             }
         }
+        captureInto(DEFAULTS, fields);
     }
 
     private static Map<String, Object> snapshot() {
         Map<String, Object> m = new LinkedHashMap<>();
-        for (Field f : ConfigSchema.all()) {
+        captureInto(m, ConfigSchema.all());
+        return m;
+    }
+
+    /** Read every field's current value into {@code target}, keyed by field name. Shared by the initial
+     *  snapshot (all schema fields) and a late holder registration (just that holder's fields): an option
+     *  with no captured default resets to nothing and reports success anyway, so a broken build throws here
+     *  rather than tolerating the gap. */
+    private static void captureInto(Map<String, Object> target, List<Field> fields) {
+        for (Field f : fields) {
             try {
-                m.put(f.getName(), ConfigType.copyIfArray(f.get(null)));
+                target.put(f.getName(), ConfigType.copyIfArray(f.get(null)));
             } catch (IllegalAccessException e) {
-                // An option the schema lists but cannot read is a broken build, not a runtime condition to
-                // tolerate: skipping it silently leaves that option with NO factory default, so a later
-                // reset restores nothing and reports success anyway.
-                throw new IllegalStateException(
-                        "config option " + f.getName() + " is listed by the schema but not readable", e);
+                throw new IllegalStateException("cannot capture default for " + f.getName(), e);
             }
         }
-        return m;
     }
 
     public static String read(Field f) {

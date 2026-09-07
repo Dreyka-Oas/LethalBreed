@@ -55,7 +55,7 @@ final class PreyCells {
     void remove(LivingEntity e) {
         long k = cellOf.remove(e.getId());
         if (k != Long.MIN_VALUE) {
-            removeFrom(k, e);
+            CellMath.removeFrom(cells, k, e);
         }
     }
 
@@ -67,24 +67,13 @@ final class PreyCells {
             return;
         }
         if (was != Long.MIN_VALUE) {
-            removeFrom(was, e);
+            CellMath.removeFrom(cells, was, e);
         }
-        cells.computeIfAbsent(now, key -> new ArrayList<>(4)).add(e);
-        cellOf.put(e.getId(), now);
+        insert(e);
     }
 
     void clear() {
         cells.clear();
         cellOf.clear();
-    }
-
-    private void removeFrom(long key, LivingEntity e) {
-        List<LivingEntity> list = cells.get(key);
-        if (list != null) {
-            list.remove(e);
-            if (list.isEmpty()) {
-                cells.remove(key);
-            }
-        }
     }
 }

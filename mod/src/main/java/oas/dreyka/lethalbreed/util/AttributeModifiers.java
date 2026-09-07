@@ -23,12 +23,7 @@ public final class AttributeModifiers {
 
     /** Scale {@code attr}'s base by {@code factor}, keyed by an explicit id. No-op if the entity lacks {@code attr}. */
     public static void multiplyBase(LivingEntity entity, Holder<Attribute> attr, Identifier id, double factor) {
-        AttributeInstance inst = entity.getAttribute(attr);
-        if (inst == null) {
-            return;
-        }
-        inst.addOrReplacePermanentModifier(
-                new AttributeModifier(id, factor - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        multiply(entity, attr, id, factor, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
     }
 
     /**
@@ -41,13 +36,18 @@ public final class AttributeModifiers {
      * yields exactly the original size, cancelling outright.
      */
     public static void multiplyTotal(LivingEntity entity, Holder<Attribute> attr, String idPath, double factor) {
+        multiply(entity, attr, Identifier.fromNamespaceAndPath("lethalbreed", idPath), factor,
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+    }
+
+    /** Shared stamp behind both flavours: same key, scale and no-op rule, only the operation differs. */
+    private static void multiply(LivingEntity entity, Holder<Attribute> attr, Identifier id, double factor,
+            AttributeModifier.Operation operation) {
         AttributeInstance inst = entity.getAttribute(attr);
         if (inst == null) {
             return;
         }
-        inst.addOrReplacePermanentModifier(new AttributeModifier(
-                Identifier.fromNamespaceAndPath("lethalbreed", idPath), factor - 1.0,
-                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        inst.addOrReplacePermanentModifier(new AttributeModifier(id, factor - 1.0, operation));
     }
 
     /** Drop a modifier this class stamped earlier. No-op if the entity lacks {@code attr} or never carried it. */

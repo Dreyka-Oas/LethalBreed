@@ -51,22 +51,27 @@ public final class BomberBlast {
      * absolute deadline, so the duration no longer follows activation cadence.
      */
     public static int fuseTicksFor(double rand01) {
-        double a = SpecialVariantConfig.specialBomberFuseMinTicks;
-        double b = SpecialVariantConfig.specialBomberFuseMaxTicks;
-        double min = lo(a, b), max = hi(a, b);
+        double[] minMax = minMaxFuseTicks();
+        double min = minMax[0], max = minMax[1];
         return (int) Math.round(min + (max - min) * Math.clamp(rand01, 0.0, 1.0));
     }
 
     /** Where a fuse length sits in its configured range. A degenerate range yields 0, the mildest blast:
      *  the safe way to fail. */
     public static double ratioOf(int fuseTicks) {
-        double a = SpecialVariantConfig.specialBomberFuseMinTicks;
-        double b = SpecialVariantConfig.specialBomberFuseMaxTicks;
-        double min = lo(a, b), max = hi(a, b);
+        double[] minMax = minMaxFuseTicks();
+        double min = minMax[0], max = minMax[1];
         if (max - min <= 0.0) {
             return 0.0;
         }
         return Math.clamp((fuseTicks - min) / (max - min), 0.0, 1.0);
+    }
+
+    /** Configured fuse bounds, order-corrected: {@code [min, max]} regardless of how the player typed them. */
+    private static double[] minMaxFuseTicks() {
+        double a = SpecialVariantConfig.specialBomberFuseMinTicks;
+        double b = SpecialVariantConfig.specialBomberFuseMaxTicks;
+        return new double[] { lo(a, b), hi(a, b) };
     }
 
     /** Explosion power for a fuse ratio: the longer it swelled, the bigger it bursts. */
