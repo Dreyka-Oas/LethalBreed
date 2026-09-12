@@ -4,8 +4,8 @@ package oas.dreyka.lethalbreed.config.domain;
  * The infinite difficulty-phase escalation: the advance timer, the stat-scaling curves, the beneficial-effect
  * curves, the mobcap/frequency curves, the colour tiers and the optional ceiling/loop.
  *
- * <p>Special-variant tuning lives in {@link SpecialVariantConfig}; this class used to hold both, plus the
- * headless-test toggles that now live in the {@code dev} source set ({@code DevTestConfig}) and never ship.
+ * <p>Special-variant tuning lives in {@link SpecialVariantConfig}, and the headless-test toggles live in
+ * the {@code dev} source set ({@code DevTestConfig}) and never ship.
  */
 public final class ProgressionConfig {
     private ProgressionConfig() {}

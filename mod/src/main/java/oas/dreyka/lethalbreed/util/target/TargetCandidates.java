@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * The broad phase of target acquisition: everything a zombie could plausibly hunt right now.
  *
- * <p>Split out of {@link TargetSelector}, which keeps the choosing. This half is where the measurements
+ * <p>Apart from {@link TargetSelector}, which keeps the choosing. This half is where the measurements
  * are, and it reads better next to its own scratch buffer than buried in the middle of the pick.
  */
 final class TargetCandidates {

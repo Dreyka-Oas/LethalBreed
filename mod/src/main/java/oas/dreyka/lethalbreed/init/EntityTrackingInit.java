@@ -24,7 +24,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * Zombie and prey bookkeeping tied to entity load and unload: registering a vanilla zombie as a
  * {@code SmartZombie}, indexing prey, and undoing both when the entity leaves the level.
  *
- * <p>Split from {@link EntityEventsInit}, which now only wires the four event families up. This one is
+ * <p>Apart from {@link EntityEventsInit}, which wires the four event families up and nothing else. This one is
  * the largest by far and the only one whose failure mode is a leak, so it is worth reading on its own.
  */
 final class EntityTrackingInit {
@@ -135,12 +135,12 @@ final class EntityTrackingInit {
                     dimensions.get(world.dimension()).packManager().rejoin(sz, packId);
                 }
             }
-            // Deliberately NO "lift NoAI on load" repair here. Tried and reverted: ENTITY_LOAD fires for
-            // freshly-added entities too, so it cancelled a setNoAi(true) applied a line before
-            // addFreshEntity, which is how this project's own dev harness builds its arenas
-            // (MechTestArena:64). Measured: with the lift the headless `phasescale` case reported 0 zombies
-            // and FAILed; without it, PASS. Nothing distinguishes one of our old statues from a map-maker's
-            // deliberately frozen prop, so the repair cannot be made safe. Audit #2 is prevented on the
+            // Deliberately NO "lift NoAI on load" repair here: ENTITY_LOAD fires for freshly-added
+            // entities too, so it cancels a setNoAi(true) applied a line before addFreshEntity, which is
+            // how this project's own dev harness builds its arenas (MechTestArena:64). Measured: with the
+            // lift the headless `phasescale` case reported 0 zombies and FAILed; without it, PASS. Nothing
+            // distinguishes one of our own statues from a map-maker's deliberately frozen prop, so the
+            // repair cannot be made safe. The leak is closed on the
             // WRITE instead, by ZombieNoAiNotPersistedMixin: the releases on ENTITY_UNLOAD and
             // SERVER_STOPPING only fix the live entity and are too late for the save. An old statue in an
             // existing world is repaired by hand with

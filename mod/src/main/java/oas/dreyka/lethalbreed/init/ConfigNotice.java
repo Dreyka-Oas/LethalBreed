@@ -16,9 +16,8 @@ import net.minecraft.server.permissions.Permissions;
  * the write that follows the read already fixed is deliberately silent, because a message about a file
  * that is already fixed is noise, and noise is what makes an operator stop reading these.
  *
- * <p>It names every offending key. This used to be a count plus {@code /lethalconfig verify}, which made
- * the reader run a command to be told the one thing the message was for; that subcommand is gone. What
- * survives here is rare by construction, so the line budget is a guard against a pathological file, not
+ * <p>It names every offending key, rather than a count the reader has to run a command to expand. What
+ * reaches here is rare by construction, so the line budget is a guard against a pathological file, not
  * an expected path.
  */
 final class ConfigNotice {

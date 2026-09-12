@@ -10,9 +10,9 @@ import oas.dreyka.lethalbreed.ai.flowfield.gpu.GpuComputeManager;
  * Dispatcher chosen by {@link FlowFieldManager}'s worker task. Uses the GPU when enabled and
  * available, otherwise the CPU solver. Any GPU error degrades to CPU: the GPU is never load-bearing.
  *
- * <p>No size gate: a device that is present takes every solve, whatever the grid. There used to be one, with
- * a per-machine crossover the server measured at boot, and the boot measurement disagreed with itself between
- * runs. The gate went with it. The solve is not on the server thread either way (FlowFieldManager runs it on
+ * <p>No size gate: a device that is present takes every solve, whatever the grid. The obvious gate is a
+ * per-machine crossover measured at boot, and that measurement disagrees with itself between runs, which is
+ * why there is none. The solve is not on the server thread either way (FlowFieldManager runs it on
  * two dedicated low-priority threads, which carry the GPU pass just as well), so below the crossover the card
  * costs field latency rather than TPS, and leaves the CPU solve pool idle instead (SolvePool, cores-2 workers
  * by default). On a 9060 XT the bench wanders between runs and puts that crossover somewhere between 64x64

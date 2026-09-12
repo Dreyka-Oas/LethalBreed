@@ -33,7 +33,7 @@ public final class SoundEventBus {
 
     // event = {x, y, z, radius}
     private final List<double[]> events = new ArrayList<>();
-    /** Reused across every event of every tick: process() used to allocate a fresh ArrayList per queued
+    /** Reused across every event of every tick so process() does not allocate a fresh ArrayList per queued
      *  sound event. Safe to share because the list is consumed fully before the next queryRadiusInto. */
     private final List<SmartZombie> nearScratch = new ArrayList<>();
     // playerId -> last {x, y, z}

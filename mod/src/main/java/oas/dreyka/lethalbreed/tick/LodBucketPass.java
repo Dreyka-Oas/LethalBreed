@@ -63,8 +63,8 @@ final class LodBucketPass {
         double mspt = server.getAverageTickTimeNanos() / 1_000_000.0;
         int stress = (SchedulerConfig.msptThrottle && mspt > SchedulerConfig.msptThrottleThreshold) ? 2 : 1;
         long round = frozenRound++;
-        // Per-stage timing: one volatile read per TICK when disabled (hoisted out of the loop: it used to be
-        // re-evaluated per zombie). DevProbe.sink is volatile, so this read is not constant-folded even on a
+        // Per-stage timing: one volatile read per TICK when disabled, hoisted out of the loop rather than
+        // re-evaluated per zombie. DevProbe.sink is volatile, so this read is not constant-folded even on a
         // shipped jar with no sink installed. The real cost is one volatile load here, once per bucket run.
         boolean prof = DevProbe.on();
         for (SmartZombie sz : registry.all()) {

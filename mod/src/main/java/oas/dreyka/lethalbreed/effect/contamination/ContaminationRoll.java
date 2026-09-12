@@ -8,9 +8,9 @@ import java.util.Random;
 /**
  * The plague's random-draw rules as pure functions. **No Minecraft imports, and none may be added**.
  * That restriction is the reason the class exists: {@link ContaminationState} registers Fabric attachment
- * types in its static initialiser and so cannot be loaded by a headless unit test, which left every draw
- * rule the plague uses permanently untested. Findings #5 and #12 are both instances of the same
- * failure mode that produced: one rule, written in several places, quietly drifting apart.
+ * types in its static initialiser and so cannot be loaded by a headless unit test, which leaves every draw
+ * rule the plague uses permanently untested. Untested is how one rule, written in several places, quietly
+ * drifts apart.
  *
  * <p>Add a draw rule HERE and call it from the timer classes. Never inline a fresh copy at a call site.
  */
@@ -61,10 +61,10 @@ public final class ContaminationRoll {
      * Odds a zombie's hit infects at {@code phase}: the capped ramp, or certainty once the world is late
      * enough.
      *
-     * <p>The ramp alone never reaches 1 whatever the phase, so on a world that had been running for weeks
-     * the plague was still a coin flip and a corpse rising again was down to luck.
+     * <p>The ramp alone never reaches 1 whatever the phase, so without a ceiling a world running for weeks
+     * still leaves the plague a coin flip and a corpse rising again down to luck.
      * {@code contamCertainPhase} is where the flip stops, and a negative value keeps the ramp in charge for
-     * a server that wants the old behaviour.
+     * a server that wants exactly that.
      */
     public static double infectionChance(int phase) {
         if (ContaminationConfig.contamCertainPhase >= 0 && phase >= ContaminationConfig.contamCertainPhase) {

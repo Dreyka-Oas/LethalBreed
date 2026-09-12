@@ -104,8 +104,8 @@ public final class FlowFieldManager {
                 consecutiveFailures = 0;
             } catch (Throwable t) {
                 // GpuFlowField already catches GPU errors and degrades to CPU (and the GPU circuit breaker
-                // logs those), so reaching here means the CPU solver ITSELF threw: previously swallowed
-                // silently into a discarded Future. Log it (rate-limited): silence here means a throwing
+                // logs those), so reaching here means the CPU solver ITSELF threw, which a discarded Future
+                // would swallow silently. Log it (rate-limited): silence here means a throwing
                 // snapshot gets re-solved every interval with no trace. Do NOT null `active`: the last good
                 // field is a far better fallback than none, and there is no other "known" field to swap to.
                 onSolveFailure(serverTick, t);
@@ -117,7 +117,7 @@ public final class FlowFieldManager {
 
     /** Record a solve failure and log it at most once per ~10 s window, with the running consecutive count so
      *  a persistent failure is visible without one line per cycle. (POOL.submit can't itself throw here: the
-     *  queue is unbounded and the pool is never shut down, so there is no reject path to guard. Audit #19.) */
+     *  queue is unbounded and the pool is never shut down, so there is no reject path to guard.) */
     private void onSolveFailure(long serverTick, Throwable t) {
         int n = ++consecutiveFailures;
         long since = serverTick - lastFailureLogTick;

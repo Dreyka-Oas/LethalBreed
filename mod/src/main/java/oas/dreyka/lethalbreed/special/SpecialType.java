@@ -18,8 +18,8 @@ import java.util.Map;
  * editable through the config JSON / GUI / {@code /lethalconfig}. The switches below are only the routing to
  * those config fields; the field defaults hold the built-in values.
  *
- * <p>The names are English, matching what {@code en_us.json} has always displayed; the French names players
- * used to see are now a translation, not a hard-coded string. See {@link #translationKey()}.
+ * <p>The names are English, matching {@code en_us.json}. The French names players see are a translation,
+ * not a hard-coded string. See {@link #translationKey()}.
  */
 public enum SpecialType {
     NONE("none", Kind.PASSIVE),

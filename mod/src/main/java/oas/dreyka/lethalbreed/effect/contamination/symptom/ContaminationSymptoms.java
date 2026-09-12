@@ -17,8 +17,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
- * The latent stage (one-shot slow + symptom-surfacing roll) and the effect icon. Split out of
- * {@link ContaminationLifecycle} to keep both under the file-size limit.
+ * The latent stage (one-shot slow + symptom-surfacing roll) and the effect icon. Apart from
+ * {@link ContaminationLifecycle} so both stay under the file-size limit.
  */
 public final class ContaminationSymptoms {
     private ContaminationSymptoms() {}

@@ -122,9 +122,8 @@ public final class ContaminationConfig {
     /** Dev time-compression for plague timers: every pulse/symptom interval is divided by this factor, so a
      *  developer can watch the (normally days-long) progression fast. Default 1.0 = real timing.
      *
-     *  <p>Despite the name it is a normal player-facing option with its own row in the Contamination tab:
-     *  the {@code /lethaldev timescale} command that used to be its only writer was removed as a duplicate
-     *  of that row. {@code /lethaldev status} still reports the current value. */
+     *  <p>Despite the name it is a normal player-facing option with its own row in the Contamination tab,
+     *  and that row is its only writer. {@code /lethaldev status} reports the current value. */
     public static double contamDevTimeScale = 1.0;
 
     // Appended below the ones above on purpose: ConfigSchema.all() order is the on-disk write order within

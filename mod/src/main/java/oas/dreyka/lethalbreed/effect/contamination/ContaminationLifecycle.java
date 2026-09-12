@@ -103,11 +103,11 @@ public final class ContaminationLifecycle {
     /** Drop EVERY in-memory per-victim entry across all six contamination collections at once, without
      *  touching the persistent attachments (the victim re-tracks via {@link #onLoad} if it reloads).
      *
-     *  <p>The single place the full six-collection purge lives. Audit #2: the per-tick invalid-entity branch
-     *  used to drop only {@code tracked}, leaking the other five collections (four timer maps here + the
-     *  episodes and hallucination maps in the sibling classes), each pinning a dead {@link LivingEntity} →
-     *  its {@code ServerLevel} → the whole server graph. Routing cure, death AND the tick sweep through one
-     *  method means a newly-added collection can't be forgotten by just one caller. */
+     *  <p>The single place the full six-collection purge lives. Dropping only {@code tracked} leaks the other
+     *  five (four timer maps here + the episodes and hallucination maps in the sibling classes), each pinning
+     *  a dead {@link LivingEntity} → its {@code ServerLevel} → the whole server graph. Routing cure, death AND
+     *  the tick sweep through one method means a newly-added collection can't be forgotten by just one
+     *  caller. */
     public static void forgetAllTransient(LivingEntity e) {
         ContaminationState.forgetTimers(e);
         ContaminationEpisodes.clearEpisodes(e);

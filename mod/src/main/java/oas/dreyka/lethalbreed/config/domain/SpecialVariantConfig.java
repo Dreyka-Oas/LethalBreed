@@ -3,10 +3,10 @@ package oas.dreyka.lethalbreed.config.domain;
 /**
  * The eight special zombie variants: roll weights and the per-variant stat multipliers.
  *
- * <p>Split out of {@code ProgressionConfig}, which held three unrelated domains. Field NAMES are
- * unchanged and the holders stay adjacent in {@code ConfigSchema.HOLDERS} in their original order, so
- * the on-disk JSON, {@code ConfigBoundsTable}, {@code ConfigCategory} and every translation key are
- * unaffected (see {@code ConfigSchemaOrderTest}).
+ * <p>A holder of its own, and one that has to stay adjacent to {@code ProgressionConfig} in
+ * {@code ConfigSchema.HOLDERS} and in that order: the on-disk JSON, {@code ConfigBoundsTable},
+ * {@code ConfigCategory} and every translation key follow the field names and the holder order
+ * (see {@code ConfigSchemaOrderTest}).
  */
 public final class SpecialVariantConfig {
     private SpecialVariantConfig() {}

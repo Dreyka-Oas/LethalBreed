@@ -10,10 +10,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Archiving an unusable config file so the user never loses its content.
- *
- * <p>Split out of {@code ConfigIo}, which held loading, writing, archiving and operator reporting in one
- * 309-line class.
+ * Archiving an unusable config file so the user never loses its content. Reached through
+ * {@code ConfigIo}, which is the facade over this and its siblings.
  */
 public final class ConfigQuarantine {
     private ConfigQuarantine() {}

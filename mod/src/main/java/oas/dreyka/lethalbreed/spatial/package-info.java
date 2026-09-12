@@ -2,7 +2,7 @@
  * Coarse spatial structures the AI queries every tick: the zombie grid, the prey index, and the cell
  * arithmetic they share.
  *
- * <p><b>Why this exists.</b> Target acquisition used to ask the world:
+ * <p><b>Why this exists.</b> The direct way to acquire targets is to ask the world:
  * {@code getEntitiesOfClass(LivingEntity.class, box, isValid)} over an 80-block box. That visits every
  * entity in the box and runs the predicate on each, and the predicate rejects {@code Zombie}, which in
  * this mod is nearly everything in the box. So each zombie paid for walking the whole horde in order to

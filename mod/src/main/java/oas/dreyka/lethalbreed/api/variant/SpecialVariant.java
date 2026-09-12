@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 /**
  * One kind of special zombie: what it is called on disk, when it starts appearing, how often, and what it
- * does. This is what an enum constant used to be, opened so a variant can come from somewhere else.
+ * does. A record rather than an enum constant, so a variant can come from somewhere else.
  *
  * @param id written into the save and never translated. Namespace yours ({@code "mymod:frostbite"}); the
  *        eight shipped ones are bare words and stay that way, because saves already hold them

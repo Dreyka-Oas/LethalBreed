@@ -35,8 +35,8 @@ public final class ZombieVariation {
     private static final long EFFECT_SALT = 4242L;
     private static final long LEAP_SALT = 777L;
 
-    /** Distinct salt so the special roll no longer consumes the phase RNG: it used to share {@code r} inside
-     *  applyPhase, which coupled a zombie's variant to how many phase rolls happened before it. */
+    /** Distinct salt so the special roll does not consume the phase RNG: sharing {@code r} inside applyPhase
+     *  would couple a zombie's variant to how many phase rolls happened before it. */
     private static final long SPECIAL_SALT = 55501L;
 
     public static void apply(Zombie z) {
@@ -59,9 +59,9 @@ public final class ZombieVariation {
         } else {
             applyRandomEffect(z); // legacy flat effect roll when the phase system is off
         }
-        // Outside the branch on purpose. The special roll used to live inside applyPhase, so turning
-        // phaseSystemEnabled off (a legitimate, exposed option) silently disabled every special variant for
-        // the life of the world, while some forty special* options stayed visible and editable in the GUI with
+        // Outside the branch on purpose. Inside applyPhase the roll would be gated on phaseSystemEnabled, a
+        // legitimate exposed option, so turning it off would silently disable every special variant for the
+        // life of the world while some forty special* options stayed visible and editable in the GUI with
         // nothing to act on. With the phase system off there is no phase to gate unlocks, so the roll runs at
         // the floor phase where only the earliest types are available.
         oas.dreyka.lethalbreed.special.SpecialRoller.roll(z, seeded(z, SPECIAL_SALT),

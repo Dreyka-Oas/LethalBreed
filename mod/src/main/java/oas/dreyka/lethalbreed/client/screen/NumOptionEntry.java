@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 /** Option row for a numeric value: an edit field validated against the row's kind (int/long/double). */
 public final class NumOptionEntry extends OptionEntry {
     /** Quiet period after the last keystroke before the value is sent. {@link EditBox#setResponder} fires on
-     *  every text mutation, not on commit, so typing "36000" used to emit five SetConfig packets, each one
+     *  every text mutation, not on commit, so without this, typing "36000" emits five SetConfig packets, each
      *  costing the server thread two reflective 295-field scans and a blocking full-file write (~10 KB). One
      *  frame of latency is imperceptible when editing a text field; five synchronous disk writes per value
      *  are not. */

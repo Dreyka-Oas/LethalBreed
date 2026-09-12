@@ -40,8 +40,8 @@ public final class ConfigSchema {
     private ConfigSchema() {}
 
     /** Every class whose public-static-non-final primitive fields are config options. Shipped holders are
-     *  listed here; {@link #registerHolder} appends a dev-only one at runtime, so this has to be a
-     *  mutable list rather than the {@code Class<?>[]} it used to be. */
+     *  listed here; {@link #registerHolder} appends a dev-only one at runtime, so this has to be a mutable
+     *  list rather than a {@code Class<?>[]}. */
     private static final List<Class<?>> HOLDERS = new ArrayList<>(List.of(
             SchedulerConfig.class,
             FlowConfig.class,

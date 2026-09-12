@@ -22,7 +22,15 @@ public final class LethalBreedClientConfig {
 
     /** Skip rendering plain zombies farther than {@link #zombieRenderDistance} blocks. */
     public boolean cullDistantZombies = true;
-    /** Distance (blocks) beyond which zombies are culled from rendering. */
+    /**
+     * Distance (blocks) beyond which zombies are culled from rendering.
+     *
+     * <p>Vanilla gates first and this only ever subtracts, so the number above is a ceiling rather than
+     * the distance a player sees. {@code Entity.shouldRenderAtSqrDistance} refuses any entity past
+     * {@code boundingBox().getSize() * 64 * entityDistanceScaling}, which is 67 blocks for a zombie at the
+     * default scaling of 1.0: below that setting this cull is inert, and it starts biting once the video
+     * option is raised, which is exactly the machine that needs it.
+     */
     public double zombieRenderDistance = 96.0;
 
     /**

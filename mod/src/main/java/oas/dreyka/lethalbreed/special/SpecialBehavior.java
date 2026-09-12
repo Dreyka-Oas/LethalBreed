@@ -69,7 +69,7 @@ public final class SpecialBehavior {
 
     private static final Set<String> BLAMED = ConcurrentHashMap.newKeySet();
 
-    /** The eight shipped cases, exactly as they were; each self-gates on target + cooldown. */
+    /** The eight shipped cases; each self-gates on target + cooldown. */
     static void shippedTick(SpecialType t, SmartZombie sz, ServerLevel level, WorldAiContext ctx) {
         Zombie z = sz.entity();
         LivingEntity tgt = z.getTarget();

@@ -23,9 +23,8 @@ import java.util.Set;
  * Reading {@code lethalbreed.json} into the live config fields, and telling the operator what is wrong with
  * the file's shape.
  *
- * <p>Split out of {@code ConfigIo}, which held loading, writing, archiving and reporting in one 309-line
- * class. Takes the path as a parameter rather than resolving it, so the read path is exercisable without a
- * Fabric runtime.
+ * <p>Takes the path as a parameter rather than resolving it, so the read path is exercisable without a
+ * Fabric runtime. {@code ConfigIo} is the facade that resolves it.
  *
  * @return the structure report, or {@code null} when the file was absent or had to be quarantined.
  */

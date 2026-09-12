@@ -10,7 +10,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 /**
  * The dozing pose itself, and the one piece of vanilla state it borrows: {@code NoAi}.
  *
- * <p>Split out of {@code ZombieMood} because the NoAi hold, alone among the state here, outlives a single
+ * <p>Apart from {@code ZombieMood} because the NoAi hold, alone among the state here, outlives a single
  * call and can leak: vanilla persists {@code NoAI} to entity NBT while our own flag is not persisted, so
  * a frozen zombie whose mood object dies is reloaded as a gravity-less statue. Keeping the flag and every
  * path that clears it in one small class is what makes that auditable.

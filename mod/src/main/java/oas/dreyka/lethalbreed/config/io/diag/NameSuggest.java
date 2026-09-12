@@ -5,8 +5,8 @@ import java.util.Set;
 /**
  * "Did you mean …?" for a config key the schema does not know.
  *
- * <p>Split out of {@code ConfigStructure}, which mixed the SHAPE analysis of the file with the string-distance
- * search used to explain one of its findings. The two answer different questions and change for different
+ * <p>Apart from {@code ConfigStructure}, which analyses the SHAPE of the file; this is the string-distance
+ * search that explains one of its findings. The two answer different questions and change for different
  * reasons: what counts as drift is a decision about the config format, while how close two names are is a
  * decision about typing mistakes.
  *

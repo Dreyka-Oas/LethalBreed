@@ -17,8 +17,8 @@ import oas.dreyka.lethalbreed.effect.contamination.PlagueDeadlines;
 /**
  * One victim's symptomatic tick: everything that fires while the plague is showing.
  *
- * <p>Lifted out of {@code ContaminationTick}, which now only decides WHO is due this tick; what happens to
- * each of them lives here, beside the four episode and hallucination units it drives.
+ * <p>Apart from {@code ContaminationTick}, which decides WHO is due this tick; what happens to each of
+ * them lives here, beside the four episode and hallucination units it drives.
  */
 public final class SymptomEffects {
     private SymptomEffects() {}

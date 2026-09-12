@@ -13,7 +13,7 @@ import java.util.function.LongFunction;
  * What happens to a pack on the visit its turn comes up: where its centre is, whether it should swallow a
  * neighbour, and whether it should stop existing.
  *
- * <p>Split from {@code PackManager}, which owns the map, the ids and the visit cursor. These are the rules
+ * <p>Apart from {@code PackManager}, which owns the map, the ids and the visit cursor. These are the rules
  * about a pack's shape over time; that is the bookkeeping that keeps the roster honest.
  */
 public final class PackLifecycle {

@@ -22,8 +22,8 @@ import java.util.TreeMap;
 /**
  * Writing every config option back to disk, grouped by GUI category, via an atomic write-then-rename.
  *
- * <p>Split out of {@code ConfigIo}. The destination path arrives as a parameter, resolved by the caller, so
- * the writer is testable against a temp directory with no Fabric runtime present.
+ * <p>The destination path arrives as a parameter, resolved by the caller ({@code ConfigIo}), so the writer
+ * is testable against a temp directory with no Fabric runtime present.
  */
 public final class ConfigWriter {
     private ConfigWriter() {}

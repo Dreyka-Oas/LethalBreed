@@ -3,7 +3,7 @@ package oas.dreyka.lethalbreed.config.schema;
 /**
  * The 6 primitive kinds a config field can be. Single source of truth for "what kind of field is this",
  * used by {@link ConfigType#kind}, {@link ConfigSchema#isSupported}, and {@code ConfigWriter}'s per-field
- * JSON write dispatch, three places that used to independently re-derive this same 6-way type check.
+ * JSON write dispatch, three places that would otherwise each re-derive the same 6-way type check.
  */
 public enum ConfigPrimitive {
     BOOL("bool"), INT("int"), LONG("long"), DOUBLE("double"), FLOAT("float"), LIST("list");

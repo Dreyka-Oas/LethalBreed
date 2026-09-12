@@ -23,7 +23,7 @@ import java.nio.file.Path;
  * Values are stored with their natural JSON type (boolean / number) keyed by the exact field name, so the
  * file is human-editable. Reflection via {@link ConfigFields} means no per-field serialization code.
  *
- * <p>This class is now only the facade plus the one thing its collaborators must not know: WHERE the file
+ * <p>This class is the facade plus the one thing its collaborators must not know: WHERE the file
  * lives. Each concern is a leaf: {@link ConfigLoader} (read + apply), {@link ConfigWriter} (atomic write),
  * {@link ConfigQuarantine} (archive an unusable file), {@link ConfigDriftReport} (tell the operator). They
  * take the path as a parameter, so the writer can be tested against a temp directory with no Fabric

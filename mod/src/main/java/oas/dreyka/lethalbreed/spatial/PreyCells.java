@@ -14,9 +14,9 @@ import java.util.List;
  * The bucket half of {@link TargetIndex}: which cell each prey entity currently sits in, and the list of
  * entities per cell.
  *
- * <p>Split from the index itself because nothing else owns invariants across two maps at once (an entity's
- * id in {@code cellOf} and the same entity in the {@code cells} list for that key), and every leak this
- * structure has ever had came from those two drifting apart.
+ * <p>Apart from the index itself because this is the only place that owns an invariant across two maps at
+ * once (an entity's id in {@code cellOf} and the same entity in the {@code cells} list for that key), and
+ * every leak this structure has ever had came from those two drifting apart.
  */
 final class PreyCells {
 

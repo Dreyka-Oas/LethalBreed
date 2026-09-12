@@ -10,10 +10,10 @@ import net.minecraft.server.level.ServerLevel;
  * What a zombie does when nothing is detected: walk to the spot it last heard something, follow its pack's
  * waypoint, or freeze.
  *
- * <p>Split from {@link LodManager}, which keeps the live-detection branch. These three are the fallbacks,
+ * <p>Apart from {@link LodManager}, which keeps the live-detection branch. These three are the fallbacks,
  * in strict priority order, and each of them has to cut the vanilla attack target as well as our own: the
  * mod declaring a zombie frozen while vanilla's never-stripped {@code ZombieAttackGoal} keeps driving it is
- * exactly the divergence that used to cap a Screamer's rally.
+ * exactly the divergence that caps a Screamer's rally.
  */
 final class TargetFallback {
     private TargetFallback() {}

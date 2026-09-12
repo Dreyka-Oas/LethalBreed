@@ -7,7 +7,7 @@ import oas.dreyka.lethalbreed.config.domain.ProgressionConfig;
  * phase}: {@code growth * phase^exponent}, bent onto a ceiling by {@link PhaseConfig#softCap}. Shared by the
  * spawn mixins so both curves are read the exact same way.
  *
- * <p>These two used to be unbounded "by design", on the reasoning that night-spawn pressure should keep
+ * <p>Leaving these two unbounded is tempting, on the reasoning that night-spawn pressure should keep
  * rising forever. In practice that is also a performance cliff nobody chose: at phase 100 the raw mob-cap
  * multiplier is 144x vanilla, and this mod never despawns anything. The ceiling applies from
  * {@link PhaseConfig#KNEE_PHASE} upward, so the phases anyone has actually played are untouched.

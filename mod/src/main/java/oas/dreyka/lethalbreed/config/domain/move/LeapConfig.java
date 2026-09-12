@@ -10,8 +10,8 @@ package oas.dreyka.lethalbreed.config.domain.move;
  *
  * <p>What the move does decide is the ORDER inside that section, which is holder order then declaration
  * order. Hence the one rule this class imposes on its surroundings: it must stay directly before
- * {@code CombatMoveConfig} in {@code ConfigSchema.HOLDERS}, where its fields used to be declared, or the
- * Leap section of every config file already on a disk gets reshuffled on the next save.
+ * {@code CombatMoveConfig} in {@code ConfigSchema.HOLDERS}, the position its fields occupy in every config
+ * file already on a disk, or the Leap section of those files gets reshuffled on the next save.
  *
  * <p>It sits in {@code config.domain.move} rather than beside its parent because {@code config.domain} is
  * full at eight files.
