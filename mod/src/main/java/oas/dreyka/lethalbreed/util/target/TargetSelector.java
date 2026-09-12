@@ -8,10 +8,7 @@ import oas.dreyka.lethalbreed.probe.DevProbe;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,7 +54,7 @@ public final class TargetSelector {
     public static LivingEntity findNearest(ServerLevel level, Mob self, double radius, TargetIndex index) {
         boolean prof = DevProbe.on();
         long t0 = prof ? System.nanoTime() : 0L;
-        List<LivingEntity> candidates = collectCandidates(level, self, radius, index);
+        List<LivingEntity> candidates = TargetCandidates.collect(level, self, radius, index);
         if (prof) {
             DevProbe.sink.stage(DevProbe.SCAN, System.nanoTime() - t0);
         }
@@ -88,37 +85,6 @@ public final class TargetSelector {
         return nearestVisible(level, self, candidates, distSq, radiusSq, n, prof);
     }
 
-    private static List<LivingEntity> collectCandidates(ServerLevel level, Mob self, double radius, TargetIndex index) {
-        // Broad phase. MEASURED (StageProfiler, ~100 zombies): asking the world for every LivingEntity in an
-        // 80-block box was ~50% of the whole reclassify stage, itself ~40% of the mod's tick time, because
-        // it visits the entire horde only to have isValid reject Zombie on each one.
-        //
-        // Shrinking the box does NOT fix that, and the measurement says so: narrowing the vertical
-        // extent to 24 blocks left the sweep at 23.8us/call against 22.1 without it. The cost is the
-        // entities inside, not the volume. So the horde is simply never offered to the scan: prey lives
-        // in the mod's own TargetIndex, and players (few, and far too important to risk a bookkeeping slip
-        // hiding one) are read live from the level.
-        List<LivingEntity> candidates = new ArrayList<>();
-        if (index != null) {
-            index.collectInto(candidates, self.getX(), self.getZ(), radius);
-            // The index already narrows prey to the radius; the player list does not, and it is the whole
-            // server's. A player further than the radius is dropped by the radius test in nearestVisible
-            // anyway, so keeping it here only pays for it in the shuffle and the sort, once per zombie per
-            // activation. Same squared 3D distance those two use, so the pick itself cannot move.
-            double radiusSq = radius * radius;
-            for (Player p : level.players()) {
-                if (self.distanceToSqr(p) <= radiusSq) {
-                    candidates.add(p);
-                }
-            }
-            candidates.removeIf(e -> !TargetFilter.isValid(self, e));
-        } else {
-            // No index wired (unit tests, or a call path that predates it): fall back to the world scan.
-            AABB box = self.getBoundingBox().inflate(radius);
-            candidates = level.getEntitiesOfClass(LivingEntity.class, box, e -> TargetFilter.isValid(self, e));
-        }
-        return candidates;
-    }
 
     private static LivingEntity nearestVisible(ServerLevel level, Mob self, List<LivingEntity> candidates,
                                                 double[] distSq, double radiusSq, int n, boolean prof) {

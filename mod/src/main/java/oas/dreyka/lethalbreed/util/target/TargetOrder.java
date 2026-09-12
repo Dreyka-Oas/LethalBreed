@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.util.target;
 
+import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
 
 import net.minecraft.world.entity.LivingEntity;
@@ -18,8 +19,11 @@ import java.util.List;
 final class TargetOrder {
     private TargetOrder() {}
 
-    /** 4 = (2 blocks)²: distances differing by less than 2 blocks count as equally close. */
-    private static final double TIE_BAND = 4.0;
+    /** Floor on the squared band, matching the 0.05-block minimum {@code TargetingBounds} puts on the
+     *  option. It is enforced here and not only there because {@link #WET_PENALTY} depends on it: a band
+     *  divided by something near zero would climb past 2^32 and start colliding with the water penalty,
+     *  which would silently rank some dry prey behind wet prey. */
+    private static final double MIN_BAND_SQ = 0.05 * 0.05;
 
     /**
      * Added to the band of a candidate standing in water, which pushes it behind every candidate on dry
@@ -30,13 +34,38 @@ final class TargetOrder {
      * killing itself. Deprioritising rather than rejecting keeps a horde able to finish off someone who
      * fled into a lake once nothing dry is left.
      *
-     * <p>2^32 cannot collide with a real band: the largest one is {@code targetDetectRadius² / 4}, and
-     * {@code TargetingBounds} clamps that radius at 128, so no band can reach 4097.
+     * <p>2^32 cannot collide with a real band. The largest one is
+     * {@code targetDetectRadius² / targetTieBandBlocks²}, and both are clamped: the radius at 128, the band
+     * at no less than 0.05 blocks (see {@link #MIN_BAND_SQ}), so the worst case is 16384 / 0.0025, about
+     * 6.6 million, three orders of magnitude below the penalty.
      */
     private static final long WET_PENALTY = 1L << 32;
 
+    // Sort scratch, reused across calls. This runs once per zombie per activation on a path the profiler
+    // put at roughly 40% of the mod's tick time, and three fresh arrays per call is three allocations per
+    // zombie per activation for data that dies before the method returns.
+    //
+    // Safe to share because this is server-thread only (the entry point takes a ServerLevel) and because
+    // nothing in the call it feeds, the visibility pass in TargetSelector, can re-enter this method. The
+    // buffers are only ever LONGER than needed, and every reader is bounded by n, so a leftover tail from
+    // a bigger horde is never read.
+    private static long[] bands = new long[8];
+    private static double[] gaps = new double[8];
+    private static double[] dists = new double[8];
+
+    private static long[] grow(long[] a, int n) {
+        return a.length >= n ? a : new long[Math.max(n, a.length * 2)];
+    }
+
+    private static double[] grow(double[] a, int n) {
+        return a.length >= n ? a : new double[Math.max(n, a.length * 2)];
+    }
+
     /**
      * Sorts {@code candidates} in place and returns the squared distance of each, in the same order.
+     *
+     * <p>The returned array is SHARED scratch, valid only until the next call and only for the first
+     * {@code candidates.size()} entries. The one caller reads it immediately and never keeps it.
      *
      * <p>Dry prey first, then nearest, then ties broken by height: among two roughly-as-close candidates
      * (one overhead, one at our level) the one nearest in HEIGHT wins, because a target at the zombie's own
@@ -58,9 +87,9 @@ final class TargetOrder {
         // Read once: the option cannot change mid-sort, and a zombie allowed to swim has no reason to rank
         // a wading target behind a dry one.
         final boolean avoidWater = CombatMoveConfig.cannotSwim;
-        long[] band = new long[n];
-        double[] heightGap = new double[n];
-        double[] distSq = new double[n];
+        long[] band = bands = grow(bands, n);
+        double[] heightGap = gaps = grow(gaps, n);
+        double[] distSq = dists = grow(dists, n);
         for (int i = 0; i < n; i++) {
             LivingEntity e = candidates.get(i);
             double d = self.distanceToSqr(e);
@@ -75,7 +104,10 @@ final class TargetOrder {
     /** The primary sort key: distance band, pushed past every dry candidate when {@code inWater}. Package
      *  private so the ordering can be checked without a world to stand entities in. */
     static long band(double distSq, boolean inWater) {
-        long b = (long) (distSq / TIE_BAND);
+        // The option is in blocks, the distances are squared, so the band is squared here rather than at
+        // every edit site.
+        double blocks = TargetingConfig.targetTieBandBlocks;
+        long b = (long) (distSq / Math.max(MIN_BAND_SQ, blocks * blocks));
         return inWater ? b + WET_PENALTY : b;
     }
 
