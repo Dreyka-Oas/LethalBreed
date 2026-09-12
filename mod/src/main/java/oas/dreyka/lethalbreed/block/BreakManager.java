@@ -42,11 +42,14 @@ public final class BreakManager {
         if (!active.containsKey(key) && active.size() >= CombatMoveConfig.maxConcurrentBreaks) {
             return;
         }
-        State s = active.computeIfAbsent(key, k -> {
-            State ns = new State();
-            ns.breakerId = breakerSeq++;
-            return ns;
-        });
+        // get-then-put rather than computeIfAbsent: the lambda captures this (it reads breakerSeq) and would
+        // be allocated on every request, which is once per breaking zombie per activation.
+        State s = active.get(key);
+        if (s == null) {
+            s = new State();
+            s.breakerId = breakerSeq++;
+            active.put(key, s);
+        }
         s.lastRequest = now;
         s.breaker = breaker;
         if (breaker != null) {
@@ -64,10 +67,15 @@ public final class BreakManager {
         long grace = CombatMoveConfig.breakGraceTicks;
 
         Iterator<Map.Entry<Long, State>> it = active.entrySet().iterator();
+        // One cursor for the whole sweep, the same shape PlacedBlockTracker uses and for the same reason:
+        // a BlockPos per entry per tick, with maxConcurrentBreaks of them per dimension. Every call below
+        // reads its coordinates on the spot, and the two that keep a position (the crack packets) freeze it
+        // themselves inside CrackingBlock.
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         while (it.hasNext()) {
             Map.Entry<Long, State> e = it.next();
             State s = e.getValue();
-            BlockPos pos = BlockPos.of(e.getKey());
+            pos.set(e.getKey());
 
             if (now - s.lastRequest > grace) {
                 s.clearCracks(level, pos); // request went stale
