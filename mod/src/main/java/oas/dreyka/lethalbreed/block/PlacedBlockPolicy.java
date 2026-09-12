@@ -44,9 +44,10 @@ public final class PlacedBlockPolicy {
         return age >= lifetime(configuredLifetime) * ABANDON_FACTOR;
     }
 
-    /** Clamp an already-scaled tenths value (progress×10 / age×10÷lifetime) to a 0..9 crack stage. Shared
-     *  with the progressive break path through {@code CrackingBlock.stage}, so both ramp the vanilla overlay
-     *  the exact same way. */
+    /** Clamp an already-scaled tenths value (progress×10 / age×10÷lifetime) to a 0..9 crack stage. This
+     *  method is itself the shared point: the progressive break path calls it too, inside
+     *  {@code BreakManager.tick}, before handing the stage to {@code CrackingBlock.showStage}, so both ramp
+     *  the vanilla overlay the exact same way. */
     public static int stage(double tenths) {
         return (int) Math.max(0, Math.min(9, tenths));
     }
