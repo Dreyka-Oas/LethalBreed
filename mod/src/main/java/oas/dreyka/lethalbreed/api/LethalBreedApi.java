@@ -12,23 +12,42 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class LethalBreedApi {
     private LethalBreedApi() {}
 
-    private static final List<String> AI_NAMESPACES = new CopyOnWriteArrayList<>(
-            List.of("net.minecraft.", "oas.dreyka.lethalbreed"));
+    private static final List<String> BUILT_IN_NAMESPACES = List.of("net.minecraft.", "oas.dreyka.lethalbreed");
+
+    /** Only what addons claimed. Kept apart from the two built-ins above because the two lists answer
+     *  different questions: everything here is a goal somebody owns and wants left alone, while a vanilla
+     *  target goal is exactly what {@code forceNearestTarget} exists to take away. */
+    private static final List<String> CLAIMED_NAMESPACES = new CopyOnWriteArrayList<>();
 
     /**
      * Declare that goals from {@code prefix} are yours and are not a conflict.
      *
      * <p>Without this, AiConflictDetector treats any goal outside vanilla and this mod as an incompatible
      * AI mod and, with the shipped {@code failOnAiConflict}, stops the server on the first zombie loaded.
+     *
+     * <p>A claimed goal is also KEPT when {@code forceNearestTarget} empties the target selector, so an
+     * addon's own targeting survives. Its verdict and this mod's nearest-prey pick then both write the
+     * target, each overwriting the other; claiming the namespace is how an addon accepts that.
      */
     public static void allowAiNamespace(String prefix) {
-        if (prefix != null && !prefix.isEmpty() && !AI_NAMESPACES.contains(prefix)) {
-            AI_NAMESPACES.add(prefix);
+        if (prefix != null && !prefix.isEmpty() && !CLAIMED_NAMESPACES.contains(prefix)) {
+            CLAIMED_NAMESPACES.add(prefix);
         }
     }
 
+    /** Whether this goal counts as a conflict. Vanilla and this mod's own goals never do. */
     public static boolean isAllowedAiNamespace(String className) {
-        for (String p : AI_NAMESPACES) {
+        return isClaimedAiNamespace(className) || startsWithAny(className, BUILT_IN_NAMESPACES);
+    }
+
+    /** Whether an addon explicitly claimed this goal, which is narrower than {@link #isAllowedAiNamespace}
+     *  and is the question {@code VanillaTargetingGoals} has to ask before removing anything. */
+    public static boolean isClaimedAiNamespace(String className) {
+        return startsWithAny(className, CLAIMED_NAMESPACES);
+    }
+
+    private static boolean startsWithAny(String className, List<String> prefixes) {
+        for (String p : prefixes) {
             if (className.startsWith(p)) {
                 return true;
             }

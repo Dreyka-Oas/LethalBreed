@@ -33,21 +33,32 @@ public final class VanillaTargetingGoals {
     /** Goal classes already reported by {@link #warnOnce}, so one addon does not fill the log. */
     private static final Set<String> WARNED = ConcurrentHashMap.newKeySet();
 
-    /** Remove every target goal, remembering the set for a later {@link #restore}. No-op if already stripped. */
+    /** Remove every target goal whose namespace no addon claimed, remembering exactly those for a later
+     *  {@link #restore}. No-op if already stripped. */
     public static void strip(Mob mob) {
+        // Checked before anything else. This is asked once per zombie per classify, and the answer is yes
+        // for every zombie already stripped, which is nearly all of them: the computeIfAbsent it replaces
+        // allocated a capturing lambda on each of those calls and resolved the accessor cast for nothing.
+        Integer id = mob.getId();
+        if (STRIPPED.containsKey(id)) {
+            return; // the snapshot is only ever taken while the goals are still present
+        }
         GoalSelector ts = ((MobGoalsAccessor) mob).lethalbreed$targetSelector();
-        // computeIfAbsent guards double-strip: the snapshot is only ever taken while goals are still present.
-        STRIPPED.computeIfAbsent(mob.getId(), id -> {
-            List<WrappedGoal> saved = new ArrayList<>(ts.getAvailableGoals());
-            for (WrappedGoal w : saved) {
-                String cls = w.getGoal().getClass().getName();
-                if (!LethalBreedApi.isAllowedAiNamespace(cls)) {
-                    warnOnce(cls);
-                }
+        List<WrappedGoal> removed = new ArrayList<>();
+        for (WrappedGoal w : ts.getAvailableGoals()) {
+            String cls = w.getGoal().getClass().getName();
+            if (LethalBreedApi.isClaimedAiNamespace(cls)) {
+                continue; // the addon claimed this namespace, so its goal stays in the selector
             }
-            ts.removeAllGoals(g -> true);
-            return saved;
-        });
+            warnOnce(cls);
+            removed.add(w);
+        }
+        // A claimed namespace is KEPT, not merely unreported: allowAiNamespace is the addon saying the goal
+        // is its own, and emptying the selector under it would have been the opposite of the permission it
+        // asked for. The addon accepts the consequence, that its goal and our nearest pick now both write
+        // the target, which is why the claim has to be made explicitly.
+        ts.removeAllGoals(g -> !LethalBreedApi.isClaimedAiNamespace(g.getClass().getName()));
+        STRIPPED.put(id, removed);
     }
 
     /** AiConflictDetector only ever walks the goalSelector, so a foreign goal sitting in the targetSelector
@@ -55,13 +66,14 @@ public final class VanillaTargetingGoals {
     private static void warnOnce(String cls) {
         if (WARNED.add(cls)) {
             LethalBreed.LOGGER.warn("[LethalBreed] removed foreign targeting goal {}: forceNearestTarget=true empties "
-                    + "the whole target selector. Set forceNearestTarget=false in config/oas/lethalbreed.json to keep it. "
-                    + "Calling LethalBreedApi.allowAiNamespace silences this line and the conflict scan, it does not "
-                    + "keep the goal.", cls);
+                    + "every target goal whose namespace nobody claimed. Set forceNearestTarget=false in "
+                    + "config/oas/lethalbreed.json to keep the whole selector, or call "
+                    + "LethalBreedApi.allowAiNamespace to keep this one goal.", cls);
         }
     }
 
-    /** Re-add the exact vanilla target goals captured by {@link #strip}. No-op if the mob isn't stripped. */
+    /** Re-add the exact goals {@link #strip} removed. A goal kept for a claimed namespace was never taken
+     *  out, so it is not in the snapshot and is not added a second time here. */
     public static void restore(Mob mob) {
         List<WrappedGoal> saved = STRIPPED.remove(mob.getId());
         if (saved == null) {
