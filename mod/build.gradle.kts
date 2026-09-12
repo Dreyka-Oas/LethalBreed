@@ -277,6 +277,23 @@ fabricApi {
 // the integrated server rather than guess. The API names this property itself in the error it prints.
 tasks.named<JavaExec>("runClientGameTest") {
     systemProperty("fabric.client.gametest.disableNetworkSynchronizer", "true")
+    // -PlbGametestOnly=bomber,contam narrows the run to the classes whose simple name starts with one of
+    // those tokens (see GameTestFilter). The runner's own filter selects mod ids and all seventeen suites
+    // share one, so without this a single pixel threshold costs a full run of the other sixteen.
+    (project.findProperty("lbGametestOnly") as String?)?.let {
+        systemProperty("lethalbreed.gametest.only", it)
+    }
+    // -PlbGametestMods=run/mods/sodium-....jar adds third-party jars to the run. The gametest run
+    // directory is rebuilt per launch, so a jar dropped into its mods/ folder by hand is gone before the
+    // client reads it; fabric.addMods is the loader's own dev-time route and survives that rebuild.
+    // cull/sodium-floor is the case that needs it: the Sodium-adaptive distance floor has nothing to
+    // measure when Sodium is absent, and it reports that as a FAIL rather than skipping itself.
+    (project.findProperty("lbGametestMods") as String?)?.let { list ->
+        val jars = list.split(",")
+                .map { file(it.trim()).absolutePath }
+                .joinToString(File.pathSeparator)
+        systemProperty("fabric.addMods", jars)
+    }
 }
 
 // `build` ignores a source set nothing depends on, so a gametest that stopped compiling would only surface the
