@@ -93,25 +93,15 @@ final class GpuContext {
         if (devList.isEmpty()) {
             throw new IllegalStateException("no OpenCL GPU device");
         }
-        for (int i = 0; i < nameList.size(); i++) {
-            LethalBreed.LOGGER.info("[LethalBreed] GPU[{}] = {}", i, nameList.get(i));
+        int[] units = new int[devList.size()];
+        for (int i = 0; i < devList.size(); i++) {
+            units[i] = GpuDeviceInfo.computeUnits(devList.get(i));
+            // The width is logged beside the name because it is what decides between two cards of the same
+            // vendor, and a pick nobody can read is a pick nobody can argue with.
+            LethalBreed.LOGGER.info("[LethalBreed] GPU[{}] = {} ({} compute units)", i, nameList.get(i), units[i]);
         }
 
-        // Pick: an explicit, in-range gpuDeviceIndex wins; otherwise auto (prefer AMD/Radeon, else device 0).
-        int want = FlowConfig.gpuDeviceIndex;
-        int chosen;
-        if (want >= 0 && want < devList.size()) {
-            chosen = want;
-        } else {
-            chosen = 0;
-            for (int i = 0; i < nameList.size(); i++) {
-                String upper = nameList.get(i).toUpperCase();
-                if (upper.contains("AMD") || upper.contains("RADEON")) {
-                    chosen = i;
-                    break;
-                }
-            }
-        }
+        int chosen = GpuDevicePick.choose(nameList, units, FlowConfig.gpuDeviceIndex);
         cl_platform_id chosenPlatform = platList.get(chosen);
         cl_device_id chosenDevice = devList.get(chosen);
         String chosenName = nameList.get(chosen);

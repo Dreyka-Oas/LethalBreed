@@ -6,6 +6,7 @@ import org.jocl.cl_device_id;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.jocl.CL.CL_DEVICE_MAX_COMPUTE_UNITS;
 import static org.jocl.CL.CL_DEVICE_MAX_WORK_GROUP_SIZE;
 import static org.jocl.CL.CL_DEVICE_NAME;
 import static org.jocl.CL.clGetDeviceInfo;
@@ -39,6 +40,18 @@ final class GpuDeviceInfo {
             return out[0] > 0 ? out[0] : 256L;
         } catch (Throwable t) {
             return 256L;
+        }
+    }
+
+    /** Query CL_DEVICE_MAX_COMPUTE_UNITS, the figure {@link GpuDevicePick} uses to tell a discrete card
+     *  from an integrated one. 0 when the query fails, which only makes that device the least attractive. */
+    static int computeUnits(cl_device_id device) {
+        try {
+            int[] out = new int[1];
+            clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS, Sizeof.cl_uint, Pointer.to(out), null);
+            return Math.max(0, out[0]);
+        } catch (Throwable t) {
+            return 0;
         }
     }
 
