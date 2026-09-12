@@ -40,6 +40,16 @@ public final class ContaminationScreenOverlay {
     /** Number of pre-baked radial-blur chains (one per plague level). Levels above this reuse the last one. */
     private static final int MAX_LEVEL = 5;
 
+    /** Green multiplier (ARGB) the HUD draws filled hearts and food icons through while the local player
+     *  carries the plague. Full alpha, RGB near-white with a slight green bias so the sprite keeps its colour
+     *  and only reads faintly sickly (red channel pulled down a touch).
+     *
+     *  <p>Here rather than in {@code GuiContaminationHudMixin} where it is used: a type declared inside a
+     *  mixin package cannot be loaded directly, so the client gametest that measures the tint band could not
+     *  read the real number and would have to restate it. The other half of the contamination look on the
+     *  client already lives in this class. */
+    public static final int HUD_TINT = 0xFF_D8FFD8;
+
     /** Post-effect ids: assets/lethalbreed/post_effect/contam_radial_blur_N.json, one per level 1..MAX_LEVEL. */
     private static final Identifier[] CHAIN_IDS = buildChainIds();
 

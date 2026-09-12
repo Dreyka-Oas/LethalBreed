@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.mixin.client;
 
+import oas.dreyka.lethalbreed.client.ContaminationScreenOverlay;
 import oas.dreyka.lethalbreed.effect.LethalBreedEffects;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.fabricmc.api.EnvType;
@@ -22,9 +23,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Environment(EnvType.CLIENT)
 @Mixin(Gui.class)
 public class GuiContaminationHudMixin {
-    /** Green multiplier (ARGB) applied to filled icons. Full alpha, RGB near-white with a slight green bias so
-     *  the sprite keeps its colour and only reads faintly sickly (red channel pulled down a touch). */
-    private static final int TINT = 0xFF_D8FFD8;
 
     // require = 0 because this injection is cosmetic. lethalbreed.mixins.json sets defaultRequire = 1,
     // which turns a failed injection into a crash at load: right for a gameplay mixin, wrong here. A HUD or
@@ -54,7 +52,7 @@ public class GuiContaminationHudMixin {
             return;
         }
         // blitSprite's trailing int is an ARGB colour multiplier: draw the vanilla sprite tinted sickly green.
-        g.blitSprite(pipe, sprite, x, y, w, h, TINT);
+        g.blitSprite(pipe, sprite, x, y, w, h, ContaminationScreenOverlay.HUD_TINT);
     }
 
     private static boolean lethalbreed$contaminated() {
