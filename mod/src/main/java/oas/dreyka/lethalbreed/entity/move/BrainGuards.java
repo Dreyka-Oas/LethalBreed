@@ -116,9 +116,15 @@ final class BrainGuards {
         return true;
     }
 
+    /** No target left. The sound walk still runs; only the label changes, and a fresh kill owns it: the
+     *  celebration opens precisely because nothing else was in range, so reading that emptiness back as IDLE
+     *  erased the state {@code ZombieMood.tryCelebrate} had just set, on the very next activation and for the
+     *  whole of its latch. Nothing downstream ever saw CELEBRATING. */
     boolean handleNoTarget(WorldAiContext ctx, ZombiePursuit p) {
         if (p.hasTarget()) return false;
-        owner.setState(p.hasSound() && nav.navigateToSound(ctx) ? ZombieState.PURSUING_SOUND : ZombieState.IDLE);
+        boolean sound = p.hasSound() && nav.navigateToSound(ctx);
+        owner.setState(sound ? ZombieState.PURSUING_SOUND
+                : owner.mood().isCelebrating() ? ZombieState.CELEBRATING : ZombieState.IDLE);
         return true;
     }
 

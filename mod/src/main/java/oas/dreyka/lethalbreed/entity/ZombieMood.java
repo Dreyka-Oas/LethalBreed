@@ -39,18 +39,16 @@ public final class ZombieMood {
         this.owner = owner;
     }
 
-    public boolean isFleeing() {
-        return state == State.FLEEING;
-    }
+    public boolean isFleeing() { return state == State.FLEEING; }
 
-    public boolean isSheltering() {
-        return state == State.SHELTERING;
-    }
+    public boolean isSheltering() { return state == State.SHELTERING; }
 
     /** Dozing, or shuffling to shade before dozing: the brain holds and drives it, not the hunt. */
-    public boolean isSleeping() {
-        return state == State.SLEEPING;
-    }
+    public boolean isSleeping() { return state == State.SLEEPING; }
+
+    /** Arms up over a fresh kill, until {@code celebrateTicks} runs out. The brain reads it so a zombie with
+     *  nothing left to chase is not relabelled idle in the middle of its own celebration. */
+    public boolean isCelebrating() { return state == State.CELEBRATING; }
 
     /** True while walking to shade: the brain keeps the walk calm, LodManager waits for the sky to go. */
     public boolean isSeekingShade() {

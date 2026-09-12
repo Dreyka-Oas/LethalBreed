@@ -65,6 +65,11 @@ public final class MoodStateDispatch {
             }
         } else if (active == State.CELEBRATING) {
             owner.setLod(LodLevel.HIGH); // keep the pose + countdown alive even with no target
+            // Re-asserted every activation, not set once at the kill. The arms are an entity flag vanilla
+            // also writes: MeleeAttackGoal was chasing the victim, its canContinueToUse goes false the tick
+            // that victim dies, and its stop() clears the very flag tryCelebrate had just raised. Set once,
+            // the victory pose lasted a single tick and no player ever saw it.
+            entity.setAggressive(true);
         }
         return false;
     }
