@@ -204,7 +204,20 @@ loom {
             // MC drops to the menu (no crash). Create it once, then it auto-enters.
             // Greenfield (huge 1:1-scale city, run/saves/Greenfield v0.5.4) makes a good stress test
             // for zombie pathing/climbing across dense multi-story buildings.
-            programArgs("--quickPlaySingleplayer", "Greenfield v0.5.4")
+            //
+            // Overridable because it cannot be ADDED to: the client refuses to start at all with two
+            // quick-play options ("Only one quick play option can be specified", thrown during argument
+            // parsing), so anything passing its own through --args crashed here. -PlbQuickPlay takes
+            // "none", "solo:<world name>" or "join:<host:port>"; headless-test.sh uses the last one so a
+            // --both session puts the client in the very world its console commands are driving.
+            when (val quickPlay = (project.findProperty("lbQuickPlay") as String?) ?: "solo:Greenfield v0.5.4") {
+                "none" -> {}
+                else -> if (quickPlay.startsWith("join:")) {
+                    programArgs("--quickPlayMultiplayer", quickPlay.removePrefix("join:"))
+                } else {
+                    programArgs("--quickPlaySingleplayer", quickPlay.removePrefix("solo:"))
+                }
+            }
         }
         // Second dev client for local multiplayer tests: its OWN run dir (so it never fights the
         // primary client / server over run/.fabric/processedMods) and it auto-connects to the local
