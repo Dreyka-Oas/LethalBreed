@@ -45,7 +45,14 @@ public final class AiConflictDetector {
             "monster_ai", "monsterai"
     );
 
-    private static boolean scanned = false;
+    /** Whether the behavioural scan has already run in THIS session. Reset by {@link #onServerStopped},
+     *  because a client process opens one world after another and the second deserves its own scan. */
+    private static volatile boolean scanned = false;
+
+    /** Arm the scan again for the next world. Called from {@code LifecycleInit} on SERVER_STOPPED. */
+    public static void onServerStopped() {
+        scanned = false;
+    }
 
     /** Startup check against the known-id list. Runs from {@code BootstrapInit}, where throwing is correct because
      *  the server has not started yet, so a hard stop is a clean "won't launch". */

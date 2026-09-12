@@ -13,6 +13,7 @@ import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.entity.ZombieRegistry;
 import oas.dreyka.lethalbreed.entity.spawn.SpawnFilter;
 import oas.dreyka.lethalbreed.block.PlacedBlockSavedData;
+import oas.dreyka.lethalbreed.util.AiConflictDetector;
 import oas.dreyka.lethalbreed.util.target.VanillaTargetingGoals;
 
 import net.minecraft.server.MinecraftServer;
@@ -98,6 +99,10 @@ public final class LifecycleInit {
             GorePuddles.onServerStopped();
             SpawnFilter.onServerStopped();
             VanillaTargetingGoals.clearAll();
+            // The behavioural scan latches after its first zombie. Without this, a single-player client
+            // opening a second world in the same process never rescans, so a mod loaded between the two
+            // (a datapack-driven goal, a reconfigured addon) goes unreported for the rest of the session.
+            AiConflictDetector.onServerStopped();
         });
     }
 
