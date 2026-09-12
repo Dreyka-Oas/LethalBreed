@@ -272,6 +272,13 @@ fabricApi {
     }
 }
 
+// The crack-overlay cases drive setBlockBreakingInfo through the packet layer to fake another player's
+// progress, which is exactly what the gametest API's network synchronizer refuses to arbitrate; it crashes
+// the integrated server rather than guess. The API names this property itself in the error it prints.
+tasks.named<JavaExec>("runClientGameTest") {
+    systemProperty("fabric.client.gametest.disableNetworkSynchronizer", "true")
+}
+
 // `build` ignores a source set nothing depends on, so a gametest that stopped compiling would only surface the
 // next time someone launched the client, hours into a sweep. Fail at build time instead.
 tasks.check {
