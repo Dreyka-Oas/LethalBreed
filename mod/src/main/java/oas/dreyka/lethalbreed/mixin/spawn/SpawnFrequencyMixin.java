@@ -49,9 +49,12 @@ public abstract class SpawnFrequencyMixin {
         // it once per loaded chunk per tick runs deeply negative. What a harness wants here is the loop trip
         // count, which nothing downstream reports.
         DevProbe.count("spawn.extraPasses", extra);
+        // Bound once, outside the loop: each method reference captures inv, so writing them inline allocated
+        // two objects per pass on a loop that runs up to spawnMaxExtraPasses times per chunk per tick.
+        NaturalSpawner.SpawnPredicate canSpawn = inv::lethalbreed$canSpawn;
+        NaturalSpawner.AfterSpawnCallback afterSpawn = inv::lethalbreed$afterSpawn;
         for (int i = 0; i < extra; i++) {
-            NaturalSpawner.spawnCategoryForChunk(MobCategory.MONSTER, level, chunk,
-                    inv::lethalbreed$canSpawn, inv::lethalbreed$afterSpawn);
+            NaturalSpawner.spawnCategoryForChunk(MobCategory.MONSTER, level, chunk, canSpawn, afterSpawn);
         }
     }
 }
