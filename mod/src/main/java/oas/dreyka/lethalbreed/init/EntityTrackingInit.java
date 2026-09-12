@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.init;
 
+import oas.dreyka.lethalbreed.api.event.ZombieAdoptCallback;
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.config.domain.WorldSpawnConfig;
 import oas.dreyka.lethalbreed.dimension.DimensionManager;
@@ -48,14 +49,13 @@ final class EntityTrackingInit {
                 // neighbour queries (sound, Screamer rally, Healer heal) kept matching those ghosts.
                 if (sz != null && sz.pursuit().pack().inPack()) {
                     // The chunk beat the materialiser to it: the zombie goes to disk WITH its attachment and
-                    // re-joins on the way back, so count it detached and write no ghost. A ghost here is how a
-                    // member ends up existing twice, and nothing in this mod despawns, so that is permanent.
+                    // re-joins on the way back, so count it detached and write no ghost. A ghost is how a
+                    // member exists twice, and nothing here despawns, so that would be permanent.
                     // A chunk turning HIDDEN ends tracking from PersistentEntitySectionManager.updateChunkStatus,
                     // which runs BEFORE anything sets a removal reason, so a null reason IS the chunk unload and
-                    // the only case that comes back. Reading null as "not saved" sent that case to leave(), which
-                    // drops the member without counting it and strips the attachment before the section is
-                    // written: the pack fell to zero members and dissolved under a zombie that was merely on
-                    // disk, and the zombie came back loose for good.
+                    // the only case that comes back. Reading null as "not saved" sent it to leave(), which drops
+                    // the member uncounted and strips the attachment before the section is written: the pack
+                    // dissolved under a zombie merely on disk, and that zombie came back loose for good.
                     var reason = entity.getRemovalReason();
                     if (reason == null || reason.shouldSave()) {
                         dimensions.get(sz.dimension()).packManager().detach(sz);
@@ -79,8 +79,7 @@ final class EntityTrackingInit {
 
     /** One ENTITY_LOAD firing: phase-gated spawn filtering, blocked-variant discards, contamination
      *  re-tracking, target indexing, zombie registration and pack re-join. Moved out of the registration
-     *  lambda in {@link #registerTracking} verbatim. The reasoning behind each branch below is unchanged
-     *  from before the extraction. */
+     *  lambda verbatim, so the reasoning on each branch predates the extraction. */
     private static void onEntityLoad(ZombieRegistry registry, DimensionManager dimensions,
                                       Entity entity, ServerLevel world) {
         // Phase-gated hostile filtering. In phase 0 (classic) NOTHING hostile spawns; in phases 1..15 only
@@ -108,9 +107,13 @@ final class EntityTrackingInit {
         if (TargetIndex.indexable(entity)) {
             dimensions.get(world.dimension()).targetIndex().track((net.minecraft.world.entity.LivingEntity) entity);
         }
-        // Track all zombie variants (plain Zombie, Husk, ZombieVillager, ZombifiedPiglin...).
-        // Drowned + babies are handled above (discarded when blocked).
+        // Every zombie variant (Husk, ZombieVillager, ZombifiedPiglin...); drowned and babies left above.
         if (entity instanceof Zombie zombie) {
+            // An addon with a zombie subclass of its own says so here, before anything is done to it: the
+            // equipment strip below, the goal strip, the scheduler and the pack all follow from adoption.
+            if (!ZombieAdoptCallback.EVENT.invoker().allowAdopt(zombie, true)) {
+                return;
+            }
             if (WorldSpawnConfig.stripZombieEquipment) {
                 SpawnControl.stripEquipment(zombie);
             }
@@ -132,18 +135,15 @@ final class EntityTrackingInit {
                     dimensions.get(world.dimension()).packManager().rejoin(sz, packId);
                 }
             }
-            // Deliberately NO "lift NoAI on load" repair here. It was tried and reverted: ENTITY_LOAD
-            // fires for freshly-added entities too, not just chunk reloads, so it cancelled a
-            // setNoAi(true) applied by the caller a line before addFreshEntity, exactly how this
-            // project's own dev harness builds its arenas (MechTestArena:64 "stay on the open
-            // platform (don't wander into shade/void)"). Measured: with the lift in place the headless
-            // `phasescale` case reported 0 zombies and FAILed; without it, PASS (16 tanky, hp 65.5-317.5).
-            // Nothing distinguishes one of our old statues from a map-maker's deliberately frozen prop,
-            // so the repair cannot be made safe. Audit #2 is prevented on the WRITE instead, by
-            // ZombieNoAiNotPersistedMixin: the releases on ENTITY_UNLOAD and SERVER_STOPPING only fix the
-            // live entity and are too late for the save (the chunk is serialised before it is unloaded,
-            // and an autosave or /save-all unloads nothing at all). A world already carrying an old
-            // statue can be repaired by hand with
+            // Deliberately NO "lift NoAI on load" repair here. Tried and reverted: ENTITY_LOAD fires for
+            // freshly-added entities too, so it cancelled a setNoAi(true) applied a line before
+            // addFreshEntity, which is how this project's own dev harness builds its arenas
+            // (MechTestArena:64). Measured: with the lift the headless `phasescale` case reported 0 zombies
+            // and FAILed; without it, PASS. Nothing distinguishes one of our old statues from a map-maker's
+            // deliberately frozen prop, so the repair cannot be made safe. Audit #2 is prevented on the
+            // WRITE instead, by ZombieNoAiNotPersistedMixin: the releases on ENTITY_UNLOAD and
+            // SERVER_STOPPING only fix the live entity and are too late for the save. An old statue in an
+            // existing world is repaired by hand with
             //   /data merge entity @e[type=zombie,limit=1] {NoAI:0b}
         }
     }
