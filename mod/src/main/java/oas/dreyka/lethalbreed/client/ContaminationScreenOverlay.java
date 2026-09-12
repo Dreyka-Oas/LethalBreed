@@ -5,6 +5,7 @@ import oas.dreyka.lethalbreed.effect.LethalBreedEffects;
 import com.mojang.blaze3d.resource.CrossFrameResourcePool;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.Minecraft;
@@ -56,6 +57,9 @@ public final class ContaminationScreenOverlay {
     /** Owns the transient render targets the chain allocates each frame; reused across frames like vanilla's. */
     private static final CrossFrameResourcePool RESOURCE_POOL = new CrossFrameResourcePool(3);
 
+    /** Whether a level was loaded on the previous client tick; the falling edge is when the pool is released. */
+    private static boolean hadLevel;
+
     private static Identifier[] buildChainIds() {
         Identifier[] ids = new Identifier[MAX_LEVEL];
         for (int i = 0; i < MAX_LEVEL; i++) {
@@ -67,8 +71,13 @@ public final class ContaminationScreenOverlay {
     public static void register() {
         HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, ID,
                 (GuiGraphics g, net.minecraft.client.DeltaTracker tick) -> render());
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT
-                .register((handler, client) -> releasePool());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            boolean inWorld = client.level != null;
+            if (hadLevel && !inWorld) {
+                releasePool();
+            }
+            hadLevel = inWorld;
+        });
     }
 
     private static void render() {
@@ -102,10 +111,18 @@ public final class ContaminationScreenOverlay {
         }
     }
 
-    /** Release every pooled render target outright. Called on world unload, and this is the ONLY vector it
-     *  addresses: our render() is HUD-attached, so it stops being called the moment {@code level == null}, and
-     *  with it endFrame(), leaving the pool's ~33 MB parked until the process exits. Vanilla needs no
-     *  equivalent because GameRenderer's own endFrame() keeps sweeping at the main menu.
+    /** Release every pooled render target outright. Called on the tick the level goes away, and this is the
+     *  ONLY vector it addresses: our render() is HUD-attached, so it stops being called the moment
+     *  {@code level == null}, and with it endFrame(), leaving the pool's ~33 MB parked until the process
+     *  exits. Vanilla needs no equivalent because GameRenderer's own endFrame() keeps sweeping at the main
+     *  menu.
+     *
+     *  <p>Driven off the level going null rather than off {@code ClientPlayConnectionEvents.DISCONNECT}, which
+     *  is where this used to hang. That event is raised from {@code Connection.channelInactive}, so it arrives
+     *  when netty gets round to closing the channel and not when the player leaves: a client that is already
+     *  at the title screen with its level nulled may not have had it yet, and the VRAM stays parked for as
+     *  long as that takes. The level is the thing the leak actually depends on, it is readable every tick, and
+     *  every route out of a world passes through it, including the ones a disconnect never covers.
      *
      *  <p>NOT what fixes the stale-window-size vector, despite the obvious guess: endFrame() sweeps EVERY
      *  entry in the pool unconditionally and decrements its framesToLive. It is not gated on the entry being
