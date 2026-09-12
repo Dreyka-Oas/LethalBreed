@@ -16,12 +16,9 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  */
 public final class SunShelterOverride {
 
-    /** Same patience {@code ShadeSeek} gives its own walk, and for the same failure: a refuge that stops
-     *  getting closer is one the zombie will never reach, and three seconds is longer than a re-path or a
-     *  block break and far shorter than the burn that kills it. */
-    private static final int STALL_PATIENCE = 60;
-
-    private final ShadeStall stall = new ShadeStall(STALL_PATIENCE);
+    /** Same window {@code ShadeSeek} gives its own walk, and for the same failure: a refuge that stops getting
+     *  closer is one the zombie will never reach. Hence the single {@code shelterStallTicks} option. */
+    private final ShadeStall stall = new ShadeStall();
     private BlockPos shelterTarget = null;
     private long retryAt = Long.MIN_VALUE;
 
@@ -51,7 +48,8 @@ public final class SunShelterOverride {
         // puts driveShelter back on driveFlee, which at least moves it, and the cooldown keeps the next sweep
         // from re-acquiring the same unreachable block on the very next activation.
         if (shelterTarget != null && stall.stalled(now, entity.distanceToSqr(
-                shelterTarget.getX() + 0.5, shelterTarget.getY(), shelterTarget.getZ() + 0.5))) {
+                shelterTarget.getX() + 0.5, shelterTarget.getY(), shelterTarget.getZ() + 0.5),
+                ZombieMoodConfig.shelterStallTicks)) {
             clearTarget();
             retryAt = now + ZombieMoodConfig.shelterRetryTicks;
         }

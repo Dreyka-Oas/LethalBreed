@@ -3,6 +3,7 @@ package oas.dreyka.lethalbreed.init;
 import oas.dreyka.lethalbreed.config.domain.CombatMoveConfig;
 import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
 import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
+import oas.dreyka.lethalbreed.config.domain.ZombieMoodConfig;
 
 import oas.dreyka.lethalbreed.dimension.DimensionManager;
 import oas.dreyka.lethalbreed.dimension.WorldAiContext;
@@ -32,10 +33,6 @@ public final class EntityEventsInit {
         registerDeath(registry);
     }
 
-    /** How far above a broken block a frozen sleeper may be and still be dropped by it. Two blocks covers
-     *  a zombie standing on the block itself; past that the block was not what held it up. */
-    private static final double DROP_RADIUS = 2.0;
-
     /** Loud sounds (block breaks) attract nearby zombies, and a block broken under a sleeper drops it. */
     private static void registerSound(DimensionManager dimensions) {
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
@@ -63,7 +60,7 @@ public final class EntityEventsInit {
      */
     private static void dropSleepers(WorldAiContext ctx, BlockPos pos) {
         for (SmartZombie sz : ctx.spatialGrid().queryRadius(
-                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, DROP_RADIUS)) {
+                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, ZombieMoodConfig.sleeperDropRadius)) {
             if (sz.mood().holdsAiFreeze() && !DozePose.supported(sz.entity())) {
                 sz.mood().releaseAiHold();
             }

@@ -126,4 +126,14 @@ public final class ContaminationConfig {
      *  the {@code /lethaldev timescale} command that used to be its only writer was removed as a duplicate
      *  of that row. {@code /lethaldev status} still reports the current value. */
     public static double contamDevTimeScale = 1.0;
+
+    // Appended below the ones above on purpose: ConfigSchema.all() order is the on-disk write order within
+    // a category, so inserting a field mid-holder rewrites every existing user's config file for nothing.
+
+    /** Chance added per plague level that a natural heal tick is skipped outright. Level 1 loses 15% of its
+     *  heal ticks at the default, level 5 loses 75%. */
+    public static double contamRegenSkipPerLevel = 0.15;
+    /** Hard cap on that skip chance, so recovery stays possible however high the level climbs. Raising this
+     *  to 1.0 makes a high-level victim unable to heal from food at all. */
+    public static double contamRegenSkipMax = 0.85;
 }

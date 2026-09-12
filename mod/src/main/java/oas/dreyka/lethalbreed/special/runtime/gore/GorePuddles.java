@@ -49,7 +49,7 @@ public final class GorePuddles {
         final List<GoreCocktail.Dose> cocktail;
         /**
          * Who this puddle has already rolled infection against. The puddle re-doses every
-         * {@code PUDDLE_REAPPLY_TICKS}, so rolling per dose would turn a few seconds of standing in one into
+         * {@code specialBomberPuddleReapplyTicks}, so rolling per dose would turn a few seconds of standing in one into
          * a certainty; one roll per victim per puddle keeps infection a risk.
          * Keyed by UUID, not by entity, so a victim who leaves and returns is still remembered without this
          * set pinning a dead entity for the puddle's lifetime.
@@ -108,7 +108,7 @@ public final class GorePuddles {
             if (p.age % PARTICLE_INTERVAL_TICKS == 0) {
                 BomberAbility.gorePuddleParticles(p.level, p.x, p.y, p.z, radius);
             }
-            if (p.age % GoreCurves.PUDDLE_REAPPLY_TICKS == 0) {
+            if (p.age % GoreCurves.puddleReapplyTicks() == 0) {
                 dose(p, radius);
             }
             return false;

@@ -64,4 +64,14 @@ public final class TargetingConfig {
     /** Tallest creature (blocks) a zombie will hunt. Anything above this is left alone, which is how giants
      *  and oversized modded mobs stay out of the horde's reach. Raise it to let them be hunted. */
     public static double targetMaxPreyHeight = 5.0;
+    /** Distances differing by less than this many blocks count as equally close when ranking prey, so a
+     *  horde does not all commit to one target over a few centimetres. Never goes below 0.05, see
+     *  {@code TargetOrder}. */
+    public static double targetTieBandBlocks = 2.0;
+    /** Ceiling on the footstep radius multiplier, so a player falling fast or teleporting cannot emit one
+     *  sound the whole dimension hears. */
+    public static double soundStepRadiusMax = 2.0;
+    /** How often the creature noise sweep runs, in ticks. Player footsteps and event distribution still run
+     *  every tick; only the sweep over every nearby creature is throttled. */
+    public static int soundScanIntervalTicks = 4;
 }

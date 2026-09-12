@@ -1,6 +1,7 @@
 package oas.dreyka.lethalbreed.mixin.plague;
 
 import oas.dreyka.lethalbreed.effect.ContaminationManager;
+import oas.dreyka.lethalbreed.effect.contamination.PlagueRegen;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,21 +19,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(net.minecraft.world.food.FoodData.class)
 public class PlagueBlocksRegenMixin {
 
-    /** Skip chance added per plague level. Level 1 → 15%, level 5 → 75%. */
-    private static final float SKIP_PER_LEVEL = 0.15f;
-    /** Hard cap so regen never becomes truly impossible, however high the level climbs. */
-    private static final float SKIP_MAX = 0.85f;
-
     @Redirect(
             method = "tick(Lnet/minecraft/server/level/ServerPlayer;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;heal(F)V"))
     private void lethalbreed$plagueStutterRegen(ServerPlayer player, float amount) {
-        int level = ContaminationManager.plagueLevel(player);
-        if (level > 0) {
-            float skipChance = Math.min(SKIP_MAX, SKIP_PER_LEVEL * level);
-            if (player.getRandom().nextFloat() < skipChance) {
-                return; // this heal tick is lost to the sickness
-            }
+        float skipChance = PlagueRegen.skipChance(ContaminationManager.plagueLevel(player));
+        if (skipChance > 0.0f && player.getRandom().nextFloat() < skipChance) {
+            return; // this heal tick is lost to the sickness
         }
         player.heal(amount);
     }

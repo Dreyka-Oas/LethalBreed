@@ -68,7 +68,9 @@ public final class PackState {
     public Phase phase = Phase.MATERIAL;
     /** Game time at which the pause on arrival ends. */
     public long dwellUntil;
-    /** Game time of the last virtual advance, so the next one can prorate by the ticks actually elapsed. */
+    /** Game time of the last advance, read by both movement paths for different reasons: the virtual one
+     *  prorates by the ticks actually elapsed, the material one ({@code PackMarch}) uses it as the clock of
+     *  its fixed-interval headway test. */
     public long lastAdvanceTick;
     /** Game time from which the pack has been under the minimum size, or 0 while it is healthy. */
     public long belowMinSince;

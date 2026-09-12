@@ -23,9 +23,8 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 public final class ShadeSeek {
 
     /** Breaks the one-block-short deadlock: a seek that stops closing on its target is abandoned so the
-     *  search can re-plan. 60 ticks, three seconds of no progress at all, comfortably longer than a
-     *  re-path or a block break and far shorter than the burn that kills an exposed zombie. */
-    private final ShadeStall stall = new ShadeStall(60);
+     *  search can re-plan. The window is {@code shelterStallTicks}, shared with the burning zombie's dash. */
+    private final ShadeStall stall = new ShadeStall();
     private boolean seeking = false;
     /** Server tick before which a fresh sweep is pointless, plus where we were when it last failed. */
     private long retryAt = Long.MIN_VALUE;
@@ -54,7 +53,8 @@ public final class ShadeSeek {
             // check the walk was still going anywhere. Measured in the headless shade rig: a zombie stopped ONE
             // BLOCK short of the roof and stood there with hasTarget and seeking both true from t+40 to t+320.
             // It never arrived, so it never dozed; it never lost the memory, so it never re-planned.
-            if (seeking && stall.stalled(now, owner.pursuit().distanceToTargetSq())) {
+            if (seeking && stall.stalled(now, owner.pursuit().distanceToTargetSq(),
+                    ZombieMoodConfig.shelterStallTicks)) {
                 LethalBreed.LOGGER.debug("[LethalBreed] zombie {} abandoned a stalled shade-seek", entity.getId());
                 abandon(owner, now, entity.blockPosition());
             }
@@ -64,9 +64,10 @@ public final class ShadeSeek {
             return; // memory routing disabled, so no shade-seek can be driven; it keeps roaming and burns
         }
         BlockPos here = entity.blockPosition();
-        // Skip the sweep while the last failure is still fresh AND we have not meaningfully moved. Moving more
-        // than 4 blocks exposes genuinely new volume, so that always re-arms the search immediately.
-        boolean moved = failedAt == null || failedAt.distSqr(here) > 16.0;
+        // Skip the sweep while the last failure is still fresh AND we have not meaningfully moved. Moving past
+        // shelterRescanDistance exposes genuinely new volume, so that always re-arms the search immediately.
+        double rescan = ZombieMoodConfig.shelterRescanDistance;
+        boolean moved = failedAt == null || failedAt.distSqr(here) > rescan * rescan;
         if (!moved && now < retryAt) {
             return;
         }

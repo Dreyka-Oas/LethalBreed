@@ -102,4 +102,19 @@ public final class ZombieMoodConfig {
      *  start + 1) * slope, 0, 1). 0.05 → 5% at the start phase, +5%/phase, everyone awake ~20 phases later.
      *  A stable per-zombie roll decides who; the threshold only grows, so the awake set never shrinks. */
     public static double dayAwakePhaseSlope = 0.05;
+
+    // Appended after the options above on purpose: ConfigSchema.all() order is the on-disk write order, so
+    // slipping a field in higher up rewrites every line under it in a config a server owner may have annotated.
+
+    /** How long (ticks) a walk to shade may fail to get any closer before it is given up and the search allowed
+     *  to run again. Covers both the day-doze walk and the burning zombie's dash to cover. 60 = 3 s, longer than
+     *  a re-path or a block break and far shorter than the burn that kills an exposed zombie. */
+    public static int shelterStallTicks = 60;
+    /** How far (blocks) a zombie must have moved since a failed shade sweep for the next one to run immediately
+     *  instead of waiting out {@link #shelterRetryTicks}. Moving this far exposes genuinely new volume. */
+    public static double shelterRescanDistance = 4.0;
+    /** How far (blocks) above a broken block a frozen sleeper may be and still be dropped by it, handing
+     *  gravity back at once instead of on its next activation. Two blocks covers a zombie standing on the
+     *  block itself; past that the block was not what held it up. */
+    public static double sleeperDropRadius = 2.0;
 }

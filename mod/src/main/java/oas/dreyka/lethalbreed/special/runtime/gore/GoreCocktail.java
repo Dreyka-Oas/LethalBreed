@@ -1,5 +1,6 @@
 package oas.dreyka.lethalbreed.special.runtime.gore;
 
+import oas.dreyka.lethalbreed.config.domain.special.BomberConfig;
 import oas.dreyka.lethalbreed.special.runtime.BomberBlast;
 import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;
@@ -29,32 +30,61 @@ public final class GoreCocktail {
     private GoreCocktail() {}
 
     /**
+     * How long a family of afflictions lasts. Read through the enum rather than stored in the pool, because
+     * the pool is built once at class-init and the durations are config options: a captured {@code double}
+     * would freeze whatever was in the file the first time a Bomber burst.
+     */
+    private enum Curve {
+        /** Hampers: poison, slowness, weakness, mining fatigue. */
+        HAMPER,
+        /** Disorients: nausea, hunger. Longer, because losing your bearings for three seconds is nothing. */
+        DISORIENT,
+        /** Blindness, short on purpose: it takes sight, not capability. */
+        BLIND;
+
+        double baseS() {
+            return switch (this) {
+                case HAMPER -> BomberConfig.specialBomberDoseBaseSec;
+                case DISORIENT -> BomberConfig.specialBomberLongDoseBaseSec;
+                case BLIND -> BomberConfig.specialBomberBlindDoseBaseSec;
+            };
+        }
+
+        double spanS() {
+            return switch (this) {
+                case HAMPER -> BomberConfig.specialBomberDoseSpanSec;
+                case DISORIENT -> BomberConfig.specialBomberLongDoseSpanSec;
+                case BLIND -> BomberConfig.specialBomberBlindDoseSpanSec;
+            };
+        }
+    }
+
+    /**
      * One entry of the pool.
      *
      * @param effect     what to apply
-     * @param baseS      duration in seconds at intensity 0
-     * @param spanS      seconds added at intensity 1
-     * @param ampCap     highest amplifier this effect may reach, regardless of the phase. 0 for effects whose
-     *                   amplifier does nothing in vanilla. Showing the player "Nausea III" would promise a
-     *                   severity the game does not implement.
+     * @param curve      which duration family it belongs to
+     * @param capped     whether the amplifier may rise to {@code specialBomberDoseAmpCap}. False pins it at 0,
+     *                   for effects whose amplifier does nothing in vanilla: showing the player "Nausea III"
+     *                   would promise a severity the game does not implement.
      * @param blindGated whether this entry is subject to {@code specialBomberBlindThreshold}
      */
-    private record Entry(Holder<MobEffect> effect, double baseS, double spanS, int ampCap, boolean blindGated) {}
+    private record Entry(Holder<MobEffect> effect, Curve curve, boolean capped, boolean blindGated) {}
 
     /** One rolled affliction: an effect and the amplifier this Bomber drew for it. */
     public record Dose(Holder<MobEffect> effect, int amplifier, double baseS, double spanS) {}
 
     private static final List<Entry> POOL = List.of(
-            new Entry(MobEffects.NAUSEA, 4.0, 11.0, 0, false),
-            new Entry(MobEffects.POISON, 3.0, 9.0, 2, false),
-            new Entry(MobEffects.SLOWNESS, 3.0, 9.0, 2, false),
-            new Entry(MobEffects.WEAKNESS, 3.0, 9.0, 2, false),
-            new Entry(MobEffects.MINING_FATIGUE, 3.0, 9.0, 2, false),
-            new Entry(MobEffects.HUNGER, 4.0, 11.0, 2, false),
+            new Entry(MobEffects.NAUSEA, Curve.DISORIENT, false, false),
+            new Entry(MobEffects.POISON, Curve.HAMPER, true, false),
+            new Entry(MobEffects.SLOWNESS, Curve.HAMPER, true, false),
+            new Entry(MobEffects.WEAKNESS, Curve.HAMPER, true, false),
+            new Entry(MobEffects.MINING_FATIGUE, Curve.HAMPER, true, false),
+            new Entry(MobEffects.HUNGER, Curve.DISORIENT, true, false),
             // Blindness stays behind its threshold, keeping specialBomberBlindThreshold's documented meaning
             // ("intensity from which Blindness is applied", 1.0 disables it). It takes away information
             // where the rest of the pool takes away capability, so it alone is gated.
-            new Entry(MobEffects.BLINDNESS, 1.0, 4.0, 0, true));
+            new Entry(MobEffects.BLINDNESS, Curve.BLIND, false, true));
 
     /**
      * Roll this Bomber's cocktail.
@@ -81,8 +111,9 @@ public final class GoreCocktail {
         for (int i = 0; i < want; i++) {
             // Swap-remove: draws without replacement in O(1) without shuffling the shared pool.
             Entry picked = eligible.remove(rng.nextInt(eligible.size()));
-            int amp = Math.min(picked.ampCap(), rng.nextInt(Math.max(1, maxAmp + 1)));
-            out.add(new Dose(picked.effect(), amp, picked.baseS(), picked.spanS()));
+            int cap = picked.capped() ? Math.max(0, BomberConfig.specialBomberDoseAmpCap) : 0;
+            int amp = Math.min(cap, rng.nextInt(Math.max(1, maxAmp + 1)));
+            out.add(new Dose(picked.effect(), amp, picked.curve().baseS(), picked.curve().spanS()));
         }
         return out;
     }

@@ -21,26 +21,20 @@ package oas.dreyka.lethalbreed.entity.mood.sleep;
  */
 public final class ShadeStall {
 
-    private final int patienceTicks;
-
     private double bestDistSq = Double.MAX_VALUE;
     private long lastProgressAt = Long.MIN_VALUE;
-
-    /** @param patienceTicks how long the distance may fail to improve before the seek is abandoned */
-    public ShadeStall(int patienceTicks) {
-        if (patienceTicks <= 0) {
-            throw new IllegalArgumentException("patience must be positive, got " + patienceTicks);
-        }
-        this.patienceTicks = patienceTicks;
-    }
 
     /**
      * Feed the current squared distance to the shade target.
      *
+     * @param patienceTicks how long the distance may fail to improve before the seek is abandoned. Read at
+     *                      every call rather than kept from construction, so raising or lowering the option
+     *                      reaches the zombies already on their walk, not only the ones spawned afterwards.
+     *                      Anything below one tick is clamped to one.
      * @return true when the seek has made no progress for {@code patienceTicks} and should be abandoned, so
      *         the memory is dropped and the search allowed to run again under its normal cooldown
      */
-    public boolean stalled(long now, double distSqToTarget) {
+    public boolean stalled(long now, double distSqToTarget, int patienceTicks) {
         if (lastProgressAt == Long.MIN_VALUE) {
             lastProgressAt = now;
             bestDistSq = distSqToTarget;
@@ -51,7 +45,7 @@ public final class ShadeStall {
             lastProgressAt = now;
             return false;
         }
-        return now - lastProgressAt >= patienceTicks;
+        return now - lastProgressAt >= Math.max(1, patienceTicks);
     }
 
     /** Forget this seek. Call when a new shade target is acquired, or the seek ends. */

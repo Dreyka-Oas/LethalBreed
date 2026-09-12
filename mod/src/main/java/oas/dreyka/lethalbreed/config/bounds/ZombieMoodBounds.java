@@ -36,6 +36,9 @@ public final class ZombieMoodBounds {
         r.b("daySleepAlertTicks", 0, 72_000);
         r.b("dayAwakePhaseStart", 0, 1_000_000);
         r.b("dayAwakePhaseSlope", 0, 1);
-
+        // Never below one tick: a zero window would abandon every shade walk on its second activation.
+        r.b("shelterStallTicks", 1, 72_000);
+        r.b("shelterRescanDistance", 0, 128);
+        r.b("sleeperDropRadius", 0, 64);
     }
 }

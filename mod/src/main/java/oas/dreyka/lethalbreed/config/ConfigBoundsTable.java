@@ -3,6 +3,7 @@ package oas.dreyka.lethalbreed.config;
 import oas.dreyka.lethalbreed.config.schema.ConfigSchema;
 
 import java.util.HashMap;
+import oas.dreyka.lethalbreed.config.bounds.BomberBounds;
 import oas.dreyka.lethalbreed.config.bounds.CombatMoveBounds;
 import oas.dreyka.lethalbreed.config.bounds.ContaminationBounds;
 import oas.dreyka.lethalbreed.config.bounds.engine.FlowBounds;
@@ -58,5 +59,6 @@ final class ConfigBoundsTable {
         ContaminationBounds.register(ConfigBoundsTable::b);
         ZombieMoodBounds.register(ConfigBoundsTable::b);
         PackBounds.register(ConfigBoundsTable::b);
+        BomberBounds.register(ConfigBoundsTable::b);
     }
 }

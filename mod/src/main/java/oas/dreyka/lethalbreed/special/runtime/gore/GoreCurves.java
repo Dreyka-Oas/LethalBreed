@@ -1,6 +1,7 @@
 package oas.dreyka.lethalbreed.special.runtime.gore;
 
 import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
+import oas.dreyka.lethalbreed.config.domain.special.BomberConfig;
 import oas.dreyka.lethalbreed.special.runtime.BomberBlast;
 
 /**
@@ -13,24 +14,22 @@ import oas.dreyka.lethalbreed.special.runtime.BomberBlast;
 public final class GoreCurves {
     private GoreCurves() {}
 
-    /** Seconds a puddle lasts at the shortest and the longest fuse. */
-    private static final double PUDDLE_BASE_S = 3.0, PUDDLE_SPAN_S = 9.0;
-    /** A puddle is smaller than the ring that made it: the gore settles inward as it lands. */
-    private static final double PUDDLE_RADIUS_MUL = 0.6;
-    /** The residue doses at half the strength of the burst that left it. */
-    private static final double PUDDLE_POTENCY = 0.5;
-    /** How often a lingering puddle re-doses whoever stands in it. */
-    public static final int PUDDLE_REAPPLY_TICKS = 20;
     private static final int TPS = 20;
+
+    /** How often a lingering puddle re-doses whoever stands in it, never under one tick. */
+    public static int puddleReapplyTicks() {
+        return Math.max(1, BomberConfig.specialBomberPuddleReapplyTicks);
+    }
 
     /** How long the gore puddle lingers, in ticks. A long fuse leaves more of a mess behind. */
     public static int puddleDurationTicks(double ratio) {
-        return effectTicks(PUDDLE_BASE_S, PUDDLE_SPAN_S, ratio);
+        return effectTicks(BomberConfig.specialBomberPuddleBaseSec,
+                BomberConfig.specialBomberPuddleSpanSec, ratio);
     }
 
     /** The puddle's radius at the moment it forms. */
     public static double puddleRadius(double splatterRadius) {
-        return Math.max(0.0, splatterRadius) * PUDDLE_RADIUS_MUL;
+        return Math.max(0.0, splatterRadius) * BomberConfig.specialBomberPuddleRadiusMul;
     }
 
     /**
@@ -46,12 +45,12 @@ public final class GoreCurves {
 
     /**
      * Dose delivered by standing in the puddle: the same proximity-and-fuse curve as the burst, scaled down by
-     * {@link #PUDDLE_POTENCY}. Reusing {@link BomberBlast#intensity} is deliberate. The residue should fall off toward
-     * its own edge exactly the way the ring does, so one rule governs both and there is no second curve to
-     * keep in sync.
+     * {@code specialBomberPuddlePotency}. Reusing {@link BomberBlast#intensity} is deliberate. The residue
+     * should fall off toward its own edge exactly the way the ring does, so one rule governs both and there is
+     * no second curve to keep in sync.
      */
     public static double puddleIntensity(double ratio, double dist, double puddleRadius) {
-        return BomberBlast.intensity(ratio, dist, puddleRadius) * PUDDLE_POTENCY;
+        return BomberBlast.intensity(ratio, dist, puddleRadius) * BomberConfig.specialBomberPuddlePotency;
     }
 
     /**

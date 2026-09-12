@@ -14,6 +14,7 @@ import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
 import oas.dreyka.lethalbreed.config.domain.TargetingConfig;
 import oas.dreyka.lethalbreed.config.domain.WorldSpawnConfig;
 import oas.dreyka.lethalbreed.config.domain.ZombieMoodConfig;
+import oas.dreyka.lethalbreed.config.domain.special.BomberConfig;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -31,10 +32,9 @@ import java.util.List;
  * holders (or add a new holder to {@link #HOLDERS}) and the rest of the config layer (load/save, GUI,
  * commands) keeps working unchanged.
  *
- * <p>The holder list is not fixed at compile time: {@link #registerHolder} adds one at runtime. That exists
- * for exactly one caller ({@code DevBootstrap}, in a development environment), so the dev-only options and
- * the "Dev / Debug" GUI tab they produce simply do not exist in a player's game, and are never written into
- * a player's {@code lethalbreed.json}.
+ * <p>The holder list is not fixed at compile time: {@link #registerHolder} adds one at runtime, for exactly
+ * one caller ({@code DevBootstrap}, in a development environment), so the dev-only options and the "Dev /
+ * Debug" GUI tab they produce never exist in a player's game or {@code lethalbreed.json}.
  */
 public final class ConfigSchema {
     private ConfigSchema() {}
@@ -58,7 +58,8 @@ public final class ConfigSchema {
             ExpertConfig.class,
             // Appended last on purpose: inserting a holder mid-list would shift the on-disk write order of
             // every option after it, rewriting every existing user's config file for nothing.
-            PackConfig.class));
+            PackConfig.class,
+            BomberConfig.class));
 
     /** Editable fields in source-declaration order, across all holders. Cached rather than recomputed on
      *  every call (config load, every GUI keystroke via {@code ConfigAccess}, every {@code find()}). Those
@@ -101,10 +102,9 @@ public final class ConfigSchema {
      * Undo a {@link #registerHolder}. Exists for tests: a registration is process-global, and a test that
      * leaves one behind changes the option list every later test sees. Nothing in production unregisters.
      *
-     * <p>Not a full undo: it does not remove the {@code ConfigAccess.DEFAULTS} entries
-     * {@link ConfigAccess#captureDefaultsFor} added for the holder, so those keys persist in that map for
-     * the JVM's lifetime. Harmless today ({@code DEFAULTS} is only ever read by key, never iterated), but a
-     * test relying on the defaults map being fully clean after unregistering would not find that here.
+     * <p>Not a full undo: the {@code ConfigAccess.DEFAULTS} entries {@link ConfigAccess#captureDefaultsFor}
+     * added for the holder persist in that map for the JVM's lifetime. Harmless today ({@code DEFAULTS} is
+     * only ever read by key, never iterated), but a test wanting it fully clean will not find that here.
      */
     static void unregisterHolder(Class<?> holder) {
         if (HOLDERS.remove(holder)) {

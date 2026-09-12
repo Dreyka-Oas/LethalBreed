@@ -118,4 +118,11 @@ public final class SpecialVariantConfig {
     public static double specialJuggernautHealthMul = 2.0;
     /** Resistance effect amplifier on a Juggernaut (1 = Resistance II). */
     public static int specialJuggernautResistanceAmp = 1;
+
+    // Appended after the options above on purpose: ConfigSchema.all() order is the on-disk write order, so
+    // inserting a field higher up rewrites every line below it in a config a server owner may have annotated.
+
+    /** Placements tried when summoning a child before giving up. The last one always falls back to the
+     *  parent's own cell, so raising this only buys more scattered spots, never more children. */
+    public static int specialSpawnAttempts = 5;
 }

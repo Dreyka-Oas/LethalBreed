@@ -46,5 +46,6 @@ public final class PackBounds {
         r.b("packSpawnSpread", 1, 32);
         r.b("packMaterializeRetries", 0, 64);
         r.b("packRejoinRadius", 8, 512);
+        r.b("packHeadwayCheckTicks", 1, 12_000);
     }
 }

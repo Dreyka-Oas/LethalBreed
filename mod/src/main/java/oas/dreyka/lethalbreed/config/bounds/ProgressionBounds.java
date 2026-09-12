@@ -98,5 +98,6 @@ public final class ProgressionBounds {
         r.b("specialJuggernautScale", 0.05, 10);
         r.b("specialJuggernautHealthMul", 0.05, 100);
         r.b("specialJuggernautResistanceAmp", 0, 9);
+        r.b("specialSpawnAttempts", 1, 64);
     }
 }

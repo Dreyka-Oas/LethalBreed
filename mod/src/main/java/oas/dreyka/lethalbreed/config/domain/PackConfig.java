@@ -93,4 +93,12 @@ public final class PackConfig {
     public static int packMaterializeRetries = 5;
     /** How far from its pack a returning member may be and still re-join it. */
     public static double packRejoinRadius = 64.0;
+
+    // Appended after the options above on purpose: ConfigSchema.all() order is the on-disk write order, so
+    // inserting a field higher up rewrites every line below it in a config a server owner may have annotated.
+
+    /** How often (ticks) the headway test is allowed to fire. Long enough that a walking pack visibly closes
+     *  on its destination between two checks, short enough that a pack pinned against a wall gives up within
+     *  {@code packStuckActivations} x this, i.e. in seconds, where a slower check would strand it overnight. */
+    public static int packHeadwayCheckTicks = 40;
 }

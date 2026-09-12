@@ -19,6 +19,8 @@ public final class ContaminationBounds {
         r.b("contamDamageMax", 0, 1000);
         r.b("contamIntervalMinSec", 0, 3600);
         r.b("contamIntervalMaxSec", 0, 3600);
+        r.b("contamRegenSkipPerLevel", 0, 1);
+        r.b("contamRegenSkipMax", 0, 1);
         r.b("contamCureCheckTicks", 1, 72_000);
         r.b("contamCureMinPct", 0, 100);
         r.b("contamCureMaxPct", 0, 100);

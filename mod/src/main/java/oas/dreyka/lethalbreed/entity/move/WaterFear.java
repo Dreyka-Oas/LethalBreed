@@ -32,9 +32,6 @@ public final class WaterFear {
     /** What {@link SmartZombie#airLeft()} holds while the zombie has its head in the air. */
     private static final int BREATHING = Integer.MIN_VALUE;
 
-    /** Pace of the walk back to dry land. Above 1 so climbing out beats the current pushing it about. */
-    private static final double RETREAT_SPEED = 1.2;
-
     /**
      * Spend air while the zombie's head is under water, walk it back out, and hurt it harder the longer it
      * stays under.
@@ -93,7 +90,7 @@ public final class WaterFear {
             return;
         }
         BlockPos dry = BlockPos.of(packed);
-        zombie.getNavigation().moveTo(dry.getX() + 0.5, dry.getY(), dry.getZ() + 0.5, RETREAT_SPEED);
+        zombie.getNavigation().moveTo(dry.getX() + 0.5, dry.getY(), dry.getZ() + 0.5, CombatMoveConfig.waterRetreatSpeed);
     }
 
     private static void drown(ServerLevel level, Zombie zombie, SmartZombie owner, int step) {

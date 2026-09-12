@@ -4,7 +4,6 @@ import oas.dreyka.lethalbreed.GameState;
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.pack.rule.PackAdvance;
-import oas.dreyka.lethalbreed.pack.PackManager;
 import oas.dreyka.lethalbreed.pack.PackState;
 
 import net.minecraft.server.level.ServerLevel;
@@ -26,12 +25,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class PackMarch {
     private PackMarch() {}
 
-    /** How often the headway test is allowed to fire. Long enough that a walking pack visibly closes on
-     *  its destination between two checks, short enough that a pack pinned against a wall gives up within
-     *  packStuckActivations x this, i.e. in seconds, where a slower check would strand it overnight. */
-    private static final int HEADWAY_CHECK_TICKS = 40;
-
-    public static void tick(ServerLevel level, PackManager manager, PackState pack, long gameTime) {
+    public static void tick(ServerLevel level, PackState pack, long gameTime) {
         if (!PackConfig.packMigrationEnabled) {
             return;
         }
@@ -97,7 +91,7 @@ public final class PackMarch {
         // almost every tick, tripped packStuckActivations within a second, and made the pack re-roll its
         // destination over and over: measured at 11 blocks covered in 780 ticks where the walk alone should
         // manage several times that. The interval is what makes the epsilon mean something.
-        if (gameTime - pack.lastAdvanceTick >= HEADWAY_CHECK_TICKS) {
+        if (gameTime - pack.lastAdvanceTick >= Math.max(1, PackConfig.packHeadwayCheckTicks)) {
             if (d >= pack.lastDistToDest - PackAdvance.HEADWAY_EPSILON) {
                 pack.stuckActivations++;
             } else {

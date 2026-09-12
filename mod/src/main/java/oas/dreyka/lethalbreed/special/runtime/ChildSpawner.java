@@ -1,5 +1,7 @@
 package oas.dreyka.lethalbreed.special.runtime;
 
+import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -16,14 +18,13 @@ final class ChildSpawner {
     private ChildSpawner() {
     }
 
-    /** Attempts before giving up. Past this, a run of discards has stopped being plausible and the loop must
-     *  not become the thing that hangs a tick. */
-    private static final int ATTEMPTS = 5;
-
     static Zombie spawnNear(ServerLevel level, Zombie parent, int spread) {
-        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+        // Attempts before giving up. Past this, a run of discards has stopped being plausible and the loop
+        // must not become the thing that hangs a tick.
+        int attempts = Math.max(1, SpecialVariantConfig.specialSpawnAttempts);
+        for (int attempt = 0; attempt < attempts; attempt++) {
             // Last attempt falls back to the parent's own cell, which is known to admit an entity.
-            boolean fallback = attempt == ATTEMPTS - 1;
+            boolean fallback = attempt == attempts - 1;
             int dx = fallback ? 0 : level.getRandom().nextInt(spread * 2 + 1) - spread;
             int dz = fallback ? 0 : level.getRandom().nextInt(spread * 2 + 1) - spread;
             BlockPos at = parent.blockPosition().offset(dx, 0, dz);

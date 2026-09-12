@@ -61,6 +61,6 @@ public final class CombatMoveBounds {
         r.b("pillarFinishSpeed", 0, 5);
         r.b("pillarFinishJump", 0, 2);
         r.b("descendDirectlyBelowRadius", 0, 16);
-
+        r.b("waterRetreatSpeed", 0, 10);
     }
 }

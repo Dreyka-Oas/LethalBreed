@@ -61,9 +61,9 @@ final class WorldMaintenance {
                 }
                 if (pack.phase == PackState.Phase.VIRTUAL) {
                     // A dematerialised pack has no members to walk it: it advances as a point instead.
-                    PackVirtualMove.tick(level, ctx.packManager(), pack, gameTime);
+                    PackVirtualMove.tick(level, pack, gameTime);
                 } else {
-                    PackMarch.tick(level, ctx.packManager(), pack, gameTime);
+                    PackMarch.tick(level, pack, gameTime);
                 }
             }
         });

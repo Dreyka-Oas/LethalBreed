@@ -22,11 +22,14 @@ import java.util.Map;
  * grid, setting their sound target. Server-thread only.
  */
 public final class SoundEventBus {
-    // How often the prey sweep (tickEntities) actually runs. A moving creature's noise refreshes a zombie's
-    // short-term memory (~10 s window), so scanning every Nth tick instead of every tick is imperceptible for
-    // pursuit while cutting that sweep by N×. Player footsteps (tickPlayers) and event distribution (process)
-    // still run EVERY tick. Only the O(prey) creature scan is throttled.
-    private static final int ENTITY_SCAN_INTERVAL = 4;
+    // How often the prey sweep (tickEntities) actually runs, now read from soundScanIntervalTicks. A moving
+    // creature's noise refreshes a zombie's short-term memory (~10 s window), so scanning every Nth tick
+    // instead of every tick is imperceptible for pursuit while cutting that sweep by N×. Player footsteps
+    // (tickPlayers) and event distribution (process) still run EVERY tick. Only the O(prey) creature scan is
+    // throttled.
+    private static int entityScanInterval() {
+        return Math.max(1, TargetingConfig.soundScanIntervalTicks);
+    }
 
     // event = {x, y, z, radius}
     private final List<double[]> events = new ArrayList<>();
@@ -64,7 +67,8 @@ public final class SoundEventBus {
             double dx = x - prev[0], dy = y - prev[1], dz = z - prev[2];
             double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
             if (dist >= threshold && !p.isCrouching()) {
-                double radius = TargetingConfig.soundBaseRadius * Math.min(2.0, 1.0 + dist);
+                double radius = TargetingConfig.soundBaseRadius
+                        * Math.min(TargetingConfig.soundStepRadiusMax, 1.0 + dist);
                 emit(x, y, z, radius);
             }
             prev[0] = x; prev[1] = y; prev[2] = z;
@@ -80,8 +84,8 @@ public final class SoundEventBus {
         if (!TargetingConfig.soundEnabled) {
             return;
         }
-        // Throttle the sweep (see ENTITY_SCAN_INTERVAL). Cheap early-out on the off ticks.
-        if ((entityScanCounter++ % ENTITY_SCAN_INTERVAL) != 0) {
+        // Throttle the sweep (see entityScanInterval). Cheap early-out on the off ticks.
+        if ((entityScanCounter++ % entityScanInterval()) != 0) {
             return;
         }
         double base = TargetingConfig.soundBaseRadius;

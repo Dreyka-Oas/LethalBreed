@@ -1,6 +1,7 @@
 package oas.dreyka.lethalbreed.special.runtime;
 
 import oas.dreyka.lethalbreed.config.domain.SpecialVariantConfig;
+import oas.dreyka.lethalbreed.config.domain.special.BomberConfig;
 
 /**
  * Pure maths behind a Bomber detonation: how long its fuse burns, how hard it blows, how far the gore
@@ -32,11 +33,6 @@ public final class BomberBlast {
      * and it is why the constant lives here, where a unit test can hold it to being opaque.
      */
     public static final int SPLATTER_COLOR_ARGB = 0xFF8A2E7A;
-
-
-    /** Weight of the fuse in the intensity blend; proximity always keeps the remaining share, so distance
-     *  can never stop mattering however long the Bomber swelled. */
-    private static final double FUSE_WEIGHT = 0.6;
 
     private static double lo(double a, double b) { return Math.min(a, b); }
 
@@ -98,9 +94,11 @@ public final class BomberBlast {
             return 0.0;
         }
         double prox = Math.max(0.0, 1.0 - dist / splatterRadius);
-        return Math.clamp(prox * ((1.0 - FUSE_WEIGHT) + FUSE_WEIGHT * Math.clamp(ratio, 0.0, 1.0)), 0.0, 1.0);
+        // Clamped here, not only in the bounds: a weight outside [0,1] would let proximity's share go
+        // negative and rank a victim at the rim above one at the centre.
+        double w = Math.clamp(BomberConfig.specialBomberFuseWeight, 0.0, 1.0);
+        return Math.clamp(prox * ((1.0 - w) + w * Math.clamp(ratio, 0.0, 1.0)), 0.0, 1.0);
     }
-
 
     public static double infectChance(double i) {
         return Math.clamp(i, 0.0, 1.0)

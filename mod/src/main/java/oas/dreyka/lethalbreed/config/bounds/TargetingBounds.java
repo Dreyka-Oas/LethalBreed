@@ -15,6 +15,11 @@ public final class TargetingBounds {
         r.b("targetMemoryTicks", 0, 72_000);
         r.b("targetSwitchMargin", 1, 8);
         r.b("soundBaseRadius", 0, 128);
+        // Never below 0.05: TargetOrder.WET_PENALTY only separates wet from dry while no dry band can reach
+        // it, and the band is the detect radius squared divided by this squared.
+        r.b("targetTieBandBlocks", 0.05, 64);
+        r.b("soundStepRadiusMax", 1, 64);
+        r.b("soundScanIntervalTicks", 1, 200);
         r.b("soundLoudMultiplier", 1, 16);
         r.b("soundMoveThreshold", 0, 10);
         r.b("soundArriveDistance", 0, 64);

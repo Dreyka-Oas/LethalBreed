@@ -122,4 +122,11 @@ public final class CombatMoveConfig {
     public static float breakMaxHardness = 30.0f;
     /** Ticks before zombie-placed dirt is auto-removed (no drop). 600 = 30s. */
     public static long placedBlockLifetimeTicks = 600L;
+
+    // Appended after the options above on purpose: ConfigSchema.all() order is the on-disk write order, so
+    // inserting a field higher up rewrites every line below it in a config a server owner may have annotated.
+
+    /** Navigation speed multiplier for the walk back to dry land once a zombie is out of its depth. Above 1
+     *  so climbing out beats the current pushing it about. */
+    public static double waterRetreatSpeed = 1.2;
 }

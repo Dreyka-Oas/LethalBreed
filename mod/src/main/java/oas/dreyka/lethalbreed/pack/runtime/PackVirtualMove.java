@@ -2,7 +2,6 @@ package oas.dreyka.lethalbreed.pack.runtime;
 
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.pack.rule.PackAdvance;
-import oas.dreyka.lethalbreed.pack.PackManager;
 import oas.dreyka.lethalbreed.pack.PackState;
 
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class PackVirtualMove {
     private PackVirtualMove() {}
 
-    public static void tick(ServerLevel level, PackManager manager, PackState pack, long gameTime) {
+    public static void tick(ServerLevel level, PackState pack, long gameTime) {
         if (!PackConfig.packMigrationEnabled) {
             return;
         }
