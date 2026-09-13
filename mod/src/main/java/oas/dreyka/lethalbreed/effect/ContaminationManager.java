@@ -69,7 +69,7 @@ public final class ContaminationManager {
     }
 
     /** SERVER_STOPPED: drop every victim from the plague's static in-memory collections so a closed world's
-     *  entity graph isn't pinned into the next session (audit #2). Persistent attachments are untouched. */
+     *  entity graph isn't pinned into the next session. Persistent attachments are untouched. */
     public static void onServerStopped() {
         ContaminationLifecycle.onServerStopped();
     }

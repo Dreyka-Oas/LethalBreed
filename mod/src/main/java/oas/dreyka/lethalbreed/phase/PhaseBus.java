@@ -9,10 +9,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Who is told when the night progression moves, and the only place that tells them.
  *
- * <p>The list used to sit on {@code LethalBreedApi} next to a public {@code firePhaseChanged}, so anything
- * holding the published jar could announce a phase the server had not moved to and every listener would
- * believe it. Subscribing is part of the published surface; announcing is not, and this class is out of an
- * addon's reach because the package is not {@code api}. {@link PhaseManager} is its only caller.
+ * <p>The list is deliberately not on {@code LethalBreedApi}: a public {@code firePhaseChanged} next to it
+ * would let anything holding the published jar announce a phase the server had not moved to, and every
+ * listener would believe it. Subscribing is part of the published surface; announcing is not, and this class
+ * is out of an addon's reach because the package is not {@code api}. {@link PhaseManager} is its only
+ * caller.
  */
 public final class PhaseBus {
     private PhaseBus() {}

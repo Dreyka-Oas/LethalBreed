@@ -33,7 +33,7 @@ public final class PackPass {
      *  Emptied on the way out of {@link #collectNeighbours}, never merely on the way in: a list cleared only
      *  before its next fill still holds the previous batch for however long that next fill takes to arrive,
      *  which after the last pack decision of a world is forever. Up to packScanCap zombies, each pinning its
-     *  ServerLevel and from there the whole server graph (same shape as audit #8). */
+     *  ServerLevel and from there the whole server graph. */
     private static final List<SmartZombie> NEIGHBOURS = new ArrayList<>(32);
     private static long[] packIds = new long[32];
     private static int[] entityIds = new int[32];

@@ -83,11 +83,11 @@ public final class ClingMath {
      * Where a latched zombie goes this tick, or null when it has to let go for want of room.
      *
      * <p>{@link #behind} is the one that is meant to be seen, and it is also the roomiest: the zombie stands
-     * on the prey's own floor, so anywhere the prey fits the zombie nearly fits too. {@link #above} used to
-     * come first and looked wrong twice over, a zombie riding a head instead of holding a back, and a zombie
-     * 1.95 tall on prey caught in a two-block corridor with its eyes in the rock. {@code Entity.isInWall}
-     * reads exactly the eye block, so that was a point of suffocation per tick for the whole bite. It stays
-     * as the second choice for prey backed against a wall, and {@link #inside} behind it for the rest.
+     * on the prey's own floor, so anywhere the prey fits the zombie nearly fits too. {@link #above} is wrong
+     * first twice over: a zombie riding a head instead of holding a back, and a zombie 1.95 tall on prey
+     * caught in a two-block corridor with its eyes in the rock. {@code Entity.isInWall} reads exactly the eye
+     * block, so that is a point of suffocation per tick for the whole bite. It comes second, for prey backed
+     * against a wall, and {@link #inside} behind it for the rest.
      */
     public static Vec3 perch(Zombie self, LivingEntity victim) {
         AABB body = self.getBoundingBox().move(-self.getX(), -self.getY(), -self.getZ());

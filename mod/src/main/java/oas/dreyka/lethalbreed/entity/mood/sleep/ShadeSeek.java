@@ -49,8 +49,8 @@ public final class ShadeSeek {
             return;
         }
         if (owner.hasTarget()) {
-            // While a target is held the brain owns the walk and this method stands back, but nothing used to
-            // check the walk was still going anywhere. Measured in the headless shade rig: a zombie stopped ONE
+            // While a target is held the brain owns the walk and this method stands back, so something has to
+            // check the walk is still going anywhere. Measured in the headless shade rig: a zombie stopped ONE
             // BLOCK short of the roof and stood there with hasTarget and seeking both true from t+40 to t+320.
             // It never arrived, so it never dozed; it never lost the memory, so it never re-planned.
             if (seeking && stall.stalled(now, owner.pursuit().distanceToTargetSq(),

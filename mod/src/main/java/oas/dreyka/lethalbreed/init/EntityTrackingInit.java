@@ -66,7 +66,7 @@ final class EntityTrackingInit {
                 if (sz != null) {
                     // Hand vanilla AI back BEFORE the mood object goes away. NoAI is persisted to NBT,
                     // the "we froze it" flag is not, so a dozing zombie unloaded while frozen would be
-                    // saved as NoAI=true with nothing left to lift it (audit #2).
+                    // saved as NoAI=true with nothing left to lift it.
                     sz.mood().releaseAiHold();
                     if (sz.pursuit().inGrid()) {
                         dimensions.get(sz.dimension()).spatialGrid().remove(sz);

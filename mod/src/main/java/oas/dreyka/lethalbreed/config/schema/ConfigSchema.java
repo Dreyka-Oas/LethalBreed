@@ -64,7 +64,7 @@ public final class ConfigSchema {
     /** Editable fields in source-declaration order, across all holders. Cached rather than recomputed on
      *  every call (config load, every GUI keystroke via {@code ConfigAccess}, every {@code find()}). Those
      *  only ever rebuilt an identical list. Returned as an unmodifiable view since every caller only
-     *  iterates it (audit #29).
+     *  iterates it.
      *
      *  <p>{@code volatile} and nullable rather than {@code final}: {@link #registerHolder} runs on the
      *  mod-init thread while every read happens on the server (or client) thread, so the invalidation has to

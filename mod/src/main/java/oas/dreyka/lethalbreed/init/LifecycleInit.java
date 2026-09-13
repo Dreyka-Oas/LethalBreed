@@ -93,7 +93,7 @@ public final class LifecycleInit {
             registry.clear();
             dimensions.clear();
             // Release the rest of the process-wide state that references entities/levels, so the closed
-            // world isn't pinned into the next session (audit #2, #20).
+            // world isn't pinned into the next session.
             scheduler.reset();
             ContaminationManager.onServerStopped();
             GorePuddles.onServerStopped();

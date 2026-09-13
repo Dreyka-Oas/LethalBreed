@@ -1,6 +1,6 @@
 package oas.dreyka.lethalbreed.entity;
 
-/** High-level behaviour state of a smart zombie (see plan.md State Machine). */
+/** High-level behaviour state of a smart zombie. One at a time, held on {@link ZombieStateAttachment}. */
 public enum ZombieState {
     IDLE,
     PURSUING_PLAYER,

@@ -54,7 +54,7 @@ public final class PlacedBlockTracker {
             // Never force a chunk load from here. Level.getBlockState() resolves through
             // getChunk(x, z, FULL, /* requireChunk */ true), which on a ServerLevel cache miss does
             // addTicket + managedBlock + join: a synchronous stall of the server thread, once per tracked
-            // position per tick, with up to 12000 of them per dimension (audit #3). Same guard
+            // position per tick, with up to 12000 of them per dimension. Same guard
             // CellClassifier:31 already uses. An unloaded placement is held, not dropped: we can neither
             // read nor destroy the block while its chunk is gone, so an over-age entry is resolved by the
             // loaded path below the moment the chunk comes back, however much later that is. Only a very

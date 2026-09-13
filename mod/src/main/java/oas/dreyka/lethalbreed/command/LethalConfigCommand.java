@@ -55,7 +55,7 @@ public final class LethalConfigCommand {
      *  server thread, so it MUST NOT call {@code isAvailable()}: that takes the compute monitor (blocking
      *  behind an in-flight solve) and lazily triggers OpenCL init (a ~second-long clBuildProgram) on a box
      *  where the admin disabled the GPU precisely to avoid OpenCL. It reads the already-known state
-     *  instead (audit #9). */
+     *  instead. */
     private static GpuStatus detectGpu() {
         if (!oas.dreyka.lethalbreed.config.domain.engine.FlowConfig.useGpu) {
             return new GpuStatus(GpuStatus.Kind.DISABLED, "");

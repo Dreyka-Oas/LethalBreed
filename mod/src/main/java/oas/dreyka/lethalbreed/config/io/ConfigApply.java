@@ -15,9 +15,9 @@ import java.util.Map;
  * <p>The loop is FIELD-driven, not file-driven: it only ever looks at names the schema has, so
  * {@code ConfigStructure} has to run first to notice anything the file carries that the schema does not.
  *
- * <p>Every field is guarded separately. {@code getAsString()} throws on a JSON object or null, and that
- * exception used to escape the loop entirely, leaving every remaining option at its code default, which
- * {@code save()} then persisted. One bad field must not cost the user every field after it.
+ * <p>Every field is guarded separately. {@code getAsString()} throws on a JSON object or null, and an
+ * exception escaping the loop would leave every remaining option at its code default, which {@code save()}
+ * then persists. One bad field must not cost the user every field after it.
  */
 final class ConfigApply {
     private ConfigApply() {}
@@ -31,9 +31,9 @@ final class ConfigApply {
                 continue;
             }
             // One bad field must not cost the user every field after it: getAsString() throws on a
-            // JSON object or null (neither overrides JsonElement.getAsString()), and that exception
-            // used to escape the loop entirely, leaving the rest at code defaults, which save() then
-            // persisted. Guard per field, and account for what was dropped instead of staying silent.
+            // JSON object or null (neither overrides JsonElement.getAsString()), and an exception let out
+            // of the loop would leave the rest at code defaults, which save() then persists. Guard per
+            // field, and account for what was dropped instead of staying silent.
             try {
                 JsonElement el = values.get(f.getName());
                 String raw;

@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  *
  * <p>This replaces a {@code @At("TAIL")} handler that could never work: the callee's TAIL fires BEFORE the
  * caller's, so the plague attachments were already wiped by the time it tested {@code isSymptomatic()},
- * making the whole mixin dead code and letting any player cancel the plague with a bucket of milk (audit #1).
+ * making the whole mixin dead code and letting any player cancel the plague with a bucket of milk.
  */
 @Mixin(ClearAllStatusEffectsConsumeEffect.class)
 public class MilkKeepsPlagueMixin {

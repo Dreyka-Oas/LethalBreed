@@ -13,10 +13,9 @@ import java.util.List;
  *
  * <p>Every path that replaces the user's config goes through here. A config can represent hours of
  * tuning, so the mod never deletes one outright: it renames it to
- * {@code lethalbreed.json.old-yyyyMMdd-HHmmss-SSS} and writes a fresh file alongside. The timestamp
- * format is the one {@code ConfigIo.quarantine()} already used, chosen because it sorts
- * lexicographically in chronological order, so {@link #prune} is a plain sort with no bookkeeping file
- * to keep in sync.
+ * {@code lethalbreed.json.old-yyyyMMdd-HHmmss-SSS} and writes a fresh file alongside. That timestamp
+ * format sorts lexicographically in chronological order, so {@link #prune} is a plain sort with no
+ * bookkeeping file to keep in sync.
  *
  * <p>Deliberately free of Minecraft types, logging and FabricLoader: it takes explicit paths and
  * returns what it did, so the caller reports and so this is testable under plain JUnit with

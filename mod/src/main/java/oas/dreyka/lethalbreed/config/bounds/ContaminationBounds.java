@@ -36,7 +36,7 @@ public final class ContaminationBounds {
         r.b("contamEpisodeCap", 0, 1);
         r.b("contamFoodExhaustionMult", 0, 100);
         // Levels / evolution / episodes: this whole block was added after the table and was unbounded until
-        // audit #6. contamLevelStep and the jitter pair are kept deliberately tight: they multiply plague
+        // contamLevelStep and the jitter pair are kept deliberately tight: they multiply plague
         // damage, so an unbounded value turned a gradual DoT into a one-shot and (via a non-finite value)
         // poisoned the persistent INTENSITY attachment. The ConfigBounds non-finite guard now covers even
         // unlisted fields, but these must be listed so the magnitude itself stays sane.

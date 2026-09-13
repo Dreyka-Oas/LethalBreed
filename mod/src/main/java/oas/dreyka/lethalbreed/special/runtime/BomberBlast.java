@@ -42,9 +42,9 @@ public final class BomberBlast {
      * Fuse length in GAME TICKS for a uniform roll in {@code [0,1]}.
      *
      * <p>Ticks, not activations. {@code SpecialBehavior.tick} only runs once every {@code tickBuckets}
-     * ticks, so the old per-activation charge tied a gameplay tempo to a performance knob: raising
-     * {@code tickBuckets} silently doubled the time before detonation. The caller turns this figure into an
-     * absolute deadline, so the duration no longer follows activation cadence.
+     * ticks, so charging the fuse per activation would tie a gameplay tempo to a performance knob: raising
+     * {@code tickBuckets} would silently double the time before detonation. The caller turns this figure into
+     * an absolute deadline, which keeps the duration off the activation cadence.
      */
     public static int fuseTicksFor(double rand01) {
         double[] minMax = minMaxFuseTicks();

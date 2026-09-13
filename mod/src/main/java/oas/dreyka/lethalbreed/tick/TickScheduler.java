@@ -87,7 +87,7 @@ public final class TickScheduler {
      * references from the world that just closed; this scheduler is a JVM-lived {@code static} in
      * {@code LethalBreedMod}, so without this the old {@code ServerLevel} stays pinned until the NEXT server's
      * first tick prunes them via {@code EveryTickPass.drive}, i.e. across the whole menu/loading window, at
-     * peak memory (audit #20). {@code tickCounter} resets so a fresh world starts its stagger from 0.
+     * peak memory. {@code tickCounter} resets so a fresh world starts its stagger from 0.
      */
     public void reset() {
         climbers.clear();

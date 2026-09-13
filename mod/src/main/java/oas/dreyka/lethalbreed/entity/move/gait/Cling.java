@@ -101,7 +101,7 @@ public final class Cling {
         owner.setState(ZombieState.CLINGING);
         // Gravity is left alone on purpose. Vanilla persists NoGravity from the moment it is true, no cling
         // survives a reload to clear it again, and a zombie that comes back floating never paths or leaps
-        // again (audit #2, in its other flag). The pin below is the last word of a server tick, after every
+        // again, through its other flag. The pin below is the last word of a server tick, after every
         // entity has moved and after the trackers have gone out, so the fall it undoes is never seen.
         entity.setDeltaMovement(Vec3.ZERO);
         entity.resetFallDistance();

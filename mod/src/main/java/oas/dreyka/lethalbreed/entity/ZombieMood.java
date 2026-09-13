@@ -117,7 +117,7 @@ public final class ZombieMood {
         sleep.releaseAiHold(entity);
     }
 
-    /** True while the doze holds vanilla AI off; the save-path mixin asks before dropping NoAI (audit #2). */
+    /** True while the doze holds vanilla AI off; the save-path mixin asks before dropping NoAI. */
     public boolean holdsAiFreeze() {
         return sleep.holdsAiFreeze();
     }

@@ -4,7 +4,7 @@ package oas.dreyka.lethalbreed.entity.mood.sleep;
  * Watchdog for a shade-seek that has stopped making progress.
  *
  * <p><b>The deadlock it breaks.</b> A day-sleeping zombie remembers the shade it found and walks there, and
- * while that memory is held {@code ZombieMood.handleDaySleep} deliberately returns early: the brain is already
+ * while that memory is held {@code ShadeSeek} deliberately leaves it alone: the brain is already
  * pathing, breaking and pillaring its way over. But nothing checked that the walk was still going anywhere. The
  * headless shade rig caught the consequence: a zombie stopped one block short of the roof and stood at
  * {@code (153,101,460)} for the rest of the run, {@code hasTarget=true} and {@code seeking=true} at every

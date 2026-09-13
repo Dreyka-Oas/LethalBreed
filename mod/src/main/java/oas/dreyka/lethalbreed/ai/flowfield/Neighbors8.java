@@ -2,7 +2,7 @@ package oas.dreyka.lethalbreed.ai.flowfield;
 
 
 /**
- * The 8-neighbour offsets and the no-corner-cutting rule, shared by the CPU {@link BellmanFordSolver} (both its
+ * The 8-neighbour offsets and the no-corner-cutting rule, shared by the CPU {@code BellmanFordSolver} (both its
  * relaxation and its direction-extraction pass) so it enumerates neighbours and rejects diagonal corner-cuts
  * consistently. Pure geometry. (The GPU kernel re-declares the same constants in OpenCL, which cannot import
  * Java.)

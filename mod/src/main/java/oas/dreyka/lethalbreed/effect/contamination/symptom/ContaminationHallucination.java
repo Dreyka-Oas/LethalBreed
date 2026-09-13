@@ -24,7 +24,7 @@ public final class ContaminationHallucination {
     /** Drive the zombie-vision hallucination flare for one victim: OFF between flares, ON (ZOMBIE_VISION applied)
      *  for a random duration, then a random gap. Duration scales up / gap scales down with intensity, exactly
      *  like episodes. Both gaps go through {@link ContaminationRoll#intensityFactor}, so the
-     *  {@code expertContamIntensityFloor} option governs all four flare types (audit #5). */
+     *  {@code expertContamIntensityFloor} option governs all four flare types. */
     public static void tickHallucination(LivingEntity e, long t, double mult) {
         EpisodeTimers st = HALLUCINATION_TIMERS.computeIfAbsent(e, k -> {
             EpisodeTimers s = new EpisodeTimers();

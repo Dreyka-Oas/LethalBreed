@@ -17,7 +17,7 @@
  * bookkeeping slip makes one invisible to the horde; there are also never more than a handful, so
  * scanning them directly costs nothing. This index only holds the cheap-to-lose, numerous prey.
  *
- * <p><b>Lifetime.</b> Entries hold live {@link LivingEntity} references, which pin the entity, its level
+ * <p><b>Lifetime.</b> Entries hold live {@code LivingEntity} references, which pin the entity, its level
  * and the server. They are dropped on {@code ENTITY_UNLOAD}, again defensively in {@link #refresh()} for
  * anything that died or was removed without the event reaching us, and wholesale when the per-dimension
  * context is discarded at {@code SERVER_STOPPED}. That belt-and-braces shape is deliberate: the same

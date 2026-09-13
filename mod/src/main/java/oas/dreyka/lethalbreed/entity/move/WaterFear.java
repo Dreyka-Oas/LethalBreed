@@ -13,8 +13,8 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
  * Zombies that cannot swim: water is a wall to their pathfinder, and one that goes under it drowns.
  *
  * <p>Vanilla gives them the opposite deal. A zombie sinks, walks the bottom indefinitely because undead do
- * not breathe, and after thirty seconds turns into a Drowned. This mod used to go further still and hand them
- * a {@code FloatGoal} so they swam the surface after you. Both make water a road; here it is a moat.
+ * not breathe, and after thirty seconds turns into a Drowned. Handing them a {@code FloatGoal} instead, so
+ * they swim the surface after you, goes further the same way. Both make water a road; here it is a moat.
  *
  * <p><b>The drowning clock is the entity's own air supply.</b> Nothing in vanilla ever moves a zombie's, so
  * the field is free, it is already per-entity and already saved with the entity, and using it means this

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Keeps the day-doze freeze out of the save file (audit #2).
+ * Keeps the day-doze freeze out of the save file.
  *
  * <p>The doze stops a zombie with {@code setNoAi(true)}, and vanilla persists that flag while the mod's
  * own "we set it" flag is not persisted. Releasing it when the mood object dies is too late for the write:

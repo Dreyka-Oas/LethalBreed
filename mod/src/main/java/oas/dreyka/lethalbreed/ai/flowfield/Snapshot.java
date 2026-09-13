@@ -4,7 +4,7 @@ package oas.dreyka.lethalbreed.ai.flowfield;
 /**
  * Immutable world snapshot for one flow-field solve. Produced on the server thread by
  * {@link FlowFieldSnapshotBuilder} (classifying cells into cost arrays) and consumed off-thread by
- * {@link BellmanFordSolver} (the CPU backup) or the GPU solver, neither of which touch Minecraft.
+ * {@code BellmanFordSolver} (the CPU backup) or the GPU solver, neither of which touch Minecraft.
  */
 public final class Snapshot {
     public final int originX, originZ, width, depth, focusY;

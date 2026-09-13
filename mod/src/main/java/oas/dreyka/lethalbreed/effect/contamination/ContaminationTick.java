@@ -30,7 +30,7 @@ public final class ContaminationTick {
         // Cleared BEFORE the guard, not after: the two ordinary ways out of here, `tracked` going empty
         // (last victim cured or died) and the plague being switched off, both take the early return, and
         // a scratch buffer that only self-clears on the hot path holds its last batch forever. One retained
-        // LivingEntity pins level -> ServerLevel -> chunks -> MinecraftServer (audit #8).
+        // LivingEntity pins level -> ServerLevel -> chunks -> MinecraftServer.
         SNAPSHOT.clear();
 
         boolean enabled = refreshEnabledState();
@@ -42,7 +42,7 @@ public final class ContaminationTick {
             LivingEntity e = SNAPSHOT.get(i);
             if (e == null || e.isRemoved() || !e.isAlive() || !(e.level() instanceof ServerLevel level)) {
                 // Fully drop the victim from all six collections, not just `tracked`: an unloaded/dead/
-                // dimension-changed entity left in the timer maps pins the whole world graph (audit #2).
+                // dimension-changed entity left in the timer maps pins the whole world graph.
                 // Persistent attachments stay, so a chunk that reloads re-tracks the victim via onLoad.
                 ContaminationLifecycle.forgetAllTransient(e);
                 continue;
@@ -85,7 +85,7 @@ public final class ContaminationTick {
         if (wasEnabled && !enabled) {
             // Enabled -> disabled: purge once, here. The sweep that would otherwise clean the in-memory
             // state is switched off by this very flag. Persistent attachments are untouched, so
-            // re-enabling the plague re-tracks every victim through onLoad on its next chunk load (audit #9).
+            // re-enabling the plague re-tracks every victim through onLoad on its next chunk load.
             ContaminationLifecycle.onServerStopped();
         }
         wasEnabled = enabled;

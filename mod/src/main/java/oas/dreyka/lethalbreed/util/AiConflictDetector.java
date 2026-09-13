@@ -100,7 +100,7 @@ public final class AiConflictDetector {
     }
 
     /** In-session policy: NEVER throw. Throwing from the {@code ENTITY_LOAD} entity pipeline of a running
-     *  world crashes mid-tick on a save that is being written (audit #21). Instead log, tell the players, and
+     *  world crashes mid-tick on a save that is being written. Instead log, tell the players, and
      *  if configured to fail, ask the server to stop cleanly with {@code halt(false)}, never {@code halt(true)}:
      *  we are ON the server thread here, and {@code halt(true)} joins that same thread → deadlock. With
      *  {@code false} the current tick finishes and the normal shutdown path saves the world. */

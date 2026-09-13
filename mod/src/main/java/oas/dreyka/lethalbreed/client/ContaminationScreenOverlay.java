@@ -106,7 +106,7 @@ public final class ContaminationScreenOverlay {
             // pushes an entry back onto the free list; endFrame() is the ONLY thing that decrements
             // framesToLive, closes the target and drops it, and there is no autonomous expiry. Skipping it on
             // the not-sick path is what kept ~33 MB of VRAM (1080p, colour + depth, x2) alive until the
-            // process exited, including after returning to the menu (audit #10).
+            // process exited, including after returning to the menu.
             RESOURCE_POOL.endFrame();
         }
     }
@@ -117,8 +117,8 @@ public final class ContaminationScreenOverlay {
      *  exits. Vanilla needs no equivalent because GameRenderer's own endFrame() keeps sweeping at the main
      *  menu.
      *
-     *  <p>Driven off the level going null rather than off {@code ClientPlayConnectionEvents.DISCONNECT}, which
-     *  is where this used to hang. That event is raised from {@code Connection.channelInactive}, so it arrives
+     *  <p>Driven off the level going null rather than off {@code ClientPlayConnectionEvents.DISCONNECT}, the
+     *  obvious hook. That event is raised from {@code Connection.channelInactive}, so it arrives
      *  when netty gets round to closing the channel and not when the player leaves: a client that is already
      *  at the title screen with its level nulled may not have had it yet, and the VRAM stays parked for as
      *  long as that takes. The level is the thing the leak actually depends on, it is readable every tick, and

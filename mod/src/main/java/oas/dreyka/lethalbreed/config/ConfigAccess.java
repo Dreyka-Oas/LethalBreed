@@ -88,7 +88,7 @@ public final class ConfigAccess {
     }
 
     /** Apply a value to a field by name. Returns true on success. Persists to JSON when {@code persist}
-     *  AND the value actually changed. A GUI edit box fires one packet per keystroke (audit #16), and most
+     *  AND the value actually changed. A GUI edit box fires one packet per keystroke, and most
      *  carry a value equal to the current one (mid-typing, or re-applying the same number), so skipping the
      *  unchanged writes removes the bulk of the redundant full-file saves without any behaviour change. */
     public static boolean apply(String name, String raw, boolean persist) {

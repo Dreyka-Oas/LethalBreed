@@ -52,8 +52,8 @@ final class GpuFlowFieldSolver {
         int diagCost = Math.max(orthoCost, FlowConfig.flowDiagonalCost);
 
         // Declared null before the try so EVERY buffer (including one whose own clCreateBuffer throws) is
-        // covered by the finally. With setExceptionsEnabled(true), an allocation failure at buffer k used to
-        // leak the k-1 already created, because the creates sat outside the protected block (audit #8).
+        // covered by the finally. With setExceptionsEnabled(true), a create outside the protected block would
+        // leak the k-1 buffers already made when allocation number k throws.
         cl_mem costMem = null, btMem = null, extraMem = null, dirXMem = null, dirZMem = null, changedMem = null;
         try {
             costMem = clCreateBuffer(ctx.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
@@ -122,7 +122,7 @@ final class GpuFlowFieldSolver {
             clFinish(ctx.queue);
         } finally {
             // Each release guarded on its own: a bare sequence skipped every buffer after the first that
-            // threw, leaking the rest (audit #8). null-safe so a partial allocation still frees what it got.
+            // threw, leaking the rest. null-safe so a partial allocation still frees what it got.
             releaseQuietly(costMem);
             releaseQuietly(btMem);
             releaseQuietly(extraMem);

@@ -16,11 +16,11 @@ import net.fabricmc.loader.api.FabricLoader;
 /**
  * Entry point for LethalBreed.
  *
- * <p>Phase 1 scope (current): bootstrap the runtime spine by registering vanilla zombies into a
- * {@link ZombieRegistry}, driving them through a staggered {@link TickScheduler}, and maintaining a
- * per-dimension {@link DimensionManager} (spatial grid now, flow field later). All work runs on
- * the server thread for now; off-thread compute (flow field, GPU) arrives in later phases behind
- * the thread-safety discipline described in plan.md.
+ * <p>The runtime spine: vanilla zombies are registered into a {@link ZombieRegistry}, driven through a
+ * staggered {@link TickScheduler}, and served by a per-dimension {@link DimensionManager} holding the
+ * spatial grid and the flow field. Gameplay decisions stay on the server thread; the flow-field solve is
+ * the only thing that leaves it, and it is handed an immutable {@code Snapshot} built on the server thread
+ * rather than a view of the live world.
  *
  * <p>Registration is split into {@code init.*} helpers. {@code onInitialize} straddles them with two dev
  * hooks: {@code devHook("registerConfig")} runs first, before {@link BootstrapInit#run()} reads the config

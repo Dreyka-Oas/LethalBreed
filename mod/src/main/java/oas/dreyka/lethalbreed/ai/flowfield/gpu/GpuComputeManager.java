@@ -26,7 +26,7 @@ public final class GpuComputeManager {
 
     // volatile: written under the instance monitor (init/solve/logFallbackOnce) but ALSO read without it by
     // the non-blocking command/UI accessors below, so plain fields could publish a stale value across
-    // threads (audit #27).
+    // threads.
     private volatile boolean initialized = false;
     private volatile boolean available = false;
     private volatile String deviceName = "none";
@@ -71,7 +71,7 @@ public final class GpuComputeManager {
 
     /** Current known availability WITHOUT taking the monitor or triggering {@link #init}. For command/UI
      *  paths (e.g. {@code /lethalconfig}) that run on the server thread and must neither stall behind an
-     *  in-flight solve nor force OpenCL init on a box where the admin set {@code useGpu=false} (audit #9). */
+     *  in-flight solve nor force OpenCL init on a box where the admin set {@code useGpu=false}. */
     public boolean isAvailableNonBlocking() {
         return available;
     }
@@ -115,8 +115,8 @@ public final class GpuComputeManager {
     /**
      * Record a GPU solve failure (called by {@code GpuFlowField} after it has caught the throwable and fallen
      * back to the CPU for THIS solve). Trips the circuit breaker at {@link #FAILURE_LIMIT} consecutive
-     * failures, switching the GPU off for the rest of the session so the retry storm stops. Kept the historic
-     * method name; it is no longer a one-shot log.
+     * failures, switching the GPU off for the rest of the session so the retry storm stops. The {@code Once}
+     * in the name is about the log line, not about the counting: every failure is counted.
      */
     public synchronized void logFallbackOnce(Throwable t) {
         if (!available) {

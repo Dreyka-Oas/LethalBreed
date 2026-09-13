@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 
 /**
- * Per-tick orchestrator for a {@link SmartZombie}: target attack, leap, navigation, then {@link MoveDispatch}
+ * Per-tick orchestrator for a {@link SmartZombie}: target attack, leap, navigation, then {@code MoveDispatch}
  * picks the movement mode. Owns the transient per-tick bookkeeping + the pillar/leap state units.
  */
 public final class ZombieBrain {

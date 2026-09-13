@@ -66,11 +66,11 @@ public final class SpecialAbilities {
     /**
      * HEALER: restore health to nearby living smart zombies.
      *
-     * <p>This used to apply {@link MobEffects#REGENERATION}, and healed nothing at all. Vanilla's
-     * {@code canBeAffected} rejects Regeneration for everything tagged {@code ignores_poison_and_regen},
-     * which covers {@code #undead} and therefore every zombie; {@code addEffect} bails out before writing,
-     * and {@code forceAddEffect} runs the same check first, so neither route works. The aura was a no-op for
-     * its whole existence, hidden because the dev counter incremented regardless of the return value.
+     * <p>Health is set directly rather than through {@code MobEffects.REGENERATION}, which on a zombie heals
+     * nothing at all. Vanilla's {@code canBeAffected} rejects Regeneration for everything tagged
+     * {@code ignores_poison_and_regen}, which covers {@code #undead} and therefore every zombie;
+     * {@code addEffect} bails out before writing, and {@code forceAddEffect} runs the same check first, so
+     * neither route works. The failure is silent: both return without touching health.
      *
      * <p>Forcing the effect through would mean a mixin exempting Regeneration globally, which would also let
      * every vanilla regeneration potion, beacon and lingering cloud heal zombies, far outside this variant's

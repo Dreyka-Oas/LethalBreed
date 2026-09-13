@@ -60,7 +60,7 @@ public final class ZombieMoodConfig {
     /** Server ticks to wait before re-running a shade search that just failed, unless the zombie moved
      *  more than 4 blocks in the meantime. 100 = 5 seconds. 0 DISABLES the cooldown entirely, restoring
      *  the pre-fix behaviour of a full rescan every activation, including the unbounded case of a
-     *  stationary zombie stuck in water (audit #6). Not recommended; kept only as an operator escape hatch. */
+     *  stationary zombie stuck in water. Not recommended; kept only as an operator escape hatch. */
     public static int shelterRetryTicks = 100;
 
     // ---- Distress scream (rallies idle zombies to the fleer) ----

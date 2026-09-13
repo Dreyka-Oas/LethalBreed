@@ -31,7 +31,7 @@ public final class ContaminationRoll {
      * Floors BOTH ends at 0 independently, then REORDERS an inverted pair before lerping.
      * {@code ConfigBoundsTable} bounds each option independently and never the relation between two, so an
      * operator can put min above max with both values perfectly in range. Without the reorder that yields a
-     * draw below the minimum, or negative: a healing plague, or a cure threshold that never fires (audit #12).
+     * draw below the minimum, or negative: a healing plague, or a cure threshold that never fires.
      *
      * <p>Because {@code max} is floored on its own, a pair with BOTH ends negative does not merely clip:
      * it collapses to the constant 0 (a zero-width range), so the caller's draw is 0 rather than negative.

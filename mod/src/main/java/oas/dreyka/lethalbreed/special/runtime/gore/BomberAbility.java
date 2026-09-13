@@ -18,7 +18,7 @@ import net.minecraft.world.phys.AABB;
 import java.util.List;
 
 /**
- * The Bomber's burst, and the gore it leaves behind. Apart from {@link SpecialAbilities} because it is
+ * The Bomber's burst, and the gore it leaves behind. Apart from {@code SpecialAbilities} because it is
  * the only ability with an aftermath: the ring, the puddle and their particles all share one rolled
  * cocktail and one victim rule, and keeping them together is what guarantees the puddle can never touch
  * someone the explosion spared.

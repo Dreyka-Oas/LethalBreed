@@ -6,7 +6,7 @@ package oas.dreyka.lethalbreed.effect.contamination;
  *
  * <p>Both routes are the same method: vanilla's {@code ClearAllStatusEffectsConsumeEffect.apply} is
  * literally {@code return livingEntity.removeAllEffects();}, contradicting the "different code path" the
- * mod's own javadoc claimed (audit #1). The two must behave oppositely: milk keeps the plague, the command
+ * mod's own javadoc claimed. The two must behave oppositely: milk keeps the plague, the command
  * cures it. Since they are indistinguishable at the callee, the caller marks itself on the way in.
  *
  * <p>Thread-local because consume effects run on both the client and the server thread; server-only state

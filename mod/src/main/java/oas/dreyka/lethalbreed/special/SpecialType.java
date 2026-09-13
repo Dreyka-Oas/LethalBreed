@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * <p>The {@linkplain #unlockPhase() unlock phase} (from which phase a type can appear) and the
  * {@linkplain #weight() selection weight} (relative frequency) are NOT hard-coded here: they are read live
- * from {@link ProgressionConfig} ({@code special<Type>Phase} / {@code special<Type>Weight}), so both are
+ * from {@code ProgressionConfig} ({@code special<Type>Phase} / {@code special<Type>Weight}), so both are
  * editable through the config JSON / GUI / {@code /lethalconfig}. The switches below are only the routing to
  * those config fields; the field defaults hold the built-in values.
  *
@@ -73,7 +73,7 @@ public enum SpecialType {
      *  files carry these keys, so each player now gets the name in their own language. */
     public String translationKey() { return "lethalbreed.special." + id; }
 
-    /** Phase from which this type can appear (configurable via {@link ProgressionConfig}). */
+    /** Phase from which this type can appear (configurable via {@code ProgressionConfig}). */
     public int unlockPhase() {
         return switch (this) {
             case SPRINTER -> SpecialVariantConfig.specialSprinterPhase;
@@ -88,7 +88,7 @@ public enum SpecialType {
         };
     }
 
-    /** Relative selection weight (higher = more frequent; 0 = never picked), configurable via {@link ProgressionConfig}. */
+    /** Relative selection weight (higher = more frequent; 0 = never picked), configurable via {@code ProgressionConfig}. */
     public int weight() {
         return switch (this) {
             case SPRINTER -> SpecialVariantConfig.specialSprinterWeight;
