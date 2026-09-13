@@ -200,17 +200,19 @@ loom {
                 "-XX:+UseNUMA"
             )
             // Auto-load the test world on launch (skip menus), like StormCore.
-            // World dir must exist under run/saves/ with this exact name; if absent,
-            // MC drops to the menu (no crash). Create it once, then it auto-enters.
-            // Greenfield (huge 1:1-scale city, run/saves/Greenfield v0.5.4) makes a good stress test
-            // for zombie pathing/climbing across dense multi-story buildings.
+            // The value is the DIRECTORY name under run/saves/, not the name the menu shows, and it
+            // must carry no space: a world called "Banc LethalBreed" is opened as BancLethalBreed.
+            // If the directory is absent, MC drops to the menu rather than crashing.
+            // BancLethalBreed is the bench: a superflat world whose datapack rebuilds eight stations,
+            // one per mechanic, on every load. Greenfield (run/saves/Greenfield v0.5.4) is the other
+            // one worth knowing about, a 1:1-scale city that stresses pathing through dense blocks.
             //
             // Overridable because it cannot be ADDED to: the client refuses to start at all with two
             // quick-play options ("Only one quick play option can be specified", thrown during argument
             // parsing), so anything passing its own through --args crashed here. -PlbQuickPlay takes
             // "none", "solo:<world name>" or "join:<host:port>"; headless-test.sh uses the last one so a
             // --both session puts the client in the very world its console commands are driving.
-            when (val quickPlay = (project.findProperty("lbQuickPlay") as String?) ?: "solo:Greenfield v0.5.4") {
+            when (val quickPlay = (project.findProperty("lbQuickPlay") as String?) ?: "solo:BancLethalBreed") {
                 "none" -> {}
                 else -> if (quickPlay.startsWith("join:")) {
                     programArgs("--quickPlayMultiplayer", quickPlay.removePrefix("join:"))
