@@ -95,8 +95,16 @@ public final class GpuComputeManager {
     }
 
     /**
-     * Solve a snapshot on the GPU. Serialized (single shared queue). Returns a {@link FlowField} or
-     * throws. Callers fall back to CPU on any throwable. A successful solve resets the failure breaker.
+     * Solve a snapshot on the GPU. Returns a {@link FlowField} or throws. Callers fall back to CPU on any
+     * throwable. A successful solve resets the failure breaker.
+     *
+     * <p><b>The lock is required, not cautious.</b> Kernel arguments are state on the {@code cl_kernel}
+     * object, and the solver sets ten of them before it enqueues. OpenCL excludes exactly that call from
+     * its thread-safety guarantee: {@code clSetKernelArg} on one kernel object from two host threads at
+     * once is undefined, and even a lock around the single call would not help, since the second thread
+     * could overwrite the arguments between the first thread's last set and its enqueue. The whole
+     * sequence has to be atomic. Letting the two flow-field threads run concurrently means one
+     * {@code cl_kernel} and one queue each, not a narrower lock.
      */
     public synchronized FlowField solve(Snapshot s) {
         FlowField f = GpuFlowFieldSolver.solve(ctx, s);
