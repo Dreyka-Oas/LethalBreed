@@ -7,7 +7,7 @@ special variants, with an optional AMD GPU (OpenCL) compute path and a multithre
 mechanic, parameter and command is documented on the wiki at
 [lethalbreed.pages.dev](https://lethalbreed.pages.dev), in French and English.
 
-Runs on Minecraft 1.21.11 with Fabric Loader 0.19.3, compiled against Java 21.
+Runs on Fabric Loader. Pinned versions live in `gradle.properties`, not here.
 
 ## Build
 

@@ -1,0 +1,63 @@
+package oas.dreyka.lethalbreed.special;
+
+import com.mojang.serialization.Codec;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.Identifier;
+
+/**
+ * Persistent per-entity attachment holding a zombie's {@link SpecialType} id. Set at spawn
+ * ({@link SpecialRoller}, in finalizeSpawn, before the entity is tracked) and read by the
+ * {@code SmartZombie} constructor at ENTITY_LOAD. Persistent → survives chunk unload/reload (a vanilla
+ * {@code getPersistentData} doesn't exist in this mapping; Fabric's data-attachment API is the way).
+ */
+public final class SpecialAttachment {
+    private SpecialAttachment() {}
+
+    /**
+     * The variant id. Persisted with the same {@code Codec.STRING} it always was, so a world written by an
+     * older build reads back byte for byte, and now synced to tracking clients as well.
+     *
+     * <p>The sync is what lets a third party draw its own variant. This mod's own eight are recognisable by
+     * their stats and their nametag, but a renderer needs to know which variant it is looking at, and until
+     * now that answer never left the server.
+     */
+    public static final AttachmentType<String> SPECIAL = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "special"),
+            builder -> builder
+                    .persistent(Codec.STRING)
+                    .syncWith(ByteBufCodecs.STRING_UTF8, AttachmentSyncPredicate.all()));
+
+    /**
+     * BOMBER belly-swell charge, 0..1. Transient (never persisted: a fresh zombie starts at 0) but
+     * synced to tracking clients so the render-side model can inflate the {@code body} part as the
+     * fuse burns. Ramped server-side in {@link SpecialBehavior}; read in the client model mixin.
+     */
+    public static final AttachmentType<Float> BOMBER_CHARGE = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "bomber_charge"),
+            builder -> builder
+                    .initializer(() -> 0.0f)
+                    .syncWith(ByteBufCodecs.FLOAT, AttachmentSyncPredicate.all()));
+
+    /**
+     * BOMBER fuse length in GAME TICKS, rolled once when it arms; 0 means not armed yet. Transient and
+     * NOT synced. Only the derived {@link #BOMBER_CHARGE} needs to reach clients.
+     */
+    public static final AttachmentType<Integer> BOMBER_FUSE = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "bomber_fuse"),
+            builder -> builder.initializer(() -> 0));
+
+    /**
+     * Game time at which the BOMBER armed. With {@link #BOMBER_FUSE} this makes the detonation an absolute
+     * deadline rather than a per-activation accumulation, so the fuse lasts the same real time whatever
+     * {@code tickBuckets} is set to, and a skipped activation cannot stretch it.
+     */
+    public static final AttachmentType<Long> BOMBER_ARMED_AT = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("lethalbreed", "bomber_armed_at"),
+            builder -> builder.initializer(() -> 0L));
+
+    /** Force class-load so the attachments register during mod init. */
+    public static void init() {}
+}

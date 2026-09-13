@@ -1,6 +1,7 @@
 plugins {
     id("fabric-loom") version "1.17.12"
     java
+    `maven-publish`
 }
 
 version = project.property("mod_version") as String
@@ -20,7 +21,7 @@ base {
 // `unzip -l build/libs/*.jar | grep lethalbreed/dev/` → nothing. It is added to the runClient/runServer
 // classpath, so all of the above runs under `gradlew runServer` / `gradlew runClient` only.
 //
-// main keeps exactly one seam back into this source set: com.dreykaoas.lethalbreed.probe.DevProbe. Timings,
+// main keeps exactly one seam back into this source set: oas.dreyka.lethalbreed.probe.DevProbe. Timings,
 // counters and traces measure things that happen INSIDE main-source code (a tick, a stage, a hit), so they
 // cannot be observed purely from dev, so main has to call out to record them. DevProbe is that single call-out:
 // a volatile sink field plus cheap gate checks, wired up by DevBootstrap (in dev) through the existing
@@ -72,6 +73,34 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+    // An addon author has to point Gradle at something, and reading the javadoc is the only way they
+    // learn a signature without cloning this repository. No sources jar next to it: see the publishing
+    // block below.
+    withJavadocJar()
+}
+
+// The javadoc that travels covers api/ and nothing else. The rest of main is mechanics, and a mechanic
+// is not a promise: documenting it would read as a contract for signatures that move between versions.
+// Doclint stays off because these comments are prose written for a reader rather than a schema, and its
+// HTML rules would fail the build over a missing paragraph tag.
+tasks.javadoc {
+    include("oas/dreyka/lethalbreed/api/**")
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+}
+
+// What a third party compiles against. `remapJar` is the artifact, not the intermediate under
+// build/devlibs: Loom swaps it into the java component itself, so an addon's own Loom run maps the
+// named mappings back and no separate api jar is needed.
+//
+// It stops at the local repository on purpose. GitHub Packages was the obvious remote and was dropped:
+// it demands a token even to read a public package, so the two lines shown to an addon author would not
+// work as written. Someone who has not cloned this repository has nothing to resolve yet.
+publishing {
+    publications {
+        create<MavenPublication>("mod") {
+            from(components["java"])
+        }
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -92,7 +121,7 @@ tasks.named<JavaCompile>("compileJava") {
 // reads), and FlowFieldPerfBench alone cost 2.5 s of the suite's 3.2 s. Gating them on a system property
 // rather than on @Disabled keeps them genuinely runnable: `--tests` selects tests, it does not re-enable a
 // disabled one, and the test JVM is forked so a bare -D on the Gradle command line never reaches it.
-//   ./gradlew test -Plb.bench=true --tests "com.dreykaoas.lethalbreed.ai.flowfield.FlowFieldPerfBench"
+//   ./gradlew test -Plb.bench=true --tests "oas.dreyka.lethalbreed.ai.flowfield.FlowFieldPerfBench"
 // A Provider<String> of "true"/"false", not a Boolean. Hence "flag" rather than "enabled", which would
 // invite `if (benchFlag)` and read as already-resolved.
 val benchFlag = providers.gradleProperty("lb.bench").orElse("false")
@@ -112,6 +141,11 @@ tasks.test {
 tasks.processResources {
     // Exclude the raw .cl from the output; the .clx copy is written by doLast below.
     exclude("kernels/*.cl")
+    // exclude() drops the .cl from the task's input snapshot as well, so editing the kernel used to leave
+    // processResources UP-TO-DATE and the jar shipping the previous .clx. Naming the source as an input and
+    // the generated file as an output puts the doLast back under up-to-date checking instead of outside it.
+    inputs.file("src/main/resources/kernels/bellman_ford.cl")
+    outputs.file(provider { destinationDir.resolve("kernels/bellman_ford.clx") })
     doLast {
         // Truncate each line at its first `//`: the kernel has 23 comment-bearing lines and 10 of them are
         // TRAILING comments on live code (18-22, 27, 36, 45, 61, 68), so dropping whole lines would delete
@@ -170,7 +204,20 @@ loom {
             // MC drops to the menu (no crash). Create it once, then it auto-enters.
             // Greenfield (huge 1:1-scale city, run/saves/Greenfield v0.5.4) makes a good stress test
             // for zombie pathing/climbing across dense multi-story buildings.
-            programArgs("--quickPlaySingleplayer", "Greenfield v0.5.4")
+            //
+            // Overridable because it cannot be ADDED to: the client refuses to start at all with two
+            // quick-play options ("Only one quick play option can be specified", thrown during argument
+            // parsing), so anything passing its own through --args crashed here. -PlbQuickPlay takes
+            // "none", "solo:<world name>" or "join:<host:port>"; headless-test.sh uses the last one so a
+            // --both session puts the client in the very world its console commands are driving.
+            when (val quickPlay = (project.findProperty("lbQuickPlay") as String?) ?: "solo:Greenfield v0.5.4") {
+                "none" -> {}
+                else -> if (quickPlay.startsWith("join:")) {
+                    programArgs("--quickPlayMultiplayer", quickPlay.removePrefix("join:"))
+                } else {
+                    programArgs("--quickPlaySingleplayer", quickPlay.removePrefix("solo:"))
+                }
+            }
         }
         // Second dev client for local multiplayer tests: its OWN run dir (so it never fights the
         // primary client / server over run/.fabric/processedMods) and it auto-connects to the local
@@ -225,23 +272,47 @@ fabricApi {
     }
 }
 
+// The crack-overlay cases drive setBlockBreakingInfo through the packet layer to fake another player's
+// progress, which is exactly what the gametest API's network synchronizer refuses to arbitrate; it crashes
+// the integrated server rather than guess. The API names this property itself in the error it prints.
+tasks.named<JavaExec>("runClientGameTest") {
+    systemProperty("fabric.client.gametest.disableNetworkSynchronizer", "true")
+    // -PlbGametestOnly=bomber,contam narrows the run to the classes whose simple name starts with one of
+    // those tokens (see GameTestFilter). The runner's own filter selects mod ids and all seventeen suites
+    // share one, so without this a single pixel threshold costs a full run of the other sixteen.
+    (project.findProperty("lbGametestOnly") as String?)?.let {
+        systemProperty("lethalbreed.gametest.only", it)
+    }
+    // -PlbGametestMods=run/mods/sodium-....jar adds third-party jars to the run. The gametest run
+    // directory is rebuilt per launch, so a jar dropped into its mods/ folder by hand is gone before the
+    // client reads it; fabric.addMods is the loader's own dev-time route and survives that rebuild.
+    // cull/sodium-floor is the case that needs it: the Sodium-adaptive distance floor has nothing to
+    // measure when Sodium is absent, and it reports that as a FAIL rather than skipping itself.
+    (project.findProperty("lbGametestMods") as String?)?.let { list ->
+        val jars = list.split(",")
+                .map { file(it.trim()).absolutePath }
+                .joinToString(File.pathSeparator)
+        systemProperty("fabric.addMods", jars)
+    }
+}
+
 // `build` ignores a source set nothing depends on, so a gametest that stopped compiling would only surface the
 // next time someone launched the client, hours into a sweep. Fail at build time instead.
 tasks.check {
     dependsOn(tasks.named("compileGametestJava"))
 }
 
-// The licence has to travel with the jar, for two independent reasons: section 2 of LICENSE makes it a
-// condition of redistribution, and section 6 carries the MIT notice of the bundled JOCL, whose notice
-// clause obliges the same for any copy. `../` because the Gradle root is mod/ while the file sits at the
-// repository root, next to the README. Added to `jar`, not `remapJar`: remapJar copies the jar output,
-// so it inherits it.
+// The licence has to travel with the jar, for two independent reasons: MIT obliges the notice to follow
+// any substantial copy, and the same file carries the notice of the bundled JOCL, whose own MIT clause
+// obliges the same. `../` because the Gradle root is mod/ while the file sits at the repository root,
+// next to the README. Added to `jar`, not `remapJar`: remapJar copies the jar output, so it inherits it.
 tasks.jar {
     from("../LICENSE")
 }
 
-// `gradlew build` produces exactly one artifact: build/libs/lethalbreed-<version>.jar, the player jar.
-// build/devlibs holds Loom's unmapped intermediate, an implementation detail of remapJar, never shipped.
-// No sources jar, no javadoc jar, no dev flavour: dev tooling lives in src/dev and runs under runClient/
-// runServer only. The jar is unobfuscated by choice: the source is public and readable anyway, so
-// obfuscating it would only cost crash-report legibility. Reading it is not licence to reuse it.
+// `gradlew build` produces the player jar, build/libs/lethalbreed-<version>.jar, plus the javadoc jar
+// the publication carries. build/devlibs holds Loom's unmapped intermediate, an implementation detail of
+// remapJar, never shipped. No sources jar and no dev flavour: dev tooling lives in src/dev and runs under
+// runClient/runServer only, and an addon author who wants the sources clones the repository, which MIT
+// lets them do with the whole tree. The jar is unobfuscated by choice: obfuscating it would only cost
+// crash-report legibility on code anyone is free to read anyway.

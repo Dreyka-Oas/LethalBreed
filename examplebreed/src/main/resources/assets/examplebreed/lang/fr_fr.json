@@ -1,0 +1,8 @@
+{
+  "lethalbreed.special.examplebreed.frostbite": "Gelé",
+  "lethalbreed.category.Frostbite": "Givre",
+  "lethalbreed.option.frostbitePhase": "Phase de déblocage",
+  "lethalbreed.option.frostbiteWeight": "Poids",
+  "lethalbreed.option.frostbiteRadius": "Rayon de gel",
+  "lethalbreed.option.frostbiteSlowSeconds": "Durée du gel (s)"
+}

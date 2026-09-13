@@ -1,0 +1,85 @@
+package oas.dreyka.lethalbreed;
+
+import oas.dreyka.lethalbreed.dimension.DimensionManager;
+import oas.dreyka.lethalbreed.entity.ZombieRegistry;
+import oas.dreyka.lethalbreed.init.AddonInit;
+import oas.dreyka.lethalbreed.init.BootstrapInit;
+import oas.dreyka.lethalbreed.init.CommandInit;
+import oas.dreyka.lethalbreed.init.EntityEventsInit;
+import oas.dreyka.lethalbreed.init.LifecycleInit;
+import oas.dreyka.lethalbreed.init.TickInit;
+import oas.dreyka.lethalbreed.special.ShippedVariants;
+import oas.dreyka.lethalbreed.tick.TickScheduler;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
+
+/**
+ * Entry point for LethalBreed.
+ *
+ * <p>The runtime spine: vanilla zombies are registered into a {@link ZombieRegistry}, driven through a
+ * staggered {@link TickScheduler}, and served by a per-dimension {@link DimensionManager} holding the
+ * spatial grid and the flow field. Gameplay decisions stay on the server thread; the flow-field solve is
+ * the only thing that leaves it, and it is handed an immutable {@code Snapshot} built on the server thread
+ * rather than a view of the live world.
+ *
+ * <p>Registration is split into {@code init.*} helpers. {@code onInitialize} straddles them with two dev
+ * hooks: {@code devHook("registerConfig")} runs first, before {@link BootstrapInit#run()} reads the config
+ * file, so a dev-only holder can join the schema in time to have its options loaded; {@code
+ * devHook("install")} runs last, after every other {@code init.*} registration, so its config-driven
+ * decisions are not overwritten by the load. See {@link #devHook} for why both are reflective and both are
+ * no-ops on a shipped jar.
+ */
+public final class LethalBreedMod implements ModInitializer {
+    private static final DimensionManager DIMENSIONS = GameState.DIMENSIONS;
+    private static final ZombieRegistry REGISTRY = GameState.REGISTRY;
+    private static final TickScheduler SCHEDULER = new TickScheduler(REGISTRY, DIMENSIONS);
+
+    @Override
+    public void onInitialize() {
+        // The dev config holder must join the schema BEFORE BootstrapInit.run() reads lethalbreed.json:
+        // the loader is field-driven, so options it cannot match are warned about and dropped on the next
+        // write, which would delete a developer's own dev settings from their own file on first launch.
+        devHook("registerConfig");
+        // Ahead of the addons on purpose: the eight shipped ids are claimed first, so a mod that happens to
+        // want "bomber" is refused at its own registration instead of blowing up ours.
+        ShippedVariants.register();
+        // Before BootstrapInit for the same reason the dev hook is: an addon declares its options here, and
+        // an option that joins the schema after the file has been read is one the loader cannot match, so
+        // the player's saved value for it is warned about and dropped on the next write. BootstrapInit calls
+        // them back a second time right after that read.
+        AddonInit.register();
+        BootstrapInit.run();
+        EntityEventsInit.register(REGISTRY, DIMENSIONS);
+        TickInit.register(SCHEDULER);
+        CommandInit.register();
+        LifecycleInit.register(REGISTRY, DIMENSIONS, SCHEDULER);
+        // Everything else dev-side stays LAST, after the load: it ends with DevTestSelector.apply(), which
+        // forces exactly one arena flag on, and the JSON load would overwrite that decision.
+        devHook("install");
+    }
+
+    /**
+     * Call one development-only entry point, but ONLY in a development environment. The dev code lives in a
+     * separate {@code dev} source set that is never packaged into the shipped jar, so we reach its bootstrap
+     * ({@code oas.dreyka.lethalbreed.dev.DevBootstrap}) reflectively: on a production jar the class is
+     * absent and the lookup fails silently, leaving zero dev wiring active.
+     *
+     * @param method argument-free static method on {@code DevBootstrap}: {@code registerConfig} (before the
+     *               config load) or {@code install} (after it)
+     */
+    private static void devHook(String method) {
+        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            return;
+        }
+        try {
+            Class.forName("oas.dreyka.lethalbreed.dev.DevBootstrap")
+                    .getMethod(method)
+                    .invoke(null);
+        } catch (ClassNotFoundException e) {
+            // Dev source set not on the classpath (shipped jar): expected, nothing to install.
+            LethalBreed.LOGGER.debug("[LethalBreed] no dev source set on classpath; skipping dev hooks.");
+        } catch (ReflectiveOperationException e) {
+            LethalBreed.LOGGER.warn("[LethalBreed] failed to run dev hook {}", method, e);
+        }
+    }
+}

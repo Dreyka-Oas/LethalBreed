@@ -1,11 +1,13 @@
 {
   "required": true,
-  "package": "com.dreykaoas.lethalbreed.mixin",
+  "package": "oas.dreyka.lethalbreed.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "plague.EffectClearCuresPlagueMixin",
     "plague.LivingEntityCanBeAffectedMixin",
     "plague.MilkKeepsPlagueMixin",
+    "plague.PlagueEffectSyncMixin",
+    "MobControlFlagsMixin",
     "MobGoalsAccessor",
     "plague.PlagueBlocksRegenMixin",
     "PlayerItemDropSoundMixin",
@@ -30,6 +32,7 @@
     "client.render.LivingEntityRendererMixin",
     "client.ZombieBellySmoothingMixin",
     "client.model.ZombieBellyModelMixin",
+    "client.model.ZombieClingPoseMixin",
     "client.model.ZombieSleepArmsMixin"
   ],
   "injectors": {

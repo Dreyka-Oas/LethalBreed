@@ -1,0 +1,76 @@
+package oas.dreyka.lethalbreed.effect.contamination;
+
+import oas.dreyka.lethalbreed.config.domain.ContaminationConfig;
+import oas.dreyka.lethalbreed.config.domain.engine.ExpertConfig;
+
+import java.util.Random;
+
+/**
+ * The plague's random-draw rules as pure functions. **No Minecraft imports, and none may be added**.
+ * That restriction is the reason the class exists: {@link ContaminationState} registers Fabric attachment
+ * types in its static initialiser and so cannot be loaded by a headless unit test, which leaves every draw
+ * rule the plague uses permanently untested. Untested is how one rule, written in several places, quietly
+ * drifts apart.
+ *
+ * <p>Add a draw rule HERE and call it from the timer classes. Never inline a fresh copy at a call site.
+ */
+public final class ContaminationRoll {
+    private ContaminationRoll() {}
+
+    /**
+     * Gap-shortening factor for a flare timer: higher intensity → shorter gap, so we hand back
+     * {@code 1/mult}. The divisor is floored by {@code expertContamIntensityFloor} both to avoid a
+     * divide-by-zero and to cap how short an operator can drive the gaps.
+     */
+    public static double intensityFactor(double mult) {
+        return 1.0 / Math.max(ExpertConfig.expertContamIntensityFloor, mult);
+    }
+
+    /**
+     * The one uniform draw in {@code [min, max]} behind every plague timer and every plague magnitude.
+     * Floors BOTH ends at 0 independently, then REORDERS an inverted pair before lerping.
+     * {@code ConfigBoundsTable} bounds each option independently and never the relation between two, so an
+     * operator can put min above max with both values perfectly in range. Without the reorder that yields a
+     * draw below the minimum, or negative: a healing plague, or a cure threshold that never fires.
+     *
+     * <p>Because {@code max} is floored on its own, a pair with BOTH ends negative does not merely clip:
+     * it collapses to the constant 0 (a zero-width range), so the caller's draw is 0 rather than negative.
+     * That is deliberate: 0 damage / 0 percent / 0 ticks is the safe reading of a nonsensical range.
+     */
+    public static double uniform(Random rng, double min, double max) {
+        min = Math.max(0.0, min);
+        max = Math.max(0.0, max);
+        if (min > max) {
+            double tmp = min;
+            min = max;
+            max = tmp;
+        }
+        return min + rng.nextDouble() * (max - min);
+    }
+
+    /**
+     * Draw a percentage threshold in {@code [minPct, maxPct]}, then roll against it. True means the
+     * event fires. Consumes exactly two values from {@code rng}, in that order.
+     */
+    public static boolean percent(Random rng, double minPct, double maxPct) {
+        double pct = uniform(rng, minPct, maxPct);
+        return rng.nextDouble() * 100.0 < pct;
+    }
+
+    /**
+     * Odds a zombie's hit infects at {@code phase}: the capped ramp, or certainty once the world is late
+     * enough.
+     *
+     * <p>The ramp alone never reaches 1 whatever the phase, so without a ceiling a world running for weeks
+     * still leaves the plague a coin flip and a corpse rising again down to luck.
+     * {@code contamCertainPhase} is where the flip stops, and a negative value keeps the ramp in charge for
+     * a server that wants exactly that.
+     */
+    public static double infectionChance(int phase) {
+        if (ContaminationConfig.contamCertainPhase >= 0 && phase >= ContaminationConfig.contamCertainPhase) {
+            return 1.0;
+        }
+        return Math.min(ContaminationConfig.contamMaxChance,
+                ContaminationConfig.contamBaseChance + phase * ContaminationConfig.contamPhaseScale);
+    }
+}

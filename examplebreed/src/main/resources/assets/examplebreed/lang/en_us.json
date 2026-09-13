@@ -1,0 +1,8 @@
+{
+  "lethalbreed.special.examplebreed.frostbite": "Frostbitten",
+  "lethalbreed.category.Frostbite": "Frostbite",
+  "lethalbreed.option.frostbitePhase": "Unlock phase",
+  "lethalbreed.option.frostbiteWeight": "Weight",
+  "lethalbreed.option.frostbiteRadius": "Chill radius",
+  "lethalbreed.option.frostbiteSlowSeconds": "Chill duration (s)"
+}

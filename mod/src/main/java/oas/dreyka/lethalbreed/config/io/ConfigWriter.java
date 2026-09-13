@@ -1,0 +1,105 @@
+package oas.dreyka.lethalbreed.config.io;
+
+import oas.dreyka.lethalbreed.config.schema.ConfigCategory;
+import oas.dreyka.lethalbreed.config.schema.ConfigFields;
+import oas.dreyka.lethalbreed.config.schema.ConfigPrimitive;
+
+import oas.dreyka.lethalbreed.LethalBreed;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * Writing every config option back to disk, grouped by GUI category, via an atomic write-then-rename.
+ *
+ * <p>The destination path arrives as a parameter, resolved by the caller ({@code ConfigIo}), so the writer
+ * is testable against a temp directory with no Fabric runtime present.
+ */
+public final class ConfigWriter {
+    private ConfigWriter() {}
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    public static synchronized void save(Path path) {
+        // Group options under their GUI category. Categories are sorted alphabetically so the output is
+        // deterministic: the file is rewritten on every launch, and a HashMap's iteration order would
+        // produce a spurious diff on every run. Within a category, options keep the schema order that
+        // ConfigFields.all() returns. That order is meaningful (grouped by domain class), so nothing
+        // re-sorts it.
+        TreeMap<String, JsonObject> byCategory = new TreeMap<>();
+        for (Field f : ConfigFields.all()) {
+            String category = ConfigCategory.of(f.getName());
+            JsonObject json = byCategory.get(category);
+            if (json == null) {
+                json = new JsonObject();
+                byCategory.put(category, json);
+            }
+            ConfigPrimitive primitive = ConfigPrimitive.of(f.getType());
+            try {
+                switch (primitive) {
+                    case BOOL -> json.add(f.getName(), new JsonPrimitive(f.getBoolean(null)));
+                    case INT -> json.add(f.getName(), new JsonPrimitive(f.getInt(null)));
+                    case LONG -> json.add(f.getName(), new JsonPrimitive(f.getLong(null)));
+                    case DOUBLE -> json.add(f.getName(), new JsonPrimitive(f.getDouble(null)));
+                    case FLOAT -> json.add(f.getName(), new JsonPrimitive(f.getFloat(null)));
+                    case LIST -> {
+                        com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+                        for (double v : (double[]) f.get(null)) {
+                            arr.add(v);
+                        }
+                        json.add(f.getName(), arr);
+                    }
+                    case null -> { /* unsupported field type: ConfigFields.all() never yields one. */ }
+                }
+            } catch (IllegalAccessException e) {
+                // Not writing an option here makes it vanish from the file on this save and come back as a
+                // default on the next load: the user watches a setting disappear with no explanation. Say
+                // so; the rest of the file still gets written.
+                LethalBreed.LOGGER.error("[LethalBreed] config option {} could not be written to disk",
+                        f.getName(), e);
+            }
+        }
+        JsonObject json = new JsonObject();
+        for (Map.Entry<String, JsonObject> entry : byCategory.entrySet()) {
+            json.add(entry.getKey(), entry.getValue());
+        }
+        // Write-then-rename rather than writeString(path, …), whose implicit TRUNCATE_EXISTING empties the
+        // real file BEFORE the new content is written. That window is short, but ENOSPC turns it into a
+        // certainty: truncate succeeds, the write does not, and the next start reads a half-written file.
+        // A rename is atomic, so readers only ever see the old file or the new one.
+        Path tmp = path.resolveSibling(path.getFileName() + ".tmp");
+        boolean moved = false;
+        try {
+            Files.createDirectories(path.getParent());
+            Files.writeString(tmp, GSON.toJson(json));
+            try {
+                Files.move(tmp, path, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException notAtomic) {
+                // Some filesystems (and any cross-device layout) refuse ATOMIC_MOVE. A plain replace is
+                // still strictly better than truncate-in-place.
+                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING);
+            }
+            moved = true;
+        } catch (IOException e) {
+            LethalBreed.LOGGER.warn("[LethalBreed] config save failed: {}", e.toString());
+        } finally {
+            if (!moved) {
+                try {
+                    Files.deleteIfExists(tmp);
+                } catch (IOException ignored) {
+                    // Leaving a stray .tmp is harmless; it is overwritten on the next save.
+                }
+            }
+        }
+    }
+}

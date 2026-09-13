@@ -3,18 +3,23 @@
   "id": "lethalbreed",
   "version": "1.0.0",
   "name": "LethalBreed",
-  "description": "Smart vanilla zombies: build, break, hear sounds. Scales toward ~1000 via per-dimension flow field + GPU/CPU compute.",
+  "description": "Vanilla zombies wait at your wall until morning. These climb it, dig under it, and hunt you by sound. Every night is harder than the last, with no ceiling. And they carry a plague milk will not cure.",
   "authors": [
     "Dreyka Oas"
   ],
-  "license": "All rights reserved. See LICENSE",
+  "license": "MIT",
+  "contact": {
+    "homepage": "https://lethalbreed.pages.dev",
+    "issues": "https://github.com/Dreyka-Oas/LethalBreed/issues"
+  },
+  "icon": "assets/lethalbreed/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.dreykaoas.lethalbreed.LethalBreedMod"
+      "oas.dreyka.lethalbreed.LethalBreedMod"
     ],
     "client": [
-      "com.dreykaoas.lethalbreed.client.LethalBreedClient"
+      "oas.dreyka.lethalbreed.client.LethalBreedClient"
     ]
   },
   "mixins": [
