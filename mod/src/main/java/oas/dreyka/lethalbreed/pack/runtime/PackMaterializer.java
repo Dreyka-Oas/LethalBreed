@@ -5,6 +5,7 @@ import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.config.domain.WorldSpawnConfig;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.phase.PhaseManager;
+import oas.dreyka.lethalbreed.pack.rule.PackMigrationGate;
 import oas.dreyka.lethalbreed.pack.PackState;
 
 import net.minecraft.core.BlockPos;
@@ -98,14 +99,12 @@ public final class PackMaterializer {
         if (!ticking) {
             return;
         }
-        // Phase 0 destroys every hostile at ENTITY_LOAD. Restoring into it would delete the pack silently
-        // and leave a point on the map still marching with nobody in it.
-        if (WorldSpawnConfig.nightSpawnEnabled && PhaseManager.current() <= 0) {
-            return;
-        }
-        // Bringing a pack back into full daylight below the immunity phase means handing the player a pyre.
-        // Staying virtual is not a failure here: the pack keeps advancing as a point.
-        if (!PackConfig.packMigrateAtDay && level.isBrightOutside()) {
+        // Phase 0 destroys every hostile at ENTITY_LOAD: restoring into it would delete the pack silently and
+        // leave a point on the map still marching with nobody in it. And bringing one back into full daylight
+        // below the immunity phase hands the player a pyre; staying virtual is not a failure, the pack keeps
+        // advancing as a point.
+        if ((WorldSpawnConfig.nightSpawnEnabled && PhaseManager.current() <= 0)
+                || PackMigrationGate.daylightHalt(level)) {
             return;
         }
         Random rng = new Random(pack.seed ^ gameTime);

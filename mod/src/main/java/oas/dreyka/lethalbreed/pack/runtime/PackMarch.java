@@ -4,6 +4,7 @@ import oas.dreyka.lethalbreed.GameState;
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.entity.SmartZombie;
 import oas.dreyka.lethalbreed.pack.rule.PackAdvance;
+import oas.dreyka.lethalbreed.pack.rule.PackMigrationGate;
 import oas.dreyka.lethalbreed.pack.PackState;
 
 import net.minecraft.server.level.ServerLevel;
@@ -26,15 +27,7 @@ public final class PackMarch {
     private PackMarch() {}
 
     public static void tick(ServerLevel level, PackState pack, long gameTime) {
-        if (!PackConfig.packMigrationEnabled) {
-            return;
-        }
-        if (!PackConfig.packMigrateAtDay && level.isBrightOutside()) {
-            // Daylight halt. Members keep whatever waypoint they hold until mood puts them to sleep, which
-            // clears it via the FROZEN path: replanting here would fight the day-sleep for the whole day.
-            return;
-        }
-        if (gameTime < pack.dwellUntil) {
+        if (PackMigrationGate.halted(level, pack, gameTime)) {
             return;
         }
         if (arrivedOrStuck(pack, gameTime)) {

@@ -2,6 +2,7 @@ package oas.dreyka.lethalbreed.pack.runtime;
 
 import oas.dreyka.lethalbreed.config.domain.PackConfig;
 import oas.dreyka.lethalbreed.pack.rule.PackAdvance;
+import oas.dreyka.lethalbreed.pack.rule.PackMigrationGate;
 import oas.dreyka.lethalbreed.pack.PackState;
 
 import net.minecraft.server.level.ServerLevel;
@@ -24,13 +25,7 @@ public final class PackVirtualMove {
     private PackVirtualMove() {}
 
     public static void tick(ServerLevel level, PackState pack, long gameTime) {
-        if (!PackConfig.packMigrationEnabled) {
-            return;
-        }
-        if (!PackConfig.packMigrateAtDay && level.isBrightOutside()) {
-            return;
-        }
-        if (gameTime < pack.dwellUntil) {
+        if (PackMigrationGate.halted(level, pack, gameTime)) {
             return;
         }
         // Prorate by the ticks actually elapsed. Packs are visited round-robin, so without this a pack's
