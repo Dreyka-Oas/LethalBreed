@@ -1,3 +1,7 @@
+// Imported rather than written out: the java plugin puts its own extension under the name `java`,
+// so java.nio.file.Files inside this script resolves against that instead of the package.
+import java.nio.file.Files
+
 plugins {
     id("fabric-loom") version "1.17.12"
     java
@@ -166,9 +170,32 @@ tasks.processResources {
     }
 }
 
+// OpenCL needs two nudges on Fedora, neither of which needs root. Mesa's rusticl exposes no device
+// unless RUSTICL_ENABLE names the driver, and the JOCL binding dlopens the unversioned
+// libOpenCL.so, which is shipped only in the -devel package. Without both, the flow-field solver
+// logs "GPU: unavailable, CPU fallback activated" on a machine that has a working card, and the
+// launch looks fine while running the slow path. scripts/headless-test.sh does the same two things
+// for its own sessions; a plain ./gradlew runClient deserves the same card.
+val openClEnv: Map<String, String> = runCatching {
+    val loader = listOf("/usr/lib64/libOpenCL.so.1", "/usr/lib/x86_64-linux-gnu/libOpenCL.so.1")
+        .map { file(it) }
+        .firstOrNull { it.exists() } ?: return@runCatching emptyMap()
+    val dir = layout.buildDirectory.dir("opencl").get().asFile
+    dir.mkdirs()
+    val link = dir.resolve("libOpenCL.so").toPath()
+    Files.deleteIfExists(link)
+    Files.createSymbolicLink(link, loader.toPath())
+    mapOf(
+        "RUSTICL_ENABLE" to (System.getenv("RUSTICL_ENABLE") ?: "radeonsi"),
+        "LD_LIBRARY_PATH" to listOfNotNull(dir.absolutePath, System.getenv("LD_LIBRARY_PATH"))
+            .joinToString(":")
+    )
+}.getOrDefault(emptyMap())
+
 loom {
     runs {
         named("client") {
+            openClEnv.forEach { (key, value) -> environmentVariable(key, value) }
             runDir("run") // primary client keeps the default run dir
             source(devSourceSet) // dev harnesses on the client run classpath (dev env only)
             // Optimized JVM args for Liberica NIK 23 (GraalVM JIT) + aggressive G1GC (Aikar-style).
@@ -229,6 +256,7 @@ loom {
             runDir("run/client2")
             configName = "Minecraft Client 2"
             source(devSourceSet)
+            openClEnv.forEach { (key, value) -> environmentVariable(key, value) }
             vmArgs("-Xms2G", "-Xmx4G", "-XX:+UseG1GC")
             programArgs("--username", "Tester2", "--quickPlayMultiplayer", "localhost:25565")
         }
@@ -238,12 +266,14 @@ loom {
             runDir("run/client1")
             configName = "Minecraft Client 1"
             source(devSourceSet)
+            openClEnv.forEach { (key, value) -> environmentVariable(key, value) }
             vmArgs("-Xms2G", "-Xmx4G", "-XX:+UseG1GC")
             programArgs("--username", "Tester1", "--quickPlayMultiplayer", "localhost:25565")
         }
         named("server") {
             runDir("run/server") // dedicated server gets its own run dir under run/: no lock war with the clients
             source(devSourceSet) // dev harnesses on the dedicated-server run classpath (gradlew runServer)
+            openClEnv.forEach { (key, value) -> environmentVariable(key, value) }
             vmArgs(
                 "-Xms2G",
                 "-Xmx6G",
